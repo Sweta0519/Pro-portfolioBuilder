@@ -1,0 +1,166 @@
+# 🚀 ProPortfolio Builder
+
+[![Vite](https://img.shields.io/badge/Vite-7.3.2-646CFF?style=flat&logo=vite&logoColor=white)](https://vitejs.dev/)
+[![React](https://img.shields.io/badge/React-19.2.6-61DAFB?style=flat&logo=react&logoColor=black)](https://reactjs.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.1.17-06B6D4?style=flat&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9.3-3178C6?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
+An all-in-one AI-driven resume parser, ATS compliance scanner, interactive resume coach, and professional web portfolio generator. 
+
+ProPortfolio Builder allows candidates to paste or upload standard PDF/Word resumes, audit them against active job listings, auto-optimize their content, upload a profile picture, customize styling, and instantly export a fully responsive, deployment-ready Vite + React + Tailwind CSS portfolio site.
+
+---
+
+## 🌟 Key Features
+
+### 📁 1. Intelligent Resume Parser
+* **Multi-Format Parsing:** Directly upload and parse standard `.docx`, `.pdf`, or plain text files.
+* **Structured Data Extraction:** Automatically separates text into a clean JSON schema covering personal info, work experience, projects, skills, education, certifications, and testimonials.
+
+### 🎭 2. 5 Premium Interactive Web Themes
+* **Creative Morph:** Fluid morphing gradient background blobs, a rotating card avatar sidebar, and sleek interactive transitions.
+* **Cyberpunk Terminal:** Retro-futuristic, high-contrast monospace developer terminal look. Built with CLI dashboard aesthetics.
+* **Minimal Slate:** Ultra-clean, high-readability layout built around premium typography, subtle spacing, and traditional structure.
+* **Gradient Glow:** A sleek dark mode UI utilizing floating glassmorphism, gradient cards, and glowing neon nodes.
+* **Classic Professional:** Clean, structured corporate layout perfect for traditional engineering, finance, or consulting fields.
+
+### 🎨 3. Deep Customization Engine
+* **Dynamic Palette Customizer:** Live accent color picker allowing instant switching between violet, emerald, blue, amber, rose, and slate.
+* **Typography Selector:** Toggle typography families (Sans, Serif, and Monospace) to match your developer identity.
+* **Base64 Avatar Uploader:** Upload custom profile pictures. Photos are processed via `FileReader.readAsDataURL()` and stored in state as Base64 strings. This embeds the avatar directly in the page markup and exported packages with **zero third-party hosting dependencies**.
+
+### 📊 4. Real-Time ATS & Cover Letter Scanner
+* **Jobscan-Style Scoring:** Paste target job descriptions to analyze match probability.
+* **Audit Checks:** Automatically checks for contact info, formatting layout, and flags unreadable nested grids that trip up legacy ATS systems.
+* **Recruiter Insights:** Audits document word count, sentence length complexity, calculates estimated experience years from resume dates, and verifies job title alignment.
+* **Keyword Density Analysis:** Generates a target vs. actual frequency checklist for hard and soft skills.
+* **Cover Letter Auditor:** Real-time feedback on greeting presence, length, and keyword mapping.
+
+### 🧠 5. Interactive AI Resume Coach
+* **Real-time Scoring:** Rates resume content on a scale of `0 - 100` and assigns a letter grade (`A+` down to `Needs Work`).
+* **Active Verb Audits:** Automatically scans description lines and flags passive phrasing, warning you if you lack strong start verbs (e.g. *Led*, *Spearheaded*, *Engineered*).
+* **Metrics Auditor:** Scans bullets for quantitative values (percentages, savings, currency, quantities), helping you prove impact with concrete data.
+* **Action Verb Upgrader:** Includes a dictionary mapping weak verbs (like *"worked on"*, *"helped"*, *"made"*) to high-impact bullet point examples.
+
+### 🔄 6. One-Click Resume Optimizer
+* **Keyword Injection:** Automatically appends relevant missing technical keywords to your skills section.
+* **Verb Upgrading:** Automatically swaps passive verbs in your experience history with professional power-verbs.
+* **Summary Polishing:** Refines and fills out brief professional bios to increase executive presence.
+
+### 📦 7. Multi-Format Exporters
+* **Vite + React + Tailwind ZIP:** Downloads a zip package containing a complete, modular, and responsive Vite application pre-configured with Tailwind CSS 4.0. Upload to Vercel/Netlify for one-click live portfolio deployment.
+* **Word Exporter:** Generates a structured, clean, and beautifully styled Word Document (`.docx`) using heading structures.
+* **Print PDF:** Renders a clean document layout optimized for printing or direct PDF generation.
+
+---
+
+## 🛠️ Tech Stack
+
+* **Frontend Framework:** React 19 (TypeScript)
+* **Build Tooling:** Vite 7.3.2
+* **Styling Engine:** Tailwind CSS 4.1.17 (using `@tailwindcss/vite` plugin compilation)
+* **Icon Set:** Lucide React
+* **Document Parsing Support:** `pdfjs-dist` (PDF extraction) & `mammoth` (Docx extraction)
+* **Export Utilities:** `docx` (Word formatting), `jszip` (ZIP file compilation)
+
+---
+
+## 📂 Project Structure
+
+```bash
+build-portfolio-from-resume/
+├── src/
+│   ├── App.tsx                     # Main UI: Sidebar editors, previewers, ATS scanner, and layout tools
+│   ├── ThemeRenderer.tsx           # Layout engine rendering all 5 portfolio styles and interactions
+│   ├── types.ts                    # Core TypeScript definitions (ResumeData, ThemeSettings, etc.)
+│   ├── parser.ts                   # Text-to-JSON resume parsing heuristics
+│   ├── fileParser.ts               # File upload readers (converting PDF/DOCX to plain text)
+│   ├── ats.ts                      # ATS scanner, keyword mapping, and cover letter analysis
+│   ├── coach.ts                    # AI Coach recommendations engine and action verb dictionary
+│   ├── zipExporter.ts              # Code generator writing React/Vite/Tailwind source files into a ZIP
+│   ├── wordExporter.ts             # Word Document (.docx) builder
+│   ├── ResumeDocumentTemplate.tsx  # Document preview layout optimized for PDF printouts
+│   ├── ResumeInteractivePreview.tsx# Live interactive editor preview cards
+│   ├── sampleData.ts               # Fallback mock data populated on startup
+│   ├── index.css                   # Core Tailwind styling imports and transition rules
+│   └── main.tsx                    # React entrypoint
+├── public/                         # Static assets
+├── index.html                      # HTML container template
+├── vite.config.ts                  # Vite compilation configurations
+├── tsconfig.json                   # TypeScript setup
+├── package.json                    # Dependencies & execution scripts
+└── README.md                       # Documentation
+```
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+Make sure you have [Node.js](https://nodejs.org/) installed (version 18+ recommended).
+
+### 1. Install Dependencies
+In the root directory, install all required packages:
+```bash
+npm install
+```
+
+### 2. Launch Local Development Server
+Spin up the local hot-reloading development environment:
+```bash
+npm run dev
+```
+Open [http://localhost:5173/](http://localhost:5173/) in your web browser.
+
+### 3. Build for Production
+Bundle the project into a highly optimized production asset build:
+```bash
+npm run build
+```
+Verify the production build locally:
+```bash
+npm run preview
+```
+
+---
+
+## 💡 How the Exporter Works
+
+The **Vite/React/Tailwind ZIP Exporter** (`src/zipExporter.ts`) works by compiling your current resume state and custom configuration settings directly into a standalone React codebase.
+
+1. **Self-Contained Data:** The code generator writes a `data.json` file inside the export containing all your customized text and the Base64 representation of your uploaded profile image.
+2. **Modular Components:** It bundles a dedicated copy of the `App.tsx`, `ThemeRenderer.tsx`, `types.ts`, and core styles into the ZIP.
+3. **Tailwind CSS 4.0 Integration:** The exported code is set up with Tailwind's Vite compiler, allowing utility styles to compile instantly upon deployment.
+4. **No Server Backend Required:** The contact form on the exported website is fully configured to route local inputs, allowing it to work statically.
+
+---
+
+## 🌐 One-Click Deployment Guide
+
+Deploying your exported ZIP archive to the cloud is fast and free.
+
+### Deploying to Vercel (Recommended)
+1. Extract the downloaded ZIP file into a folder on your computer.
+2. Install the Vercel CLI (`npm install -g vercel`) or push the folder to a **GitHub repository**.
+3. If using GitHub:
+   * Go to the [Vercel Dashboard](https://vercel.com/) and click **Add New Project**.
+   * Import your GitHub repository.
+   * Vercel will automatically detect **Vite** and configure the settings. Click **Deploy**.
+4. If using Vercel CLI:
+   * Open a terminal inside the extracted directory.
+   * Run:
+     ```bash
+     vercel
+     ```
+   * Follow the prompt questions, and run `vercel --prod` to publish it live!
+
+### Deploying to Netlify
+1. Log in to [Netlify](https://www.netlify.com/).
+2. Drag and drop your extracted project folder directly into the **Netlify Drop** upload zone.
+3. Your portfolio will be live at a public URL within seconds!
+
+---
+
+## 📝 License
+This project is licensed under the MIT License - see the LICENSE file for details.
