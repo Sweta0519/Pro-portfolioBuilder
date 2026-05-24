@@ -913,18 +913,39 @@ IMPORTANT: Return ONLY valid JSON. No markdown code fences, no explanation text 
   }
 
   try {
-    // Try with Google Search grounding first
-    let response = await callGemini(true);
+    // Check if grounding was previously found to be unsupported (cached in localStorage)
+    const groundingSupported = localStorage.getItem('gemini_grounding_supported') !== 'false';
+    let response: Response;
 
-    // If grounding not supported (400), fall back to without grounding
-    if (response.status === 400) {
-      console.info('Google Search grounding not available, falling back to Gemini knowledge...');
+    if (groundingSupported) {
+      // Try with Google Search grounding first
+      response = await callGemini(true);
+
+      // If grounding not supported (400), cache it and fall back
+      if (response.status === 400) {
+        console.info('Google Search grounding not available, caching preference and retrying...');
+        localStorage.setItem('gemini_grounding_supported', 'false');
+        response = await callGemini(false);
+      }
+    } else {
+      // Skip grounding attempt — go directly without it (saves 1 API call)
       response = await callGemini(false);
+    }
+
+    // Auto-retry on rate limit with exponential backoff (up to 2 retries)
+    if (response.status === 429) {
+      for (let retry = 0; retry < 2; retry++) {
+        const waitSec = (retry + 1) * 3; // 3s, then 6s
+        console.info(`Rate limited, retrying in ${waitSec}s... (attempt ${retry + 2}/3)`);
+        await new Promise(resolve => setTimeout(resolve, waitSec * 1000));
+        response = await callGemini(false);
+        if (response.status !== 429) break;
+      }
     }
 
     if (!response.ok) {
       if (response.status === 429) {
-        throw new Error('⏳ Rate limit exceeded — the free tier allows 15 requests/minute. Wait 60 seconds and try again.');
+        throw new Error('⏳ Rate limit exceeded — please wait 60 seconds and try again. The free tier allows 15 requests/minute.');
       } else if (response.status === 401 || response.status === 403) {
         throw new Error('🔑 Invalid API key. Please check your Gemini API key or generate a new one at aistudio.google.com/apikey');
       }
