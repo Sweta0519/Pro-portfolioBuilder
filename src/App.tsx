@@ -38,9 +38,17 @@ export default function App() {
   // Core states
   const [resumeData, setResumeData] = useState<ResumeData>(defaultResumeData);
   const [themeSettings, setThemeSettings] = useState<ThemeSettings>(defaultThemeSettings);
+  const [appTheme, setAppTheme] = useState<'slate-dark' | 'indigo-midnight' | 'nord-light'>(
+    () => (localStorage.getItem('app_theme') as any) || 'slate-dark'
+  );
   const [activeTab, setActiveTab] = useState<string>('coach');
   const [previewDevice, setPreviewDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const [fullscreenPreview, setFullscreenPreview] = useState<boolean>(false);
+
+  // Sync App Theme to localStorage
+  useEffect(() => {
+    localStorage.setItem('app_theme', appTheme);
+  }, [appTheme]);
   
   // Form & helper states
   const [rawTextImport, setRawTextImport] = useState<string>('');
@@ -1321,7 +1329,7 @@ export default function Portfolio() {
   };
 
   return (
-    <div id="app-root-container" className="flex flex-col h-screen bg-slate-900 text-slate-100 select-none font-sans antialiased overflow-hidden">
+    <div id="app-root-container" className={`flex flex-col h-screen bg-slate-900 text-slate-100 select-none font-sans antialiased overflow-hidden theme-${appTheme}`}>
       
       {/* TOP HEADER */}
       <header className="flex flex-shrink-0 items-center justify-between px-6 h-16 bg-slate-950 border-b border-slate-800 relative z-40">
@@ -1334,13 +1342,89 @@ export default function Portfolio() {
         </div>
 
         <div className="flex items-center gap-3">
+          {/* App Theme Selector Dropdown */}
+          <div className="relative group">
+            <button
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
+                appTheme === 'nord-light'
+                  ? 'bg-slate-100 hover:bg-slate-200 border-slate-250 text-slate-700 hover:text-slate-955 shadow-sm'
+                  : appTheme === 'indigo-midnight'
+                    ? 'bg-[#0c0920] hover:bg-[#17123d] border-[#2b1f63] text-indigo-200 hover:text-white shadow-indigo-950/20'
+                    : 'bg-slate-900 hover:bg-slate-850 border-slate-800 text-slate-300 hover:text-white'
+              }`}
+            >
+              {appTheme === 'nord-light' ? (
+                <Sun className="w-3.5 h-3.5 text-amber-500" />
+              ) : appTheme === 'indigo-midnight' ? (
+                <Sparkles className="w-3.5 h-3.5 text-indigo-405 animate-pulse" />
+              ) : (
+                <Moon className="w-3.5 h-3.5 text-indigo-400" />
+              )}
+              <span>
+                Theme: {appTheme === 'slate-dark' ? 'Slate Dark' : appTheme === 'indigo-midnight' ? 'Indigo Midnight' : 'Nord Light'}
+              </span>
+              <ChevronDown className="w-3 h-3 text-slate-500 group-hover:text-slate-350" />
+            </button>
+            <div
+              className={`absolute right-0 mt-1 w-40 rounded-xl border p-1 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 ${
+                appTheme === 'nord-light'
+                  ? 'bg-white border-slate-200 shadow-slate-200/50'
+                  : appTheme === 'indigo-midnight'
+                    ? 'bg-[#0e0a26] border-[#2b1f63] shadow-indigo-950/30'
+                    : 'bg-slate-950 border-slate-800 shadow-black/40'
+              }`}
+            >
+              <button
+                type="button"
+                onClick={() => setAppTheme('slate-dark')}
+                className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                  appTheme === 'slate-dark'
+                    ? 'bg-indigo-650 text-white'
+                    : appTheme === 'nord-light'
+                      ? 'text-slate-650 hover:bg-slate-100 hover:text-slate-900'
+                      : 'text-slate-400 hover:bg-slate-900 hover:text-white'
+                }`}
+              >
+                Slate Dark
+              </button>
+              <button
+                type="button"
+                onClick={() => setAppTheme('indigo-midnight')}
+                className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                  appTheme === 'indigo-midnight'
+                    ? 'bg-indigo-650 text-white'
+                    : appTheme === 'nord-light'
+                      ? 'text-slate-650 hover:bg-slate-100 hover:text-slate-900'
+                      : 'text-slate-400 hover:bg-slate-900/60 hover:text-white'
+                }`}
+              >
+                Indigo Midnight
+              </button>
+              <button
+                type="button"
+                onClick={() => setAppTheme('nord-light')}
+                className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                  appTheme === 'nord-light'
+                    ? 'bg-indigo-650 text-white'
+                    : 'text-slate-400 hover:bg-slate-900/60 hover:text-white'
+                }`}
+              >
+                Nord Light
+              </button>
+            </div>
+          </div>
+
           {/* Fullscreen Toggle */}
           <button
             onClick={() => setFullscreenPreview(!fullscreenPreview)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
               fullscreenPreview
-                ? 'bg-indigo-600 border-indigo-500 text-white'
-                : 'bg-slate-900 hover:bg-slate-850 border-slate-800 text-slate-400 hover:text-white'
+                ? 'bg-indigo-600 border-indigo-500 text-white shadow-md'
+                : appTheme === 'nord-light'
+                  ? 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-700 hover:text-slate-950 shadow-sm'
+                  : appTheme === 'indigo-midnight'
+                    ? 'bg-[#0c0920] hover:bg-[#17123d] border-[#2b1f63] text-indigo-300 hover:text-white'
+                    : 'bg-slate-900 hover:bg-slate-850 border-slate-800 text-slate-400 hover:text-white'
             }`}
           >
             <Laptop className="w-3.5 h-3.5" />
@@ -1363,7 +1447,7 @@ export default function Portfolio() {
             <span>One-Click Deploy</span>
           </button>
 
-            {/* Export options */}
+          {/* Export options */}
           <button
             onClick={handleZipDownload}
             disabled={isZipping}
@@ -1376,25 +1460,43 @@ export default function Portfolio() {
 
           <button
             onClick={() => handleWordDownload()}
-            className="flex items-center gap-1.5 bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-200 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer"
+            className={`flex items-center gap-1.5 border px-3.5 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+              appTheme === 'nord-light'
+                ? 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-700 hover:text-slate-955'
+                : appTheme === 'indigo-midnight'
+                  ? 'bg-[#0c0920] hover:bg-[#17123d] border-[#2b1f63] text-indigo-250 hover:text-white'
+                  : 'bg-slate-900 hover:bg-slate-850 border-slate-800 text-slate-200'
+            }`}
             title="Downloads resume document formatted for Microsoft Word (.doc)"
           >
-            <FileText className="w-3.5 h-3.5 text-indigo-400" />
+            <FileText className={`w-3.5 h-3.5 ${appTheme === 'nord-light' ? 'text-indigo-600' : 'text-indigo-400'}`} />
             <span>Download Word (.doc)</span>
           </button>
 
           <button
             onClick={handlePdfPrint}
-            className="flex items-center gap-1.5 bg-slate-900 hover:bg-slate-850 border border-slate-800 text-slate-200 px-3.5 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer"
+            className={`flex items-center gap-1.5 border px-3.5 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+              appTheme === 'nord-light'
+                ? 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-700 hover:text-slate-955'
+                : appTheme === 'indigo-midnight'
+                  ? 'bg-[#0c0920] hover:bg-[#17123d] border-[#2b1f63] text-indigo-250 hover:text-white'
+                  : 'bg-slate-900 hover:bg-slate-850 border-slate-800 text-slate-200'
+            }`}
             title="Open Document Export Preview"
           >
-            <Download className="w-3.5 h-3.5 text-emerald-400" />
+            <Download className={`w-3.5 h-3.5 ${appTheme === 'nord-light' ? 'text-emerald-600' : 'text-emerald-400'}`} />
             <span>Export Document...</span>
           </button>
 
           <button
             onClick={() => copyToClipboard(getExportCode(), 'code')}
-            className="flex items-center gap-1.5 bg-indigo-950 hover:bg-indigo-900 border border-indigo-800 text-slate-300 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer"
+            className={`flex items-center gap-1.5 border px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+              appTheme === 'nord-light'
+                ? 'bg-indigo-50 hover:bg-indigo-100 border-indigo-200 text-indigo-750 hover:text-indigo-900'
+                : appTheme === 'indigo-midnight'
+                  ? 'bg-indigo-950/40 hover:bg-indigo-900/40 border-indigo-850 text-slate-350 hover:text-slate-100'
+                  : 'bg-indigo-950 hover:bg-indigo-900 border-indigo-800 text-slate-300'
+            }`}
             title="Downloads standalone React source code locally as Portfolio.tsx"
           >
             {copiedCode ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <FileCode className="w-3.5 h-3.5" />}
@@ -2667,10 +2769,14 @@ export default function Portfolio() {
                         <button
                           key={t.id}
                           onClick={() => setThemeSettings(prev => ({ ...prev, id: t.id as ThemeSettings['id'] }))}
-                          className={`p-3 text-left rounded-xl border transition-all ${
+                          className={`p-3 text-left rounded-xl border transition-all cursor-pointer ${
                             themeSettings.id === t.id
-                              ? 'bg-indigo-950/40 border-indigo-500 text-white'
-                              : 'bg-slate-950/40 border-slate-850 text-slate-400 hover:border-slate-750'
+                              ? appTheme === 'nord-light'
+                                ? 'bg-indigo-600 border-indigo-500 text-white shadow-sm'
+                                : 'bg-indigo-950/40 border-indigo-500 text-white'
+                              : appTheme === 'nord-light'
+                                ? 'bg-white border-slate-200 text-slate-650 hover:border-slate-350'
+                                : 'bg-slate-950/40 border-slate-850 text-slate-400 hover:border-slate-750'
                           }`}
                         >
                           <span className="text-xs font-bold block">{t.label}</span>
@@ -2755,7 +2861,11 @@ export default function Portfolio() {
                   {/* Typography Controls */}
                   <div className="space-y-2">
                     <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Font Family</label>
-                    <div className="grid grid-cols-3 gap-2 bg-slate-950/40 p-1 rounded-lg border border-slate-850 text-xs font-medium text-center">
+                    <div className={`grid grid-cols-3 gap-2 p-1 rounded-lg border text-xs font-medium text-center ${
+                      appTheme === 'nord-light'
+                        ? 'bg-slate-100 border-slate-200'
+                        : 'bg-slate-950/40 border-slate-850'
+                    }`}>
                       {[
                         { id: 'sans', label: 'Sans Serif', font: 'font-sans' },
                         { id: 'serif', label: 'Classic Serif', font: 'font-serif' },
@@ -2764,10 +2874,12 @@ export default function Portfolio() {
                         <button
                           key={font.id}
                           onClick={() => setThemeSettings(prev => ({ ...prev, fontFamily: font.id as ThemeSettings['fontFamily'] }))}
-                          className={`py-2 px-1.5 rounded-md transition-colors ${
+                          className={`py-2 px-1.5 rounded-md transition-colors cursor-pointer ${
                             themeSettings.fontFamily === font.id
-                              ? 'bg-indigo-600 text-white'
-                              : 'text-slate-500 hover:text-slate-300'
+                              ? 'bg-indigo-600 text-white shadow-sm'
+                              : appTheme === 'nord-light'
+                                ? 'text-slate-550 hover:text-slate-900'
+                                : 'text-slate-500 hover:text-slate-300'
                           }`}
                         >
                           <span className={font.font}>{font.label}</span>
@@ -2777,7 +2889,9 @@ export default function Portfolio() {
                   </div>
 
                   {/* Dark Mode Preview Toggler */}
-                  <div className="flex items-center justify-between p-4 rounded-xl border border-slate-850 bg-slate-950/20">
+                  <div className={`flex items-center justify-between p-4 rounded-xl border ${
+                    appTheme === 'nord-light' ? 'bg-slate-100 border-slate-200' : 'bg-slate-950/20 border-slate-850'
+                  }`}>
                     <div>
                       <span className="text-xs font-bold text-white block">Preview Dark Mode</span>
                       <span className="text-[9px] text-slate-500 mt-0.5 block">Toggles dark styling of target portfolio</span>
@@ -2786,7 +2900,7 @@ export default function Portfolio() {
                     <button
                       onClick={() => setThemeSettings(prev => ({ ...prev, darkMode: !prev.darkMode }))}
                       className={`w-12 h-6 rounded-full transition-colors relative cursor-pointer ${
-                        themeSettings.darkMode ? 'bg-indigo-600' : 'bg-slate-800'
+                        themeSettings.darkMode ? 'bg-indigo-650' : 'bg-slate-850'
                       }`}
                     >
                       <div 
@@ -2797,6 +2911,41 @@ export default function Portfolio() {
                         {themeSettings.darkMode ? <Moon className="w-2.5 h-2.5" /> : <Sun className="w-2.5 h-2.5" />}
                       </div>
                     </button>
+                  </div>
+
+                  {/* Application Workspace Theme */}
+                  <div className={`space-y-2 pt-4 border-t ${
+                    appTheme === 'nord-light' ? 'border-slate-200' : 'border-slate-850'
+                  }`}>
+                    <div className="flex flex-col">
+                      <span className="text-xs font-bold text-white block">Workspace Theme</span>
+                      <span className="text-[9px] text-slate-500 mt-0.5 block">Customize the look and feel of the builder workspace interface</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2 mt-2">
+                      {[
+                        { id: 'slate-dark', label: 'Slate Dark', desc: 'Default carbon' },
+                        { id: 'indigo-midnight', label: 'Indigo Midnight', desc: 'Deep violet' },
+                        { id: 'nord-light', label: 'Nord Light', desc: 'Sleek light' }
+                      ].map(t => (
+                        <button
+                          type="button"
+                          key={t.id}
+                          onClick={() => setAppTheme(t.id as any)}
+                          className={`p-2.5 text-left rounded-xl border transition-all cursor-pointer ${
+                            appTheme === t.id
+                              ? appTheme === 'nord-light'
+                                ? 'bg-indigo-600 border-indigo-500 text-white shadow-sm'
+                                : 'bg-indigo-950/40 border-indigo-500 text-white'
+                              : appTheme === 'nord-light'
+                                ? 'bg-white border-slate-200 text-slate-650 hover:border-slate-350'
+                                : 'bg-slate-950/40 border-slate-850 text-slate-400 hover:border-slate-750'
+                          }`}
+                        >
+                          <span className="text-xs font-bold block">{t.label}</span>
+                          <span className="text-[9px] text-slate-500 block mt-0.5 leading-tight">{t.desc}</span>
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
               )}
