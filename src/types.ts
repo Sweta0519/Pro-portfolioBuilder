@@ -200,3 +200,16 @@ export interface AnswerScore {
   strengths: string[];
   improvements: string[];
 }
+
+// ─── Gemini Google Search Enhancement ────────────────────────────────────────
+
+export interface GeminiEnhancedData {
+  roleInsights: RoleInsights;
+  interviewProcess: string[];
+  reportedQuestions: {
+    question: string;
+    round: string;
+    source: string;
+  }[];
+  searchSources: string[];
+}

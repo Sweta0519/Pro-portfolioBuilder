@@ -10,6 +10,7 @@ import {
   InterviewRound,
   RoleCategory,
   RoleInsights,
+  GeminiEnhancedData,
 } from './types';
 
 // ─── Role Classification ──────────────────────────────────────────────────────
@@ -847,4 +848,110 @@ export function scoreAnswer(question: string, answer: string, round: InterviewRo
     : 'This answer needs significant development. Review the improvements and practise again.';
 
   return { score: finalScore, grade, color, feedback, strengths, improvements };
+}
+
+// ─── Gemini Google Search Grounding ──────────────────────────────────────────
+
+export async function fetchGeminiInsights(
+  apiKey: string,
+  company: string,
+  role: string,
+  seniority: string,
+): Promise<GeminiEnhancedData | null> {
+  const prompt = `You are a career research assistant. Search the internet for real, current information about this specific role and company.
+
+**Role:** ${role}
+**Company:** ${company}
+**Level:** ${seniority}
+
+Search Glassdoor, LinkedIn, Blind, Indeed, and the company's careers page. Provide a comprehensive JSON response with:
+
+1. "roleInsights" — an object with:
+   - "glance" (string): A one-line factual summary of what this role does at ${company}
+   - "whatYouDo" (array of 5-6 strings): Specific day-to-day responsibilities for this role at ${company}, based on real job postings and employee reviews
+   - "typicalDay" (string): A paragraph describing what a typical workday looks like for someone in this role at ${company}
+   - "keySkills" (array of 5 strings): The most important skills for this specific role at ${company}
+   - "topChallenges" (array of 4 strings): Common challenges people face in this role at ${company}
+
+2. "interviewProcess" (array of strings): The actual step-by-step interview process at ${company} for this role (e.g., "Phone screen with recruiter (30 min)", "Technical coding round (60 min)", etc.)
+
+3. "reportedQuestions" (array of objects): 8-10 real interview questions that candidates have reported being asked for this role at ${company}. Each object should have:
+   - "question" (string): The actual question
+   - "round" (string): Which round it was asked in (e.g., "Technical", "Behavioral", "HR", "System Design", "Coding")
+   - "source" (string): Where this was reported (e.g., "Glassdoor", "Blind", "LeetCode Discuss")
+
+4. "searchSources" (array of strings): URLs or source names you found this information from
+
+IMPORTANT: Return ONLY valid JSON. No markdown code fences, no explanation text outside the JSON. Start your response with { and end with }.`;
+
+  try {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          tools: [{ google_search: {} }],
+          generationConfig: {
+            temperature: 0.3,
+            maxOutputTokens: 4096,
+          },
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      console.error('Gemini API error:', response.status, response.statusText);
+      return null;
+    }
+
+    const data = await response.json();
+
+    // Extract text parts from the Gemini response (skip search result parts)
+    const textParts = data.candidates?.[0]?.content?.parts
+      ?.filter((p: { text?: string }) => p.text)
+      ?.map((p: { text: string }) => p.text)
+      ?.join('') || '';
+
+    if (!textParts) return null;
+
+    // Extract JSON from the response (handle possible markdown fences)
+    let jsonStr = textParts.trim();
+    const fenceMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (fenceMatch) jsonStr = fenceMatch[1].trim();
+    const jsonMatch = jsonStr.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return null;
+
+    const parsed = JSON.parse(jsonMatch[0]);
+
+    // Extract grounding sources from metadata if available
+    const groundingMeta = data.candidates?.[0]?.groundingMetadata;
+    const searchSources: string[] = parsed.searchSources || [];
+    if (groundingMeta?.groundingChunks) {
+      for (const chunk of groundingMeta.groundingChunks) {
+        if (chunk?.web?.uri) searchSources.push(chunk.web.uri);
+      }
+    }
+
+    return {
+      roleInsights: {
+        glance: parsed.roleInsights?.glance || '',
+        whatYouDo: parsed.roleInsights?.whatYouDo || [],
+        typicalDay: parsed.roleInsights?.typicalDay || '',
+        keySkills: parsed.roleInsights?.keySkills || [],
+        topChallenges: parsed.roleInsights?.topChallenges || [],
+      },
+      interviewProcess: parsed.interviewProcess || [],
+      reportedQuestions: (parsed.reportedQuestions || []).map((q: { question?: string; round?: string; source?: string }) => ({
+        question: q.question || '',
+        round: q.round || 'General',
+        source: q.source || 'Unknown',
+      })),
+      searchSources: [...new Set(searchSources)].slice(0, 10),
+    };
+  } catch (err) {
+    console.error('Gemini fetch error:', err);
+    return null;
+  }
 }

@@ -17,8 +17,8 @@ import {
 } from './types';
 import { parseRawResumeText } from './parser';
 import { analyzeResume, actionVerbDictionary } from './coach';
-import { generateInterviewPlan, scoreAnswer } from './interviewCoach';
-import { InterviewPlan, InterviewRound, AnswerScore } from './types';
+import { generateInterviewPlan, scoreAnswer, fetchGeminiInsights } from './interviewCoach';
+import { InterviewPlan, InterviewRound, AnswerScore, GeminiEnhancedData } from './types';
 import { analyzeATSCompliance, analyzeCoverLetter, autoTuneDesign, autoOptimizeResume } from './ats';
 import { ThemeRenderer } from './ThemeRenderer';
 import { ResumeDocumentTemplate } from './ResumeDocumentTemplate';
@@ -102,6 +102,13 @@ export default function App() {
   const [hintVisible, setHintVisible] = useState<Record<string, boolean>>({});
   const [sampleVisible, setSampleVisible] = useState<Record<string, boolean>>({});
   const mockTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // ─── Gemini Google Search Enhancement ────────────────────────────────────
+  const [geminiApiKey, setGeminiApiKey] = useState<string>(() => localStorage.getItem('gemini-api-key') || '');
+  const [geminiData, setGeminiData] = useState<GeminiEnhancedData | null>(null);
+  const [isFetchingGemini, setIsFetchingGemini] = useState<boolean>(false);
+  const [geminiError, setGeminiError] = useState<string>('');
+  const [showApiKeyInput, setShowApiKeyInput] = useState<boolean>(false);
 
   // ATS Scanner states
   const [jobDescription, setJobDescription] = useState<string>('');
@@ -3396,6 +3403,45 @@ export default function Portfolio() {
                   {/* JD Input */}
                   {!interviewPlan && (
                     <div className="space-y-3">
+                      {/* Gemini API Key Section */}
+                      <div className="rounded-xl border border-slate-800 bg-slate-950/40 overflow-hidden">
+                        <button
+                          onClick={() => setShowApiKeyInput(!showApiKeyInput)}
+                          className="w-full flex items-center justify-between px-3 py-2 text-[10px] font-bold text-slate-400 hover:text-slate-300 transition-colors"
+                        >
+                          <span className="flex items-center gap-1.5">
+                            {geminiApiKey ? '🟢' : '⚪'} Gemini API Key {geminiApiKey ? '(Connected)' : '(Optional — Enables Live Google Search)'}
+                          </span>
+                          <span className="text-slate-600">{showApiKeyInput ? '▲' : '▼'}</span>
+                        </button>
+                        {showApiKeyInput && (
+                          <div className="px-3 pb-3 space-y-2 border-t border-slate-800 pt-2">
+                            <p className="text-[10px] text-slate-500 leading-relaxed">
+                              With a free Gemini API key, the tool searches Google in real-time for <strong className="text-slate-400">what people actually do in this role at this company</strong>, real interview questions reported on Glassdoor/Blind, and the actual interview process. <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" className="text-violet-400 hover:text-violet-300 underline">Get a free key →</a>
+                            </p>
+                            <div className="flex gap-2">
+                              <input
+                                type="password"
+                                value={geminiApiKey}
+                                onChange={e => {
+                                  const v = e.target.value;
+                                  setGeminiApiKey(v);
+                                  localStorage.setItem('gemini-api-key', v);
+                                }}
+                                placeholder="Paste your Gemini API key here..."
+                                className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-[10px] text-slate-300 placeholder-slate-600 focus:outline-none focus:border-violet-500 transition-colors font-mono"
+                              />
+                              {geminiApiKey && (
+                                <button
+                                  onClick={() => { setGeminiApiKey(''); localStorage.removeItem('gemini-api-key'); }}
+                                  className="text-[10px] text-slate-500 hover:text-rose-400 px-2"
+                                >Clear</button>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
                       {/* Position Name input */}
                       <div>
                         <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Position / Job Title *</label>
@@ -3421,11 +3467,15 @@ export default function Portfolio() {
                       </div>
 
                       <button
-                        onClick={() => {
+                        onClick={async () => {
                           if (!interviewPositionName.trim() && !interviewJD.trim()) return;
                           setIsGeneratingPlan(true);
+                          setGeminiData(null);
+                          setGeminiError('');
+
+                          // Step 1: Generate local plan immediately
+                          const plan = generateInterviewPlan(resumeData, interviewPositionName, interviewJD);
                           setTimeout(() => {
-                            const plan = generateInterviewPlan(resumeData, interviewPositionName, interviewJD);
                             setInterviewPlan(plan);
                             setIsGeneratingPlan(false);
                             setInterviewSubTab('overview');
@@ -3434,7 +3484,29 @@ export default function Portfolio() {
                             setMockTimerSec(0);
                             setMockAnswers({});
                             setMockScores({});
-                          }, 900);
+                          }, 600);
+
+                          // Step 2: If API key exists, fetch Gemini enhanced data in parallel
+                          if (geminiApiKey.trim()) {
+                            setIsFetchingGemini(true);
+                            try {
+                              const enhanced = await fetchGeminiInsights(
+                                geminiApiKey,
+                                plan.context.company,
+                                plan.context.role,
+                                plan.context.seniority,
+                              );
+                              if (enhanced) {
+                                setGeminiData(enhanced);
+                              } else {
+                                setGeminiError('Could not fetch data from Google Search. Using local templates.');
+                              }
+                            } catch {
+                              setGeminiError('Gemini API call failed. Check your API key.');
+                            } finally {
+                              setIsFetchingGemini(false);
+                            }
+                          }
                         }}
                         disabled={isGeneratingPlan || (!interviewPositionName.trim() && !interviewJD.trim())}
                         className="w-full py-3 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-40 text-white text-xs font-bold transition-all flex items-center justify-center gap-2"
@@ -3457,7 +3529,7 @@ export default function Portfolio() {
                           <p className="text-[11px] text-violet-400 font-semibold">{interviewPlan.context.role} · {interviewPlan.context.seniority}</p>
                         </div>
                         <button
-                          onClick={() => { setInterviewPlan(null); setInterviewJD(''); setInterviewPositionName(''); }}
+                          onClick={() => { setInterviewPlan(null); setInterviewJD(''); setInterviewPositionName(''); setGeminiData(null); setGeminiError(''); }}
                           className="text-[10px] text-slate-500 hover:text-rose-400 transition-colors border border-slate-700 rounded-lg px-2 py-1"
                         >↩ Reset</button>
                       </div>
@@ -3483,58 +3555,102 @@ export default function Portfolio() {
                       {interviewSubTab === 'overview' && (
                         <div className="space-y-3 animate-fadeIn">
 
+                          {/* Gemini Loading Indicator */}
+                          {isFetchingGemini && (
+                            <div className="flex items-center gap-2 p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 animate-pulse">
+                              <span className="animate-spin text-sm">🌐</span>
+                              <p className="text-[11px] text-blue-300 font-semibold">Searching Google for real data about this role at {interviewPlan.context.company}...</p>
+                            </div>
+                          )}
+                          {geminiError && (
+                            <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                              <p className="text-[10px] text-amber-400">{geminiError}</p>
+                            </div>
+                          )}
+
                           {/* Role Insights Card */}
-                          <div className="rounded-xl border border-violet-500/25 bg-violet-500/5 overflow-hidden">
-                            <div className="px-4 py-3 bg-violet-500/10 border-b border-violet-500/20">
-                              <p className="text-[10px] font-black text-violet-400 uppercase tracking-wider">🔍 What People Do In This Role</p>
-                              <p className="text-xs text-slate-200 font-semibold mt-0.5">{interviewPlan.roleInsights.glance}</p>
-                            </div>
-                            <div className="p-4 space-y-3">
-                              {/* What you do */}
-                              <div>
-                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1.5">Day-to-Day Responsibilities</p>
-                                <ul className="space-y-1">
-                                  {interviewPlan.roleInsights.whatYouDo.map((item, i) => (
-                                    <li key={i} className="flex items-start gap-2 text-[11px] text-slate-300">
-                                      <span className="text-violet-400 mt-0.5 flex-shrink-0">▸</span>
-                                      {item}
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-
-                              {/* Typical day */}
-                              <div className="p-2.5 rounded-lg bg-slate-900/60 border border-slate-800">
-                                <p className="text-[10px] text-amber-400 font-bold mb-1">⏰ Typical Day at {interviewPlan.context.company}</p>
-                                <p className="text-[11px] text-slate-400 leading-relaxed">{interviewPlan.roleInsights.typicalDay}</p>
-                              </div>
-
-                              {/* Key skills + challenges row */}
-                              <div className="grid grid-cols-2 gap-2">
-                                <div>
-                                  <p className="text-[10px] text-emerald-400 font-bold mb-1">✅ Key Skills</p>
-                                  <ul className="space-y-0.5">
-                                    {interviewPlan.roleInsights.keySkills.map((s, i) => (
-                                      <li key={i} className="text-[10px] text-slate-400">• {s}</li>
-                                    ))}
-                                  </ul>
+                          {(() => {
+                            const insights = geminiData?.roleInsights?.glance ? geminiData.roleInsights : interviewPlan.roleInsights;
+                            const isGemini = !!(geminiData?.roleInsights?.glance);
+                            return (
+                              <div className={`rounded-xl border overflow-hidden ${isGemini ? 'border-blue-500/30 bg-blue-500/5' : 'border-violet-500/25 bg-violet-500/5'}`}>
+                                <div className={`px-4 py-3 border-b ${isGemini ? 'bg-blue-500/10 border-blue-500/20' : 'bg-violet-500/10 border-violet-500/20'}`}>
+                                  <div className="flex items-center justify-between">
+                                    <p className={`text-[10px] font-black uppercase tracking-wider ${isGemini ? 'text-blue-400' : 'text-violet-400'}`}>🔍 What People Do In This Role</p>
+                                    {isGemini && <span className="text-[9px] font-bold bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded-full">🌐 Live Google Search</span>}
+                                  </div>
+                                  <p className="text-xs text-slate-200 font-semibold mt-0.5">{insights.glance}</p>
                                 </div>
-                                <div>
-                                  <p className="text-[10px] text-rose-400 font-bold mb-1">⚠️ Top Challenges</p>
-                                  <ul className="space-y-0.5">
-                                    {interviewPlan.roleInsights.topChallenges.map((c, i) => (
-                                      <li key={i} className="text-[10px] text-slate-400">• {c}</li>
-                                    ))}
-                                  </ul>
+                                <div className="p-4 space-y-3">
+                                  {/* What you do */}
+                                  <div>
+                                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1.5">Day-to-Day Responsibilities</p>
+                                    <ul className="space-y-1">
+                                      {insights.whatYouDo.map((item, i) => (
+                                        <li key={i} className="flex items-start gap-2 text-[11px] text-slate-300">
+                                          <span className={`mt-0.5 flex-shrink-0 ${isGemini ? 'text-blue-400' : 'text-violet-400'}`}>▸</span>
+                                          {item}
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+
+                                  {/* Typical day */}
+                                  <div className="p-2.5 rounded-lg bg-slate-900/60 border border-slate-800">
+                                    <p className="text-[10px] text-amber-400 font-bold mb-1">⏰ Typical Day at {interviewPlan.context.company}</p>
+                                    <p className="text-[11px] text-slate-400 leading-relaxed">{insights.typicalDay}</p>
+                                  </div>
+
+                                  {/* Key skills + challenges row */}
+                                  <div className="grid grid-cols-2 gap-2">
+                                    <div>
+                                      <p className="text-[10px] text-emerald-400 font-bold mb-1">✅ Key Skills</p>
+                                      <ul className="space-y-0.5">
+                                        {insights.keySkills.map((s, i) => (
+                                          <li key={i} className="text-[10px] text-slate-400">• {s}</li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                    <div>
+                                      <p className="text-[10px] text-rose-400 font-bold mb-1">⚠️ Top Challenges</p>
+                                      <ul className="space-y-0.5">
+                                        {insights.topChallenges.map((c, i) => (
+                                          <li key={i} className="text-[10px] text-slate-400">• {c}</li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  </div>
+
+                                  {/* Gemini search sources */}
+                                  {isGemini && geminiData!.searchSources.length > 0 && (
+                                    <div className="pt-1 border-t border-slate-800">
+                                      <p className="text-[9px] text-slate-600 font-bold uppercase tracking-wider mb-1">Sources</p>
+                                      <div className="flex flex-wrap gap-1">
+                                        {geminiData!.searchSources.slice(0, 5).map((src, i) => {
+                                          try {
+                                            const domain = new URL(src).hostname.replace('www.', '');
+                                            return <a key={i} href={src} target="_blank" rel="noopener noreferrer" className="text-[9px] text-blue-400/60 hover:text-blue-300 underline">{domain}</a>;
+                                          } catch {
+                                            return <span key={i} className="text-[9px] text-slate-600">{src}</span>;
+                                          }
+                                        })}
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
                               </div>
-                            </div>
-                          </div>
+                            );
+                          })()}
 
                           {/* Process overview */}
-                          <p className="text-[11px] text-slate-500 font-semibold uppercase tracking-wider pt-1">Expected Interview Process</p>
+                          <p className="text-[11px] text-slate-500 font-semibold uppercase tracking-wider pt-1 flex items-center gap-2">
+                            Expected Interview Process
+                            {geminiData?.interviewProcess && geminiData.interviewProcess.length > 0 && (
+                              <span className="text-[9px] font-bold bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded-full">🌐 From Google</span>
+                            )}
+                          </p>
                           <div className="space-y-2">
-                            {interviewPlan.processOverview.map((step, i) => (
+                            {(geminiData?.interviewProcess && geminiData.interviewProcess.length > 0 ? geminiData.interviewProcess : interviewPlan.processOverview).map((step, i) => (
                               <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-slate-950/40 border border-slate-800">
                                 <span className="text-[11px] font-black text-violet-400 bg-violet-500/10 w-5 h-5 flex items-center justify-center rounded-full flex-shrink-0 mt-0.5">{i + 1}</span>
                                 <span className="text-xs text-slate-300">{step}</span>
@@ -3554,6 +3670,34 @@ export default function Portfolio() {
                       {/* QUESTIONS: Round-filtered question bank */}
                       {interviewSubTab === 'questions' && (
                         <div className="space-y-3 animate-fadeIn">
+
+                          {/* Gemini Reported Questions */}
+                          {geminiData?.reportedQuestions && geminiData.reportedQuestions.length > 0 && (
+                            <div className="rounded-xl border border-blue-500/25 bg-blue-500/5 overflow-hidden">
+                              <div className="px-3 py-2 bg-blue-500/10 border-b border-blue-500/20 flex items-center justify-between">
+                                <p className="text-[10px] font-black text-blue-400 uppercase tracking-wider">🌐 Real Interview Questions From Candidates</p>
+                                <span className="text-[9px] bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded-full font-bold">{geminiData.reportedQuestions.length} found</span>
+                              </div>
+                              <div className="divide-y divide-slate-800/50">
+                                {geminiData.reportedQuestions.map((q, i) => (
+                                  <div key={i} className="px-3 py-2.5 flex items-start gap-2">
+                                    <span className="text-[10px] font-black text-blue-400/60 w-4 flex-shrink-0 mt-0.5">{i + 1}.</span>
+                                    <div className="flex-1">
+                                      <p className="text-[11px] text-slate-200">{q.question}</p>
+                                      <div className="flex items-center gap-2 mt-1">
+                                        <span className="text-[9px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded font-medium">{q.round}</span>
+                                        <span className="text-[9px] text-slate-600">Source: {q.source}</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Curated question bank header */}
+                          <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">📋 Curated Practice Questions by Round</p>
+
                           {/* Round selector pills */}
                           <div className="flex gap-1.5 flex-wrap">
                             {interviewPlan.rounds.map(r => (

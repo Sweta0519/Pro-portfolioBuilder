@@ -6,9 +6,9 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9.3-3178C6?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-An all-in-one AI-driven resume parser, ATS compliance scanner, interactive resume coach, and professional web portfolio generator. 
+An all-in-one AI-driven resume parser, ATS compliance scanner, interactive resume coach, **AI-powered interview prep coach with live Google Search**, and professional web portfolio generator. 
 
-ProPortfolio Builder allows candidates to paste or upload standard PDF/Word resumes, audit them against active job listings, auto-optimize their content, upload a profile picture, customize styling, and instantly export a fully responsive, deployment-ready Vite + React + Tailwind CSS portfolio site.
+ProPortfolio Builder allows candidates to paste or upload standard PDF/Word resumes, audit them against active job listings, auto-optimize their content, prepare for interviews with role-specific questions sourced from Glassdoor and Blind, practice with a live mock interview simulator, upload a profile picture, customize styling, and instantly export a fully responsive, deployment-ready Vite + React + Tailwind CSS portfolio site.
 
 ---
 
@@ -53,6 +53,73 @@ ProPortfolio Builder allows candidates to paste or upload standard PDF/Word resu
 * **Word Exporter:** Generates a structured, clean, and beautifully styled Word Document (`.docx`) using heading structures.
 * **Print PDF:** Renders a clean document layout optimized for printing or direct PDF generation.
 
+### 🎯 8. AI Interview Prep Coach
+A comprehensive, role-aware interview preparation system that tailors everything based on your specific position and target company.
+
+#### 🧠 Role-Aware Intelligence (13 Role Categories)
+The system classifies your position into one of 13 categories and automatically adjusts which interview rounds and questions are shown:
+
+| Position Detected | Interview Rounds Shown | DSA? | System Design? |
+|---|---|---|---|
+| Software / Fullstack Engineer | HR, Behavioral, Technical, DSA, System Design | ✅ | ✅ |
+| Frontend Engineer | HR, Behavioral, Technical, DSA | ✅ | ❌ |
+| Tech Support / Customer Success | HR, Behavioral, Technical, **Customer Scenarios** | ❌ | ❌ |
+| Product Manager | HR, Behavioral, **Product Sense** | ❌ | ❌ |
+| Data Analyst | HR, Behavioral, **SQL & Analytics** | ❌ | ❌ |
+| Data Scientist / ML Engineer | HR, Behavioral, Technical, **ML & Statistics** | ❌ | ❌ |
+| DevOps / SRE | HR, Behavioral, **Infrastructure**, System Design | ❌ | ✅ |
+| QA / SDET | HR, Behavioral, Technical, **QA & Testing** | ❌ | ❌ |
+| UX/UI Designer | HR, Behavioral, **Design Portfolio** | ❌ | ❌ |
+| Engineering Manager | HR, Behavioral, **Leadership** | ❌ | ❌ |
+
+#### 🌐 Gemini Google Search Integration (Optional)
+With a free [Google AI Studio API key](https://aistudio.google.com/apikey), the tool calls **Gemini 2.0 Flash with Google Search grounding** to fetch real, live information:
+* **What people actually do** in this role at this specific company (from Glassdoor, LinkedIn, Blind, Indeed)
+* **The real interview process** — step-by-step rounds reported by actual candidates
+* **8–10 real interview questions** reported on Glassdoor, Blind, and LeetCode Discuss
+* **Source links** from the web results for verification
+
+> Without an API key, the tool falls back to curated local templates — still fully functional with 100+ questions across all roles.
+
+#### 🔍 Role Insights Dashboard
+For every company + role combination, see a rich "What People Do In This Role" card:
+* Day-to-day responsibilities (company culture–aware: big-tech vs. startup vs. consulting)
+* Typical workday description
+* Key skills expected
+* Top challenges candidates face
+
+#### 📋 100+ Curated Practice Questions
+* **HR & Screening** — salary expectations, motivation, strengths/weaknesses
+* **Behavioral (STAR)** — Amazon LP-style, failure/success stories, conflict resolution
+* **Technical** — REST vs GraphQL, event loop, SOLID, Docker, JWT auth, database optimization
+* **DSA / Coding** — Two Sum, LRU Cache, Number of Islands, Coin Change (real LeetCode problems)
+* **System Design** — URL Shortener, Notification System, News Feed, Rate Limiter
+* **Customer Scenarios** — Ticket prioritization, escalation handling, knowledge base writing
+* **Product Sense** — Metrics investigation, feature prioritization, build vs. buy decisions
+* **SQL & Analytics** — Window functions, rolling averages, A/B test design
+* **ML & Statistics** — Bias-variance, precision/recall, recommendation systems
+* **Infrastructure** — CI/CD pipelines, incident response, Kubernetes, cost optimization
+* **QA & Testing** — Test pyramid, API testing, flaky test management
+* **Design Portfolio** — Portfolio walkthrough, accessibility, designer-engineer handoff
+* **Leadership** — Performance feedback, technical debt negotiation, team building
+
+#### 📚 Smart Study Planner
+* Identifies skill gaps between your resume and the job description
+* Assigns High/Medium/Low priority based on role category and seniority
+* Links to real external learning resources (LeetCode, NeetCode, YouTube, official docs)
+* All links open in a new tab for easy access
+
+#### 🎤 Mock Interview Simulator
+* **One-question-at-a-time** sequential flow with a live timer
+* **AI-powered answer scorer** evaluates your response on:
+  * STAR method structure (for behavioral rounds)
+  * Quantitative metrics and impact statements
+  * Action verb usage (Led, Built, Delivered, Optimized...)
+  * Technical depth and terminology (for technical rounds)
+  * Role-specific criteria (SQL terms for analysts, customer empathy for support, etc.)
+* Letter grade system (A+ through "Needs Work") with actionable feedback
+* Practice shortcuts: click "Practice This" on any question to jump directly into mock mode
+
 ---
 
 ## 🛠️ Tech Stack
@@ -60,6 +127,7 @@ ProPortfolio Builder allows candidates to paste or upload standard PDF/Word resu
 * **Frontend Framework:** React 19 (TypeScript)
 * **Build Tooling:** Vite 7.3.2
 * **Styling Engine:** Tailwind CSS 4.1.17 (using `@tailwindcss/vite` plugin compilation)
+* **AI Integration:** Gemini 2.0 Flash API with Google Search grounding (optional, free tier)
 * **Icon Set:** Lucide React
 * **Document Parsing Support:** `pdfjs-dist` (PDF extraction) & `mammoth` (Docx extraction)
 * **Export Utilities:** `docx` (Word formatting), `jszip` (ZIP file compilation)
@@ -71,13 +139,14 @@ ProPortfolio Builder allows candidates to paste or upload standard PDF/Word resu
 ```bash
 build-portfolio-from-resume/
 ├── src/
-│   ├── App.tsx                     # Main UI: Sidebar editors, previewers, ATS scanner, and layout tools
+│   ├── App.tsx                     # Main UI: Sidebar editors, previewers, ATS scanner, interview coach, and layout tools
 │   ├── ThemeRenderer.tsx           # Layout engine rendering all 5 portfolio styles and interactions
-│   ├── types.ts                    # Core TypeScript definitions (ResumeData, ThemeSettings, etc.)
+│   ├── types.ts                    # Core TypeScript definitions (ResumeData, ThemeSettings, Interview types, etc.)
 │   ├── parser.ts                   # Text-to-JSON resume parsing heuristics
 │   ├── fileParser.ts               # File upload readers (converting PDF/DOCX to plain text)
 │   ├── ats.ts                      # ATS scanner, keyword mapping, and cover letter analysis
 │   ├── coach.ts                    # AI Coach recommendations engine and action verb dictionary
+│   ├── interviewCoach.ts           # Interview Prep engine: role classifier, question banks, study planner, Gemini integration
 │   ├── zipExporter.ts              # Code generator writing React/Vite/Tailwind source files into a ZIP
 │   ├── wordExporter.ts             # Word Document (.docx) builder
 │   ├── ResumeDocumentTemplate.tsx  # Document preview layout optimized for PDF printouts
