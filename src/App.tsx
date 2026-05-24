@@ -90,6 +90,7 @@ export default function App() {
   const [interviewPlan, setInterviewPlan] = useState<InterviewPlan | null>(null);
   const [interviewJD, setInterviewJD] = useState<string>('');
   const [interviewPositionName, setInterviewPositionName] = useState<string>('');
+  const [interviewCompanyName, setInterviewCompanyName] = useState<string>('');
   const [interviewSubTab, setInterviewSubTab] = useState<'overview' | 'questions' | 'study-plan' | 'mock'>('overview');
   const [activeRound, setActiveRound] = useState<InterviewRound>('hr');
   const [isGeneratingPlan, setIsGeneratingPlan] = useState<boolean>(false);
@@ -109,6 +110,13 @@ export default function App() {
   const [isFetchingGemini, setIsFetchingGemini] = useState<boolean>(false);
   const [geminiError, setGeminiError] = useState<string>('');
   const [showApiKeyInput, setShowApiKeyInput] = useState<boolean>(false);
+
+  // ─── Voice Recording for Mock Interview ─────────────────────────────────────
+  const [isRecording, setIsRecording] = useState<boolean>(false);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const recognitionRef = useRef<any>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
 
   // ATS Scanner states
   const [jobDescription, setJobDescription] = useState<string>('');
@@ -3442,6 +3450,19 @@ export default function Portfolio() {
                         )}
                       </div>
 
+                      {/* Company Name input */}
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Company Name</label>
+                        <input
+                          type="text"
+                          value={interviewCompanyName}
+                          onChange={e => setInterviewCompanyName(e.target.value)}
+                          placeholder="e.g. Google, Amazon, Stripe, Infosys..."
+                          className="w-full bg-slate-950/50 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-violet-500 transition-colors"
+                        />
+                        <p className="text-[10px] text-slate-600 mt-1">Gemini will search Google for this company's real interview process, questions, and what people do in this role.</p>
+                      </div>
+
                       {/* Position Name input */}
                       <div>
                         <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Position / Job Title *</label>
@@ -3474,7 +3495,7 @@ export default function Portfolio() {
                           setGeminiError('');
 
                           // Step 1: Generate local plan immediately
-                          const plan = generateInterviewPlan(resumeData, interviewPositionName, interviewJD);
+                          const plan = generateInterviewPlan(resumeData, interviewPositionName, interviewJD, interviewCompanyName);
                           setTimeout(() => {
                             setInterviewPlan(plan);
                             setIsGeneratingPlan(false);
@@ -3490,9 +3511,10 @@ export default function Portfolio() {
                           if (geminiApiKey.trim()) {
                             setIsFetchingGemini(true);
                             try {
+                              const companyForSearch = interviewCompanyName.trim() || plan.context.company;
                               const enhanced = await fetchGeminiInsights(
                                 geminiApiKey,
-                                plan.context.company,
+                                companyForSearch,
                                 plan.context.role,
                                 plan.context.seniority,
                               );
@@ -3529,7 +3551,7 @@ export default function Portfolio() {
                           <p className="text-[11px] text-violet-400 font-semibold">{interviewPlan.context.role} · {interviewPlan.context.seniority}</p>
                         </div>
                         <button
-                          onClick={() => { setInterviewPlan(null); setInterviewJD(''); setInterviewPositionName(''); setGeminiData(null); setGeminiError(''); }}
+                          onClick={() => { setInterviewPlan(null); setInterviewJD(''); setInterviewPositionName(''); setInterviewCompanyName(''); setGeminiData(null); setGeminiError(''); }}
                           className="text-[10px] text-slate-500 hover:text-rose-400 transition-colors border border-slate-700 rounded-lg px-2 py-1"
                         >↩ Reset</button>
                       </div>
@@ -3907,25 +3929,113 @@ export default function Portfolio() {
                                   <p className="text-[10px] text-slate-600 mt-2">📍 {currentQ.source}</p>
                                 </div>
 
-                                {/* Answer textarea */}
+                                {/* Answer textarea + voice */}
                                 {mockMode === 'answering' && (
                                   <>
-                                    <textarea
-                                      value={currentAnswer}
-                                      onChange={e => setMockAnswers(p => ({ ...p, [currentQ.id]: e.target.value }))}
-                                      placeholder="Type your answer here... Use the STAR method for behavioral questions: Situation → Task → Action → Result"
-                                      className="w-full h-36 bg-slate-950/50 border border-slate-700 focus:border-violet-500 rounded-xl p-3 text-xs text-slate-300 placeholder-slate-600 resize-none focus:outline-none transition-colors"
-                                    />
+                                    <div className="relative">
+                                      <textarea
+                                        value={currentAnswer}
+                                        onChange={e => setMockAnswers(p => ({ ...p, [currentQ.id]: e.target.value }))}
+                                        placeholder={isRecording ? '🎙️ Listening... speak your answer now' : 'Type your answer here or click the microphone to speak... Use the STAR method for behavioral questions: Situation → Task → Action → Result'}
+                                        className={`w-full h-36 bg-slate-950/50 border rounded-xl p-3 pr-12 text-xs text-slate-300 placeholder-slate-600 resize-none focus:outline-none transition-colors ${isRecording ? 'border-red-500 bg-red-950/10' : 'border-slate-700 focus:border-violet-500'}`}
+                                      />
+                                      {/* Microphone button */}
+                                      <button
+                                        onClick={() => {
+                                          if (isRecording) {
+                                            // Stop recording
+                                            recognitionRef.current?.stop();
+                                            mediaRecorderRef.current?.stop();
+                                            setIsRecording(false);
+                                          } else {
+                                            // Start recording
+                                            const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+                                            if (!SpeechRecognition) {
+                                              alert('Speech recognition is not supported in this browser. Please use Chrome or Edge.');
+                                              return;
+                                            }
+                                            const recognition = new SpeechRecognition();
+                                            recognition.continuous = true;
+                                            recognition.interimResults = true;
+                                            recognition.lang = 'en-US';
+                                            let finalTranscript = currentAnswer;
+                                            recognition.onresult = (event: any) => {
+                                              let interim = '';
+                                              for (let i = event.resultIndex; i < event.results.length; i++) {
+                                                if (event.results[i].isFinal) {
+                                                  finalTranscript += (finalTranscript ? ' ' : '') + event.results[i][0].transcript;
+                                                } else {
+                                                  interim += event.results[i][0].transcript;
+                                                }
+                                              }
+                                              setMockAnswers(p => ({ ...p, [currentQ.id]: finalTranscript + (interim ? ' ' + interim : '') }));
+                                            };
+                                            recognition.onerror = () => setIsRecording(false);
+                                            recognition.onend = () => setIsRecording(false);
+                                            recognition.start();
+                                            recognitionRef.current = recognition;
+
+                                            // Also start audio recording for playback
+                                            navigator.mediaDevices.getUserMedia({ audio: true })
+                                              .then(stream => {
+                                                const recorder = new MediaRecorder(stream);
+                                                audioChunksRef.current = [];
+                                                recorder.ondataavailable = (e) => audioChunksRef.current.push(e.data);
+                                                recorder.onstop = () => {
+                                                  const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+                                                  setAudioUrl(URL.createObjectURL(blob));
+                                                  stream.getTracks().forEach(t => t.stop());
+                                                };
+                                                recorder.start();
+                                                mediaRecorderRef.current = recorder;
+                                              })
+                                              .catch(() => { /* audio recording optional */ });
+
+                                            setIsRecording(true);
+                                            setAudioUrl(null);
+                                          }
+                                        }}
+                                        className={`absolute right-2 top-2 w-8 h-8 rounded-full flex items-center justify-center transition-all ${
+                                          isRecording
+                                            ? 'bg-red-500 text-white animate-pulse shadow-lg shadow-red-500/40'
+                                            : 'bg-slate-800 text-slate-400 hover:bg-violet-600 hover:text-white'
+                                        }`}
+                                        title={isRecording ? 'Stop recording' : 'Start voice recording'}
+                                      >
+                                        {isRecording ? '⏹' : '🎙️'}
+                                      </button>
+                                    </div>
+
+                                    {/* Recording status */}
+                                    {isRecording && (
+                                      <div className="flex items-center gap-2 text-[10px] text-red-400 font-semibold">
+                                        <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                                        Recording... speak your answer clearly. Click ⏹ when done.
+                                      </div>
+                                    )}
+
+                                    {/* Audio playback */}
+                                    {audioUrl && !isRecording && (
+                                      <div className="flex items-center gap-2 p-2 rounded-lg bg-slate-900/60 border border-slate-800">
+                                        <span className="text-[10px] text-slate-400 font-bold">🔊 Playback:</span>
+                                        <audio src={audioUrl} controls className="h-8 flex-1" style={{ maxHeight: '32px' }} />
+                                      </div>
+                                    )}
+
                                     <div className="flex gap-2">
                                       <button
                                         onClick={() => {
                                           if (mockTimerRef.current) clearInterval(mockTimerRef.current);
+                                          if (isRecording) { recognitionRef.current?.stop(); mediaRecorderRef.current?.stop(); setIsRecording(false); }
                                           setMockMode('idle');
                                         }}
                                         className="flex-1 py-2 rounded-xl border border-slate-700 text-xs font-bold text-slate-400 hover:text-slate-200 hover:border-slate-500 transition-all"
                                       >✕ Skip</button>
                                       <button
-                                        onClick={submitAnswer}
+                                        onClick={() => {
+                                          if (isRecording) { recognitionRef.current?.stop(); mediaRecorderRef.current?.stop(); setIsRecording(false); }
+                                          submitAnswer();
+                                        }}
                                         disabled={!currentAnswer.trim()}
                                         className="flex-1 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-40 text-white text-xs font-bold transition-all"
                                       >✓ Submit Answer</button>

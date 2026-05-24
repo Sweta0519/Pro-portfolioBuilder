@@ -323,36 +323,41 @@ export function generateRoleInsights(roleCategory: RoleCategory, company: string
 
 // ─── JD Parsing ───────────────────────────────────────────────────────────────
 
-export function extractJobContext(positionName: string, jd: string): JobContext {
+export function extractJobContext(positionName: string, jd: string, explicitCompanyName?: string): JobContext {
   const text = jd.toLowerCase();
   const combined = (positionName + ' ' + jd).toLowerCase();
 
-  // Detect well-known companies
-  const knownCompanies: Record<string, string> = {
-    google: 'Google', alphabet: 'Google', amazon: 'Amazon', aws: 'Amazon Web Services',
-    microsoft: 'Microsoft', meta: 'Meta', facebook: 'Meta', apple: 'Apple',
-    netflix: 'Netflix', uber: 'Uber', lyft: 'Lyft', airbnb: 'Airbnb',
-    linkedin: 'LinkedIn', twitter: 'X (Twitter)', salesforce: 'Salesforce',
-    stripe: 'Stripe', shopify: 'Shopify', atlassian: 'Atlassian',
-    oracle: 'Oracle', ibm: 'IBM', deloitte: 'Deloitte', accenture: 'Accenture',
-    jpmorgan: 'JPMorgan', 'j.p. morgan': 'JPMorgan', goldman: 'Goldman Sachs',
-    infosys: 'Infosys', wipro: 'Wipro', tcs: 'TCS', cognizant: 'Cognizant',
-    zendesk: 'Zendesk', servicenow: 'ServiceNow', twilio: 'Twilio',
-    datadog: 'Datadog', snowflake: 'Snowflake', palantir: 'Palantir',
-  };
-  let company = 'the Company';
-  for (const [key, name] of Object.entries(knownCompanies)) {
-    if (text.includes(key)) { company = name; break; }
-  }
-  // Fallback heuristic pattern
-  if (company === 'the Company') {
-    const patterns = [
-      /^([A-Z][a-zA-Z0-9\s&]{2,30}?)\s+is (?:hiring|looking|seeking)/m,
-      /(?:at|join)\s+([A-Z][a-zA-Z0-9\s&]{2,25}?)(?:\s*[,\.\n])/,
-    ];
-    for (const p of patterns) {
-      const m = jd.match(p);
-      if (m && m[1]) { company = m[1].trim(); break; }
+  // Use explicit company name if provided, otherwise auto-detect
+  let company = explicitCompanyName?.trim() || '';
+
+  if (!company) {
+    // Detect well-known companies
+    const knownCompanies: Record<string, string> = {
+      google: 'Google', alphabet: 'Google', amazon: 'Amazon', aws: 'Amazon Web Services',
+      microsoft: 'Microsoft', meta: 'Meta', facebook: 'Meta', apple: 'Apple',
+      netflix: 'Netflix', uber: 'Uber', lyft: 'Lyft', airbnb: 'Airbnb',
+      linkedin: 'LinkedIn', twitter: 'X (Twitter)', salesforce: 'Salesforce',
+      stripe: 'Stripe', shopify: 'Shopify', atlassian: 'Atlassian',
+      oracle: 'Oracle', ibm: 'IBM', deloitte: 'Deloitte', accenture: 'Accenture',
+      jpmorgan: 'JPMorgan', 'j.p. morgan': 'JPMorgan', goldman: 'Goldman Sachs',
+      infosys: 'Infosys', wipro: 'Wipro', tcs: 'TCS', cognizant: 'Cognizant',
+      zendesk: 'Zendesk', servicenow: 'ServiceNow', twilio: 'Twilio',
+      datadog: 'Datadog', snowflake: 'Snowflake', palantir: 'Palantir',
+    };
+    company = 'the Company';
+    for (const [key, name] of Object.entries(knownCompanies)) {
+      if (text.includes(key)) { company = name; break; }
+    }
+    // Fallback heuristic pattern
+    if (company === 'the Company') {
+      const patterns = [
+        /^([A-Z][a-zA-Z0-9\s&]{2,30}?)\s+is (?:hiring|looking|seeking)/m,
+        /(?:at|join)\s+([A-Z][a-zA-Z0-9\s&]{2,25}?)(?:\s*[,\.\n])/,
+      ];
+      for (const p of patterns) {
+        const m = jd.match(p);
+        if (m && m[1]) { company = m[1].trim(); break; }
+      }
     }
   }
 
@@ -684,8 +689,8 @@ const ROUND_QUESTION_BANKS: Record<InterviewRound, Omit<InterviewQuestion, 'id'>
   'leadership':         LEADERSHIP_QUESTIONS,
 };
 
-export function generateInterviewPlan(resume: ResumeData, positionName: string, jd: string): InterviewPlan {
-  const context = extractJobContext(positionName, jd);
+export function generateInterviewPlan(resume: ResumeData, positionName: string, jd: string, explicitCompanyName?: string): InterviewPlan {
+  const context = extractJobContext(positionName, jd, explicitCompanyName);
   const roleInsights = generateRoleInsights(context.roleCategory, context.company, context.companyCulture, context.seniority);
 
   // Interview process overview

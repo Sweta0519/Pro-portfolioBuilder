@@ -79,6 +79,8 @@ With a free [Google AI Studio API key](https://aistudio.google.com/apikey), the 
 * **8–10 real interview questions** reported on Glassdoor, Blind, and LeetCode Discuss
 * **Source links** from the web results for verification
 
+The interview form has three input fields: **Company Name**, **Position/Job Title**, and **Job Description**. Enter the company name explicitly for the most targeted search results.
+
 > Without an API key, the tool falls back to curated local templates — still fully functional with 100+ questions across all roles.
 
 #### 🔍 Role Insights Dashboard
@@ -111,6 +113,7 @@ For every company + role combination, see a rich "What People Do In This Role" c
 
 #### 🎤 Mock Interview Simulator
 * **One-question-at-a-time** sequential flow with a live timer
+* **🎙️ Voice Recording:** Click the microphone button to speak your answer — real-time speech-to-text transcription appears in the textarea (powered by the browser's Web Speech API). Audio is also recorded for playback so you can listen to yourself.
 * **AI-powered answer scorer** evaluates your response on:
   * STAR method structure (for behavioral rounds)
   * Quantitative metrics and impact statements
