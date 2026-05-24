@@ -17,7 +17,7 @@ import {
 } from './types';
 import { parseRawResumeText } from './parser';
 import { analyzeResume, actionVerbDictionary } from './coach';
-import { generateInterviewPlan, scoreAnswer, fetchGeminiInsights } from './interviewCoach';
+import { generateInterviewPlan, scoreAnswer, fetchGeminiInsights, testApiConnection } from './interviewCoach';
 import type { AiProvider } from './interviewCoach';
 import { InterviewPlan, InterviewRound, AnswerScore, GeminiEnhancedData } from './types';
 import { analyzeATSCompliance, analyzeCoverLetter, autoTuneDesign, autoOptimizeResume } from './ats';
@@ -112,6 +112,7 @@ export default function App() {
   const [geminiError, setGeminiError] = useState<string>('');
   const [showApiKeyInput, setShowApiKeyInput] = useState<boolean>(false);
   const [aiProvider, setAiProvider] = useState<AiProvider>(() => (localStorage.getItem('ai_provider') as AiProvider) || 'groq');
+  const [connectionTest, setConnectionTest] = useState<{ testing: boolean; result: { ok: boolean; message: string } | null }>({ testing: false, result: null });
 
   // ─── Voice Recording for Mock Interview ─────────────────────────────────────
   const [isRecording, setIsRecording] = useState<boolean>(false);
@@ -3429,11 +3430,11 @@ export default function Portfolio() {
                             {/* Provider Toggle */}
                             <div className="flex items-center gap-1 p-0.5 bg-slate-900 rounded-lg w-fit">
                               <button
-                                onClick={() => { setAiProvider('groq'); localStorage.setItem('ai_provider', 'groq'); setGeminiApiKey(''); localStorage.removeItem('gemini-api-key'); }}
+                                onClick={() => { setAiProvider('groq'); localStorage.setItem('ai_provider', 'groq'); setGeminiApiKey(''); localStorage.removeItem('gemini-api-key'); setConnectionTest({ testing: false, result: null }); }}
                                 className={`px-3 py-1 rounded-md text-[10px] font-bold transition-all ${aiProvider === 'groq' ? 'bg-green-600 text-white' : 'text-slate-500 hover:text-slate-300'}`}
                               >🟢 Groq (Recommended)</button>
                               <button
-                                onClick={() => { setAiProvider('gemini'); localStorage.setItem('ai_provider', 'gemini'); setGeminiApiKey(''); localStorage.removeItem('gemini-api-key'); }}
+                                onClick={() => { setAiProvider('gemini'); localStorage.setItem('ai_provider', 'gemini'); setGeminiApiKey(''); localStorage.removeItem('gemini-api-key'); setConnectionTest({ testing: false, result: null }); }}
                                 className={`px-3 py-1 rounded-md text-[10px] font-bold transition-all ${aiProvider === 'gemini' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:text-slate-300'}`}
                               >🔵 Gemini</button>
                             </div>
@@ -3453,17 +3454,44 @@ export default function Portfolio() {
                                   const v = e.target.value;
                                   setGeminiApiKey(v);
                                   localStorage.setItem('gemini-api-key', v);
+                                  setConnectionTest({ testing: false, result: null });
                                 }}
                                 placeholder={aiProvider === 'groq' ? 'Paste your Groq API key (gsk_...)' : 'Paste your Gemini API key here...'}
                                 className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-[10px] text-slate-300 placeholder-slate-600 focus:outline-none focus:border-violet-500 transition-colors font-mono"
                               />
                               {geminiApiKey && (
                                 <button
-                                  onClick={() => { setGeminiApiKey(''); localStorage.removeItem('gemini-api-key'); }}
+                                  onClick={() => { setGeminiApiKey(''); localStorage.removeItem('gemini-api-key'); setConnectionTest({ testing: false, result: null }); }}
                                   className="text-[10px] text-slate-500 hover:text-rose-400 px-2"
                                 >Clear</button>
                               )}
                             </div>
+
+                            {/* Test Connection Button */}
+                            {geminiApiKey && (
+                              <div className="flex items-center gap-2">
+                                <button
+                                  onClick={async () => {
+                                    setConnectionTest({ testing: true, result: null });
+                                    const result = await testApiConnection(geminiApiKey, aiProvider);
+                                    setConnectionTest({ testing: false, result });
+                                  }}
+                                  disabled={connectionTest.testing}
+                                  className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-[10px] font-bold text-slate-300 transition-all flex items-center gap-1.5"
+                                >
+                                  {connectionTest.testing ? (
+                                    <><span className="w-3 h-3 border-2 border-slate-500 border-t-violet-400 rounded-full animate-spin" /> Testing...</>
+                                  ) : (
+                                    <>🔌 Test Connection</>
+                                  )}
+                                </button>
+                                {connectionTest.result && (
+                                  <span className={`text-[10px] font-semibold ${connectionTest.result.ok ? 'text-green-400' : 'text-rose-400'}`}>
+                                    {connectionTest.result.message}
+                                  </span>
+                                )}
+                              </div>
+                            )}
                           </div>
                         )}
                       </div>

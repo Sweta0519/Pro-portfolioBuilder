@@ -859,6 +859,35 @@ export function scoreAnswer(question: string, answer: string, round: InterviewRo
 
 export type AiProvider = 'gemini' | 'groq';
 
+export async function testApiConnection(apiKey: string, provider: AiProvider): Promise<{ ok: boolean; message: string }> {
+  if (!apiKey.trim()) return { ok: false, message: 'No API key provided.' };
+
+  try {
+    if (provider === 'groq') {
+      const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+        body: JSON.stringify({ model: 'llama-3.3-70b-versatile', messages: [{ role: 'user', content: 'Hi' }], max_tokens: 5 }),
+      });
+      if (r.ok) return { ok: true, message: '✅ Groq connected! Llama 3.3 70B ready.' };
+      if (r.status === 401) return { ok: false, message: '🔑 Invalid API key. Check at console.groq.com/keys' };
+      if (r.status === 429) return { ok: false, message: '⏳ Rate limited. Wait a moment and try again.' };
+      return { ok: false, message: `❌ Error ${r.status}` };
+    } else {
+      const r = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: 'Hi' }] }], generationConfig: { maxOutputTokens: 5 } }) }
+      );
+      if (r.ok) return { ok: true, message: '✅ Gemini connected! Ready to search.' };
+      if (r.status === 401 || r.status === 403) return { ok: false, message: '🔑 Invalid API key. Check at aistudio.google.com/apikey' };
+      if (r.status === 429) return { ok: false, message: '⏳ Rate limited. Wait 60s or switch to Groq.' };
+      return { ok: false, message: `❌ Error ${r.status}` };
+    }
+  } catch {
+    return { ok: false, message: '❌ Network error. Check your connection.' };
+  }
+}
+
 function buildInsightsPrompt(company: string, role: string, seniority: string): string {
   return `You are a career research assistant with expert knowledge about tech companies and their hiring processes.
 
