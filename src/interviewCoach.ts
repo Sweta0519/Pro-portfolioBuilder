@@ -863,13 +863,13 @@ export async function fetchGeminiInsights(
   role: string,
   seniority: string,
 ): Promise<GeminiEnhancedData | null> {
-  const prompt = `You are a career research assistant. Search the internet for real, current information about this specific role and company.
+  const prompt = `You are a career research assistant with expert knowledge about tech companies and their hiring processes.
 
 **Role:** ${role}
 **Company:** ${company}
 **Level:** ${seniority}
 
-Search Glassdoor, LinkedIn, Blind, Indeed, and the company's careers page. Provide a comprehensive JSON response with:
+Based on your knowledge of ${company}'s interview process, Glassdoor reviews, LinkedIn job postings, Blind discussions, and Indeed reviews, provide a comprehensive JSON response with:
 
 1. "roleInsights" — an object with:
    - "glance" (string): A one-line factual summary of what this role does at ${company}
@@ -885,34 +885,48 @@ Search Glassdoor, LinkedIn, Blind, Indeed, and the company's careers page. Provi
    - "round" (string): Which round it was asked in (e.g., "Technical", "Behavioral", "HR", "System Design", "Coding")
    - "source" (string): Where this was reported (e.g., "Glassdoor", "Blind", "LeetCode Discuss")
 
-4. "searchSources" (array of strings): URLs or source names you found this information from
+4. "searchSources" (array of strings): Source names where this information can be found
 
 IMPORTANT: Return ONLY valid JSON. No markdown code fences, no explanation text outside the JSON. Start your response with { and end with }.`;
 
-  try {
-    const response = await fetch(
+  // Helper to make the API call with or without grounding
+  async function callGemini(useGrounding: boolean): Promise<Response> {
+    const body: Record<string, unknown> = {
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: {
+        temperature: 0.3,
+        maxOutputTokens: 4096,
+      },
+    };
+    if (useGrounding) {
+      body.tools = [{ google_search: {} }];
+    }
+
+    return fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          tools: [{ google_search: {} }],
-          generationConfig: {
-            temperature: 0.3,
-            maxOutputTokens: 4096,
-          },
-        }),
+        body: JSON.stringify(body),
       }
     );
+  }
+
+  try {
+    // Try with Google Search grounding first
+    let response = await callGemini(true);
+
+    // If grounding not supported (400), fall back to without grounding
+    if (response.status === 400) {
+      console.info('Google Search grounding not available, falling back to Gemini knowledge...');
+      response = await callGemini(false);
+    }
 
     if (!response.ok) {
       if (response.status === 429) {
         throw new Error('⏳ Rate limit exceeded — the free tier allows 15 requests/minute. Wait 60 seconds and try again.');
       } else if (response.status === 401 || response.status === 403) {
         throw new Error('🔑 Invalid API key. Please check your Gemini API key or generate a new one at aistudio.google.com/apikey');
-      } else if (response.status === 400) {
-        throw new Error('❌ Bad request — the API rejected the query. Try a shorter company name or position title.');
       }
       throw new Error(`API error ${response.status}: ${response.statusText}`);
     }
@@ -963,6 +977,8 @@ IMPORTANT: Return ONLY valid JSON. No markdown code fences, no explanation text 
     };
   } catch (err) {
     console.error('Gemini fetch error:', err);
-    return null;
+    if (err instanceof Error && err.message.startsWith('⏳')) throw err;
+    if (err instanceof Error && err.message.startsWith('🔑')) throw err;
+    throw err;
   }
 }
