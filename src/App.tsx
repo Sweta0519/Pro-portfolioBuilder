@@ -18,6 +18,7 @@ import {
 import { parseRawResumeText } from './parser';
 import { analyzeResume, actionVerbDictionary } from './coach';
 import { generateInterviewPlan, scoreAnswer, fetchGeminiInsights } from './interviewCoach';
+import type { AiProvider } from './interviewCoach';
 import { InterviewPlan, InterviewRound, AnswerScore, GeminiEnhancedData } from './types';
 import { analyzeATSCompliance, analyzeCoverLetter, autoTuneDesign, autoOptimizeResume } from './ats';
 import { ThemeRenderer } from './ThemeRenderer';
@@ -110,6 +111,7 @@ export default function App() {
   const [isFetchingGemini, setIsFetchingGemini] = useState<boolean>(false);
   const [geminiError, setGeminiError] = useState<string>('');
   const [showApiKeyInput, setShowApiKeyInput] = useState<boolean>(false);
+  const [aiProvider, setAiProvider] = useState<AiProvider>(() => (localStorage.getItem('ai_provider') as AiProvider) || 'groq');
 
   // ─── Voice Recording for Mock Interview ─────────────────────────────────────
   const [isRecording, setIsRecording] = useState<boolean>(false);
@@ -3411,21 +3413,37 @@ export default function Portfolio() {
                   {/* JD Input */}
                   {!interviewPlan && (
                     <div className="space-y-3">
-                      {/* Gemini API Key Section */}
+                      {/* AI Provider & API Key Section */}
                       <div className="rounded-xl border border-slate-800 bg-slate-950/40 overflow-hidden">
                         <button
                           onClick={() => setShowApiKeyInput(!showApiKeyInput)}
                           className="w-full flex items-center justify-between px-3 py-2 text-[10px] font-bold text-slate-400 hover:text-slate-300 transition-colors"
                         >
                           <span className="flex items-center gap-1.5">
-                            {geminiApiKey ? '🟢' : '⚪'} Gemini API Key {geminiApiKey ? '(Connected)' : '(Optional — Enables Live Google Search)'}
+                            {geminiApiKey ? '🟢' : '⚪'} {aiProvider === 'groq' ? 'Groq' : 'Gemini'} API Key {geminiApiKey ? '(Connected)' : '(Optional — Enables AI-Powered Insights)'}
                           </span>
                           <span className="text-slate-600">{showApiKeyInput ? '▲' : '▼'}</span>
                         </button>
                         {showApiKeyInput && (
                           <div className="px-3 pb-3 space-y-2 border-t border-slate-800 pt-2">
+                            {/* Provider Toggle */}
+                            <div className="flex items-center gap-1 p-0.5 bg-slate-900 rounded-lg w-fit">
+                              <button
+                                onClick={() => { setAiProvider('groq'); localStorage.setItem('ai_provider', 'groq'); setGeminiApiKey(''); localStorage.removeItem('gemini-api-key'); }}
+                                className={`px-3 py-1 rounded-md text-[10px] font-bold transition-all ${aiProvider === 'groq' ? 'bg-green-600 text-white' : 'text-slate-500 hover:text-slate-300'}`}
+                              >🟢 Groq (Recommended)</button>
+                              <button
+                                onClick={() => { setAiProvider('gemini'); localStorage.setItem('ai_provider', 'gemini'); setGeminiApiKey(''); localStorage.removeItem('gemini-api-key'); }}
+                                className={`px-3 py-1 rounded-md text-[10px] font-bold transition-all ${aiProvider === 'gemini' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:text-slate-300'}`}
+                              >🔵 Gemini</button>
+                            </div>
+
                             <p className="text-[10px] text-slate-500 leading-relaxed">
-                              With a free Gemini API key, the tool searches Google in real-time for <strong className="text-slate-400">what people actually do in this role at this company</strong>, real interview questions reported on Glassdoor/Blind, and the actual interview process. <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" className="text-violet-400 hover:text-violet-300 underline">Get a free key →</a>
+                              {aiProvider === 'groq' ? (
+                                <>Groq is <strong className="text-green-400">free with generous limits</strong> (30 req/min). Uses Llama 3.3 70B for high-quality results. <a href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer" className="text-green-400 hover:text-green-300 underline">Get a free Groq key →</a></>
+                              ) : (
+                                <>Gemini uses Google Search grounding when available. Free tier: 15 req/min. <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" className="text-violet-400 hover:text-violet-300 underline">Get a free key →</a></>
+                              )}
                             </p>
                             <div className="flex gap-2">
                               <input
@@ -3436,7 +3454,7 @@ export default function Portfolio() {
                                   setGeminiApiKey(v);
                                   localStorage.setItem('gemini-api-key', v);
                                 }}
-                                placeholder="Paste your Gemini API key here..."
+                                placeholder={aiProvider === 'groq' ? 'Paste your Groq API key (gsk_...)' : 'Paste your Gemini API key here...'}
                                 className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-[10px] text-slate-300 placeholder-slate-600 focus:outline-none focus:border-violet-500 transition-colors font-mono"
                               />
                               {geminiApiKey && (
@@ -3517,6 +3535,7 @@ export default function Portfolio() {
                                 companyForSearch,
                                 plan.context.role,
                                 plan.context.seniority,
+                                aiProvider,
                               );
                               if (enhanced) {
                                 setGeminiData(enhanced);

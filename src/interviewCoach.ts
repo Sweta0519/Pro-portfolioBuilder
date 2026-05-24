@@ -855,15 +855,12 @@ export function scoreAnswer(question: string, answer: string, round: InterviewRo
   return { score: finalScore, grade, color, feedback, strengths, improvements };
 }
 
-// ─── Gemini Google Search Grounding ──────────────────────────────────────────
+// ─── AI-Powered Interview Insights (Gemini / Groq) ──────────────────────────
 
-export async function fetchGeminiInsights(
-  apiKey: string,
-  company: string,
-  role: string,
-  seniority: string,
-): Promise<GeminiEnhancedData | null> {
-  const prompt = `You are a career research assistant with expert knowledge about tech companies and their hiring processes.
+export type AiProvider = 'gemini' | 'groq';
+
+function buildInsightsPrompt(company: string, role: string, seniority: string): string {
+  return `You are a career research assistant with expert knowledge about tech companies and their hiring processes.
 
 **Role:** ${role}
 **Company:** ${company}
@@ -888,118 +885,142 @@ Based on your knowledge of ${company}'s interview process, Glassdoor reviews, Li
 4. "searchSources" (array of strings): Source names where this information can be found
 
 IMPORTANT: Return ONLY valid JSON. No markdown code fences, no explanation text outside the JSON. Start your response with { and end with }.`;
+}
 
-  // Helper to make the API call with or without grounding
+function parseInsightsResponse(textContent: string, groundingMeta?: Record<string, unknown>): GeminiEnhancedData | null {
+  if (!textContent) return null;
+
+  let jsonStr = textContent.trim();
+  const fenceMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (fenceMatch) jsonStr = fenceMatch[1].trim();
+  const jsonMatch = jsonStr.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) return null;
+
+  const parsed = JSON.parse(jsonMatch[0]);
+
+  const searchSources: string[] = parsed.searchSources || [];
+  if (groundingMeta && Array.isArray((groundingMeta as Record<string, unknown>).groundingChunks)) {
+    for (const chunk of (groundingMeta as Record<string, unknown[]>).groundingChunks) {
+      const c = chunk as Record<string, Record<string, string>>;
+      if (c?.web?.uri) searchSources.push(c.web.uri);
+    }
+  }
+
+  return {
+    roleInsights: {
+      glance: parsed.roleInsights?.glance || '',
+      whatYouDo: parsed.roleInsights?.whatYouDo || [],
+      typicalDay: parsed.roleInsights?.typicalDay || '',
+      keySkills: parsed.roleInsights?.keySkills || [],
+      topChallenges: parsed.roleInsights?.topChallenges || [],
+    },
+    interviewProcess: parsed.interviewProcess || [],
+    reportedQuestions: (parsed.reportedQuestions || []).map((q: { question?: string; round?: string; source?: string }) => ({
+      question: q.question || '',
+      round: q.round || 'General',
+      source: q.source || 'Unknown',
+    })),
+    searchSources: [...new Set(searchSources)].slice(0, 10),
+  };
+}
+
+async function fetchWithGemini(apiKey: string, prompt: string): Promise<GeminiEnhancedData | null> {
   async function callGemini(useGrounding: boolean): Promise<Response> {
     const body: Record<string, unknown> = {
       contents: [{ parts: [{ text: prompt }] }],
-      generationConfig: {
-        temperature: 0.3,
-        maxOutputTokens: 4096,
-      },
+      generationConfig: { temperature: 0.3, maxOutputTokens: 4096 },
     };
-    if (useGrounding) {
-      body.tools = [{ google_search: {} }];
-    }
+    if (useGrounding) body.tools = [{ google_search: {} }];
 
     return fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      }
+      { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
     );
   }
 
-  try {
-    // Check if grounding was previously found to be unsupported (cached in localStorage)
-    const groundingSupported = localStorage.getItem('gemini_grounding_supported') !== 'false';
-    let response: Response;
+  const groundingSupported = localStorage.getItem('gemini_grounding_supported') !== 'false';
+  let response: Response;
 
-    if (groundingSupported) {
-      // Try with Google Search grounding first
-      response = await callGemini(true);
-
-      // If grounding not supported (400), cache it and fall back
-      if (response.status === 400) {
-        console.info('Google Search grounding not available, caching preference and retrying...');
-        localStorage.setItem('gemini_grounding_supported', 'false');
-        response = await callGemini(false);
-      }
-    } else {
-      // Skip grounding attempt — go directly without it (saves 1 API call)
+  if (groundingSupported) {
+    response = await callGemini(true);
+    if (response.status === 400) {
+      localStorage.setItem('gemini_grounding_supported', 'false');
       response = await callGemini(false);
     }
+  } else {
+    response = await callGemini(false);
+  }
 
-    // Auto-retry on rate limit with exponential backoff (up to 2 retries)
-    if (response.status === 429) {
-      for (let retry = 0; retry < 2; retry++) {
-        const waitSec = (retry + 1) * 3; // 3s, then 6s
-        console.info(`Rate limited, retrying in ${waitSec}s... (attempt ${retry + 2}/3)`);
-        await new Promise(resolve => setTimeout(resolve, waitSec * 1000));
-        response = await callGemini(false);
-        if (response.status !== 429) break;
-      }
+  if (response.status === 429) {
+    for (let retry = 0; retry < 2; retry++) {
+      await new Promise(resolve => setTimeout(resolve, (retry + 1) * 3000));
+      response = await callGemini(false);
+      if (response.status !== 429) break;
     }
+  }
 
-    if (!response.ok) {
-      if (response.status === 429) {
-        throw new Error('⏳ Rate limit exceeded — please wait 60 seconds and try again. The free tier allows 15 requests/minute.');
-      } else if (response.status === 401 || response.status === 403) {
-        throw new Error('🔑 Invalid API key. Please check your Gemini API key or generate a new one at aistudio.google.com/apikey');
-      }
-      throw new Error(`API error ${response.status}: ${response.statusText}`);
+  if (!response.ok) {
+    if (response.status === 429) throw new Error('⏳ Gemini rate limit exceeded. Wait 60s or switch to Groq (free, no rate issues).');
+    if (response.status === 401 || response.status === 403) throw new Error('🔑 Invalid Gemini API key.');
+    throw new Error(`Gemini API error ${response.status}`);
+  }
+
+  const data = await response.json();
+  const textParts = data.candidates?.[0]?.content?.parts
+    ?.filter((p: { text?: string }) => p.text)
+    ?.map((p: { text: string }) => p.text)
+    ?.join('') || '';
+  return parseInsightsResponse(textParts, data.candidates?.[0]?.groundingMetadata);
+}
+
+async function fetchWithGroq(apiKey: string, prompt: string): Promise<GeminiEnhancedData | null> {
+  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: 'llama-3.3-70b-versatile',
+      messages: [
+        { role: 'system', content: 'You are a career research assistant. Always respond with valid JSON only.' },
+        { role: 'user', content: prompt },
+      ],
+      temperature: 0.3,
+      max_tokens: 4096,
+    }),
+  });
+
+  if (!response.ok) {
+    if (response.status === 429) throw new Error('⏳ Groq rate limit — wait a moment and try again.');
+    if (response.status === 401) throw new Error('🔑 Invalid Groq API key. Get one free at console.groq.com/keys');
+    throw new Error(`Groq API error ${response.status}`);
+  }
+
+  const data = await response.json();
+  const textContent = data.choices?.[0]?.message?.content || '';
+  return parseInsightsResponse(textContent);
+}
+
+export async function fetchGeminiInsights(
+  apiKey: string,
+  company: string,
+  role: string,
+  seniority: string,
+  provider: AiProvider = 'gemini',
+): Promise<GeminiEnhancedData | null> {
+  const prompt = buildInsightsPrompt(company, role, seniority);
+
+  try {
+    if (provider === 'groq') {
+      return await fetchWithGroq(apiKey, prompt);
+    } else {
+      return await fetchWithGemini(apiKey, prompt);
     }
-
-    const data = await response.json();
-
-    // Extract text parts from the Gemini response (skip search result parts)
-    const textParts = data.candidates?.[0]?.content?.parts
-      ?.filter((p: { text?: string }) => p.text)
-      ?.map((p: { text: string }) => p.text)
-      ?.join('') || '';
-
-    if (!textParts) return null;
-
-    // Extract JSON from the response (handle possible markdown fences)
-    let jsonStr = textParts.trim();
-    const fenceMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
-    if (fenceMatch) jsonStr = fenceMatch[1].trim();
-    const jsonMatch = jsonStr.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) return null;
-
-    const parsed = JSON.parse(jsonMatch[0]);
-
-    // Extract grounding sources from metadata if available
-    const groundingMeta = data.candidates?.[0]?.groundingMetadata;
-    const searchSources: string[] = parsed.searchSources || [];
-    if (groundingMeta?.groundingChunks) {
-      for (const chunk of groundingMeta.groundingChunks) {
-        if (chunk?.web?.uri) searchSources.push(chunk.web.uri);
-      }
-    }
-
-    return {
-      roleInsights: {
-        glance: parsed.roleInsights?.glance || '',
-        whatYouDo: parsed.roleInsights?.whatYouDo || [],
-        typicalDay: parsed.roleInsights?.typicalDay || '',
-        keySkills: parsed.roleInsights?.keySkills || [],
-        topChallenges: parsed.roleInsights?.topChallenges || [],
-      },
-      interviewProcess: parsed.interviewProcess || [],
-      reportedQuestions: (parsed.reportedQuestions || []).map((q: { question?: string; round?: string; source?: string }) => ({
-        question: q.question || '',
-        round: q.round || 'General',
-        source: q.source || 'Unknown',
-      })),
-      searchSources: [...new Set(searchSources)].slice(0, 10),
-    };
   } catch (err) {
-    console.error('Gemini fetch error:', err);
-    if (err instanceof Error && err.message.startsWith('⏳')) throw err;
-    if (err instanceof Error && err.message.startsWith('🔑')) throw err;
+    console.error(`${provider} fetch error:`, err);
     throw err;
   }
 }
+
+
