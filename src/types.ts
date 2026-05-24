@@ -104,15 +104,54 @@ export interface ContactMessage {
   unread: boolean;
 }
 
-// ─── Interview Prep Coach Types ───────────────────────────────────────────────
+// ─── Interview Prep Coach Types ─────────────────────────────────────────
 
-export type InterviewRound = 'hr' | 'technical' | 'dsa' | 'system-design' | 'behavioral';
+export type InterviewRound =
+  | 'hr'
+  | 'behavioral'
+  | 'technical'
+  | 'dsa'
+  | 'system-design'
+  | 'customer-scenarios'   // Tech Support, Customer Success
+  | 'product-sense'        // Product Managers
+  | 'sql-analytics'        // Data Analysts, BI
+  | 'ml-statistics'        // Data Scientists
+  | 'infrastructure'       // DevOps, SRE
+  | 'qa-testing'           // QA Engineers
+  | 'design-portfolio'     // UX/UI Designers
+  | 'leadership';          // Managers, Directors
 
 export type CompanyCulture = 'big-tech' | 'startup' | 'consulting' | 'finance' | 'generic';
+
+// Role category — used to pick which question rounds are relevant
+export type RoleCategory =
+  | 'software-engineer'
+  | 'frontend-engineer'
+  | 'backend-engineer'
+  | 'tech-support'
+  | 'product-manager'
+  | 'data-analyst'
+  | 'data-scientist'
+  | 'devops-sre'
+  | 'qa-engineer'
+  | 'designer'
+  | 'manager'
+  | 'sales-marketing'
+  | 'general';
+
+export interface RoleInsights {
+  whatYouDo: string[];        // Bullet points: what this role does day-to-day
+  typicalDay: string;         // A paragraph describing a typical day
+  keySkills: string[];        // Top skills expected in this role
+  topChallenges: string[];    // Common challenges candidates face in this role
+  glance: string;             // One-line summary shown at the top
+}
 
 export interface JobContext {
   company: string;
   role: string;
+  positionName: string;       // Explicitly entered position title
+  roleCategory: RoleCategory; // Detected role family
   seniority: 'junior' | 'mid' | 'senior' | 'lead';
   skills: string[];
   isStartup: boolean;
@@ -148,6 +187,7 @@ export interface InterviewRoundPlan {
 export interface InterviewPlan {
   context: JobContext;
   processOverview: string[];
+  roleInsights: RoleInsights;
   rounds: InterviewRoundPlan[];
   studyPlan: StudyTopic[];
 }

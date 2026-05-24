@@ -89,6 +89,7 @@ export default function App() {
   // ─── Interview Prep Coach states ─────────────────────────────────────────
   const [interviewPlan, setInterviewPlan] = useState<InterviewPlan | null>(null);
   const [interviewJD, setInterviewJD] = useState<string>('');
+  const [interviewPositionName, setInterviewPositionName] = useState<string>('');
   const [interviewSubTab, setInterviewSubTab] = useState<'overview' | 'questions' | 'study-plan' | 'mock'>('overview');
   const [activeRound, setActiveRound] = useState<InterviewRound>('hr');
   const [isGeneratingPlan, setIsGeneratingPlan] = useState<boolean>(false);
@@ -3395,18 +3396,36 @@ export default function Portfolio() {
                   {/* JD Input */}
                   {!interviewPlan && (
                     <div className="space-y-3">
-                      <textarea
-                        value={interviewJD}
-                        onChange={e => setInterviewJD(e.target.value)}
-                        placeholder="Paste the full job description here (include company name, role, and requirements)..."
-                        className="w-full h-48 bg-slate-950/50 border border-slate-700 rounded-xl p-3 text-xs text-slate-300 placeholder-slate-600 resize-none focus:outline-none focus:border-violet-500 transition-colors"
-                      />
+                      {/* Position Name input */}
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Position / Job Title *</label>
+                        <input
+                          type="text"
+                          value={interviewPositionName}
+                          onChange={e => setInterviewPositionName(e.target.value)}
+                          placeholder="e.g. Senior Software Engineer, Tech Support Specialist, Product Manager..."
+                          className="w-full bg-slate-950/50 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-violet-500 transition-colors"
+                        />
+                        <p className="text-[10px] text-slate-600 mt-1">Used to tailor the question bank specifically for your role — a support engineer won't get DSA questions!</p>
+                      </div>
+
+                      {/* JD textarea */}
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Job Description</label>
+                        <textarea
+                          value={interviewJD}
+                          onChange={e => setInterviewJD(e.target.value)}
+                          placeholder="Paste the full job description here (include company name, role, requirements, and any culture info)..."
+                          className="w-full h-44 bg-slate-950/50 border border-slate-700 rounded-xl p-3 text-xs text-slate-300 placeholder-slate-600 resize-none focus:outline-none focus:border-violet-500 transition-colors"
+                        />
+                      </div>
+
                       <button
                         onClick={() => {
-                          if (!interviewJD.trim()) return;
+                          if (!interviewPositionName.trim() && !interviewJD.trim()) return;
                           setIsGeneratingPlan(true);
                           setTimeout(() => {
-                            const plan = generateInterviewPlan(resumeData, interviewJD);
+                            const plan = generateInterviewPlan(resumeData, interviewPositionName, interviewJD);
                             setInterviewPlan(plan);
                             setIsGeneratingPlan(false);
                             setInterviewSubTab('overview');
@@ -3417,7 +3436,7 @@ export default function Portfolio() {
                             setMockScores({});
                           }, 900);
                         }}
-                        disabled={isGeneratingPlan || !interviewJD.trim()}
+                        disabled={isGeneratingPlan || (!interviewPositionName.trim() && !interviewJD.trim())}
                         className="w-full py-3 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-40 text-white text-xs font-bold transition-all flex items-center justify-center gap-2"
                       >
                         {isGeneratingPlan ? (
@@ -3438,7 +3457,7 @@ export default function Portfolio() {
                           <p className="text-[11px] text-violet-400 font-semibold">{interviewPlan.context.role} · {interviewPlan.context.seniority}</p>
                         </div>
                         <button
-                          onClick={() => { setInterviewPlan(null); setInterviewJD(''); }}
+                          onClick={() => { setInterviewPlan(null); setInterviewJD(''); setInterviewPositionName(''); }}
                           className="text-[10px] text-slate-500 hover:text-rose-400 transition-colors border border-slate-700 rounded-lg px-2 py-1"
                         >↩ Reset</button>
                       </div>
@@ -3463,7 +3482,57 @@ export default function Portfolio() {
                       {/* OVERVIEW: Interview Process */}
                       {interviewSubTab === 'overview' && (
                         <div className="space-y-3 animate-fadeIn">
-                          <p className="text-[11px] text-slate-500 font-semibold uppercase tracking-wider">Expected Interview Process</p>
+
+                          {/* Role Insights Card */}
+                          <div className="rounded-xl border border-violet-500/25 bg-violet-500/5 overflow-hidden">
+                            <div className="px-4 py-3 bg-violet-500/10 border-b border-violet-500/20">
+                              <p className="text-[10px] font-black text-violet-400 uppercase tracking-wider">🔍 What People Do In This Role</p>
+                              <p className="text-xs text-slate-200 font-semibold mt-0.5">{interviewPlan.roleInsights.glance}</p>
+                            </div>
+                            <div className="p-4 space-y-3">
+                              {/* What you do */}
+                              <div>
+                                <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1.5">Day-to-Day Responsibilities</p>
+                                <ul className="space-y-1">
+                                  {interviewPlan.roleInsights.whatYouDo.map((item, i) => (
+                                    <li key={i} className="flex items-start gap-2 text-[11px] text-slate-300">
+                                      <span className="text-violet-400 mt-0.5 flex-shrink-0">▸</span>
+                                      {item}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+
+                              {/* Typical day */}
+                              <div className="p-2.5 rounded-lg bg-slate-900/60 border border-slate-800">
+                                <p className="text-[10px] text-amber-400 font-bold mb-1">⏰ Typical Day at {interviewPlan.context.company}</p>
+                                <p className="text-[11px] text-slate-400 leading-relaxed">{interviewPlan.roleInsights.typicalDay}</p>
+                              </div>
+
+                              {/* Key skills + challenges row */}
+                              <div className="grid grid-cols-2 gap-2">
+                                <div>
+                                  <p className="text-[10px] text-emerald-400 font-bold mb-1">✅ Key Skills</p>
+                                  <ul className="space-y-0.5">
+                                    {interviewPlan.roleInsights.keySkills.map((s, i) => (
+                                      <li key={i} className="text-[10px] text-slate-400">• {s}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                                <div>
+                                  <p className="text-[10px] text-rose-400 font-bold mb-1">⚠️ Top Challenges</p>
+                                  <ul className="space-y-0.5">
+                                    {interviewPlan.roleInsights.topChallenges.map((c, i) => (
+                                      <li key={i} className="text-[10px] text-slate-400">• {c}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Process overview */}
+                          <p className="text-[11px] text-slate-500 font-semibold uppercase tracking-wider pt-1">Expected Interview Process</p>
                           <div className="space-y-2">
                             {interviewPlan.processOverview.map((step, i) => (
                               <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-slate-950/40 border border-slate-800">
