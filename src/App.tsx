@@ -3523,8 +3523,8 @@ export default function Portfolio() {
                               } else {
                                 setGeminiError('Could not fetch data from Google Search. Using local templates.');
                               }
-                            } catch {
-                              setGeminiError('Gemini API call failed. Check your API key.');
+                            } catch (err: any) {
+                              setGeminiError(err?.message || 'Gemini API call failed. Check your API key.');
                             } finally {
                               setIsFetchingGemini(false);
                             }

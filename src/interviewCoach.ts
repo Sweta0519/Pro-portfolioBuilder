@@ -907,8 +907,14 @@ IMPORTANT: Return ONLY valid JSON. No markdown code fences, no explanation text 
     );
 
     if (!response.ok) {
-      console.error('Gemini API error:', response.status, response.statusText);
-      return null;
+      if (response.status === 429) {
+        throw new Error('⏳ Rate limit exceeded — the free tier allows 15 requests/minute. Wait 60 seconds and try again.');
+      } else if (response.status === 401 || response.status === 403) {
+        throw new Error('🔑 Invalid API key. Please check your Gemini API key or generate a new one at aistudio.google.com/apikey');
+      } else if (response.status === 400) {
+        throw new Error('❌ Bad request — the API rejected the query. Try a shorter company name or position title.');
+      }
+      throw new Error(`API error ${response.status}: ${response.statusText}`);
     }
 
     const data = await response.json();
