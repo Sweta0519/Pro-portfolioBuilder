@@ -17,6 +17,8 @@ import {
 } from './types';
 import { parseRawResumeText } from './parser';
 import { analyzeResume, actionVerbDictionary } from './coach';
+import { generateInterviewPlan, scoreAnswer } from './interviewCoach';
+import { InterviewPlan, InterviewRound, AnswerScore } from './types';
 import { analyzeATSCompliance, analyzeCoverLetter, autoTuneDesign, autoOptimizeResume } from './ats';
 import { ThemeRenderer } from './ThemeRenderer';
 import { ResumeDocumentTemplate } from './ResumeDocumentTemplate';
@@ -83,6 +85,22 @@ export default function App() {
   const [bulletStyle, setBulletStyle] = useState<'impact' | 'verbs' | 'technical'>('impact');
   const [improvedBullets, setImprovedBullets] = useState<string[]>([]);
   const [copiedBulletIdx, setCopiedBulletIdx] = useState<number | null>(null);
+
+  // ─── Interview Prep Coach states ─────────────────────────────────────────
+  const [interviewPlan, setInterviewPlan] = useState<InterviewPlan | null>(null);
+  const [interviewJD, setInterviewJD] = useState<string>('');
+  const [interviewSubTab, setInterviewSubTab] = useState<'overview' | 'questions' | 'study-plan' | 'mock'>('overview');
+  const [activeRound, setActiveRound] = useState<InterviewRound>('hr');
+  const [isGeneratingPlan, setIsGeneratingPlan] = useState<boolean>(false);
+  const [mockAnswers, setMockAnswers] = useState<Record<string, string>>({});
+  const [mockScores, setMockScores] = useState<Record<string, AnswerScore>>({});
+  const [mockQuestionIdx, setMockQuestionIdx] = useState<number>(0);
+  const [mockRound, setMockRound] = useState<InterviewRound>('hr');
+  const [mockMode, setMockMode] = useState<'idle' | 'answering' | 'reviewed'>('idle');
+  const [mockTimerSec, setMockTimerSec] = useState<number>(0);
+  const [hintVisible, setHintVisible] = useState<Record<string, boolean>>({});
+  const [sampleVisible, setSampleVisible] = useState<Record<string, boolean>>({});
+  const mockTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // ATS Scanner states
   const [jobDescription, setJobDescription] = useState<string>('');
@@ -1422,6 +1440,17 @@ export default function Portfolio() {
                     {unreadCount}
                   </span>
                 )}
+              </button>
+              <button 
+                onClick={() => setActiveTab('interview')} 
+                className={`flex-grow px-2 py-3.5 text-center border-b-2 transition-all whitespace-nowrap flex items-center justify-center gap-1 ${
+                  activeTab === 'interview' 
+                    ? 'border-violet-500 text-violet-400' 
+                    : 'border-transparent text-slate-500 hover:text-slate-300'
+                }`}
+              >
+                <span className="text-[11px]">🎯</span>
+                <span>Interview</span>
               </button>
             </div>
 
@@ -3355,6 +3384,408 @@ export default function Portfolio() {
               )}
 
               {/* TAB 7: MOCK INBOX */}
+              {/* INTERVIEW PREP COACH TAB */}
+              {activeTab === 'interview' && (
+                <div className="space-y-5 animate-fadeIn">
+                  <div>
+                    <h2 className="text-base font-bold text-white flex items-center gap-2">🎯 Interview Prep Coach</h2>
+                    <p className="text-xs text-slate-400 mt-1 leading-relaxed">Paste a job description to get a tailored interview plan with real questions, study topics, and a live mock interview simulator.</p>
+                  </div>
+
+                  {/* JD Input */}
+                  {!interviewPlan && (
+                    <div className="space-y-3">
+                      <textarea
+                        value={interviewJD}
+                        onChange={e => setInterviewJD(e.target.value)}
+                        placeholder="Paste the full job description here (include company name, role, and requirements)..."
+                        className="w-full h-48 bg-slate-950/50 border border-slate-700 rounded-xl p-3 text-xs text-slate-300 placeholder-slate-600 resize-none focus:outline-none focus:border-violet-500 transition-colors"
+                      />
+                      <button
+                        onClick={() => {
+                          if (!interviewJD.trim()) return;
+                          setIsGeneratingPlan(true);
+                          setTimeout(() => {
+                            const plan = generateInterviewPlan(resumeData, interviewJD);
+                            setInterviewPlan(plan);
+                            setIsGeneratingPlan(false);
+                            setInterviewSubTab('overview');
+                            setMockMode('idle');
+                            setMockQuestionIdx(0);
+                            setMockTimerSec(0);
+                            setMockAnswers({});
+                            setMockScores({});
+                          }, 900);
+                        }}
+                        disabled={isGeneratingPlan || !interviewJD.trim()}
+                        className="w-full py-3 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-40 text-white text-xs font-bold transition-all flex items-center justify-center gap-2"
+                      >
+                        {isGeneratingPlan ? (
+                          <><span className="animate-spin">⏳</span> Generating Interview Plan...</>
+                        ) : (
+                          <>🎯 Generate My Interview Plan</>
+                        )}
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Plan Header */}
+                  {interviewPlan && (
+                    <>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="text-sm font-bold text-white">{interviewPlan.context.company}</h3>
+                          <p className="text-[11px] text-violet-400 font-semibold">{interviewPlan.context.role} · {interviewPlan.context.seniority}</p>
+                        </div>
+                        <button
+                          onClick={() => { setInterviewPlan(null); setInterviewJD(''); }}
+                          className="text-[10px] text-slate-500 hover:text-rose-400 transition-colors border border-slate-700 rounded-lg px-2 py-1"
+                        >↩ Reset</button>
+                      </div>
+
+                      {/* Sub-tabs */}
+                      <div className="flex gap-1 bg-slate-950/40 border border-slate-800 rounded-xl p-1 text-[10px] font-bold overflow-x-auto scrollbar-none">
+                        {(['overview', 'questions', 'study-plan', 'mock'] as const).map(tab => (
+                          <button
+                            key={tab}
+                            onClick={() => setInterviewSubTab(tab)}
+                            className={`flex-1 py-1.5 px-2 rounded-lg whitespace-nowrap transition-all ${
+                              interviewSubTab === tab
+                                ? 'bg-violet-600 text-white'
+                                : 'text-slate-500 hover:text-slate-300'
+                            }`}
+                          >
+                            {tab === 'overview' ? '🏢 Process' : tab === 'questions' ? '📋 Questions' : tab === 'study-plan' ? '📚 Study Plan' : '🎤 Mock'}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* OVERVIEW: Interview Process */}
+                      {interviewSubTab === 'overview' && (
+                        <div className="space-y-3 animate-fadeIn">
+                          <p className="text-[11px] text-slate-500 font-semibold uppercase tracking-wider">Expected Interview Process</p>
+                          <div className="space-y-2">
+                            {interviewPlan.processOverview.map((step, i) => (
+                              <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-slate-950/40 border border-slate-800">
+                                <span className="text-[11px] font-black text-violet-400 bg-violet-500/10 w-5 h-5 flex items-center justify-center rounded-full flex-shrink-0 mt-0.5">{i + 1}</span>
+                                <span className="text-xs text-slate-300">{step}</span>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="p-3 rounded-xl bg-violet-500/5 border border-violet-500/20">
+                            <p className="text-[11px] text-violet-300 leading-relaxed">💡 <strong>Tip:</strong> Switch to <strong>Questions</strong> to see curated real interview questions by round, or jump to <strong>Mock</strong> to practice answering them live.</p>
+                          </div>
+                          <div className="flex gap-2">
+                            <button onClick={() => setInterviewSubTab('questions')} className="flex-1 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300 transition-colors">📋 View Questions →</button>
+                            <button onClick={() => { setInterviewSubTab('mock'); setMockMode('idle'); setMockQuestionIdx(0); }} className="flex-1 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-xs font-bold text-white transition-colors">🎤 Start Mock →</button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* QUESTIONS: Round-filtered question bank */}
+                      {interviewSubTab === 'questions' && (
+                        <div className="space-y-3 animate-fadeIn">
+                          {/* Round selector pills */}
+                          <div className="flex gap-1.5 flex-wrap">
+                            {interviewPlan.rounds.map(r => (
+                              <button
+                                key={r.round}
+                                onClick={() => setActiveRound(r.round)}
+                                className={`px-3 py-1.5 rounded-full text-[10px] font-bold transition-all border ${
+                                  activeRound === r.round
+                                    ? 'bg-violet-600 text-white border-violet-600'
+                                    : 'bg-slate-900 text-slate-400 border-slate-700 hover:border-violet-500 hover:text-slate-200'
+                                }`}
+                              >
+                                {r.emoji} {r.label}
+                              </button>
+                            ))}
+                          </div>
+
+                          {/* Active round description */}
+                          {interviewPlan.rounds.filter(r => r.round === activeRound).map(r => (
+                            <div key={r.round} className="space-y-2">
+                              <p className="text-[11px] text-slate-500 leading-relaxed">{r.description}</p>
+                              <p className="text-[10px] text-violet-400 font-bold">{r.questions.length} questions · sorted by difficulty</p>
+                              {r.questions.map(q => (
+                                <div key={q.id} className={`p-3.5 rounded-xl border space-y-2 ${
+                                  q.difficulty === 'hard' ? 'border-rose-800/50 bg-rose-950/10'
+                                  : q.difficulty === 'medium' ? 'border-amber-800/50 bg-amber-950/10'
+                                  : 'border-emerald-800/50 bg-emerald-950/10'
+                                }`}>
+                                  <div className="flex items-start justify-between gap-2">
+                                    <p className="text-xs text-slate-200 font-medium leading-relaxed flex-grow">{q.question}</p>
+                                    <span className={`text-[9px] font-black px-1.5 py-0.5 rounded flex-shrink-0 ${
+                                      q.difficulty === 'hard' ? 'bg-rose-900/60 text-rose-400'
+                                      : q.difficulty === 'medium' ? 'bg-amber-900/60 text-amber-400'
+                                      : 'bg-emerald-900/60 text-emerald-400'
+                                    }`}>{q.difficulty.toUpperCase()}</span>
+                                  </div>
+                                  <p className="text-[10px] text-slate-600">📍 {q.source}</p>
+                                  <div className="flex gap-2">
+                                    {q.hint && (
+                                      <button
+                                        onClick={() => setHintVisible(p => ({ ...p, [q.id]: !p[q.id] }))}
+                                        className="text-[10px] text-violet-400 hover:text-violet-300 font-bold transition-colors"
+                                      >💡 {hintVisible[q.id] ? 'Hide Hint' : 'Show Hint'}</button>
+                                    )}
+                                    <button
+                                      onClick={() => {
+                                        const roundIdx = interviewPlan.rounds.findIndex(r => r.round === q.round);
+                                        const qIdx = interviewPlan.rounds[roundIdx].questions.findIndex(qq => qq.id === q.id);
+                                        setMockRound(q.round);
+                                        setMockQuestionIdx(qIdx);
+                                        setMockMode('answering');
+                                        setMockTimerSec(0);
+                                        if (mockTimerRef.current) clearInterval(mockTimerRef.current);
+                                        mockTimerRef.current = setInterval(() => setMockTimerSec(s => s + 1), 1000);
+                                        setInterviewSubTab('mock');
+                                      }}
+                                      className="text-[10px] text-slate-400 hover:text-white font-bold transition-colors"
+                                    >🎤 Practice This</button>
+                                  </div>
+                                  {hintVisible[q.id] && q.hint && (
+                                    <div className="mt-1 p-2.5 rounded-lg bg-violet-500/10 border border-violet-500/20 text-[11px] text-violet-300 leading-relaxed animate-fadeIn">
+                                      {q.hint}
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* STUDY PLAN */}
+                      {interviewSubTab === 'study-plan' && (
+                        <div className="space-y-3 animate-fadeIn">
+                          <p className="text-[11px] text-slate-500">Based on your resume vs. the job description, here are your personalized study priorities:</p>
+                          {interviewPlan.studyPlan.map((topic, i) => (
+                            <div key={i} className={`p-3.5 rounded-xl border space-y-2 ${
+                              topic.priority === 'high' ? 'border-rose-800/50 bg-rose-950/10'
+                              : topic.priority === 'medium' ? 'border-amber-800/50 bg-amber-950/10'
+                              : 'border-emerald-800/50 bg-emerald-950/10'
+                            }`}>
+                              <div className="flex items-center gap-2">
+                                <span className={`text-[9px] font-black px-1.5 py-0.5 rounded ${
+                                  topic.priority === 'high' ? 'bg-rose-900/60 text-rose-400'
+                                  : topic.priority === 'medium' ? 'bg-amber-900/60 text-amber-400'
+                                  : 'bg-emerald-900/60 text-emerald-400'
+                                }`}>{topic.priority.toUpperCase()} PRIORITY</span>
+                                <p className="text-xs font-bold text-slate-200">{topic.topic}</p>
+                              </div>
+                              <p className="text-[11px] text-slate-400 leading-relaxed">{topic.reason}</p>
+                              <div className="space-y-1 pt-1">
+                                <p className="text-[10px] text-slate-600 font-bold uppercase">Resources</p>
+                                {topic.resources.map((res, ri) => (
+                                  <a key={ri} href={res.url} target="_blank" rel="noopener noreferrer"
+                                    className="flex items-center gap-1.5 text-[11px] text-violet-400 hover:text-violet-300 transition-colors">
+                                    <span>🔗</span>{res.label}
+                                  </a>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* MOCK INTERVIEW SIMULATOR */}
+                      {interviewSubTab === 'mock' && (() => {
+                        const allRounds = interviewPlan.rounds;
+                        const currentRoundData = allRounds.find(r => r.round === mockRound) || allRounds[0];
+                        const questions = currentRoundData.questions;
+                        const currentQ = questions[mockQuestionIdx];
+                        const totalQ = questions.length;
+                        const currentScore = currentQ ? mockScores[currentQ.id] : null;
+                        const currentAnswer = currentQ ? (mockAnswers[currentQ.id] || '') : '';
+                        const timerMins = Math.floor(mockTimerSec / 60).toString().padStart(2, '0');
+                        const timerSecs = (mockTimerSec % 60).toString().padStart(2, '0');
+
+                        const startQuestion = (roundType: InterviewRound, idx: number) => {
+                          setMockRound(roundType);
+                          setMockQuestionIdx(idx);
+                          setMockMode('answering');
+                          setMockTimerSec(0);
+                          if (mockTimerRef.current) clearInterval(mockTimerRef.current);
+                          mockTimerRef.current = setInterval(() => setMockTimerSec(s => s + 1), 1000);
+                        };
+
+                        const submitAnswer = () => {
+                          if (!currentQ || !currentAnswer.trim()) return;
+                          if (mockTimerRef.current) clearInterval(mockTimerRef.current);
+                          const scored = scoreAnswer(currentQ.question, currentAnswer, currentQ.round);
+                          setMockScores(p => ({ ...p, [currentQ.id]: scored }));
+                          setMockMode('reviewed');
+                        };
+
+                        const nextQuestion = () => {
+                          const nextIdx = mockQuestionIdx + 1;
+                          if (nextIdx < totalQ) {
+                            startQuestion(mockRound, nextIdx);
+                          } else {
+                            // Check for next round
+                            const roundIdx = allRounds.findIndex(r => r.round === mockRound);
+                            if (roundIdx + 1 < allRounds.length) {
+                              const nextRound = allRounds[roundIdx + 1];
+                              startQuestion(nextRound.round, 0);
+                            } else {
+                              setMockMode('idle');
+                            }
+                          }
+                        };
+
+                        return (
+                          <div className="space-y-3 animate-fadeIn">
+                            {mockMode === 'idle' && (
+                              <div className="space-y-3">
+                                <p className="text-[11px] text-slate-400 leading-relaxed">Select a round to begin your mock interview. You'll answer one question at a time and receive AI-scored feedback after each answer.</p>
+                                {allRounds.map(r => (
+                                  <button
+                                    key={r.round}
+                                    onClick={() => startQuestion(r.round, 0)}
+                                    className="w-full p-3.5 rounded-xl border border-slate-700 bg-slate-900/50 hover:border-violet-500 hover:bg-violet-500/5 transition-all text-left group"
+                                  >
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-lg">{r.emoji}</span>
+                                        <div>
+                                          <p className="text-xs font-bold text-slate-200 group-hover:text-violet-300 transition-colors">{r.label}</p>
+                                          <p className="text-[10px] text-slate-500">{r.questions.length} questions</p>
+                                        </div>
+                                      </div>
+                                      <span className="text-[10px] text-violet-400 font-bold opacity-0 group-hover:opacity-100 transition-opacity">Start →</span>
+                                    </div>
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+
+                            {(mockMode === 'answering' || mockMode === 'reviewed') && currentQ && (
+                              <>
+                                {/* Progress */}
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-[10px] text-violet-400 font-bold">{currentRoundData.emoji} {currentRoundData.label}</span>
+                                    <span className="text-[10px] text-slate-600">Q {mockQuestionIdx + 1} / {totalQ}</span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <span className={`text-[11px] font-mono font-bold ${
+                                      mockMode === 'answering' ? 'text-violet-400' : 'text-slate-500'
+                                    }`}>⏱ {timerMins}:{timerSecs}</span>
+                                    <span className={`text-[9px] font-black px-1.5 py-0.5 rounded ${
+                                      currentQ.difficulty === 'hard' ? 'bg-rose-900/60 text-rose-400'
+                                      : currentQ.difficulty === 'medium' ? 'bg-amber-900/60 text-amber-400'
+                                      : 'bg-emerald-900/60 text-emerald-400'
+                                    }`}>{currentQ.difficulty.toUpperCase()}</span>
+                                  </div>
+                                </div>
+
+                                {/* Progress bar */}
+                                <div className="w-full h-1 bg-slate-800 rounded-full">
+                                  <div
+                                    className="h-1 bg-violet-500 rounded-full transition-all"
+                                    style={{ width: `${((mockQuestionIdx + 1) / totalQ) * 100}%` }}
+                                  />
+                                </div>
+
+                                {/* Question card */}
+                                <div className="p-4 rounded-xl bg-slate-950/50 border border-slate-700">
+                                  <p className="text-xs font-medium text-slate-200 leading-relaxed">{currentQ.question}</p>
+                                  <p className="text-[10px] text-slate-600 mt-2">📍 {currentQ.source}</p>
+                                </div>
+
+                                {/* Answer textarea */}
+                                {mockMode === 'answering' && (
+                                  <>
+                                    <textarea
+                                      value={currentAnswer}
+                                      onChange={e => setMockAnswers(p => ({ ...p, [currentQ.id]: e.target.value }))}
+                                      placeholder="Type your answer here... Use the STAR method for behavioral questions: Situation → Task → Action → Result"
+                                      className="w-full h-36 bg-slate-950/50 border border-slate-700 focus:border-violet-500 rounded-xl p-3 text-xs text-slate-300 placeholder-slate-600 resize-none focus:outline-none transition-colors"
+                                    />
+                                    <div className="flex gap-2">
+                                      <button
+                                        onClick={() => {
+                                          if (mockTimerRef.current) clearInterval(mockTimerRef.current);
+                                          setMockMode('idle');
+                                        }}
+                                        className="flex-1 py-2 rounded-xl border border-slate-700 text-xs font-bold text-slate-400 hover:text-slate-200 hover:border-slate-500 transition-all"
+                                      >✕ Skip</button>
+                                      <button
+                                        onClick={submitAnswer}
+                                        disabled={!currentAnswer.trim()}
+                                        className="flex-1 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-40 text-white text-xs font-bold transition-all"
+                                      >✓ Submit Answer</button>
+                                    </div>
+                                  </>
+                                )}
+
+                                {/* Score panel */}
+                                {mockMode === 'reviewed' && currentScore && (
+                                  <div className="space-y-3 animate-fadeIn">
+                                    {/* Score badge */}
+                                    <div className={`flex items-center gap-4 p-4 rounded-xl border ${currentScore.color}`}>
+                                      <div className="text-center">
+                                        <div className="text-3xl font-black">{currentScore.grade}</div>
+                                        <div className="text-[10px] font-bold mt-0.5">{currentScore.score}/100</div>
+                                      </div>
+                                      <p className="text-xs leading-relaxed flex-grow">{currentScore.feedback}</p>
+                                    </div>
+
+                                    {/* Strengths */}
+                                    {currentScore.strengths.length > 0 && (
+                                      <div className="space-y-1.5">
+                                        <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">✅ Strengths</p>
+                                        {currentScore.strengths.map((s, i) => (
+                                          <p key={i} className="text-[11px] text-slate-300 bg-emerald-950/20 border border-emerald-900/30 rounded-lg p-2">{s}</p>
+                                        ))}
+                                      </div>
+                                    )}
+
+                                    {/* Improvements */}
+                                    {currentScore.improvements.length > 0 && (
+                                      <div className="space-y-1.5">
+                                        <p className="text-[10px] text-amber-400 font-bold uppercase tracking-wider">⚠️ Improve</p>
+                                        {currentScore.improvements.map((s, i) => (
+                                          <p key={i} className="text-[11px] text-slate-300 bg-amber-950/20 border border-amber-900/30 rounded-lg p-2">{s}</p>
+                                        ))}
+                                      </div>
+                                    )}
+
+                                    {/* Sample answer toggle */}
+                                    {currentQ.sampleAnswer && (
+                                      <>
+                                        <button
+                                          onClick={() => setSampleVisible(p => ({ ...p, [currentQ.id]: !p[currentQ.id] }))}
+                                          className="w-full py-2 border border-slate-700 rounded-xl text-xs font-bold text-slate-400 hover:text-violet-300 hover:border-violet-500 transition-all"
+                                        >📝 {sampleVisible[currentQ.id] ? 'Hide' : 'View'} Sample Answer</button>
+                                        {sampleVisible[currentQ.id] && (
+                                          <div className="p-3 rounded-xl bg-violet-500/5 border border-violet-500/20 text-[11px] text-violet-200 leading-relaxed animate-fadeIn">
+                                            {currentQ.sampleAnswer}
+                                          </div>
+                                        )}
+                                      </>
+                                    )}
+
+                                    {/* Next button */}
+                                    <button
+                                      onClick={nextQuestion}
+                                      className="w-full py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-xs font-bold text-white transition-all"
+                                    >
+                                      {mockQuestionIdx + 1 < totalQ ? 'Next Question →' : '✓ Finish Round'}
+                                    </button>
+                                  </div>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        );
+                      })()}
+                    </>
+                  )}
+                </div>
+              )}
+
               {activeTab === 'inbox' && (
                 <div className="space-y-6 animate-fadeIn">
                   <div>
