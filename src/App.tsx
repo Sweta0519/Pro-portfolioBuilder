@@ -1326,9 +1326,7 @@ export default function Portfolio() {
       {/* TOP HEADER */}
       <header className="flex flex-shrink-0 items-center justify-between px-6 h-16 bg-slate-950 border-b border-slate-800 relative z-40">
         <div className="flex items-center gap-3">
-          <div className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 to-indigo-600 shadow shadow-indigo-500/25">
-            <Sparkles className="h-4 w-4 text-white" />
-          </div>
+          <img src="/logo.png" alt="ProPortfolio Logo" className="h-9 w-9 rounded-xl shadow border border-slate-850 object-cover shrink-0" />
           <div>
             <h1 className="text-sm font-bold tracking-tight text-white">ProPortfolio Builder</h1>
             <p className="text-[10px] text-slate-500 font-medium">Dynamic Interactive Resume & Optimizer</p>
@@ -3541,7 +3539,7 @@ export default function Portfolio() {
                           placeholder="e.g. Google, Amazon, Stripe, Infosys..."
                           className="w-full bg-slate-950/50 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-violet-500 transition-colors"
                         />
-                        <p className="text-[10px] text-slate-600 mt-1">Gemini will search Google for this company's real interview process, questions, and what people do in this role.</p>
+                        <p className="text-[10px] text-slate-400 mt-1">Gemini will search Google for this company's real interview process, questions, and what people do in this role.</p>
                       </div>
 
                       {/* Position Name input */}
@@ -3554,7 +3552,7 @@ export default function Portfolio() {
                           placeholder="e.g. Senior Software Engineer, Tech Support Specialist, Product Manager..."
                           className="w-full bg-slate-950/50 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-violet-500 transition-colors"
                         />
-                        <p className="text-[10px] text-slate-600 mt-1">Used to tailor the question bank specifically for your role — a support engineer won't get DSA questions!</p>
+                        <p className="text-[10px] text-slate-400 mt-1">Used to tailor the question bank specifically for your role — a support engineer won't get DSA questions!</p>
                       </div>
 
                       {/* JD textarea */}
@@ -3728,14 +3726,14 @@ export default function Portfolio() {
                                   {/* Gemini search sources */}
                                   {isGemini && geminiData!.searchSources.length > 0 && (
                                     <div className="pt-1 border-t border-slate-800">
-                                      <p className="text-[9px] text-slate-600 font-bold uppercase tracking-wider mb-1">Sources</p>
+                                      <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-1">Sources</p>
                                       <div className="flex flex-wrap gap-1">
                                         {geminiData!.searchSources.slice(0, 5).map((src, i) => {
                                           try {
                                             const domain = new URL(src).hostname.replace('www.', '');
                                             return <a key={i} href={src} target="_blank" rel="noopener noreferrer" className="text-[9px] text-blue-400/60 hover:text-blue-300 underline">{domain}</a>;
                                           } catch {
-                                            return <span key={i} className="text-[9px] text-slate-600">{src}</span>;
+                                            return <span key={i} className="text-[9px] text-slate-450">{src}</span>;
                                           }
                                         })}
                                       </div>
@@ -3790,7 +3788,7 @@ export default function Portfolio() {
                                       <p className="text-[11px] text-slate-200">{q.question}</p>
                                       <div className="flex items-center gap-2 mt-1">
                                         <span className="text-[9px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded font-medium">{q.round}</span>
-                                        <span className="text-[9px] text-slate-600">Source: {q.source}</span>
+                                        <span className="text-[9px] text-slate-400">Source: {q.source}</span>
                                       </div>
                                     </div>
                                   </div>
@@ -3838,7 +3836,7 @@ export default function Portfolio() {
                                       : 'bg-emerald-900/60 text-emerald-400'
                                     }`}>{q.difficulty.toUpperCase()}</span>
                                   </div>
-                                  <p className="text-[10px] text-slate-600">📍 {q.source}</p>
+                                  <p className="text-[10px] text-slate-400">📍 {q.source}</p>
                                   <div className="flex gap-2">
                                     {q.hint && (
                                       <button
@@ -3901,7 +3899,7 @@ export default function Portfolio() {
                               </div>
                               <p className="text-[11px] text-slate-400 leading-relaxed">{topic.reason}</p>
                               <div className="space-y-1 pt-1">
-                                <p className="text-[10px] text-slate-600 font-bold uppercase">Resources</p>
+                                <p className="text-[10px] text-slate-400 font-bold uppercase">Resources</p>
                                 {topic.resources.map((res, ri) => (
                                   <a key={ri} href={res.url} target="_blank" rel="noopener noreferrer"
                                     className="flex items-center gap-1.5 text-[11px] text-violet-400 hover:text-violet-300 transition-colors">
@@ -3991,7 +3989,7 @@ export default function Portfolio() {
                                 <div className="flex items-center justify-between">
                                   <div className="flex items-center gap-2">
                                     <span className="text-[10px] text-violet-400 font-bold">{currentRoundData.emoji} {currentRoundData.label}</span>
-                                    <span className="text-[10px] text-slate-600">Q {mockQuestionIdx + 1} / {totalQ}</span>
+                                    <span className="text-[10px] text-slate-400">Q {mockQuestionIdx + 1} / {totalQ}</span>
                                   </div>
                                   <div className="flex items-center gap-2">
                                     <span className={`text-[11px] font-mono font-bold ${

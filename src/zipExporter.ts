@@ -300,7 +300,7 @@ export default function App() {
   const [submitSuccess, setSubmitSuccess] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const isDark = theme.darkMode || theme.id === 'cyberpunk';
+  const isDark = (theme.darkMode || theme.id === 'cyberpunk') && theme.id !== 'classic';
   const bgColor = isDark ? 'bg-slate-950 text-white' : 'bg-slate-50 text-slate-900';
   const textHeading = isDark ? 'text-white' : 'text-slate-900';
   const textBody = isDark ? 'text-slate-300' : 'text-slate-700';

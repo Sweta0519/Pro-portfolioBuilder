@@ -219,7 +219,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
   }, [settings.id]); // Re-observe and re-bind when theme changes
 
   // Theme Constants
-  const isDark = settings.darkMode || settings.id === 'cyberpunk';
+  const isDark = (settings.darkMode || settings.id === 'cyberpunk') && settings.id !== 'classic';
   const bgColor = isDark ? 'bg-slate-950 text-white' : 'bg-slate-50 text-slate-900';
   const textHeading = isDark ? 'text-white' : 'text-slate-900';
   const textBody = isDark ? 'text-slate-300' : 'text-slate-700';
