@@ -173,6 +173,41 @@ export default function App() {
     }
   }, [savedResumes]);
 
+  // ─── Text-to-Speech (TTS) for questions ─────────────────────────────────────
+  const [speakingQId, setSpeakingQId] = useState<string | null>(null);
+
+  const toggleSpeakQuestion = (qId: string, text: string) => {
+    if (speakingQId === qId) {
+      window.speechSynthesis.cancel();
+      setSpeakingQId(null);
+    } else {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.onend = () => setSpeakingQId(null);
+      utterance.onerror = () => setSpeakingQId(null);
+      
+      const voices = window.speechSynthesis.getVoices();
+      const voice = voices.find(v => v.lang.startsWith('en') && v.name.includes('Google')) ||
+                    voices.find(v => v.lang.startsWith('en')) || 
+                    voices[0];
+      if (voice) {
+        utterance.voice = voice;
+      }
+      
+      setSpeakingQId(qId);
+      window.speechSynthesis.speak(utterance);
+    }
+  };
+
+  useEffect(() => {
+    window.speechSynthesis.cancel();
+    setSpeakingQId(null);
+    return () => {
+      window.speechSynthesis.cancel();
+    };
+  }, [interviewSubTab, mockQuestionIdx, activeTab]);
+
+
   // Forms helper states for adding items
   const [newJob, setNewJob] = useState<Partial<WorkExperience>>({
     company: '',
@@ -3825,6 +3860,14 @@ export default function Portfolio() {
                                       }}
                                       className="text-[10px] text-slate-400 hover:text-white font-bold transition-colors"
                                     >🎤 Practice This</button>
+                                    <button
+                                      onClick={() => toggleSpeakQuestion(q.id, q.question)}
+                                      className={`text-[10px] font-bold transition-colors ${
+                                        speakingQId === q.id ? 'text-rose-450 hover:text-rose-400' : 'text-slate-400 hover:text-violet-400'
+                                      }`}
+                                    >
+                                      {speakingQId === q.id ? '⏹ Stop' : '🔊 Listen'}
+                                    </button>
                                   </div>
                                   {hintVisible[q.id] && q.hint && (
                                     <div className="mt-1 p-2.5 rounded-lg bg-violet-500/10 border border-violet-500/20 text-[11px] text-violet-300 leading-relaxed animate-fadeIn">
@@ -3971,9 +4014,26 @@ export default function Portfolio() {
                                 </div>
 
                                 {/* Question card */}
-                                <div className="p-4 rounded-xl bg-slate-950/50 border border-slate-700">
-                                  <p className="text-xs font-medium text-slate-200 leading-relaxed">{currentQ.question}</p>
-                                  <p className="text-[10px] text-slate-600 mt-2">📍 {currentQ.source}</p>
+                                <div className="p-4 rounded-xl bg-slate-950/50 border border-slate-700 relative group flex justify-between items-start gap-4">
+                                  <div className="flex-1">
+                                    <p className="text-xs font-medium text-slate-200 leading-relaxed">{currentQ.question}</p>
+                                    <p className="text-[10px] text-slate-500 mt-2">📍 {currentQ.source}</p>
+                                  </div>
+                                  <button
+                                    onClick={() => toggleSpeakQuestion(currentQ.id, currentQ.question)}
+                                    className={`p-2 rounded-xl border flex items-center justify-center transition-all ${
+                                      speakingQId === currentQ.id
+                                        ? 'bg-rose-950/40 border-rose-900/50 text-rose-450 animate-pulse shadow-md shadow-rose-950/40'
+                                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-violet-450 hover:border-violet-500/50 hover:bg-violet-950/10'
+                                    }`}
+                                    title={speakingQId === currentQ.id ? 'Stop reading' : 'Read question aloud'}
+                                  >
+                                    {speakingQId === currentQ.id ? (
+                                      <span className="text-xs font-bold">⏹ Stop</span>
+                                    ) : (
+                                      <span className="text-xs font-bold flex items-center gap-1">🔊 Listen</span>
+                                    )}
+                                  </button>
                                 </div>
 
                                 {/* Answer textarea + voice */}
