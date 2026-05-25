@@ -131,7 +131,7 @@ export const ResumeInteractivePreview: React.FC<ResumePreviewProps> = ({
                                     <Wand2 className="w-4 h-4" /> AI Optimized Bullet Point
                                   </p>
                                   <div className="space-y-3">
-                                    <p className="text-slate-400 italic bg-slate-950 p-2 rounded-lg border border-slate-800">Original: "{origExp.description[bIdx]}"</p>
+                                    <p className="text-slate-400 italic bg-slate-950 p-2 rounded-lg border border-slate-800">Original: "{origExp?.description?.[bIdx] || ''}"</p>
                                     <p className="text-emerald-400 font-bold border-t border-slate-800 pt-3">Impact analysis complete. Bullet re-written to emphasize "Result-driven" metrics and "Scale" to catch recruiter attention.</p>
                                   </div>
                                 </div>

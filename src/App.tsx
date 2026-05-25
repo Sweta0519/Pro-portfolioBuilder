@@ -665,7 +665,15 @@ export default function App() {
   const [showOptimizerModal, setShowOptimizerModal] = useState<boolean>(false);
 
   const triggerAIOptimization = () => {
+    if (!jobDescription.trim()) {
+      alert("⚠️ Please paste a target Job Description in the input box first, so we can analyze and optimize your resume keywords to match it.");
+      return;
+    }
     const { revisedData, fixes } = autoOptimizeResume(resumeData, jobDescription);
+    if (fixes.length === 0) {
+      alert("ℹ️ Your resume is already fully optimized for this Job Description! No missing keywords or weak action verbs were detected.");
+      return;
+    }
     setRevisedResumeData(revisedData);
     setAppliedFixes(fixes);
     setShowOptimizerModal(true);
