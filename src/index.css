@@ -288,8 +288,8 @@ html {
 #app-root-container.theme-nord-light header .border-slate-800 {
   border-color: #cbd5e1 !important;
 }
-#app-root-container.theme-nord-light .w-\[520px\] .text-white,
-#app-root-container.theme-nord-light header .text-white {
+#app-root-container.theme-nord-light .w-\[520px\] .text-white:not(button):not(a),
+#app-root-container.theme-nord-light header .text-white:not(button):not(a) {
   color: #0f172a !important;
 }
 #app-root-container.theme-nord-light .w-\[520px\] .text-slate-100 {
@@ -363,7 +363,7 @@ html {
 #app-root-container.theme-nord-light .fixed .border-slate-850 {
   border-color: #cbd5e1 !important;
 }
-#app-root-container.theme-nord-light .fixed .text-white {
+#app-root-container.theme-nord-light .fixed .text-white:not(button):not(a) {
   color: #0f172a !important;
 }
 #app-root-container.theme-nord-light .fixed .bg-indigo-900\/40 {
