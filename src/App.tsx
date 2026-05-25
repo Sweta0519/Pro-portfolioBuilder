@@ -1624,7 +1624,7 @@ export default function Portfolio() {
             mobileActiveView === 'editor' ? 'flex' : 'hidden lg:flex'
           }`}>
             {/* TAB SELECTOR NAVBAR */}
-            <div className="flex border-b border-slate-800 overflow-x-auto scrollbar-none bg-slate-950/30 text-[10px] sm:text-xs font-semibold">
+            <div className="flex lg:flex-wrap border-b border-slate-800 overflow-x-auto lg:overflow-x-visible scrollbar-none bg-slate-955/30 text-[10px] sm:text-xs font-semibold">
               <button 
                 onClick={() => setActiveTab('coach')} 
                 className={`flex-grow px-2 py-3.5 text-center border-b-2 transition-all whitespace-nowrap flex items-center justify-center gap-1 ${
