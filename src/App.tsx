@@ -44,6 +44,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState<string>('coach');
   const [previewDevice, setPreviewDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const [fullscreenPreview, setFullscreenPreview] = useState<boolean>(false);
+  const [mobileActiveView, setMobileActiveView] = useState<'editor' | 'preview'>('editor');
 
   // Sync App Theme to localStorage
   useEffect(() => {
@@ -1332,12 +1333,12 @@ export default function Portfolio() {
     <div id="app-root-container" className={`flex flex-col h-screen bg-slate-900 text-slate-100 select-none font-sans antialiased overflow-hidden theme-${appTheme}`}>
       
       {/* TOP HEADER */}
-      <header className="flex flex-shrink-0 items-center justify-between px-6 h-16 bg-slate-950 border-b border-slate-800 relative z-40">
+      <header className="flex flex-shrink-0 items-center justify-between px-4 sm:px-6 h-16 bg-slate-950 border-b border-slate-800 relative z-40">
         <div className="flex items-center gap-3">
           <img src="/logo.png" alt="ProPortfolio Logo" className="h-9 w-9 rounded-xl shadow border border-slate-850 object-cover shrink-0" />
           <div>
-            <h1 className="text-sm font-bold tracking-tight text-white">ProPortfolio Builder</h1>
-            <p className="text-[10px] text-slate-500 font-medium">Dynamic Interactive Resume & Optimizer</p>
+            <h1 className="text-xs sm:text-sm font-bold tracking-tight text-white">ProPortfolio Builder</h1>
+            <p className="text-[10px] text-slate-500 font-medium hidden md:block">Dynamic Interactive Resume & Optimizer</p>
           </div>
         </div>
 
@@ -1347,9 +1348,9 @@ export default function Portfolio() {
             <button
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
                 appTheme === 'nord-light'
-                  ? 'bg-slate-100 hover:bg-slate-200 border-slate-250 text-slate-700 hover:text-slate-955 shadow-sm'
+                  ? 'bg-slate-100 hover:bg-slate-200 border-slate-250 text-slate-700 hover:text-slate-955'
                   : appTheme === 'indigo-midnight'
-                    ? 'bg-[#0c0920] hover:bg-[#17123d] border-[#2b1f63] text-indigo-200 hover:text-white shadow-indigo-950/20'
+                    ? 'bg-[#0c0920] hover:bg-[#17123d] border-[#2b1f63] text-indigo-200 hover:text-white'
                     : 'bg-slate-900 hover:bg-slate-850 border-slate-800 text-slate-300 hover:text-white'
               }`}
             >
@@ -1361,9 +1362,10 @@ export default function Portfolio() {
                 <Moon className="w-3.5 h-3.5 text-indigo-400" />
               )}
               <span>
-                Theme: {appTheme === 'slate-dark' ? 'Slate Dark' : appTheme === 'indigo-midnight' ? 'Indigo Midnight' : 'Nord Light'}
+                <span className="hidden sm:inline">Theme: </span>
+                {appTheme === 'slate-dark' ? 'Slate' : appTheme === 'indigo-midnight' ? 'Indigo' : 'Nord'}
               </span>
-              <ChevronDown className="w-3 h-3 text-slate-500 group-hover:text-slate-350" />
+              <ChevronDown className="w-3 h-3 text-slate-500 group-hover:text-slate-355" />
             </button>
             <div
               className={`absolute right-0 mt-1 w-40 rounded-xl border p-1 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 ${
@@ -1414,14 +1416,122 @@ export default function Portfolio() {
             </div>
           </div>
 
+          {/* Mobile Actions Dropdown */}
+          <div className="relative group lg:hidden">
+            <button
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
+                appTheme === 'nord-light'
+                  ? 'bg-slate-100 hover:bg-slate-200 border-slate-250 text-slate-700 hover:text-slate-955 shadow-sm'
+                  : appTheme === 'indigo-midnight'
+                    ? 'bg-[#0c0920] hover:bg-[#17123d] border-[#2b1f63] text-indigo-200 hover:text-white'
+                    : 'bg-slate-900 hover:bg-slate-850 border-slate-800 text-slate-300 hover:text-white'
+              }`}
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Actions</span>
+              <ChevronDown className="w-3 h-3 text-slate-500" />
+            </button>
+            <div
+              className={`absolute right-0 mt-1 w-56 rounded-xl border p-1.5 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 flex flex-col gap-1 ${
+                appTheme === 'nord-light'
+                  ? 'bg-white border-slate-200 shadow-slate-200/50'
+                  : appTheme === 'indigo-midnight'
+                    ? 'bg-[#0e0a26] border-[#2b1f63] shadow-indigo-950/30'
+                    : 'bg-slate-950 border-slate-800 shadow-black/40'
+              }`}
+            >
+              <button
+                type="button"
+                onClick={() => {
+                  setVercelDeployState('idle');
+                  setVercelError('');
+                  setShowVercelModal(true);
+                }}
+                className={`w-full text-left px-2.5 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center gap-2 cursor-pointer ${
+                  appTheme === 'nord-light'
+                    ? 'text-slate-700 hover:bg-slate-100'
+                    : appTheme === 'indigo-midnight'
+                      ? 'text-indigo-250 hover:bg-indigo-950/40'
+                      : 'text-slate-300 hover:bg-slate-900'
+                }`}
+              >
+                <svg className="w-3.5 h-3.5 fill-current text-white bg-black rounded p-0.5" viewBox="0 0 512 512">
+                  <path d="M256,48,496,464H16Z"/>
+                </svg>
+                <span>One-Click Deploy</span>
+              </button>
+              
+              <button
+                type="button"
+                onClick={handleZipDownload}
+                disabled={isZipping}
+                className={`w-full text-left px-2.5 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center gap-2 cursor-pointer ${
+                  appTheme === 'nord-light'
+                    ? 'text-slate-700 hover:bg-slate-100'
+                    : appTheme === 'indigo-midnight'
+                      ? 'text-indigo-250 hover:bg-indigo-950/40'
+                      : 'text-slate-300 hover:bg-slate-900'
+                }`}
+              >
+                <Download className="w-3.5 h-3.5 text-indigo-400" />
+                <span>{isZipping ? 'Creating ZIP...' : 'Download Project (.zip)'}</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleWordDownload()}
+                className={`w-full text-left px-2.5 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center gap-2 cursor-pointer ${
+                  appTheme === 'nord-light'
+                    ? 'text-slate-700 hover:bg-slate-100'
+                    : appTheme === 'indigo-midnight'
+                      ? 'text-indigo-250 hover:bg-indigo-950/40'
+                      : 'text-slate-300 hover:bg-slate-900'
+                }`}
+              >
+                <FileText className="w-3.5 h-3.5 text-indigo-400" />
+                <span>Download Word (.doc)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handlePdfPrint}
+                className={`w-full text-left px-2.5 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center gap-2 cursor-pointer ${
+                  appTheme === 'nord-light'
+                    ? 'text-slate-700 hover:bg-slate-100'
+                    : appTheme === 'indigo-midnight'
+                      ? 'text-indigo-250 hover:bg-indigo-950/40'
+                      : 'text-slate-300 hover:bg-slate-900'
+                }`}
+              >
+                <Download className="w-3.5 h-3.5 text-emerald-400" />
+                <span>Export PDF/Document</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => copyToClipboard(getExportCode(), 'code')}
+                className={`w-full text-left px-2.5 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center gap-2 cursor-pointer ${
+                  appTheme === 'nord-light'
+                    ? 'text-slate-700 hover:bg-slate-100'
+                    : appTheme === 'indigo-midnight'
+                      ? 'text-indigo-250 hover:bg-indigo-950/40'
+                      : 'text-slate-300 hover:bg-slate-900'
+                }`}
+              >
+                <FileCode className="w-3.5 h-3.5 text-indigo-400" />
+                <span>React Code</span>
+              </button>
+            </div>
+          </div>
+
           {/* Fullscreen Toggle */}
           <button
             onClick={() => setFullscreenPreview(!fullscreenPreview)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
+            className={`hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
               fullscreenPreview
                 ? 'bg-indigo-600 border-indigo-500 text-white shadow-md'
                 : appTheme === 'nord-light'
-                  ? 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-700 hover:text-slate-950 shadow-sm'
+                  ? 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-700 hover:text-slate-955 shadow-sm'
                   : appTheme === 'indigo-midnight'
                     ? 'bg-[#0c0920] hover:bg-[#17123d] border-[#2b1f63] text-indigo-300 hover:text-white'
                     : 'bg-slate-900 hover:bg-slate-850 border-slate-800 text-slate-400 hover:text-white'
@@ -1438,7 +1548,7 @@ export default function Portfolio() {
               setVercelError('');
               setShowVercelModal(true);
             }}
-            className="flex items-center gap-1.5 bg-black hover:bg-slate-950 border border-slate-800 text-white px-3.5 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer shadow-lg hover:border-slate-700 hover:shadow-indigo-500/10"
+            className="hidden lg:flex items-center gap-1.5 bg-black hover:bg-slate-955 border border-slate-800 text-white px-3.5 py-1.5 rounded-lg text-xs font-black transition-all cursor-pointer shadow-lg hover:border-slate-700 hover:shadow-indigo-500/10"
             title="Deploy your interactive portfolio directly to Vercel in one click!"
           >
             <svg className="w-3.5 h-3.5 fill-current text-white" viewBox="0 0 512 512">
@@ -1451,7 +1561,7 @@ export default function Portfolio() {
           <button
             onClick={handleZipDownload}
             disabled={isZipping}
-            className="flex items-center gap-1.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-750 hover:to-violet-750 text-white px-3.5 py-1.5 rounded-lg text-xs font-extrabold transition-colors shadow-md cursor-pointer disabled:opacity-50"
+            className="hidden lg:flex items-center gap-1.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-750 hover:to-violet-750 text-white px-3.5 py-1.5 rounded-lg text-xs font-extrabold transition-colors shadow-md cursor-pointer disabled:opacity-50"
             title="Downloads a complete ready-to-run React + Vite + Tailwind project as a zip archive"
           >
             {copiedZip ? <Check className="w-3.5 h-3.5 text-emerald-300 animate-pulse" /> : <Download className="w-3.5 h-3.5" />}
@@ -1460,7 +1570,7 @@ export default function Portfolio() {
 
           <button
             onClick={() => handleWordDownload()}
-            className={`flex items-center gap-1.5 border px-3.5 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+            className={`hidden lg:flex items-center gap-1.5 border px-3.5 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
               appTheme === 'nord-light'
                 ? 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-700 hover:text-slate-955'
                 : appTheme === 'indigo-midnight'
@@ -1475,7 +1585,7 @@ export default function Portfolio() {
 
           <button
             onClick={handlePdfPrint}
-            className={`flex items-center gap-1.5 border px-3.5 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
+            className={`hidden lg:flex items-center gap-1.5 border px-3.5 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer ${
               appTheme === 'nord-light'
                 ? 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-700 hover:text-slate-955'
                 : appTheme === 'indigo-midnight'
@@ -1490,11 +1600,11 @@ export default function Portfolio() {
 
           <button
             onClick={() => copyToClipboard(getExportCode(), 'code')}
-            className={`flex items-center gap-1.5 border px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+            className={`hidden lg:flex items-center gap-1.5 border px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
               appTheme === 'nord-light'
-                ? 'bg-indigo-50 hover:bg-indigo-100 border-indigo-200 text-indigo-750 hover:text-indigo-900'
+                ? 'bg-indigo-50 hover:bg-indigo-100 border-indigo-200 text-indigo-755 hover:text-indigo-900'
                 : appTheme === 'indigo-midnight'
-                  ? 'bg-indigo-950/40 hover:bg-indigo-900/40 border-indigo-850 text-slate-350 hover:text-slate-100'
+                  ? 'bg-indigo-950/40 hover:bg-indigo-900/40 border-indigo-855 text-slate-350 hover:text-slate-100'
                   : 'bg-indigo-950 hover:bg-indigo-900 border-indigo-800 text-slate-300'
             }`}
             title="Downloads standalone React source code locally as Portfolio.tsx"
@@ -1510,7 +1620,9 @@ export default function Portfolio() {
         
         {/* LEFT PANEL: BUILDER CONTROLS */}
         {!fullscreenPreview && (
-          <div className="w-[520px] flex-shrink-0 bg-slate-900/80 border-r border-slate-800 flex flex-col overflow-hidden">
+          <div className={`w-[520px] flex-shrink-0 bg-slate-900/80 border-r border-slate-800 flex flex-col overflow-hidden ${
+            mobileActiveView === 'editor' ? 'flex' : 'hidden lg:flex'
+          }`}>
             {/* TAB SELECTOR NAVBAR */}
             <div className="flex border-b border-slate-800 overflow-x-auto scrollbar-none bg-slate-950/30 text-[10px] sm:text-xs font-semibold">
               <button 
@@ -4406,7 +4518,9 @@ export default function Portfolio() {
         )}
 
         {/* RIGHT PANEL: INTERACTIVE PORTFOLIO PREVIEW FRAME */}
-        <div className="flex-grow bg-slate-950 flex flex-col overflow-hidden relative">
+        <div className={`flex-grow bg-slate-950 flex flex-col overflow-hidden relative ${
+          mobileActiveView === 'preview' ? 'flex' : 'hidden lg:flex'
+        }`}>
           {/* Preview device controls */}
           <div className="flex-shrink-0 h-12 border-b border-slate-900 bg-slate-950/80 flex items-center justify-between px-6 z-20">
             <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-slate-500">
@@ -5332,6 +5446,44 @@ export default function Portfolio() {
           }
         }
       `}</style>
+      
+      {/* MOBILE BOTTOM VIEW TOGGLER */}
+      {!fullscreenPreview && (
+        <div className={`lg:hidden flex-shrink-0 h-14 border-t flex items-center justify-around px-4 z-40 ${
+          appTheme === 'nord-light'
+            ? 'bg-white border-slate-200 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]'
+            : appTheme === 'indigo-midnight'
+              ? 'bg-[#0c0920] border-[#2b1f63] shadow-[0_-2px_10px_rgba(0,0,0,0.2)]'
+              : 'bg-slate-950 border-slate-800 shadow-[0_-2px_10px_rgba(0,0,0,0.3)]'
+        }`}>
+          <button
+            onClick={() => setMobileActiveView('editor')}
+            className={`flex flex-col items-center justify-center gap-1 py-1 px-4 rounded-xl transition-all cursor-pointer ${
+              mobileActiveView === 'editor'
+                ? appTheme === 'nord-light'
+                  ? 'text-indigo-650 font-bold font-semibold'
+                  : 'text-indigo-400 font-bold font-semibold'
+                : 'text-slate-500 hover:text-slate-400'
+            }`}
+          >
+            <FileText className="w-5 h-5" />
+            <span className="text-[10px] font-bold uppercase tracking-wider">Editor</span>
+          </button>
+          <button
+            onClick={() => setMobileActiveView('preview')}
+            className={`flex flex-col items-center justify-center gap-1 py-1 px-4 rounded-xl transition-all cursor-pointer ${
+              mobileActiveView === 'preview'
+                ? appTheme === 'nord-light'
+                  ? 'text-indigo-650 font-bold font-semibold'
+                  : 'text-indigo-400 font-bold font-semibold'
+                : 'text-slate-500 hover:text-slate-400'
+            }`}
+          >
+            <Smartphone className="w-5 h-5" />
+            <span className="text-[10px] font-bold uppercase tracking-wider">Preview</span>
+          </button>
+        </div>
+      )}
     </div>
   );
 }

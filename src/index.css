@@ -409,3 +409,11 @@ html {
 #app-root-container.theme-nord-light .border-slate-850 {
   border-color: #cbd5e1 !important;
 }
+
+/* 4. RESPONSIVE MOBILE VIEW WRAPPERS */
+@media (max-width: 1023px) {
+  #app-root-container .w-\[520px\] {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+}
