@@ -1,4 +1,5 @@
 import { ResumeData, WorkExperience, Education, Skill } from './types';
+import { HARD_SKILLS, SOFT_SKILLS } from './ats';
 
 // Clean and split lines safely
 function getCleanLines(text: string): string[] {
@@ -77,6 +78,59 @@ const GARBAGE_TERMS = [
   'private & confidential', 'contact details', 'professional summary', 
   'summary', 'experience', 'education', 'skills', 'work experience'
 ];
+
+const ADDITIONAL_KNOWN_SKILLS = [
+  'html', 'html5', 'css', 'css3', 'jquery', 'bootstrap', 'svelte', 'solid.js',
+  'js', 'ts', 'mysql', 'sqlite', 'mariadb', 'firebase', 'supabase',
+  'github', 'gitlab', 'c', 'c++', 'golang', 'php', 'laravel', 'wordpress', 'webpack',
+  'vite', 'npm', 'yarn', 'pnpm', 'babel', 'eslint', 'prettier', 'restful api',
+  'api design', 'oops', 'algorithms', 'data structures', 'system design',
+  'jira', 'confluence', 'trello', 'slack', 'vscode', 'postman'
+];
+
+const ALL_KNOWN_SKILLS = Array.from(new Set([
+  ...HARD_SKILLS.map(s => s.toLowerCase()),
+  ...SOFT_SKILLS.map(s => s.toLowerCase()),
+  ...ADDITIONAL_KNOWN_SKILLS.map(s => s.toLowerCase())
+]));
+
+// Create the combined regex for matching skills in delimiter-less lines
+const SKILLS_REGEX_PATTERN = ALL_KNOWN_SKILLS
+  .sort((a, b) => b.length - a.length)
+  .map(skill => {
+    const escaped = skill.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    const startBound = /^[a-zA-Z0-9_]/.test(skill) ? '\\b' : '';
+    const endBound = /[a-zA-Z0-9_]$/.test(skill) ? '\\b' : '';
+    return `(?:${startBound}${escaped}${endBound})`;
+  })
+  .join('|');
+
+const SKILLS_REGEX = new RegExp(SKILLS_REGEX_PATTERN, 'gi');
+
+// Utility to classify a parsed skill into the standard resume categories
+function classifySkillCategory(skillName: string, prefix?: string): Skill['category'] {
+  const lowerName = skillName.toLowerCase();
+  
+  if (prefix === 'languages' || /english|german|spanish|french|mandarin|hindi|tamil|telugu|japanese/i.test(lowerName)) {
+    return 'Languages';
+  }
+  if (/aws|gcp|azure|docker|kubernetes|devops|jenkins|ci\/cd|pipeline|terraform|ansible|cloud|k8s/i.test(lowerName)) {
+    return 'DevOps/Cloud';
+  }
+  if (/figma|ux|ui|design|photoshop|illustrator|sketch|adobe/i.test(lowerName)) {
+    return 'Design';
+  }
+  if (/node|express|nestjs|fastify|graphql|rest|django|flask|laravel|spring|backend|ruby|rails|sql|postgres|mysql|sqlite|mongodb|db|prisma|sequelize|redis/i.test(lowerName)) {
+    return 'Backend';
+  }
+  if (/kibana|saucelabs|sauce connect|confluence|jira|postman|claude|copilot|swagger|tools|technologies|slack|trello/i.test(lowerName)) {
+    return 'Tools/Other';
+  }
+  if (/python|java|c\+\+|c#|go|golang|rust|swift|kotlin|ruby|javascript|typescript|testing|qa|selenium|cypress|junit|jest|xcuitest|automation|js|ts|html|css/i.test(lowerName)) {
+    return 'Languages';
+  }
+  return 'Frontend'; // default fallback
+}
 
 // Intelligent parser designed specifically to parse copy-pasted plain text copied from PDFs or Word files
 export function parseRawResumeText(rawText: string): Partial<ResumeData> {
@@ -320,27 +374,26 @@ export function parseRawResumeText(rawText: string): Partial<ResumeData> {
       const prefix = prefixMatch ? prefixMatch[1].toLowerCase() : '';
       const cleanLine = line.replace(/^(technical skills|tools & technologies|tools and technologies|key skills|skills|tools|technologies|languages):\s*/i, '').trim();
       
-      const separator = cleanLine.includes(',') ? ',' : (cleanLine.includes(';') ? ';' : (cleanLine.includes('|') ? '|' : '  '));
-      const rawSkills = cleanLine.split(separator).map(s => s.trim()).filter(s => s.length > 1 && s.length < 50);
+      const hasDelimiters = cleanLine.includes(',') || cleanLine.includes(';') || cleanLine.includes('|');
+      let rawSkills: string[] = [];
+      if (hasDelimiters) {
+        const separator = cleanLine.includes(',') ? ',' : (cleanLine.includes(';') ? ';' : '|');
+        rawSkills = cleanLine.split(separator).map(s => s.trim()).filter(s => s.length > 1 && s.length < 50);
+      } else {
+        const matches = cleanLine.match(SKILLS_REGEX);
+        if (matches) {
+          rawSkills = Array.from(new Set(matches.map(m => m.trim())));
+        } else {
+          rawSkills = cleanLine.split('  ').map(s => s.trim()).filter(s => s.length > 1 && s.length < 50);
+        }
+      }
       
       rawSkills.forEach(skillName => {
         // Ignore lines that look like sentences
         if (skillName.split(' ').length > 6) return;
         
-        let category: Skill['category'] = 'Frontend';
+        const category = classifySkillCategory(skillName, prefix);
         const lowerName = skillName.toLowerCase();
-        
-        if (prefix === 'languages' || /english|german|spanish|french|mandarin|hindi|tamil|telugu|japanese/i.test(lowerName)) {
-          category = 'Languages';
-        } else if (/figma|ux|ui|design/i.test(lowerName)) {
-          category = 'Design';
-        } else if (/node|express|nestjs|fastify|graphql|rest|django|flask|laravel|spring|backend|ruby|rails|sql|postgres|mongodb|db|cloud|aws|docker|kubernetes|devops|jenkins|github actions|git|ci\/cd|pipeline/i.test(lowerName)) {
-          category = 'Backend';
-        } else if (/kibana|saucelabs|sauce connect|confluence|jira|postman|claude|copilot|swagger|tools|technologies/i.test(lowerName)) {
-          category = 'Tools/Other';
-        } else if (/python|java|c\+\+|c#|go|rust|swift|kotlin|ruby|javascript|typescript|testing|qa|selenium|cypress|junit|jest|xcuitest|automation/i.test(lowerName)) {
-          category = 'Languages';
-        }
 
         if (!skillsList.some(s => s.name.toLowerCase() === lowerName)) {
           skillsList.push({
@@ -525,23 +578,26 @@ export function parseRawResumeText(rawText: string): Partial<ResumeData> {
         continue;
       }
 
-      const separator = line.includes(',') ? ',' : (line.includes(';') ? ';' : (line.includes('|') ? '|' : '  '));
-      const rawSkills = line.split(separator).map(s => s.trim()).filter(s => s.length > 1 && s.length < 35);
+      const hasDelimiters = line.includes(',') || line.includes(';') || line.includes('|');
+      let rawSkills: string[] = [];
+      if (hasDelimiters) {
+        const separator = line.includes(',') ? ',' : (line.includes(';') ? ';' : '|');
+        rawSkills = line.split(separator).map(s => s.trim()).filter(s => s.length > 1 && s.length < 35);
+      } else {
+        const matches = line.match(SKILLS_REGEX);
+        if (matches) {
+          rawSkills = Array.from(new Set(matches.map(m => m.trim())));
+        } else {
+          rawSkills = line.split('  ').map(s => s.trim()).filter(s => s.length > 1 && s.length < 35);
+        }
+      }
 
       rawSkills.forEach(skillName => {
         // Ignore lines that look like sentences
         if (skillName.split(' ').length > 4) return;
         
-        let category: Skill['category'] = 'Frontend';
+        const category = classifySkillCategory(skillName);
         const lowerName = skillName.toLowerCase();
-
-        if (/node|express|nestjs|fastify|graphql|rest|django|flask|laravel|spring|backend|ruby|rails|sql|postgres|mongodb|db|cloud|aws|docker|kubernetes|devops/i.test(lowerName)) {
-          category = 'Backend';
-        } else if (/figma|ux|ui|design/i.test(lowerName)) {
-          category = 'Design';
-        } else if (/python|java|c\+\+|c#|go|rust|swift|kotlin|ruby|javascript|typescript|testing|qa|selenium|cypress|junit|jest/i.test(lowerName)) {
-          category = 'Languages';
-        }
 
         if (!skillsList.some(s => s.name.toLowerCase() === lowerName)) {
           skillsList.push({

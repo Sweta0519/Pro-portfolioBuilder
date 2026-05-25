@@ -44,7 +44,7 @@ export interface CoverLetterResult {
 }
 
 // Standard list of Hard & Soft skills for jobscan mapping
-const HARD_SKILLS = [
+export const HARD_SKILLS = [
   'react', 'next.js', 'typescript', 'javascript', 'node.js', 'express', 'nestjs',
   'graphql', 'rest api', 'postgresql', 'mongodb', 'redis', 'docker', 'kubernetes',
   'aws', 'cloud', 'ci/cd', 'github actions', 'figma', 'ux/ui', 'design system',
@@ -54,7 +54,7 @@ const HARD_SKILLS = [
   'nosql', 'prisma', 'sequelize', 'terraform', 'gcp', 'azure', 'saas', 'cloud', 'life sciences', 'industry cloud'
 ];
 
-const SOFT_SKILLS = [
+export const SOFT_SKILLS = [
   'leadership', 'communication', 'collaboration', 'problem solving', 'mentorship',
   'agile', 'scrum', 'product management', 'project planning', 'teamwork', 'negotiation',
   'critical thinking', 'adaptability', 'time management', 'creativity', 'organization'
@@ -466,12 +466,31 @@ export function autoOptimizeResume(data: ResumeData, jobDescription: string): { 
   // 3. Strategic Keyword Injection (Skills)
   const missingKeywords: string[] = [];
   const allTargetKeywords = HARD_SKILLS.concat(SOFT_SKILLS);
-  const currentSkills = revised.skills.map(s => s.name.toLowerCase());
-  const resumeBlob = (revised.personal.title + ' ' + revised.personal.bio + ' ' + currentSkills.join(' ')).toLowerCase();
   
+  // Build a full search text block including work experience, education, etc.
+  // to be perfectly aligned with how analyzeATSCompliance constructs resumeBlobText
+  let resumeBlobText = `${revised.personal.name} ${revised.personal.title} ${revised.personal.subtitle} ${revised.personal.bio}`;
+  revised.experience.forEach(exp => {
+    resumeBlobText += ` ${exp.company} ${exp.position} ${exp.technologies.join(' ')} ${exp.description.join(' ')}`;
+  });
+  revised.skills.forEach(s => {
+    resumeBlobText += ` ${s.name}`;
+  });
+  revised.education.forEach(edu => {
+    resumeBlobText += ` ${edu.institution} ${edu.degree} ${edu.fieldOfStudy}`;
+  });
+
+  const hasWord = (text: string, word: string) => {
+    const escaped = word.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    const startBound = /^[a-zA-Z0-9_]/.test(word) ? '\\b' : '';
+    const endBound = /[a-zA-Z0-9_]$/.test(word) ? '\\b' : '';
+    const regex = new RegExp(`${startBound}${escaped}${endBound}`, 'i');
+    return regex.test(text);
+  };
+
   if (jobDescription) {
     allTargetKeywords.forEach(kw => {
-      if (jdLower.includes(kw) && !resumeBlob.includes(kw)) {
+      if (jdLower.includes(kw) && !hasWord(resumeBlobText, kw)) {
         missingKeywords.push(kw);
       }
     });
@@ -479,16 +498,29 @@ export function autoOptimizeResume(data: ResumeData, jobDescription: string): { 
 
   if (missingKeywords.length > 0) {
     const added: string[] = [];
-    // Only add high-relevance hard skills (max 4) to avoid "keyword stuffing" look
-    missingKeywords.filter(k => HARD_SKILLS.includes(k)).slice(0, 4).forEach(kw => {
+    
+    // Add missing hard skills
+    const missingHard = missingKeywords.filter(k => HARD_SKILLS.includes(k));
+    missingHard.slice(0, 5).forEach(kw => {
       const nameCapitalized = kw.charAt(0).toUpperCase() + kw.slice(1);
       if (!revised.skills.some(s => s.name.toLowerCase() === kw.toLowerCase())) {
         revised.skills.push({ name: nameCapitalized, level: 85, category: 'Languages' as any });
         added.push(nameCapitalized);
       }
     });
+
+    // Add missing soft skills to category 'Tools/Other'
+    const missingSoft = missingKeywords.filter(k => SOFT_SKILLS.includes(k));
+    missingSoft.slice(0, 3).forEach(kw => {
+      const nameCapitalized = kw.charAt(0).toUpperCase() + kw.slice(1);
+      if (!revised.skills.some(s => s.name.toLowerCase() === kw.toLowerCase())) {
+        revised.skills.push({ name: nameCapitalized, level: 80, category: 'Tools/Other' as any });
+        added.push(nameCapitalized);
+      }
+    });
+
     if (added.length > 0) {
-      fixes.push(`Strategically integrated missing technical keywords: ${added.join(', ')}.`);
+      fixes.push(`Strategically integrated missing technical and soft keywords: ${added.join(', ')}.`);
     }
   }
 
