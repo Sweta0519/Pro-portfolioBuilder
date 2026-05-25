@@ -1177,10 +1177,13 @@ export async function generateIdealAnswer(
   provider: AiProvider,
   question: string,
   roleTitle: string,
-  resumeData?: ResumeData
+  resumeData?: ResumeData,
+  formatAsStar?: boolean
 ): Promise<string> {
   const systemPrompt = `You are an elite interview coach. Generate a high-impact, professional, and perfect mock interview answer for the given question.
-If candidate resume details are provided, tailor the answer naturally to highlight their skills, technologies, and achievements. Keep the answer realistic, structured (using STAR method if behavioral), and about 150-200 words. Do not include meta-commentary, return the direct answer only.`;
+If candidate resume details are provided, tailor the answer naturally to highlight their skills, technologies, and achievements. Keep the answer realistic, structured, and about 150-200 words. Do not include meta-commentary, return the direct answer only.
+
+${formatAsStar ? "CRITICAL: You MUST structure the response using explicit [Situation], [Task], [Action], and [Result] tag headers (e.g. '[Situation]\\n... \\n\\n[Task]\\n...') so the editor can parse it into separate guided fields." : "If the question is behavioral, structure it using standard paragraphs."}`;
 
   const resumeContext = resumeData
     ? `Candidate Profile:

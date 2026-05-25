@@ -4449,7 +4449,8 @@ export default function Portfolio() {
                                                 aiProvider,
                                                 currentQ.question,
                                                 interviewPositionName || interviewPlan.context.role,
-                                                resumeData
+                                                resumeData,
+                                                starMode
                                               );
                                               setIdealAnswers(p => ({ ...p, [currentQ.id]: ans }));
                                               setShowIdealAnswer(p => ({ ...p, [currentQ.id]: true }));
