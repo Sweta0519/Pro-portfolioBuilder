@@ -130,6 +130,13 @@ export default function App() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
 
+  // STAR Guided Answer Builder states
+  const [starMode, setStarMode] = useState<boolean>(false);
+  const [starSituation, setStarSituation] = useState<string>('');
+  const [starTask, setStarTask] = useState<string>('');
+  const [starAction, setStarAction] = useState<string>('');
+  const [starResult, setStarResult] = useState<string>('');
+
   // ATS Scanner states
   const [jobDescription, setJobDescription] = useState<string>('');
   const [coachSubTab, setCoachSubTab] = useState<'checklist' | 'ats' | 'cover-letter' | 'linkedin' | 'plaintext'>('checklist');
@@ -4190,8 +4197,52 @@ export default function Portfolio() {
                           setMockQuestionIdx(idx);
                           setMockMode('answering');
                           setMockTimerSec(0);
+                          setStarSituation('');
+                          setStarTask('');
+                          setStarAction('');
+                          setStarResult('');
+                          setStarMode(false);
                           if (mockTimerRef.current) clearInterval(mockTimerRef.current);
                           mockTimerRef.current = setInterval(() => setMockTimerSec(s => s + 1), 1000);
+                        };
+
+                        const enableStarMode = () => {
+                          const text = currentAnswer.trim();
+                          let sit = '';
+                          let tsk = '';
+                          let act = '';
+                          let res = '';
+
+                          if (text.includes('[Situation]') || text.includes('[Task]') || text.includes('[Action]') || text.includes('[Result]')) {
+                            const sitMatch = text.match(/\[Situation\]\s*([\s\S]*?)(?=\[Task\]|\[Action\]|\[Result\]|$)/i);
+                            const tskMatch = text.match(/\[Task\]\s*([\s\S]*?)(?=\[Situation\]|\[Action\]|\[Result\]|$)/i);
+                            const actMatch = text.match(/\[Action\]\s*([\s\S]*?)(?=\[Situation\]|\[Task\]|\[Result\]|$)/i);
+                            const resMatch = text.match(/\[Result\]\s*([\s\S]*?)(?=\[Situation\]|\[Task\]|\[Action\]|$)/i);
+
+                            if (sitMatch) sit = sitMatch[1].trim();
+                            if (tskMatch) tsk = tskMatch[1].trim();
+                            if (actMatch) act = actMatch[1].trim();
+                            if (resMatch) res = resMatch[1].trim();
+                          } else if (text) {
+                            sit = text;
+                          }
+
+                          setStarSituation(sit);
+                          setStarTask(tsk);
+                          setStarAction(act);
+                          setStarResult(res);
+                          setStarMode(true);
+                        };
+
+                        const updateStarAnswer = (sit: string, tsk: string, act: string, res: string) => {
+                          if (!currentQ) return;
+                          const parts = [];
+                          if (sit.trim()) parts.push(`[Situation]\n${sit.trim()}`);
+                          if (tsk.trim()) parts.push(`[Task]\n${tsk.trim()}`);
+                          if (act.trim()) parts.push(`[Action]\n${act.trim()}`);
+                          if (res.trim()) parts.push(`[Result]\n${res.trim()}`);
+                          const compiled = parts.join('\n\n');
+                          setMockAnswers(p => ({ ...p, [currentQ.id]: compiled }));
                         };
 
                         const submitAnswer = () => {
@@ -4295,82 +4346,186 @@ export default function Portfolio() {
                                   </button>
                                 </div>
 
-                                {/* Answer textarea + voice */}
+                                {/* Answer Mode Selector & Guided Builder */}
                                 {mockMode === 'answering' && (
                                   <>
-                                    <div className="relative">
-                                      <textarea
-                                        value={currentAnswer}
-                                        onChange={e => setMockAnswers(p => ({ ...p, [currentQ.id]: e.target.value }))}
-                                        placeholder={isRecording ? '🎙️ Listening... speak your answer now' : 'Type your answer here or click the microphone to speak... Use the STAR method for behavioral questions: Situation → Task → Action → Result'}
-                                        className={`w-full h-36 bg-slate-950/50 border rounded-xl p-3 pr-12 text-xs text-slate-300 placeholder-slate-600 resize-none focus:outline-none transition-colors ${isRecording ? 'border-red-500 bg-red-950/10' : 'border-slate-700 focus:border-violet-500'}`}
-                                      />
-                                      {/* Microphone button */}
-                                      <button
-                                        onClick={() => {
-                                          if (isRecording) {
-                                            // Stop recording
-                                            recognitionRef.current?.stop();
-                                            mediaRecorderRef.current?.stop();
-                                            setIsRecording(false);
-                                          } else {
-                                            // Start recording
-                                            const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-                                            if (!SpeechRecognition) {
-                                              alert('Speech recognition is not supported in this browser. Please use Chrome or Edge.');
-                                              return;
-                                            }
-                                            const recognition = new SpeechRecognition();
-                                            recognition.continuous = true;
-                                            recognition.interimResults = true;
-                                            recognition.lang = 'en-US';
-                                            let finalTranscript = currentAnswer;
-                                            recognition.onresult = (event: any) => {
-                                              let interim = '';
-                                              for (let i = event.resultIndex; i < event.results.length; i++) {
-                                                if (event.results[i].isFinal) {
-                                                  finalTranscript += (finalTranscript ? ' ' : '') + event.results[i][0].transcript;
-                                                } else {
-                                                  interim += event.results[i][0].transcript;
-                                                }
-                                              }
-                                              setMockAnswers(p => ({ ...p, [currentQ.id]: finalTranscript + (interim ? ' ' + interim : '') }));
-                                            };
-                                            recognition.onerror = () => setIsRecording(false);
-                                            recognition.onend = () => setIsRecording(false);
-                                            recognition.start();
-                                            recognitionRef.current = recognition;
-
-                                            // Also start audio recording for playback
-                                            navigator.mediaDevices.getUserMedia({ audio: true })
-                                              .then(stream => {
-                                                const recorder = new MediaRecorder(stream);
-                                                audioChunksRef.current = [];
-                                                recorder.ondataavailable = (e) => audioChunksRef.current.push(e.data);
-                                                recorder.onstop = () => {
-                                                  const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-                                                  setAudioUrl(URL.createObjectURL(blob));
-                                                  stream.getTracks().forEach(t => t.stop());
-                                                };
-                                                recorder.start();
-                                                mediaRecorderRef.current = recorder;
-                                              })
-                                              .catch(() => { /* audio recording optional */ });
-
-                                            setIsRecording(true);
-                                            setAudioUrl(null);
-                                          }
-                                        }}
-                                        className={`absolute right-2 top-2 w-8 h-8 rounded-full flex items-center justify-center transition-all ${
-                                          isRecording
-                                            ? 'bg-red-500 text-white animate-pulse shadow-lg shadow-red-500/40'
-                                            : 'bg-slate-800 text-slate-400 hover:bg-violet-600 hover:text-white'
-                                        }`}
-                                        title={isRecording ? 'Stop recording' : 'Start voice recording'}
-                                      >
-                                        {isRecording ? '⏹' : '🎙️'}
-                                      </button>
+                                    <div className="flex items-center justify-between mb-2">
+                                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Your Answer</label>
+                                      <div className="flex p-0.5 bg-slate-955/60 rounded-lg border border-slate-800">
+                                        <button
+                                          type="button"
+                                          onClick={() => setStarMode(false)}
+                                          className={`px-2.5 py-1 rounded-md text-[9px] font-bold transition-all ${!starMode ? 'bg-violet-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}
+                                        >
+                                          ✍️ Freeform
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={enableStarMode}
+                                          className={`px-2.5 py-1 rounded-md text-[9px] font-bold transition-all ${starMode ? 'bg-violet-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-350'}`}
+                                        >
+                                          🧩 Guided STAR
+                                        </button>
+                                      </div>
                                     </div>
+
+                                    {starMode ? (
+                                      <div className="space-y-3.5">
+                                        {/* Situation */}
+                                        <div className="space-y-1">
+                                          <div className="flex justify-between items-center">
+                                            <label className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1">
+                                              <span className="w-4 h-4 rounded-full bg-blue-550/20 text-blue-400 border border-blue-500/20 flex items-center justify-center text-[9px] font-black">S</span>
+                                              Situation
+                                            </label>
+                                            <span className="text-[9px] text-slate-500">Set the scene & context</span>
+                                          </div>
+                                          <textarea
+                                            value={starSituation}
+                                            onChange={e => {
+                                              setStarSituation(e.target.value);
+                                              updateStarAnswer(e.target.value, starTask, starAction, starResult);
+                                            }}
+                                            placeholder="What was the situation? (e.g., 'Our service latency spiked by 40% during a traffic spike...')"
+                                            className="w-full h-16 bg-slate-950/40 border border-slate-700 focus:border-violet-500 rounded-xl p-2.5 text-xs text-slate-300 placeholder-slate-650 resize-none focus:outline-none transition-colors"
+                                          />
+                                        </div>
+
+                                        {/* Task */}
+                                        <div className="space-y-1">
+                                          <div className="flex justify-between items-center">
+                                            <label className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1">
+                                              <span className="w-4 h-4 rounded-full bg-amber-550/20 text-amber-400 border border-amber-500/20 flex items-center justify-center text-[9px] font-black">T</span>
+                                              Task
+                                            </label>
+                                            <span className="text-[9px] text-slate-500">What was your goal or challenge?</span>
+                                          </div>
+                                          <textarea
+                                            value={starTask}
+                                            onChange={e => {
+                                              setStarTask(e.target.value);
+                                              updateStarAnswer(starSituation, e.target.value, starAction, starResult);
+                                            }}
+                                            placeholder="What did you need to do? (e.g., 'I was tasked with identifying the bottleneck and reducing latency under 200ms...')"
+                                            className="w-full h-16 bg-slate-950/40 border border-slate-700 focus:border-violet-500 rounded-xl p-2.5 text-xs text-slate-300 placeholder-slate-650 resize-none focus:outline-none transition-colors"
+                                          />
+                                        </div>
+
+                                        {/* Action */}
+                                        <div className="space-y-1">
+                                          <div className="flex justify-between items-center">
+                                            <label className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1">
+                                              <span className="w-4 h-4 rounded-full bg-emerald-550/20 text-emerald-400 border border-emerald-500/20 flex items-center justify-center text-[9px] font-black">A</span>
+                                              Action
+                                            </label>
+                                            <span className="text-[9px] font-semibold text-violet-400">Most important (60% of answer)</span>
+                                          </div>
+                                          <textarea
+                                            value={starAction}
+                                            onChange={e => {
+                                              setStarAction(e.target.value);
+                                              updateStarAnswer(starSituation, starTask, e.target.value, starResult);
+                                            }}
+                                            placeholder="What actions did you take? (e.g., 'I profiled the DB queries, added Redis caching, and optimized the indexes...')"
+                                            className="w-full h-20 bg-slate-950/40 border border-slate-700 focus:border-violet-500 rounded-xl p-2.5 text-xs text-slate-300 placeholder-slate-650 resize-none focus:outline-none transition-colors"
+                                          />
+                                        </div>
+
+                                        {/* Result */}
+                                        <div className="space-y-1">
+                                          <div className="flex justify-between items-center">
+                                            <label className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1">
+                                              <span className="w-4 h-4 rounded-full bg-rose-555/20 text-rose-450 border border-rose-500/20 flex items-center justify-center text-[9px] font-black">R</span>
+                                              Result
+                                            </label>
+                                            <span className="text-[9px] text-slate-500">Outcome with quantitative metrics</span>
+                                          </div>
+                                          <textarea
+                                            value={starResult}
+                                            onChange={e => {
+                                              setStarResult(e.target.value);
+                                              updateStarAnswer(starSituation, starTask, starAction, e.target.value);
+                                            }}
+                                            placeholder="What was the result? (e.g., 'We reduced p99 latency by 65% and saved $4k in server costs...')"
+                                            className="w-full h-16 bg-slate-950/40 border border-slate-700 focus:border-violet-500 rounded-xl p-2.5 text-xs text-slate-300 placeholder-slate-650 resize-none focus:outline-none transition-colors"
+                                          />
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <div className="relative">
+                                        <textarea
+                                          value={currentAnswer}
+                                          onChange={e => setMockAnswers(p => ({ ...p, [currentQ.id]: e.target.value }))}
+                                          placeholder={isRecording ? '🎙️ Listening... speak your answer now' : 'Type your answer here or click the microphone to speak... Use the STAR method for behavioral questions: Situation → Task → Action → Result'}
+                                          className={`w-full h-36 bg-slate-950/50 border rounded-xl p-3 pr-12 text-xs text-slate-300 placeholder-slate-600 resize-none focus:outline-none transition-colors ${isRecording ? 'border-red-500 bg-red-950/10' : 'border-slate-700 focus:border-violet-500'}`}
+                                        />
+                                        {/* Microphone button */}
+                                        <button
+                                          onClick={() => {
+                                            if (isRecording) {
+                                              // Stop recording
+                                              recognitionRef.current?.stop();
+                                              mediaRecorderRef.current?.stop();
+                                              setIsRecording(false);
+                                            } else {
+                                              // Start recording
+                                              const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+                                              if (!SpeechRecognition) {
+                                                alert('Speech recognition is not supported in this browser. Please use Chrome or Edge.');
+                                                return;
+                                              }
+                                              const recognition = new SpeechRecognition();
+                                              recognition.continuous = true;
+                                              recognition.interimResults = true;
+                                              recognition.lang = 'en-US';
+                                              let finalTranscript = currentAnswer;
+                                              recognition.onresult = (event: any) => {
+                                                let interim = '';
+                                                for (let i = event.resultIndex; i < event.results.length; i++) {
+                                                  if (event.results[i].isFinal) {
+                                                    finalTranscript += (finalTranscript ? ' ' : '') + event.results[i][0].transcript;
+                                                  } else {
+                                                    interim += event.results[i][0].transcript;
+                                                  }
+                                                }
+                                                setMockAnswers(p => ({ ...p, [currentQ.id]: finalTranscript + (interim ? ' ' + interim : '') }));
+                                              };
+                                              recognition.onerror = () => setIsRecording(false);
+                                              recognition.onend = () => setIsRecording(false);
+                                              recognition.start();
+                                              recognitionRef.current = recognition;
+
+                                              // Also start audio recording for playback
+                                              navigator.mediaDevices.getUserMedia({ audio: true })
+                                                .then(stream => {
+                                                  const recorder = new MediaRecorder(stream);
+                                                  audioChunksRef.current = [];
+                                                  recorder.ondataavailable = (e) => audioChunksRef.current.push(e.data);
+                                                  recorder.onstop = () => {
+                                                    const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+                                                    setAudioUrl(URL.createObjectURL(blob));
+                                                    stream.getTracks().forEach(t => t.stop());
+                                                  };
+                                                  recorder.start();
+                                                  mediaRecorderRef.current = recorder;
+                                                })
+                                                .catch(() => { /* audio recording optional */ });
+
+                                              setIsRecording(true);
+                                              setAudioUrl(null);
+                                            }
+                                          }}
+                                          className={`absolute right-2 top-2 w-8 h-8 rounded-full flex items-center justify-center transition-all ${
+                                            isRecording
+                                              ? 'bg-red-500 text-white animate-pulse shadow-lg shadow-red-500/40'
+                                              : 'bg-slate-800 text-slate-400 hover:bg-violet-600 hover:text-white'
+                                          }`}
+                                          title={isRecording ? 'Stop recording' : 'Start voice recording'}
+                                        >
+                                          {isRecording ? '⏹' : '🎙️'}
+                                        </button>
+                                      </div>
+                                    )}
 
                                     {/* Recording status */}
                                     {isRecording && (
