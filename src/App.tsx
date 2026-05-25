@@ -1037,7 +1037,7 @@ export default function Portfolio() {
 
       {/* Footer */}
       <footer className="py-12 border-t text-center text-slate-400 text-xs">
-        <p>© {new Date().getFullYear()} {resumeData.personal.name}. Generated via ProPortfolio.</p>
+        <p>© {new Date().getFullYear()} {resumeData.personal.name} • Built with ProPortfolio Builder • Developed by Swetaprangya Sahoo</p>
       </footer>
     </div>
   );
@@ -4889,6 +4889,12 @@ export default function Portfolio() {
                 </div>
               )}
 
+            </div>
+
+            {/* Sidebar Credits Footer */}
+            <div className="flex-shrink-0 px-6 py-3 border-t border-slate-800 bg-slate-950/20 flex items-center justify-between text-[10px] text-slate-500 font-medium">
+              <span>© {new Date().getFullYear()} ProPortfolio Builder</span>
+              <span>Developed by <span className="text-slate-400 font-semibold">Swetaprangya Sahoo</span></span>
             </div>
           </div>
         )}

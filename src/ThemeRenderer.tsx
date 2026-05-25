@@ -470,6 +470,12 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
                 </div>
               </div>
             </section>
+
+            <footer className="mt-20 py-8 border-t border-slate-200 dark:border-white/5 text-center">
+              <p className="text-[10px] md:text-xs font-bold text-slate-500 tracking-widest uppercase">
+                © {new Date().getFullYear()} {data.personal.name} • Built with ProPortfolio Builder • Developed by Swetaprangya Sahoo
+              </p>
+            </footer>
           </main>
         </div>
       </div>
@@ -619,7 +625,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
         </div>
 
         <footer className="w-full py-12 md:py-20 px-6 border-t border-white/5 text-center">
-          <p className="text-[10px] md:text-sm font-bold text-slate-500 tracking-widest uppercase">© {new Date().getFullYear()} {data.personal.name} • Design by Antigravity</p>
+          <p className="text-[10px] md:text-sm font-bold text-slate-500 tracking-widest uppercase">© {new Date().getFullYear()} {data.personal.name} • Built with ProPortfolio Builder • Developed by Swetaprangya Sahoo</p>
         </footer>
       </div>
     );
@@ -1083,7 +1089,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
 
       {!isClassic && (
         <footer className="py-20 text-center border-t border-slate-200 dark:border-white/5">
-          <p className="text-xs font-bold text-slate-600 uppercase tracking-widest">© {new Date().getFullYear()} {data.personal.name} • Built with Antigravity</p>
+          <p className="text-xs font-bold text-slate-600 uppercase tracking-widest">© {new Date().getFullYear()} {data.personal.name} • Built with ProPortfolio Builder • Developed by Swetaprangya Sahoo</p>
         </footer>
       )}
     </div>
