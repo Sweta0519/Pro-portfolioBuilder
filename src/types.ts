@@ -119,7 +119,8 @@ export type InterviewRound =
   | 'infrastructure'       // DevOps, SRE
   | 'qa-testing'           // QA Engineers
   | 'design-portfolio'     // UX/UI Designers
-  | 'leadership';          // Managers, Directors
+  | 'leadership'          // Managers, Directors
+  | 'reported';
 
 export type CompanyCulture = 'big-tech' | 'startup' | 'consulting' | 'finance' | 'generic';
 

@@ -671,6 +671,7 @@ const ROUND_META: Record<InterviewRound, { label: string; emoji: string; descrip
   'qa-testing':         { label: 'QA & Testing',         emoji: '🔬', description: 'Tests testing strategy, automation frameworks, bug reporting, and quality mindset.' },
   'design-portfolio':   { label: 'Design Portfolio',     emoji: '🎨', description: 'Portfolio walkthrough and design process evaluation. Tests UX thinking, research, and visual communication.' },
   'leadership':         { label: 'Leadership',           emoji: '👑', description: 'Tests people management, team strategy, stakeholder alignment, and engineering culture leadership.' },
+  'reported':           { label: 'Real Company Questions', emoji: '🏢', description: 'Real interview questions reported by candidates who interviewed at this company.' },
 };
 
 const ROUND_QUESTION_BANKS: Record<InterviewRound, Omit<InterviewQuestion, 'id'>[]> = {
@@ -687,6 +688,7 @@ const ROUND_QUESTION_BANKS: Record<InterviewRound, Omit<InterviewQuestion, 'id'>
   'qa-testing':         QA_TESTING_QUESTIONS,
   'design-portfolio':   DESIGN_PORTFOLIO_QUESTIONS,
   'leadership':         LEADERSHIP_QUESTIONS,
+  'reported':           [],
 };
 
 export function generateInterviewPlan(resume: ResumeData, positionName: string, jd: string, explicitCompanyName?: string): InterviewPlan {

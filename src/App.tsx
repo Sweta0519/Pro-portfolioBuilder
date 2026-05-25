@@ -4066,6 +4066,28 @@ export default function Portfolio() {
                                         <span className="text-[9px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded font-medium">{q.round}</span>
                                         <span className="text-[9px] text-slate-400">Source: {q.source}</span>
                                       </div>
+                                      <div className="flex gap-2.5 mt-2">
+                                        <button
+                                          onClick={() => {
+                                            setMockRound('reported');
+                                            setMockQuestionIdx(i);
+                                            setMockMode('answering');
+                                            setMockTimerSec(0);
+                                            if (mockTimerRef.current) clearInterval(mockTimerRef.current);
+                                            mockTimerRef.current = setInterval(() => setMockTimerSec(s => s + 1), 1000);
+                                            setInterviewSubTab('mock');
+                                          }}
+                                          className="text-[10px] text-blue-400 hover:text-blue-300 font-bold transition-colors"
+                                        >🎤 Practice This</button>
+                                        <button
+                                          onClick={() => toggleSpeakQuestion(`reported-${i}`, q.question)}
+                                          className={`text-[10px] font-bold transition-colors ${
+                                            speakingQId === `reported-${i}` ? 'text-rose-450 hover:text-rose-400' : 'text-slate-400 hover:text-blue-400'
+                                          }`}
+                                        >
+                                          {speakingQId === `reported-${i}` ? '⏹ Stop' : '🔊 Listen'}
+                                        </button>
+                                      </div>
                                     </div>
                                   </div>
                                 ))}
@@ -4190,7 +4212,46 @@ export default function Portfolio() {
 
                       {/* MOCK INTERVIEW SIMULATOR */}
                       {interviewSubTab === 'mock' && (() => {
-                        const allRounds = interviewPlan.rounds;
+                        const allRounds = [...interviewPlan.rounds];
+                        if (geminiData?.reportedQuestions && geminiData.reportedQuestions.length > 0) {
+                          const reportedQuestionsForPractice = geminiData.reportedQuestions.map((q, idx) => {
+                            // Dynamically map reported round to closest enum InterviewRound
+                            let mappedRound: InterviewRound = 'technical';
+                            const rLower = (q.round || '').toLowerCase();
+                            if (rLower.includes('behavioral') || rLower.includes('fit') || rLower.includes('hr') || rLower.includes('culture') || rLower.includes('personal')) {
+                              mappedRound = 'behavioral';
+                            } else if (rLower.includes('system design') || rLower.includes('architecture')) {
+                              mappedRound = 'system-design';
+                            } else if (rLower.includes('dsa') || rLower.includes('coding') || rLower.includes('algorithm')) {
+                              mappedRound = 'dsa';
+                            } else if (rLower.includes('product') || rLower.includes('pm')) {
+                              mappedRound = 'product-sense';
+                            } else if (rLower.includes('sql') || rLower.includes('data') || rLower.includes('analytics')) {
+                              mappedRound = 'sql-analytics';
+                            } else if (rLower.includes('manager') || rLower.includes('lead') || rLower.includes('leadership')) {
+                              mappedRound = 'leadership';
+                            }
+
+                            return {
+                              id: `reported-${idx}`,
+                              round: mappedRound,
+                              question: q.question,
+                              hint: `This is a real candidate-reported question from ${interviewPlan.context.company} during the ${q.round || 'interview'}.`,
+                              difficulty: 'medium' as const,
+                              source: `${q.source} (${q.round})`,
+                              tags: ['Real', 'Candidate-Reported']
+                            };
+                          });
+
+                          allRounds.push({
+                            round: 'reported',
+                            label: '🌐 Real Company Questions',
+                            emoji: '🏢',
+                            description: `Real interview questions reported by candidates who interviewed at ${interviewPlan.context.company}.`,
+                            questions: reportedQuestionsForPractice
+                          });
+                        }
+
                         const currentRoundData = allRounds.find(r => r.round === mockRound) || allRounds[0];
                         const questions = currentRoundData.questions;
                         const currentQ = questions[mockQuestionIdx];
