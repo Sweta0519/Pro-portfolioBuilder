@@ -214,3 +214,18 @@ export interface GeminiEnhancedData {
   }[];
   searchSources: string[];
 }
+
+export interface InterviewSession {
+  id: string;
+  companyName: string;
+  positionName: string;
+  jobDescription: string;
+  generatedAt: string;
+  plan: InterviewPlan;
+  geminiData: GeminiEnhancedData | null;
+  mockAnswers: Record<string, string>;
+  mockScores: Record<string, AnswerScore>;
+  idealAnswers?: Record<string, string>;
+  optimizedResults?: Record<string, { optimizedAnswer: string; feedback: string }>;
+}
+

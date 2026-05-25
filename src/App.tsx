@@ -19,7 +19,7 @@ import { parseRawResumeText } from './parser';
 import { analyzeResume, actionVerbDictionary } from './coach';
 import { generateInterviewPlan, scoreAnswer, fetchGeminiInsights, testApiConnection, generateIdealAnswer, optimizeUserAnswer } from './interviewCoach';
 import type { AiProvider } from './interviewCoach';
-import { InterviewPlan, InterviewRound, AnswerScore, GeminiEnhancedData } from './types';
+import { InterviewPlan, InterviewRound, AnswerScore, GeminiEnhancedData, InterviewSession } from './types';
 import { analyzeATSCompliance, analyzeCoverLetter, autoTuneDesign, autoOptimizeResume } from './ats';
 import { ThemeRenderer } from './ThemeRenderer';
 import { ResumeDocumentTemplate } from './ResumeDocumentTemplate';
@@ -195,6 +195,48 @@ export default function App() {
       console.error("Failed to save resumes:", e);
     }
   }, [savedResumes]);
+
+  // Saved Interview Sessions History
+  const [savedSessions, setSavedSessions] = useState<InterviewSession[]>(() => {
+    try {
+      const local = localStorage.getItem('pro_portfolio_interview_sessions');
+      if (local) {
+        return JSON.parse(local);
+      }
+    } catch (e) {
+      console.error("Failed to read saved interview sessions:", e);
+    }
+    return [];
+  });
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+
+  // Sync Interview Sessions to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('pro_portfolio_interview_sessions', JSON.stringify(savedSessions));
+    } catch (e) {
+      console.error("Failed to save interview sessions:", e);
+    }
+  }, [savedSessions]);
+
+  // Sync current active session state changes back to savedSessions list
+  useEffect(() => {
+    if (!currentSessionId) return;
+    setSavedSessions(prev => prev.map(s => {
+      if (s.id === currentSessionId) {
+        return {
+          ...s,
+          mockAnswers,
+          mockScores,
+          idealAnswers,
+          optimizedResults,
+          plan: interviewPlan!,
+          geminiData
+        };
+      }
+      return s;
+    }));
+  }, [currentSessionId, mockAnswers, mockScores, idealAnswers, optimizedResults, interviewPlan, geminiData]);
 
   // ─── Text-to-Speech (TTS) for questions ─────────────────────────────────────
   const [speakingQId, setSpeakingQId] = useState<string | null>(null);
@@ -3729,7 +3771,8 @@ export default function Portfolio() {
 
                   {/* JD Input */}
                   {!interviewPlan && (
-                    <div className="space-y-3">
+                    <>
+                      <div className="space-y-3">
                       {/* AI Provider & API Key Section */}
                       <div className="rounded-xl border border-slate-800 bg-slate-950/40 overflow-hidden">
                         <button
@@ -3858,8 +3901,32 @@ export default function Portfolio() {
 
                           // Step 1: Generate local plan immediately
                           const plan = generateInterviewPlan(resumeData, interviewPositionName, interviewJD, interviewCompanyName);
+                          const sessionId = 'session-' + Date.now();
+                          const newSession: InterviewSession = {
+                            id: sessionId,
+                            companyName: interviewCompanyName.trim() || plan.context.company,
+                            positionName: interviewPositionName.trim() || plan.context.role,
+                            jobDescription: interviewJD,
+                            generatedAt: new Date().toLocaleString(undefined, {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            }),
+                            plan: plan,
+                            geminiData: null,
+                            mockAnswers: {},
+                            mockScores: {},
+                            idealAnswers: {},
+                            optimizedResults: {}
+                          };
+
+                          setSavedSessions(prev => [newSession, ...prev]);
+
                           setTimeout(() => {
                             setInterviewPlan(plan);
+                            setCurrentSessionId(sessionId);
                             setIsGeneratingPlan(false);
                             setInterviewSubTab('overview');
                             setMockMode('idle');
@@ -3906,7 +3973,80 @@ export default function Portfolio() {
                         )}
                       </button>
                     </div>
-                  )}
+
+                    {/* Past Sessions History */}
+                    {savedSessions.length > 0 && (
+                      <div className="pt-6 border-t border-slate-800 space-y-3">
+                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                          <span>🕒 Past Sessions History</span>
+                          <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full lowercase font-semibold">{savedSessions.length} session{savedSessions.length > 1 ? 's' : ''}</span>
+                        </h3>
+
+                        <div className="grid grid-cols-1 gap-2.5 max-h-96 overflow-y-auto scrollbar-thin pr-1">
+                          {savedSessions.map((session) => {
+                            const totalQuestions = session.plan.rounds.reduce((acc, r) => acc + r.questions.length, 0);
+                            const answeredCount = Object.keys(session.mockAnswers).length;
+                            const scoredCount = Object.keys(session.mockScores).length;
+
+                            return (
+                              <div key={session.id} className="p-3.5 rounded-xl border border-slate-800 bg-slate-950/20 hover:bg-slate-950/45 transition-colors flex flex-col sm:flex-row justify-between gap-3 text-xs">
+                                <div className="space-y-1 min-w-0">
+                                  <div className="flex items-center gap-1.5 flex-wrap">
+                                    <h4 className="font-bold text-slate-200 truncate max-w-[150px]">{session.companyName}</h4>
+                                    <span className="text-[9px] bg-violet-950/40 border border-violet-900 text-violet-400 px-1.5 py-0.5 rounded-md font-semibold truncate max-w-[120px]">{session.positionName}</span>
+                                  </div>
+                                  <p className="text-[10px] text-slate-500 font-medium">Created: {session.generatedAt}</p>
+                                  <div className="flex gap-3 text-[10px] text-slate-400 font-semibold pt-1">
+                                    <span>📋 {totalQuestions} Qs</span>
+                                    <span>✍️ {answeredCount} Answered</span>
+                                    <span>⭐ {scoredCount} Scored</span>
+                                  </div>
+                                </div>
+
+                                <div className="flex items-center gap-2 shrink-0">
+                                  <button
+                                    onClick={() => {
+                                      setCurrentSessionId(session.id);
+                                      setInterviewPlan(session.plan);
+                                      setGeminiData(session.geminiData);
+                                      setMockAnswers(session.mockAnswers);
+                                      setMockScores(session.mockScores);
+                                      setIdealAnswers(session.idealAnswers || {});
+                                      setOptimizedResults(session.optimizedResults || {});
+                                      setInterviewCompanyName(session.companyName);
+                                      setInterviewPositionName(session.positionName);
+                                      setInterviewJD(session.jobDescription);
+                                      setInterviewSubTab('overview');
+                                      setMockMode('idle');
+                                    }}
+                                    className="px-3 py-1.5 rounded-lg bg-violet-600/80 hover:bg-violet-600 text-white font-bold transition-all text-[11px]"
+                                  >
+                                    Resume
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      if (confirm(`Are you sure you want to delete the interview history for ${session.companyName}?`)) {
+                                        setSavedSessions(prev => prev.filter(s => s.id !== session.id));
+                                        if (currentSessionId === session.id) {
+                                          setInterviewPlan(null);
+                                          setCurrentSessionId(null);
+                                        }
+                                      }
+                                    }}
+                                    className="p-1.5 rounded-lg border border-slate-800 text-slate-500 hover:text-rose-400 hover:border-rose-900/50 transition-colors"
+                                    title="Delete Session"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
 
                   {/* Plan Header */}
                   {interviewPlan && (
@@ -3917,7 +4057,15 @@ export default function Portfolio() {
                           <p className="text-[11px] text-violet-400 font-semibold">{interviewPlan.context.role} · {interviewPlan.context.seniority}</p>
                         </div>
                         <button
-                          onClick={() => { setInterviewPlan(null); setInterviewJD(''); setInterviewPositionName(''); setInterviewCompanyName(''); setGeminiData(null); setGeminiError(''); }}
+                          onClick={() => {
+                            setInterviewPlan(null);
+                            setCurrentSessionId(null);
+                            setInterviewJD('');
+                            setInterviewPositionName('');
+                            setInterviewCompanyName('');
+                            setGeminiData(null);
+                            setGeminiError('');
+                          }}
                           className="text-[10px] text-slate-500 hover:text-rose-400 transition-colors border border-slate-700 rounded-lg px-2 py-1"
                         >↩ Reset</button>
                       </div>
