@@ -870,21 +870,46 @@ export async function testApiConnection(apiKey: string, provider: AiProvider): P
         body: JSON.stringify({ model: 'llama-3.3-70b-versatile', messages: [{ role: 'user', content: 'Hi' }], max_tokens: 5 }),
       });
       if (r.ok) return { ok: true, message: '✅ Groq connected! Llama 3.3 70B ready.' };
-      if (r.status === 401) return { ok: false, message: '🔑 Invalid API key. Check at console.groq.com/keys' };
+      
+      let errorMsg = '';
+      try {
+        const data = await r.json();
+        errorMsg = data?.error?.message || '';
+      } catch {}
+
+      if (r.status === 401 || errorMsg.toLowerCase().includes('api key') || errorMsg.toLowerCase().includes('invalid')) {
+        return { ok: false, message: '🔑 Invalid API key. Check at console.groq.com/keys' };
+      }
       if (r.status === 429) return { ok: false, message: '⏳ Rate limited. Wait a moment and try again.' };
-      return { ok: false, message: `❌ Error ${r.status}` };
+      return { ok: false, message: `❌ Error ${r.status}${errorMsg ? `: ${errorMsg}` : ''}` };
     } else {
       const r = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
         { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: 'Hi' }] }], generationConfig: { maxOutputTokens: 5 } }) }
       );
       if (r.ok) return { ok: true, message: '✅ Gemini connected! Ready to search.' };
-      if (r.status === 401 || r.status === 403) return { ok: false, message: '🔑 Invalid API key. Check at aistudio.google.com/apikey' };
+      
+      let errorMsg = '';
+      try {
+        const data = await r.json();
+        errorMsg = data?.error?.message || '';
+      } catch {}
+
+      if (r.status === 401 || r.status === 403 || errorMsg.toLowerCase().includes('api key not valid') || errorMsg.toLowerCase().includes('invalid')) {
+        return { ok: false, message: '🔑 Invalid API key. Check at aistudio.google.com/apikey' };
+      }
+      if (errorMsg.toLowerCase().includes('location') || errorMsg.toLowerCase().includes('region') || errorMsg.toLowerCase().includes('unsupported')) {
+        return { ok: false, message: '🌍 Unsupported region. Gemini API keys are restricted in some regions (like EU/UK). Try a USA VPN or switch to Groq (free, no region locks).' };
+      }
       if (r.status === 429) return { ok: false, message: '⏳ Rate limited. Wait 60s or switch to Groq.' };
-      return { ok: false, message: `❌ Error ${r.status}` };
+      return { ok: false, message: `❌ Error ${r.status}: ${errorMsg || 'Connection failed'}` };
     }
-  } catch {
-    return { ok: false, message: '❌ Network error. Check your connection.' };
+  } catch (err: any) {
+    const isGemini = provider === 'gemini';
+    const extraInfo = isGemini 
+      ? ' Check your VPN, or disable ad-blockers/shields (like Brave Shields) which often block Google AI Studio requests.'
+      : '';
+    return { ok: false, message: `❌ Network error: ${err?.message || 'Failed to fetch.'}${extraInfo}` };
   }
 }
 
@@ -972,9 +997,28 @@ async function fetchWithGemini(apiKey: string, prompt: string): Promise<GeminiEn
 
   if (groundingSupported) {
     response = await callGemini(true);
-    if (response.status === 400) {
-      localStorage.setItem('gemini_grounding_supported', 'false');
-      response = await callGemini(false);
+    if (!response.ok) {
+      let errorMsg = '';
+      try {
+        const errJson = await response.clone().json();
+        errorMsg = errJson?.error?.message || '';
+      } catch {}
+
+      // If it is an API key error, don't fallback, throw immediately
+      if (errorMsg.toLowerCase().includes('api key not valid') || errorMsg.toLowerCase().includes('invalid') || response.status === 401 || response.status === 403) {
+        throw new Error(`🔑 Invalid Gemini API key: ${errorMsg || 'Please check your key at aistudio.google.com/apikey'}`);
+      }
+
+      // If it is a region restriction, don't fallback, throw immediately
+      if (errorMsg.toLowerCase().includes('location') || errorMsg.toLowerCase().includes('region') || errorMsg.toLowerCase().includes('unsupported')) {
+        throw new Error(`🌍 Unsupported region: Gemini API keys are restricted in some regions (like EU/UK). Try a USA VPN or switch to Groq.`);
+      }
+
+      // Otherwise, assume it might be a grounding/tools error and try without grounding
+      if (response.status === 400) {
+        localStorage.setItem('gemini_grounding_supported', 'false');
+        response = await callGemini(false);
+      }
     }
   } else {
     response = await callGemini(false);
@@ -989,9 +1033,22 @@ async function fetchWithGemini(apiKey: string, prompt: string): Promise<GeminiEn
   }
 
   if (!response.ok) {
-    if (response.status === 429) throw new Error('⏳ Gemini rate limit exceeded. Wait 60s or switch to Groq (free, no rate issues).');
-    if (response.status === 401 || response.status === 403) throw new Error('🔑 Invalid Gemini API key.');
-    throw new Error(`Gemini API error ${response.status}`);
+    let errorMsg = '';
+    try {
+      const errJson = await response.json();
+      errorMsg = errJson?.error?.message || '';
+    } catch {}
+
+    if (response.status === 429) {
+      throw new Error('⏳ Gemini rate limit exceeded. Wait 60s or switch to Groq (free, no rate issues).');
+    }
+    if (response.status === 401 || response.status === 403 || errorMsg.toLowerCase().includes('api key not valid') || errorMsg.toLowerCase().includes('invalid')) {
+      throw new Error(`🔑 Invalid Gemini API key: ${errorMsg || 'Please check your key at aistudio.google.com/apikey'}`);
+    }
+    if (errorMsg.toLowerCase().includes('location') || errorMsg.toLowerCase().includes('region') || errorMsg.toLowerCase().includes('unsupported')) {
+      throw new Error(`🌍 Unsupported region: Gemini API keys are restricted in some regions (like EU/UK). Try a USA VPN or switch to Groq.`);
+    }
+    throw new Error(`Gemini API error ${response.status}: ${errorMsg || 'Unknown error'}`);
   }
 
   const data = await response.json();
@@ -1021,9 +1078,17 @@ async function fetchWithGroq(apiKey: string, prompt: string): Promise<GeminiEnha
   });
 
   if (!response.ok) {
+    let errorMsg = '';
+    try {
+      const errJson = await response.json();
+      errorMsg = errJson?.error?.message || '';
+    } catch {}
+
     if (response.status === 429) throw new Error('⏳ Groq rate limit — wait a moment and try again.');
-    if (response.status === 401) throw new Error('🔑 Invalid Groq API key. Get one free at console.groq.com/keys');
-    throw new Error(`Groq API error ${response.status}`);
+    if (response.status === 401 || errorMsg.toLowerCase().includes('api key') || errorMsg.toLowerCase().includes('invalid')) {
+      throw new Error('🔑 Invalid Groq API key. Get one free at console.groq.com/keys');
+    }
+    throw new Error(`Groq API error ${response.status}${errorMsg ? `: ${errorMsg}` : ''}`);
   }
 
   const data = await response.json();
