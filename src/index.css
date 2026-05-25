@@ -266,6 +266,22 @@ html {
   background-color: #ffffff !important;
   border-color: #e2e8f0 !important;
 }
+#app-root-container.theme-nord-light .w-\[520px\] .bg-slate-800,
+#app-root-container.theme-nord-light .w-\[520px\] .bg-slate-850 {
+  background-color: #e2e8f0 !important;
+  border-color: #cbd5e1 !important;
+}
+#app-root-container.theme-nord-light .w-\[520px\] .bg-slate-800:hover,
+#app-root-container.theme-nord-light .w-\[520px\] .bg-slate-850:hover,
+#app-root-container.theme-nord-light .w-\[520px\] .hover\:bg-slate-750:hover,
+#app-root-container.theme-nord-light .w-\[520px\] .hover\:bg-slate-800:hover,
+#app-root-container.theme-nord-light .w-\[520px\] .hover\:bg-slate-700:hover {
+  background-color: #cbd5e1 !important;
+}
+#app-root-container.theme-nord-light .w-\[520px\] .disabled\:bg-slate-900:disabled {
+  background-color: #e2e8f0 !important;
+  opacity: 0.6;
+}
 #app-root-container.theme-nord-light .w-\[520px\] .border-slate-800,
 #app-root-container.theme-nord-light .w-\[520px\] .border-slate-700,
 #app-root-container.theme-nord-light .w-\[520px\] .border-slate-850,
@@ -293,14 +309,75 @@ html {
 }
 #app-root-container.theme-nord-light .w-\[520px\] input,
 #app-root-container.theme-nord-light .w-\[520px\] textarea,
-#app-root-container.theme-nord-light .w-\[520px\] select {
+#app-root-container.theme-nord-light .w-\[520px\] select,
+#app-root-container.theme-nord-light .fixed input,
+#app-root-container.theme-nord-light .fixed textarea,
+#app-root-container.theme-nord-light .fixed select {
   background-color: #ffffff !important;
   color: #0f172a !important;
   border-color: #cbd5e1 !important;
 }
 #app-root-container.theme-nord-light .w-\[520px\] input::placeholder,
-#app-root-container.theme-nord-light .w-\[520px\] textarea::placeholder {
+#app-root-container.theme-nord-light .w-\[520px\] textarea::placeholder,
+#app-root-container.theme-nord-light .fixed input::placeholder,
+#app-root-container.theme-nord-light .fixed textarea::placeholder {
   color: #94a3b8 !important;
+}
+
+/* Modals & Overlays overrides for Nord Light */
+#app-root-container.theme-nord-light .fixed .bg-slate-900:not(.inset-0),
+#app-root-container.theme-nord-light .fixed .bg-slate-950:not(.inset-0) {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+}
+#app-root-container.theme-nord-light .fixed .bg-slate-800,
+#app-root-container.theme-nord-light .fixed .bg-slate-850 {
+  background-color: #e2e8f0 !important;
+  border-color: #cbd5e1 !important;
+}
+#app-root-container.theme-nord-light .fixed .bg-slate-800:hover,
+#app-root-container.theme-nord-light .fixed .bg-slate-850:hover,
+#app-root-container.theme-nord-light .fixed .hover\:bg-slate-750:hover,
+#app-root-container.theme-nord-light .fixed .hover\:bg-slate-700:hover {
+  background-color: #cbd5e1 !important;
+}
+#app-root-container.theme-nord-light .fixed .bg-slate-800\/50 {
+  background-color: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+}
+#app-root-container.theme-nord-light .fixed .bg-slate-900\/50,
+#app-root-container.theme-nord-light .fixed .bg-slate-955\/50,
+#app-root-container.theme-nord-light .fixed .bg-slate-955\/40,
+#app-root-container.theme-nord-light .fixed .bg-slate-950\/50,
+#app-root-container.theme-nord-light .fixed .bg-slate-950\/40,
+#app-root-container.theme-nord-light .fixed .bg-slate-950\/30,
+#app-root-container.theme-nord-light .fixed .bg-slate-950\/20,
+#app-root-container.theme-nord-light .fixed .bg-slate-900\/80,
+#app-root-container.theme-nord-light .fixed .bg-slate-900\/60 {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+}
+#app-root-container.theme-nord-light .fixed .border-slate-800,
+#app-root-container.theme-nord-light .fixed .border-slate-750,
+#app-root-container.theme-nord-light .fixed .border-slate-700,
+#app-root-container.theme-nord-light .fixed .border-slate-850 {
+  border-color: #cbd5e1 !important;
+}
+#app-root-container.theme-nord-light .fixed .text-white {
+  color: #0f172a !important;
+}
+#app-root-container.theme-nord-light .fixed .bg-indigo-900\/40 {
+  background-color: #eef2ff !important;
+  border-color: #6366f1 !important;
+}
+#app-root-container.theme-nord-light .fixed .bg-slate-900\/50 {
+  background-color: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+}
+#app-root-container.theme-nord-light .fixed .bg-slate-900\/50:hover,
+#app-root-container.theme-nord-light .fixed .hover\:bg-slate-800:hover {
+  background-color: #f1f5f9 !important;
+  border-color: #94a3b8 !important;
 }
 
 /* 2. INDIGO MIDNIGHT THEME OVERRIDES */
@@ -320,6 +397,7 @@ html {
 #app-root-container.theme-indigo-midnight .w-\[520px\] .bg-slate-955,
 #app-root-container.theme-indigo-midnight .w-\[520px\] .bg-slate-950,
 #app-root-container.theme-indigo-midnight .w-\[520px\] .bg-slate-950\/40,
+#app-root-container.theme-indigo-midnight .w-\[520px\] .bg-slate-955\/40,
 #app-root-container.theme-indigo-midnight .w-\[520px\] .bg-slate-950\/50,
 #app-root-container.theme-indigo-midnight .w-\[520px\] .bg-slate-950\/30,
 #app-root-container.theme-indigo-midnight .w-\[520px\] .bg-slate-950\/20,
@@ -327,6 +405,18 @@ html {
 #app-root-container.theme-indigo-midnight .w-\[520px\] .bg-slate-900\/60 {
   background-color: #1e1952 !important;
   border-color: #3d3795 !important;
+}
+#app-root-container.theme-indigo-midnight .w-\[520px\] .bg-slate-800,
+#app-root-container.theme-indigo-midnight .w-\[520px\] .bg-slate-850 {
+  background-color: #231d5c !important;
+  border-color: #3d3795 !important;
+}
+#app-root-container.theme-indigo-midnight .w-\[520px\] .bg-slate-800:hover,
+#app-root-container.theme-indigo-midnight .w-\[520px\] .bg-slate-850:hover,
+#app-root-container.theme-indigo-midnight .w-\[520px\] .hover\:bg-slate-750:hover,
+#app-root-container.theme-indigo-midnight .w-\[520px\] .hover\:bg-slate-800:hover,
+#app-root-container.theme-indigo-midnight .w-\[520px\] .hover\:bg-slate-700:hover {
+  background-color: #2e2677 !important;
 }
 #app-root-container.theme-indigo-midnight .w-\[520px\] .border-slate-800,
 #app-root-container.theme-indigo-midnight .w-\[520px\] .border-slate-700,
@@ -371,6 +461,57 @@ html {
   background: rgba(99, 102, 241, 0.5) !important;
 }
 
+/* Modals & Overlays overrides for Indigo Midnight */
+#app-root-container.theme-indigo-midnight .fixed .bg-slate-900:not(.inset-0),
+#app-root-container.theme-indigo-midnight .fixed .bg-slate-955:not(.inset-0),
+#app-root-container.theme-indigo-midnight .fixed .bg-slate-950:not(.inset-0) {
+  background-color: #16123e !important;
+  border-color: #35317e !important;
+}
+#app-root-container.theme-indigo-midnight .fixed .bg-slate-800,
+#app-root-container.theme-indigo-midnight .fixed .bg-slate-850 {
+  background-color: #231d5c !important;
+  border-color: #3d3795 !important;
+}
+#app-root-container.theme-indigo-midnight .fixed .bg-slate-800:hover,
+#app-root-container.theme-indigo-midnight .fixed .bg-slate-850:hover,
+#app-root-container.theme-indigo-midnight .fixed .hover\:bg-slate-750:hover,
+#app-root-container.theme-indigo-midnight .fixed .hover\:bg-slate-700:hover {
+  background-color: #2e2677 !important;
+}
+#app-root-container.theme-indigo-midnight .fixed .bg-slate-900\/50,
+#app-root-container.theme-indigo-midnight .fixed .bg-slate-955\/50,
+#app-root-container.theme-indigo-midnight .fixed .bg-slate-950\/50,
+#app-root-container.theme-indigo-midnight .fixed .bg-slate-955\/40,
+#app-root-container.theme-indigo-midnight .fixed .bg-slate-950\/40,
+#app-root-container.theme-indigo-midnight .fixed .bg-slate-950\/30,
+#app-root-container.theme-indigo-midnight .fixed .bg-slate-950\/20,
+#app-root-container.theme-indigo-midnight .fixed .bg-slate-900\/80,
+#app-root-container.theme-indigo-midnight .fixed .bg-slate-900\/60 {
+  background-color: #1e1952 !important;
+  border-color: #3d3795 !important;
+}
+#app-root-container.theme-indigo-midnight .fixed .border-slate-800,
+#app-root-container.theme-indigo-midnight .fixed .border-slate-750,
+#app-root-container.theme-indigo-midnight .fixed .border-slate-700,
+#app-root-container.theme-indigo-midnight .fixed .border-slate-850 {
+  border-color: #35317e !important;
+}
+#app-root-container.theme-indigo-midnight .fixed input,
+#app-root-container.theme-indigo-midnight .fixed textarea,
+#app-root-container.theme-indigo-midnight .fixed select {
+  background-color: #120e34 !important;
+  border-color: #3d3795 !important;
+  color: #e0e7ff !important;
+}
+#app-root-container.theme-indigo-midnight .fixed input::placeholder,
+#app-root-container.theme-indigo-midnight .fixed textarea::placeholder {
+  color: rgba(129, 140, 248, 0.4) !important;
+}
+#app-root-container.theme-indigo-midnight .fixed .text-white {
+  color: #ffffff !important;
+}
+
 /* 3. GLOBAL HIGH-CONTRAST OVERRIDES FOR NORD LIGHT THEME */
 #app-root-container.theme-nord-light .text-indigo-400,
 #app-root-container.theme-nord-light .text-indigo-300 {
@@ -379,6 +520,11 @@ html {
 #app-root-container.theme-nord-light .text-emerald-400,
 #app-root-container.theme-nord-light .text-emerald-300 {
   color: #059669 !important;
+}
+#app-root-container.theme-nord-light .text-green-450,
+#app-root-container.theme-nord-light .text-green-400,
+#app-root-container.theme-nord-light .text-green-300 {
+  color: #16a34a !important;
 }
 #app-root-container.theme-nord-light .text-amber-400,
 #app-root-container.theme-nord-light .text-amber-300 {
