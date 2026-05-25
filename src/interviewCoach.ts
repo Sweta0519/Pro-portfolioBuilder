@@ -1119,4 +1119,135 @@ export async function fetchGeminiInsights(
   }
 }
 
+// Helper to handle chat requests to Groq/Gemini consistently
+async function callAiChat(
+  apiKey: string,
+  provider: AiProvider,
+  systemPrompt: string,
+  userPrompt: string
+): Promise<string> {
+  if (provider === 'groq') {
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          { role: 'user', content: userPrompt },
+        ],
+        temperature: 0.5,
+        max_tokens: 2048,
+      }),
+    });
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`Groq API error ${response.status}: ${errText}`);
+    }
+    const data = await response.json();
+    return data.choices?.[0]?.message?.content || '';
+  } else {
+    // Gemini 2.0 Flash
+    const body = {
+      contents: [{ parts: [{ text: `${systemPrompt}\n\nUser Request:\n${userPrompt}` }] }],
+      generationConfig: { temperature: 0.5, maxOutputTokens: 2048 },
+    };
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      }
+    );
+    if (!response.ok) {
+      const errText = await response.text();
+      throw new Error(`Gemini API error ${response.status}: ${errText}`);
+    }
+    const data = await response.json();
+    return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  }
+}
+
+export async function generateIdealAnswer(
+  apiKey: string,
+  provider: AiProvider,
+  question: string,
+  roleTitle: string,
+  resumeData?: ResumeData
+): Promise<string> {
+  const systemPrompt = `You are an elite interview coach. Generate a high-impact, professional, and perfect mock interview answer for the given question.
+If candidate resume details are provided, tailor the answer naturally to highlight their skills, technologies, and achievements. Keep the answer realistic, structured (using STAR method if behavioral), and about 150-200 words. Do not include meta-commentary, return the direct answer only.`;
+
+  const resumeContext = resumeData
+    ? `Candidate Profile:
+Title: ${resumeData.personal?.title}
+Bio: ${resumeData.personal?.bio}
+Skills: ${resumeData.skills?.map(s => s.name).join(', ')}
+Top Experience: ${resumeData.experience?.slice(0, 2).map(e => `${e.position} at ${e.company} (${e.description.slice(0, 2).join('; ')})`).join('\n')}`
+    : '';
+
+  const userPrompt = `Question: "${question}"
+Target Role: "${roleTitle}"
+${resumeContext}`;
+
+  const response = await callAiChat(apiKey, provider, systemPrompt, userPrompt);
+  return response.trim().replace(/^```(markdown|text)?|```$/g, '').trim();
+}
+
+export interface OptimizedAnswerResult {
+  optimizedAnswer: string;
+  feedback: string;
+}
+
+export async function optimizeUserAnswer(
+  apiKey: string,
+  provider: AiProvider,
+  question: string,
+  roleTitle: string,
+  userAnswer: string,
+  resumeData?: ResumeData
+): Promise<OptimizedAnswerResult> {
+  const systemPrompt = `You are an elite interview coach. Analyze the candidate's draft answer for the interview question and provide:
+1. An improved, polished rewrite of their answer ("optimizedAnswer"). Keep their core experiences and details, but make it sound more professional, upgrade the phrasing, structure it clearly (using the STAR method if it is behavioral), inject powerful action verbs, and add realistic impact metrics.
+2. A brief, constructive feedback paragraph ("feedback") explaining what was improved (e.g. upgraded action verbs, added metrics, improved structure).
+
+IMPORTANT: You MUST respond with valid JSON only. Start with { and end with }. Do not include markdown code fences or any other text.
+The JSON must contain exactly these keys:
+{
+  "optimizedAnswer": "polished rewrite of candidate's answer",
+  "feedback": "constructive coaching note"
+}`;
+
+  const resumeContext = resumeData
+    ? `Candidate Profile:
+Title: ${resumeData.personal?.title}
+Skills: ${resumeData.skills?.map(s => s.name).join(', ')}`
+    : '';
+
+  const userPrompt = `Question: "${question}"
+Target Role: "${roleTitle}"
+Candidate's Draft Answer: "${userAnswer}"
+${resumeContext}`;
+
+  const textResponse = await callAiChat(apiKey, provider, systemPrompt, userPrompt);
+  
+  let jsonStr = textResponse.trim();
+  const fenceMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (fenceMatch) jsonStr = fenceMatch[1].trim();
+  const jsonMatch = jsonStr.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) {
+    throw new Error('Failed to parse AI response as JSON.');
+  }
+
+  const parsed = JSON.parse(jsonMatch[0]);
+  return {
+    optimizedAnswer: parsed.optimizedAnswer || '',
+    feedback: parsed.feedback || 'Answer polished for professional phrasing.'
+  };
+}
+
 

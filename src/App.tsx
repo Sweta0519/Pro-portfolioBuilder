@@ -17,7 +17,7 @@ import {
 } from './types';
 import { parseRawResumeText } from './parser';
 import { analyzeResume, actionVerbDictionary } from './coach';
-import { generateInterviewPlan, scoreAnswer, fetchGeminiInsights, testApiConnection } from './interviewCoach';
+import { generateInterviewPlan, scoreAnswer, fetchGeminiInsights, testApiConnection, generateIdealAnswer, optimizeUserAnswer } from './interviewCoach';
 import type { AiProvider } from './interviewCoach';
 import { InterviewPlan, InterviewRound, AnswerScore, GeminiEnhancedData } from './types';
 import { analyzeATSCompliance, analyzeCoverLetter, autoTuneDesign, autoOptimizeResume } from './ats';
@@ -136,6 +136,13 @@ export default function App() {
   const [starTask, setStarTask] = useState<string>('');
   const [starAction, setStarAction] = useState<string>('');
   const [starResult, setStarResult] = useState<string>('');
+
+  // AI Mock Coaching States
+  const [loadingIdealAnswer, setLoadingIdealAnswer] = useState<boolean>(false);
+  const [idealAnswers, setIdealAnswers] = useState<Record<string, string>>({});
+  const [loadingOptimization, setLoadingOptimization] = useState<boolean>(false);
+  const [optimizedResults, setOptimizedResults] = useState<Record<string, { optimizedAnswer: string; feedback: string }>>({});
+  const [showIdealAnswer, setShowIdealAnswer] = useState<Record<string, boolean>>({});
 
   // ATS Scanner states
   const [jobDescription, setJobDescription] = useState<string>('');
@@ -3860,6 +3867,9 @@ export default function Portfolio() {
                             setMockTimerSec(0);
                             setMockAnswers({});
                             setMockScores({});
+                            setIdealAnswers({});
+                            setOptimizedResults({});
+                            setShowIdealAnswer({});
                           }, 600);
 
                           // Step 2: If API key exists, fetch Gemini enhanced data in parallel
@@ -4418,6 +4428,79 @@ export default function Portfolio() {
                                 {/* Answer Mode Selector & Guided Builder */}
                                 {mockMode === 'answering' && (
                                   <>
+                                    {geminiApiKey.trim() && (
+                                      <div className="mb-3 flex justify-between items-center bg-slate-900/50 p-2.5 rounded-xl border border-slate-800">
+                                        <div className="text-[10px] text-slate-400">
+                                          <span className="font-bold text-violet-400">🧠 AI Answer Assistant</span>: Get an ideal answer customized to your profile.
+                                        </div>
+                                        <button
+                                          type="button"
+                                          onClick={async () => {
+                                            if (loadingIdealAnswer) return;
+                                            const cached = idealAnswers[currentQ.id];
+                                            if (cached) {
+                                              setShowIdealAnswer(p => ({ ...p, [currentQ.id]: !p[currentQ.id] }));
+                                              return;
+                                            }
+                                            setLoadingIdealAnswer(true);
+                                            try {
+                                              const ans = await generateIdealAnswer(
+                                                geminiApiKey,
+                                                aiProvider,
+                                                currentQ.question,
+                                                interviewPositionName || interviewPlan.context.role,
+                                                resumeData
+                                              );
+                                              setIdealAnswers(p => ({ ...p, [currentQ.id]: ans }));
+                                              setShowIdealAnswer(p => ({ ...p, [currentQ.id]: true }));
+                                            } catch (err: any) {
+                                              alert(`AI Error: ${err?.message || 'Failed to generate answer'}`);
+                                            } finally {
+                                              setLoadingIdealAnswer(false);
+                                            }
+                                          }}
+                                          className="px-2.5 py-1 rounded bg-violet-650 hover:bg-violet-600 text-[9px] font-bold text-white transition-colors"
+                                        >
+                                          {loadingIdealAnswer ? '⏳ Generating...' : showIdealAnswer[currentQ.id] ? '🙈 Hide Ideal' : '💡 Reveal Ideal'}
+                                        </button>
+                                      </div>
+                                    )}
+
+                                    {showIdealAnswer[currentQ.id] && idealAnswers[currentQ.id] && (
+                                      <div className="mb-3 p-3 rounded-xl bg-violet-500/5 border border-violet-500/20 space-y-2 animate-fadeIn">
+                                        <div className="flex justify-between items-center">
+                                          <span className="text-[9px] font-bold text-violet-400 uppercase">💡 Model Ideal Answer (Customized to Profile)</span>
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              const text = idealAnswers[currentQ.id];
+                                              let sit = text;
+                                              let tsk = '';
+                                              let act = '';
+                                              let res = '';
+                                              if (text.includes('[Situation]') || text.includes('[Task]') || text.includes('[Action]') || text.includes('[Result]')) {
+                                                const sitMatch = text.match(/\[Situation\]\s*([\s\S]*?)(?=\[Task\]|\[Action\]|\[Result\]|$)/i);
+                                                const tskMatch = text.match(/\[Task\]\s*([\s\S]*?)(?=\[Situation\]|\[Action\]|\[Result\]|$)/i);
+                                                const actMatch = text.match(/\[Action\]\s*([\s\S]*?)(?=\[Situation\]|\[Task\]|\[Result\]|$)/i);
+                                                const resMatch = text.match(/\[Result\]\s*([\s\S]*?)(?=\[Situation\]|\[Task\]|\[Action\]|$)/i);
+                                                if (sitMatch) sit = sitMatch[1].trim();
+                                                if (tskMatch) tsk = tskMatch[1].trim();
+                                                if (actMatch) act = actMatch[1].trim();
+                                                if (resMatch) res = resMatch[1].trim();
+                                              }
+                                              setStarSituation(sit);
+                                              setStarTask(tsk);
+                                              setStarAction(act);
+                                              setStarResult(res);
+                                              updateStarAnswer(sit, tsk, act, res);
+                                            }}
+                                            className="text-[9px] text-violet-400 hover:text-violet-300 font-bold transition-colors"
+                                          >📋 Copy to Draft</button>
+                                        </div>
+                                        <p className="text-[11px] text-slate-350 leading-relaxed text-justify">{idealAnswers[currentQ.id]}</p>
+                                      </div>
+                                    )}
+
                                     <div className="flex items-center justify-between mb-2">
                                       <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Your Answer</label>
                                       <div className="flex p-0.5 bg-slate-955/60 rounded-lg border border-slate-800">
@@ -4679,6 +4762,74 @@ export default function Portfolio() {
                                         )}
                                       </>
                                     )}
+
+                                    {/* AI Answer Polishing & Rewrite */}
+                                    <div className="border-t border-slate-800 pt-3.5 space-y-2">
+                                      <div className="flex justify-between items-center">
+                                        <p className="text-[10px] text-violet-400 font-bold uppercase tracking-wider">✨ AI Response Optimizer & Coach</p>
+                                        {geminiApiKey.trim() && !optimizedResults[currentQ.id] && (
+                                          <button
+                                            type="button"
+                                            onClick={async () => {
+                                              if (loadingOptimization) return;
+                                              setLoadingOptimization(true);
+                                              try {
+                                                const opt = await optimizeUserAnswer(
+                                                  geminiApiKey,
+                                                  aiProvider,
+                                                  currentQ.question,
+                                                  interviewPositionName || interviewPlan.context.role,
+                                                  currentAnswer,
+                                                  resumeData
+                                                );
+                                                setOptimizedResults(p => ({ ...p, [currentQ.id]: opt }));
+                                              } catch (err: any) {
+                                                alert(`AI Error: ${err?.message || 'Failed to optimize answer'}`);
+                                              } finally {
+                                                setLoadingOptimization(false);
+                                              }
+                                            }}
+                                            className="px-2.5 py-1 rounded bg-violet-650 hover:bg-violet-600 text-[9px] font-bold text-white transition-colors"
+                                          >
+                                            {loadingOptimization ? '⏳ Polishing...' : '🧠 Polish & Rewrite My Answer'}
+                                          </button>
+                                        )}
+                                      </div>
+
+                                      {!geminiApiKey.trim() ? (
+                                        <p className="text-[10px] text-slate-500 italic">🔑 Configure your Gemini or Groq API key in the configuration settings to enable real-time AI feedback and polished response rewrites.</p>
+                                      ) : optimizedResults[currentQ.id] ? (
+                                        <div className="space-y-3 animate-fadeIn">
+                                          {/* Feedback card */}
+                                          <div className="p-3.5 rounded-xl border border-violet-500/20 bg-violet-500/5 space-y-1.5">
+                                            <p className="text-[9px] text-violet-400 font-bold uppercase">💡 AI Coach Suggestions</p>
+                                            <p className="text-[11px] text-slate-350 leading-relaxed text-justify">{optimizedResults[currentQ.id].feedback}</p>
+                                          </div>
+                                          
+                                          {/* Polished rewrite card */}
+                                          <div className="p-3.5 rounded-xl border border-blue-500/25 bg-blue-500/5 space-y-2 relative group">
+                                            <div className="flex justify-between items-center">
+                                              <p className="text-[9px] text-blue-400 font-bold uppercase">✨ Your Response (Polished & Upgraded)</p>
+                                              <button
+                                                type="button"
+                                                onClick={() => {
+                                                  navigator.clipboard.writeText(optimizedResults[currentQ.id].optimizedAnswer);
+                                                  alert('📋 Copied optimized response to clipboard!');
+                                                }}
+                                                className="text-[9px] text-blue-400 hover:text-blue-350 font-bold transition-colors"
+                                              >📋 Copy Answer</button>
+                                            </div>
+                                            <p className="text-[11px] text-slate-300 leading-relaxed text-justify italic">
+                                              "{optimizedResults[currentQ.id].optimizedAnswer}"
+                                            </p>
+                                          </div>
+                                        </div>
+                                      ) : (
+                                        !loadingOptimization && (
+                                          <p className="text-[10px] text-slate-500 italic">Click the button above to get a customized, professional rewrite of your response featuring advanced industry phrasing and metrics.</p>
+                                        )
+                                      )}
+                                    </div>
 
                                     {/* Next button */}
                                     <button
