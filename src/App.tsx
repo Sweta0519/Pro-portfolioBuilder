@@ -263,13 +263,15 @@ export default function App() {
           geminiData,
           recruiterPersonaId: selectedRecruiter.id,
           recruiterReplies: recruiterReplies,
+          sessionSummaryFeedback: sessionSummaryFeedback || s.sessionSummaryFeedback,
+          recruiterQuestions: recruiterQuestions ?? s.recruiterQuestions,
           interfaceMode: mockInterfaceMode,
           isCompleted: isSessionCompleted
         };
       }
       return s;
     }));
-  }, [currentSessionId, mockAnswers, mockScores, idealAnswers, optimizedResults, interviewPlan, geminiData, selectedRecruiter, recruiterReplies, mockInterfaceMode, isSessionCompleted]);
+  }, [currentSessionId, mockAnswers, mockScores, idealAnswers, optimizedResults, interviewPlan, geminiData, selectedRecruiter, recruiterReplies, sessionSummaryFeedback, recruiterQuestions, mockInterfaceMode, isSessionCompleted]);
 
   // ─── Text-to-Speech (TTS) for questions ─────────────────────────────────────
   const [speakingQId, setSpeakingQId] = useState<string | null>(null);
@@ -4186,6 +4188,7 @@ export default function Portfolio() {
                             setRecruiterQuestions(null);
                             setIsLoadingRecruiterQuestions(false);
                             setRecruiterReplies({});
+                            setSessionSummaryFeedback('');
                             setIsRecruiterSpeaking(false);
                             setIsRecruiterTyping(false);
                             setIsSessionCompleted(false);
@@ -4268,18 +4271,24 @@ export default function Portfolio() {
                                       setInterviewCompanyName(session.companyName);
                                       setInterviewPositionName(session.positionName);
                                       setInterviewJD(session.jobDescription);
-                                      setInterviewSubTab('overview');
+                                      if (session.isCompleted) {
+                                        setInterviewSubTab('mock');
+                                      } else {
+                                        setInterviewSubTab('overview');
+                                      }
                                       setMockMode('idle');
                                       
                                       const storedPersona = RECRUITER_PERSONAS.find(p => p.id === session.recruiterPersonaId) || RECRUITER_PERSONAS[4];
                                       setSelectedRecruiter(storedPersona);
                                       setMockInterfaceMode(session.interfaceMode || 'standard');
                                       setRecruiterReplies(session.recruiterReplies || {});
+                                      setSessionSummaryFeedback(session.sessionSummaryFeedback || '');
+                                      setRecruiterQuestions(session.recruiterQuestions ? (session.recruiterQuestions as any) : null);
                                       setIsSessionCompleted(session.isCompleted || false);
                                     }}
                                     className="px-3 py-1.5 rounded-lg bg-violet-600/80 hover:bg-violet-600 text-white font-bold transition-all text-[11px]"
                                   >
-                                    Resume
+                                    {session.isCompleted ? 'View Report' : 'Resume'}
                                   </button>
                                   <button
                                     onClick={() => {

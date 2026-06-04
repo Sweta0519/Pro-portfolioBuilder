@@ -240,6 +240,8 @@ export interface InterviewSession {
   optimizedResults?: Record<string, { optimizedAnswer: string; feedback: string }>;
   recruiterPersonaId?: string;
   recruiterReplies?: Record<string, string>; // Maps questionId -> recruiter's conversational reaction
+  sessionSummaryFeedback?: string;           // Recruiter executive assessment text shown at end
+  recruiterQuestions?: Array<{ id: string; question: string; hint: string; source: string; difficulty: 'easy' | 'medium' | 'hard' }>; // Company-specific recruiter round questions
   interfaceMode?: 'standard' | 'interactive';
   isCompleted?: boolean;
 }
