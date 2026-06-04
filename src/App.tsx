@@ -166,6 +166,8 @@ export default function App() {
   const [loadingOptimization, setLoadingOptimization] = useState<boolean>(false);
   const [optimizedResults, setOptimizedResults] = useState<Record<string, { optimizedAnswer: string; feedback: string }>>({});
   const [showIdealAnswer, setShowIdealAnswer] = useState<Record<string, boolean>>({});
+  const [reportIdealLoadingMap, setReportIdealLoadingMap] = useState<Record<string, boolean>>({});
+  const [reportShowIdealMap, setReportShowIdealMap] = useState<Record<string, boolean>>({});
 
   // ATS Scanner states
   const [jobDescription, setJobDescription] = useState<string>('');
@@ -4168,6 +4170,8 @@ export default function Portfolio() {
                             setIdealAnswers({});
                             setOptimizedResults({});
                             setShowIdealAnswer({});
+                            setReportIdealLoadingMap({});
+                            setReportShowIdealMap({});
                             setRecruiterReplies({});
                             setIsRecruiterSpeaking(false);
                             setIsRecruiterTyping(false);
@@ -4877,6 +4881,65 @@ export default function Portfolio() {
                                               </div>
                                             </div>
                                           )}
+
+                                          {/* ✨ Suggested Answer Panel */}
+                                          <div className="border-t border-slate-850 pt-2.5">
+                                            {idealAnswers[q.id] ? (
+                                              <div className="space-y-1.5">
+                                                <button
+                                                  type="button"
+                                                  onClick={() => setReportShowIdealMap(p => ({ ...p, [q.id]: !p[q.id] }))}
+                                                  className="flex items-center gap-1.5 text-[9px] font-bold text-violet-400 uppercase tracking-wider hover:text-violet-300 transition-colors"
+                                                >
+                                                  <span className="text-xs">{reportShowIdealMap[q.id] ? '▾' : '▸'}</span>
+                                                  ✨ Suggested Answer {reportShowIdealMap[q.id] ? '(hide)' : '(show)'}
+                                                </button>
+                                                {reportShowIdealMap[q.id] && (
+                                                  <div className="p-3 rounded-xl bg-violet-955/15 border border-violet-900/40 space-y-1.5 animate-fadeIn">
+                                                    <p className="text-[9px] font-bold text-violet-400 uppercase tracking-wider">✨ What a strong answer looks like:</p>
+                                                    <p className="text-[11px] text-slate-250 leading-relaxed whitespace-pre-line">{idealAnswers[q.id]}</p>
+                                                  </div>
+                                                )}
+                                              </div>
+                                            ) : geminiApiKey.trim() ? (
+                                              <div className="flex items-center gap-2">
+                                                {reportIdealLoadingMap[q.id] ? (
+                                                  <div className="flex items-center gap-2 text-[10px] text-slate-500 italic animate-pulse">
+                                                    <span className="animate-spin text-sm">⏳</span>
+                                                    Generating suggested answer...
+                                                  </div>
+                                                ) : (
+                                                  <button
+                                                    type="button"
+                                                    onClick={async () => {
+                                                      setReportIdealLoadingMap(p => ({ ...p, [q.id]: true }));
+                                                      try {
+                                                        const ans = await generateIdealAnswer(
+                                                          geminiApiKey,
+                                                          aiProvider,
+                                                          q.question,
+                                                          interviewPositionName || interviewPlan.context.role,
+                                                          resumeData,
+                                                          starMode
+                                                        );
+                                                        setIdealAnswers(p => ({ ...p, [q.id]: ans }));
+                                                        setReportShowIdealMap(p => ({ ...p, [q.id]: true }));
+                                                      } catch (err: any) {
+                                                        alert(`AI Error: ${err?.message || 'Failed to generate suggested answer'}`);
+                                                      } finally {
+                                                        setReportIdealLoadingMap(p => ({ ...p, [q.id]: false }));
+                                                      }
+                                                    }}
+                                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold bg-violet-955/20 border border-violet-900/50 text-violet-400 hover:bg-violet-955/40 hover:text-violet-300 transition-all"
+                                                  >
+                                                    ✨ Generate Suggested Answer
+                                                  </button>
+                                                )}
+                                              </div>
+                                            ) : (
+                                              <p className="text-[9px] text-slate-600 italic">Add a Gemini/Groq API key to generate suggested answers.</p>
+                                            )}
+                                          </div>
                                         </div>
                                       </div>
                                     );
