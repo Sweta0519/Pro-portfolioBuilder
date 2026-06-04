@@ -11,6 +11,7 @@ import {
   RoleCategory,
   RoleInsights,
   GeminiEnhancedData,
+  RecruiterPersona,
 } from './types';
 
 // ─── Role Classification ──────────────────────────────────────────────────────
@@ -582,7 +583,7 @@ function getResources(topic: string): { label: string; url: string }[] {
 
 // ─── Study Plan Generator ─────────────────────────────────────────────────────
 
-export function generateStudyPlan(resume: ResumeData, jd: string, context: JobContext): StudyTopic[] {
+export function generateStudyPlan(resume: ResumeData, _jd: string, context: JobContext): StudyTopic[] {
   const topics: StudyTopic[] = [];
   const resumeText = [
     ...resume.skills.map(s => s.name),
@@ -590,7 +591,6 @@ export function generateStudyPlan(resume: ResumeData, jd: string, context: JobCo
     ...resume.projects.flatMap(p => p.techStack),
   ].join(' ').toLowerCase();
 
-  const jdLower = jd.toLowerCase();
   const rc = context.roleCategory;
 
   // Role-specific primary study topics
@@ -762,7 +762,7 @@ export function generateInterviewPlan(resume: ResumeData, positionName: string, 
 
 // ─── Answer Scorer ────────────────────────────────────────────────────────────
 
-export function scoreAnswer(question: string, answer: string, round: InterviewRound): AnswerScore {
+export function scoreAnswer(_question: string, answer: string, round: InterviewRound): AnswerScore {
   if (!answer.trim()) {
     return { score: 0, grade: 'Needs Work', color: 'text-rose-500 bg-rose-50 border-rose-200', feedback: 'No answer provided.', strengths: [], improvements: ['Please type your answer before submitting.'] };
   }
@@ -1252,5 +1252,179 @@ ${resumeContext}`;
     feedback: parsed.feedback || 'Answer polished for professional phrasing.'
   };
 }
+
+export const RECRUITER_PERSONAS: RecruiterPersona[] = [
+  {
+    id: 'sophia-google',
+    name: 'Sophia Vance',
+    title: 'Senior Technical Recruiter',
+    company: 'Google',
+    avatar: '👩‍💼',
+    voiceGender: 'female',
+    description: 'Analytical, encouraging, and focused on core computer science concepts, scalability, and structural clarity. Sophia values candidates who discuss complex trade-offs and structural solutions.',
+    stylePrompt: 'You are Sophia Vance, a Senior Technical Recruiter at Google. Keep your tone encouraging, professional, and slightly analytical. Reference engineering concepts like scale, code cleanliness, or efficiency if relevant. Keep it short (1-2 sentences).'
+  },
+  {
+    id: 'marcus-netflix',
+    name: 'Marcus Chen',
+    title: 'Lead Talent Partner',
+    company: 'Netflix',
+    avatar: '👨‍💼',
+    voiceGender: 'male',
+    description: 'Direct, business-focused, and obsessed with impact. Marcus wants to hear about autonomy, high performance, real customer metrics, and how your engineering work drives commercial success.',
+    stylePrompt: 'You are Marcus Chen, a Lead Talent Partner at Netflix. Keep your tone direct, warm, and highly focused on business impact and customer experience. Reference ownership, autonomy, or performance metrics. Keep it short (1-2 sentences).'
+  },
+  {
+    id: 'emily-stripe',
+    name: 'Emily Watson',
+    title: 'Product & Engineering Talent Acquisition',
+    company: 'Stripe',
+    avatar: '👩‍💻',
+    voiceGender: 'female',
+    description: 'Detail-oriented, structured, and deeply interested in user empathy and API design. Emily loves hearing about edge cases, developer experience, and how you solve real customer problems end-to-end.',
+    stylePrompt: 'You are Emily Watson from Stripe Talent Acquisition. Keep your tone curious, polished, and detail-oriented. Reference user experience, details, quality, or developer workflow. Keep it short (1-2 sentences).'
+  },
+  {
+    id: 'david-amazon',
+    name: 'David Miller',
+    title: 'Talent Acquisition Manager',
+    company: 'Amazon',
+    avatar: '🧔',
+    voiceGender: 'male',
+    description: 'Leadership Principle enthusiast. David evaluates answers strictly on ownership, customer obsession, bias for action, and expects a clear situation-action-result structure.',
+    stylePrompt: 'You are David Miller, a Talent Acquisition Manager at Amazon. Keep your tone professional, structured, and metric-focused. Reference leadership principles like Customer Obsession, Ownership, or Bias for Action if appropriate. Keep it short (1-2 sentences).'
+  },
+  {
+    id: 'sarah-general',
+    name: 'Sarah Jenkins',
+    title: 'Talent Acquisition Specialist',
+    company: 'the Company',
+    avatar: '👩',
+    voiceGender: 'female',
+    description: 'Friendly, welcoming, and highly communicative. Sarah focuses on cultural fit, work style, collaboration, and your motivation for joining the team.',
+    stylePrompt: 'You are Sarah Jenkins, a Talent Acquisition Specialist. Keep your tone friendly, welcoming, and focused on teamwork and motivation. Keep it short (1-2 sentences).'
+  }
+];
+
+export function getRecruiterPersona(companyName: string, culture: string): RecruiterPersona {
+  const comp = (companyName || '').toLowerCase();
+  const cult = (culture || '').toLowerCase();
+  
+  if (comp.includes('google')) return RECRUITER_PERSONAS[0];
+  if (comp.includes('netflix')) return RECRUITER_PERSONAS[1];
+  if (comp.includes('stripe')) return RECRUITER_PERSONAS[2];
+  if (comp.includes('amazon')) return RECRUITER_PERSONAS[3];
+  
+  if (cult === 'big-tech') {
+    return RECRUITER_PERSONAS[0];
+  } else if (cult === 'startup') {
+    return RECRUITER_PERSONAS[2]; // Emily from Stripe
+  }
+  
+  const general = { ...RECRUITER_PERSONAS[4] };
+  if (companyName && companyName !== 'the Company') {
+    general.company = companyName;
+    general.stylePrompt = `You are Sarah Jenkins, a Talent Acquisition Specialist at ${companyName}. Keep your tone friendly, welcoming, and focused on teamwork and motivation. Keep it short (1-2 sentences).`;
+  }
+  return general;
+}
+
+export async function generateRecruiterResponse(
+  apiKey: string,
+  provider: AiProvider,
+  persona: RecruiterPersona,
+  role: string,
+  question: string,
+  answer: string
+): Promise<string> {
+  if (!apiKey.trim()) {
+    const fallbackResponses = [
+      "Thanks for sharing that. It's really interesting how you approached it.",
+      "Thank you for that detailed answer. That makes a lot of sense.",
+      "Excellent points. I appreciate you walking me through your experience.",
+      "Got it, thank you. That gives me a very good understanding of your background.",
+      "Great. I like how you structured that. Let's move forward to our next question."
+    ];
+    const randomIndex = Math.floor(Math.random() * fallbackResponses.length);
+    return fallbackResponses[randomIndex];
+  }
+
+  const systemPrompt = `You are playing the role of ${persona.name}, a ${persona.title} at ${persona.company}.
+${persona.stylePrompt}
+
+The candidate is interviewing for the role: "${role}".
+They just answered the question: "${question}"
+Their answer was: "${answer}"
+
+Provide a brief, natural recruiter transition response.
+Guidelines:
+1. Keep it extremely short (1-2 sentences maximum, under 30 words).
+2. Do NOT grade their answer, do NOT say "Score: X" or "Grade: A", and do NOT give feedback like "you should improve X".
+3. Acknowledge what they said in a conversational, professional, and friendly recruiter tone, and transition.
+4. Answer directly, do NOT include any meta-commentary, markdown, or introduction. Just write the direct response.`;
+
+  const userPrompt = `Acknowledge candidate's response to: "${question}"`;
+
+  try {
+    const response = await callAiChat(apiKey, provider, systemPrompt, userPrompt);
+    return response.trim().replace(/^"(.*)"$/, '$1').replace(/^```(markdown|text)?|```$/g, '').trim();
+  } catch (err) {
+    console.error("Error generating recruiter response:", err);
+    return "Thank you for that detailed answer. That makes a lot of sense.";
+  }
+}
+
+export async function generateSessionFeedbackSummary(
+  apiKey: string,
+  provider: AiProvider,
+  persona: RecruiterPersona,
+  role: string,
+  qaPairs: Array<{ question: string; answer: string; score: number }>
+): Promise<string> {
+  const avgScore = qaPairs.reduce((acc, curr) => acc + curr.score, 0) / (qaPairs.length || 1);
+  let recommendation = "Hold";
+  if (avgScore >= 85) recommendation = "Strong Hire";
+  else if (avgScore >= 70) recommendation = "Hire";
+  else if (avgScore >= 55) recommendation = "Leaning Hire";
+  else recommendation = "No Hire";
+
+  if (!apiKey.trim()) {
+    return `Candidate evaluated for the position of ${role}. Selected Recruiter: ${persona.name}. 
+Overall Score: ${Math.round(avgScore)}/100. 
+Recommendation: ${recommendation}. 
+
+${
+  recommendation === "Strong Hire" ? `${persona.name} is highly impressed. The candidate articulated experiences clearly with outstanding structure and metrics.`
+  : recommendation === "Hire" ? `${persona.name} recommends advancing. Communication was solid, though adding more metrics would strengthen key achievements.`
+  : recommendation === "Leaning Hire" ? `${persona.name} suggests caution. The candidate has good skills, but answers lacked consistent structure or detail.`
+  : `${persona.name} noted that candidate answers were too brief and lacked the structured depth required for this role. Encourage revision using the STAR method.`
+}`;
+  }
+
+  const systemPrompt = `You are playing the role of ${persona.name}, a ${persona.title} at ${persona.company}.
+Provide an Executive Assessment Summary of the candidate's interview performance for the role of "${role}".
+
+The candidate answered the following questions:
+${qaPairs.map((pair, idx) => `Q${idx + 1}: "${pair.question}"\nCandidate Answer: "${pair.answer}"\nEvaluated Score: ${pair.score}/100\n`).join('\n')}
+
+Guidelines:
+1. Write in the first person (e.g., "I evaluated the candidate...", "I was impressed by...").
+2. Write a concise, professional assessment paragraph (around 80-100 words).
+3. Do not list the questions, write a unified narrative.
+4. Give a clear hiring verdict matching the recommendation of "${recommendation}" based on the average score of ${Math.round(avgScore)}/100.
+5. Provide 1 key strength and 1 key area for improvement.
+6. Return only the direct summary text. No markdown or meta-intro.`;
+
+  const userPrompt = `Generate the interview summary paragraph.`;
+
+  try {
+    const response = await callAiChat(apiKey, provider, systemPrompt, userPrompt);
+    return response.trim().replace(/^```(markdown|text)?|```$/g, '').trim();
+  } catch (err) {
+    console.error("Error generating feedback summary:", err);
+    return `Candidate completed the round with an average score of ${Math.round(avgScore)}/100, resulting in a recommendation of: ${recommendation}. Please review the detailed question-by-question breakdown below.`;
+  }
+}
+
 
 

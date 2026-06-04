@@ -17,9 +17,20 @@ import {
 } from './types';
 import { parseRawResumeText } from './parser';
 import { analyzeResume, actionVerbDictionary } from './coach';
-import { generateInterviewPlan, scoreAnswer, fetchGeminiInsights, testApiConnection, generateIdealAnswer, optimizeUserAnswer } from './interviewCoach';
+import { 
+  generateInterviewPlan, 
+  scoreAnswer, 
+  fetchGeminiInsights, 
+  testApiConnection, 
+  generateIdealAnswer, 
+  optimizeUserAnswer,
+  RECRUITER_PERSONAS,
+  getRecruiterPersona,
+  generateRecruiterResponse,
+  generateSessionFeedbackSummary
+} from './interviewCoach';
 import type { AiProvider } from './interviewCoach';
-import { InterviewPlan, InterviewRound, AnswerScore, GeminiEnhancedData, InterviewSession } from './types';
+import { InterviewPlan, InterviewRound, AnswerScore, GeminiEnhancedData, InterviewSession, RecruiterPersona } from './types';
 import { analyzeATSCompliance, analyzeCoverLetter, autoTuneDesign, autoOptimizeResume } from './ats';
 import { ThemeRenderer } from './ThemeRenderer';
 import { ResumeDocumentTemplate } from './ResumeDocumentTemplate';
@@ -113,6 +124,18 @@ export default function App() {
   const [hintVisible, setHintVisible] = useState<Record<string, boolean>>({});
   const [sampleVisible, setSampleVisible] = useState<Record<string, boolean>>({});
   const mockTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  // ─── Interactive Voice Recruiter States ──────────────────────────────────
+  const [mockInterfaceMode, setMockInterfaceMode] = useState<'standard' | 'interactive'>('standard');
+  const [selectedRecruiter, setSelectedRecruiter] = useState<RecruiterPersona>(RECRUITER_PERSONAS[4]);
+  const [recruiterReplies, setRecruiterReplies] = useState<Record<string, string>>({});
+  const [isRecruiterSpeaking, setIsRecruiterSpeaking] = useState<boolean>(false);
+  const [isRecruiterTyping, setIsRecruiterTyping] = useState<boolean>(false);
+  const [isSessionCompleted, setIsSessionCompleted] = useState<boolean>(false);
+  const [autoPlayVoice, setAutoPlayVoice] = useState<boolean>(true);
+  const [autoActivateMic, setAutoActivateMic] = useState<boolean>(true);
+  const [sessionSummaryFeedback, setSessionSummaryFeedback] = useState<string>('');
+  const [isLoadingSummary, setIsLoadingSummary] = useState<boolean>(false);
 
   // ─── Gemini Google Search Enhancement ────────────────────────────────────
   const [geminiApiKey, setGeminiApiKey] = useState<string>(() => localStorage.getItem('gemini-api-key') || '');
@@ -231,12 +254,16 @@ export default function App() {
           idealAnswers,
           optimizedResults,
           plan: interviewPlan!,
-          geminiData
+          geminiData,
+          recruiterPersonaId: selectedRecruiter.id,
+          recruiterReplies: recruiterReplies,
+          interfaceMode: mockInterfaceMode,
+          isCompleted: isSessionCompleted
         };
       }
       return s;
     }));
-  }, [currentSessionId, mockAnswers, mockScores, idealAnswers, optimizedResults, interviewPlan, geminiData]);
+  }, [currentSessionId, mockAnswers, mockScores, idealAnswers, optimizedResults, interviewPlan, geminiData, selectedRecruiter, recruiterReplies, mockInterfaceMode, isSessionCompleted]);
 
   // ─── Text-to-Speech (TTS) for questions ─────────────────────────────────────
   const [speakingQId, setSpeakingQId] = useState<string | null>(null);
@@ -264,13 +291,210 @@ export default function App() {
     }
   };
 
+  const speakRecruiterText = (text: string, onEndCallback?: () => void) => {
+    if (!autoPlayVoice) {
+      if (onEndCallback) onEndCallback();
+      return;
+    }
+    window.speechSynthesis.cancel();
+    setIsRecruiterSpeaking(true);
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.onend = () => {
+      setIsRecruiterSpeaking(false);
+      if (onEndCallback) onEndCallback();
+    };
+    utterance.onerror = () => {
+      setIsRecruiterSpeaking(false);
+      if (onEndCallback) onEndCallback();
+    };
+    
+    const voices = window.speechSynthesis.getVoices();
+    let voice = null;
+    if (selectedRecruiter.voiceGender === 'female') {
+      voice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Zira') || v.name.includes('Google US English') || v.name.includes('Samantha') || v.name.includes('Hazel') || v.name.includes('female')));
+    } else {
+      voice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('David') || v.name.includes('Google UK English Male') || v.name.includes('Microsoft George') || v.name.includes('male')));
+    }
+    if (!voice) voice = voices.find(v => v.lang.startsWith('en')) || voices[0];
+    if (voice) utterance.voice = voice;
+    
+    if (selectedRecruiter.id === 'sophia-google') {
+      utterance.rate = 0.95; 
+    } else if (selectedRecruiter.id === 'marcus-netflix') {
+      utterance.rate = 1.05; 
+    } else {
+      utterance.rate = 1.0;
+    }
+    
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const startListening = (qId: string) => {
+    if (isRecording) return;
+    
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert('Speech recognition is not supported in this browser. Please use Chrome or Edge.');
+      return;
+    }
+    
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = 'en-US';
+    
+    let initialText = mockAnswers[qId] || '';
+    let finalTranscript = initialText;
+    
+    recognition.onresult = (event: any) => {
+      let interim = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        if (event.results[i].isFinal) {
+          finalTranscript += (finalTranscript ? ' ' : '') + event.results[i][0].transcript;
+        } else {
+          interim += event.results[i][0].transcript;
+        }
+      }
+      setMockAnswers(p => ({ ...p, [qId]: finalTranscript + (interim ? ' ' + interim : '') }));
+    };
+    
+    recognition.onerror = () => setIsRecording(false);
+    recognition.onend = () => setIsRecording(false);
+    recognition.start();
+    recognitionRef.current = recognition;
+
+    // Start audio recorder for local playback
+    navigator.mediaDevices.getUserMedia({ audio: true })
+      .then(stream => {
+        const recorder = new MediaRecorder(stream);
+        audioChunksRef.current = [];
+        recorder.ondataavailable = (e) => audioChunksRef.current.push(e.data);
+        recorder.onstop = () => {
+          const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+          setAudioUrl(URL.createObjectURL(blob));
+          stream.getTracks().forEach(t => t.stop());
+        };
+        recorder.start();
+        mediaRecorderRef.current = recorder;
+      })
+      .catch(() => { /* optional */ });
+
+    setIsRecording(true);
+    setAudioUrl(null);
+  };
+
+  const stopListening = () => {
+    if (!isRecording) return;
+    recognitionRef.current?.stop();
+    mediaRecorderRef.current?.stop();
+    setIsRecording(false);
+  };
+
   useEffect(() => {
     window.speechSynthesis.cancel();
     setSpeakingQId(null);
+    setIsRecruiterSpeaking(false);
     return () => {
       window.speechSynthesis.cancel();
     };
   }, [interviewSubTab, mockQuestionIdx, activeTab]);
+
+  const submitAnswerInteractive = async (qId: string, question: string, answer: string) => {
+    if (mockTimerRef.current) clearInterval(mockTimerRef.current);
+    
+    if (isRecording) {
+      recognitionRef.current?.stop();
+      mediaRecorderRef.current?.stop();
+      setIsRecording(false);
+    }
+    
+    const scored = scoreAnswer(question, answer, mockRound);
+    setMockScores(p => ({ ...p, [qId]: scored }));
+    
+    setIsRecruiterTyping(true);
+    setMockMode('reviewed');
+    
+    try {
+      const reply = await generateRecruiterResponse(
+        geminiApiKey,
+        aiProvider,
+        selectedRecruiter,
+        interviewPlan!.context.role,
+        question,
+        answer
+      );
+      setRecruiterReplies(p => ({ ...p, [qId]: reply }));
+      setIsRecruiterTyping(false);
+      speakRecruiterText(reply);
+    } catch (err) {
+      console.error(err);
+      setIsRecruiterTyping(false);
+      const fallbackReply = "Thank you for sharing that experience. That makes a lot of sense.";
+      setRecruiterReplies(p => ({ ...p, [qId]: fallbackReply }));
+      speakRecruiterText(fallbackReply);
+    }
+  };
+
+  const finishInteractiveSession = async (sessionQuestions: Array<{ id: string; question: string; difficulty: string; source: string }>) => {
+    setIsSessionCompleted(true);
+    setIsLoadingSummary(true);
+    setSessionSummaryFeedback('');
+    
+    const qaPairs = sessionQuestions.map(q => ({
+      question: q.question,
+      answer: mockAnswers[q.id] || '',
+      score: mockScores[q.id]?.score || 0
+    }));
+    
+    try {
+      const summary = await generateSessionFeedbackSummary(
+        geminiApiKey,
+        aiProvider,
+        selectedRecruiter,
+        interviewPlan!.context.role,
+        qaPairs
+      );
+      setSessionSummaryFeedback(summary);
+    } catch (err) {
+      console.error(err);
+      setSessionSummaryFeedback("Failed to generate AI executive summary.");
+    } finally {
+      setIsLoadingSummary(false);
+    }
+  };
+
+  // Speak recruiter text automatically when moving to a new question in interactive mode
+  useEffect(() => {
+    if (!interviewPlan) return;
+    if (interviewSubTab === 'mock' && mockMode === 'answering' && mockInterfaceMode === 'interactive') {
+      const allRounds = [...interviewPlan.rounds];
+      const currentRoundData = allRounds.find(r => r.round === mockRound) || allRounds[0];
+      const currentQ = currentRoundData?.questions[mockQuestionIdx];
+      if (currentQ) {
+        const textToSpeak = mockQuestionIdx === 0
+          ? `Hi there! I'm ${selectedRecruiter.name}, the ${selectedRecruiter.title} at ${selectedRecruiter.company}. I will be conducting your recruiter screen today. Let's start with our first question: ${currentQ.question}`
+          : `Next question: ${currentQ.question}`;
+        
+        speakRecruiterText(textToSpeak);
+      }
+    }
+  }, [interviewSubTab, mockMode, mockQuestionIdx, mockRound, mockInterfaceMode, selectedRecruiter, interviewPlan]);
+
+  // Auto-activate microphone when recruiter stops speaking
+  useEffect(() => {
+    if (!interviewPlan) return;
+    if (interviewSubTab === 'mock' && mockMode === 'answering' && mockInterfaceMode === 'interactive' && !isRecruiterSpeaking && !isRecruiterTyping) {
+      const allRounds = [...interviewPlan.rounds];
+      const currentRoundData = allRounds.find(r => r.round === mockRound) || allRounds[0];
+      const currentQ = currentRoundData?.questions[mockQuestionIdx];
+      if (currentQ && autoActivateMic && !isRecording) {
+        const t = setTimeout(() => {
+          startListening(currentQ.id);
+        }, 150);
+        return () => clearTimeout(t);
+      }
+    }
+  }, [interviewSubTab, mockMode, isRecruiterSpeaking, isRecruiterTyping, mockQuestionIdx, mockRound, autoActivateMic, interviewPlan]);
 
 
   // Forms helper states for adding items
@@ -3899,8 +4123,11 @@ export default function Portfolio() {
                           setGeminiData(null);
                           setGeminiError('');
 
-                          // Step 1: Generate local plan immediately
+                           // Step 1: Generate local plan immediately
                           const plan = generateInterviewPlan(resumeData, interviewPositionName, interviewJD, interviewCompanyName);
+                          const recruiter = getRecruiterPersona(interviewCompanyName.trim() || plan.context.company, plan.context.companyCulture);
+                          setSelectedRecruiter(recruiter);
+
                           const sessionId = 'session-' + Date.now();
                           const newSession: InterviewSession = {
                             id: sessionId,
@@ -3919,7 +4146,11 @@ export default function Portfolio() {
                             mockAnswers: {},
                             mockScores: {},
                             idealAnswers: {},
-                            optimizedResults: {}
+                            optimizedResults: {},
+                            recruiterPersonaId: recruiter.id,
+                            recruiterReplies: {},
+                            interfaceMode: mockInterfaceMode,
+                            isCompleted: false
                           };
 
                           setSavedSessions(prev => [newSession, ...prev]);
@@ -3937,6 +4168,10 @@ export default function Portfolio() {
                             setIdealAnswers({});
                             setOptimizedResults({});
                             setShowIdealAnswer({});
+                            setRecruiterReplies({});
+                            setIsRecruiterSpeaking(false);
+                            setIsRecruiterTyping(false);
+                            setIsSessionCompleted(false);
                           }, 600);
 
                           // Step 2: If API key exists, fetch Gemini enhanced data in parallel
@@ -4018,6 +4253,12 @@ export default function Portfolio() {
                                       setInterviewJD(session.jobDescription);
                                       setInterviewSubTab('overview');
                                       setMockMode('idle');
+                                      
+                                      const storedPersona = RECRUITER_PERSONAS.find(p => p.id === session.recruiterPersonaId) || RECRUITER_PERSONAS[4];
+                                      setSelectedRecruiter(storedPersona);
+                                      setMockInterfaceMode(session.interfaceMode || 'standard');
+                                      setRecruiterReplies(session.recruiterReplies || {});
+                                      setIsSessionCompleted(session.isCompleted || false);
                                     }}
                                     className="px-3 py-1.5 rounded-lg bg-violet-600/80 hover:bg-violet-600 text-white font-bold transition-all text-[11px]"
                                   >
@@ -4373,7 +4614,6 @@ export default function Portfolio() {
                         const allRounds = [...interviewPlan.rounds];
                         if (geminiData?.reportedQuestions && geminiData.reportedQuestions.length > 0) {
                           const reportedQuestionsForPractice = geminiData.reportedQuestions.map((q, idx) => {
-                            // Dynamically map reported round to closest enum InterviewRound
                             let mappedRound: InterviewRound = 'technical';
                             const rLower = (q.round || '').toLowerCase();
                             if (rLower.includes('behavioral') || rLower.includes('fit') || rLower.includes('hr') || rLower.includes('culture') || rLower.includes('personal')) {
@@ -4429,6 +4669,7 @@ export default function Portfolio() {
                           setStarAction('');
                           setStarResult('');
                           setStarMode(false);
+                          setAudioUrl(null);
                           if (mockTimerRef.current) clearInterval(mockTimerRef.current);
                           mockTimerRef.current = setInterval(() => setMockTimerSec(s => s + 1), 1000);
                         };
@@ -4475,9 +4716,14 @@ export default function Portfolio() {
                         const submitAnswer = () => {
                           if (!currentQ || !currentAnswer.trim()) return;
                           if (mockTimerRef.current) clearInterval(mockTimerRef.current);
-                          const scored = scoreAnswer(currentQ.question, currentAnswer, currentQ.round);
-                          setMockScores(p => ({ ...p, [currentQ.id]: scored }));
-                          setMockMode('reviewed');
+                          
+                          if (mockInterfaceMode === 'interactive') {
+                            submitAnswerInteractive(currentQ.id, currentQ.question, currentAnswer);
+                          } else {
+                            const scored = scoreAnswer(currentQ.question, currentAnswer, currentQ.round);
+                            setMockScores(p => ({ ...p, [currentQ.id]: scored }));
+                            setMockMode('reviewed');
+                          }
                         };
 
                         const nextQuestion = () => {
@@ -4485,508 +4731,929 @@ export default function Portfolio() {
                           if (nextIdx < totalQ) {
                             startQuestion(mockRound, nextIdx);
                           } else {
-                            // Check for next round
-                            const roundIdx = allRounds.findIndex(r => r.round === mockRound);
-                            if (roundIdx + 1 < allRounds.length) {
-                              const nextRound = allRounds[roundIdx + 1];
-                              startQuestion(nextRound.round, 0);
+                            if (mockInterfaceMode === 'interactive') {
+                              finishInteractiveSession(questions);
                             } else {
-                              setMockMode('idle');
+                              const roundIdx = allRounds.findIndex(r => r.round === mockRound);
+                              if (roundIdx + 1 < allRounds.length) {
+                                const nextRound = allRounds[roundIdx + 1];
+                                startQuestion(nextRound.round, 0);
+                              } else {
+                                setMockMode('idle');
+                              }
                             }
                           }
                         };
 
                         return (
-                          <div className="space-y-3 animate-fadeIn">
-                            {mockMode === 'idle' && (
-                              <div className="space-y-3">
-                                <p className="text-[11px] text-slate-400 leading-relaxed">Select a round to begin your mock interview. You'll answer one question at a time and receive AI-scored feedback after each answer.</p>
-                                {allRounds.map(r => (
+                          <div className="space-y-4 animate-fadeIn">
+                            {/* SESSION COMPLETED FEEDBACK REPORT */}
+                            {isSessionCompleted ? (
+                              <div className="space-y-4 animate-fadeIn">
+                                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                                  <div>
+                                    <h3 className="text-sm font-bold text-white flex items-center gap-1.5">
+                                      <span>📋 Recruiter Interview Report</span>
+                                    </h3>
+                                    <p className="text-[10px] text-slate-500 mt-0.5">Summary of your interactive screen with {selectedRecruiter.name}</p>
+                                  </div>
                                   <button
-                                    key={r.round}
-                                    onClick={() => startQuestion(r.round, 0)}
-                                    className="w-full p-3.5 rounded-xl border border-slate-700 bg-slate-900/50 hover:border-violet-500 hover:bg-violet-500/5 transition-all text-left group"
+                                    type="button"
+                                    onClick={() => {
+                                      setIsSessionCompleted(false);
+                                      setMockMode('idle');
+                                      setMockQuestionIdx(0);
+                                    }}
+                                    className="px-3 py-1 rounded-lg border border-slate-800 text-slate-400 hover:text-white text-[10px] font-bold transition-all"
                                   >
-                                    <div className="flex items-center justify-between">
-                                      <div className="flex items-center gap-2">
-                                        <span className="text-lg">{r.emoji}</span>
-                                        <div>
-                                          <p className="text-xs font-bold text-slate-200 group-hover:text-violet-300 transition-colors">{r.label}</p>
-                                          <p className="text-[10px] text-slate-500">{r.questions.length} questions</p>
+                                    ← Back to Rounds
+                                  </button>
+                                </div>
+
+                                {/* Executive Assessment Card */}
+                                <div className="p-4 rounded-xl bg-slate-900/50 border border-slate-800 space-y-3">
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                      <div className="w-10 h-10 rounded-full bg-violet-955 border border-violet-850 flex items-center justify-center text-xl">{selectedRecruiter.avatar}</div>
+                                      <div>
+                                        <h4 className="text-xs font-bold text-slate-200">{selectedRecruiter.name}</h4>
+                                        <p className="text-[10px] text-slate-500">{selectedRecruiter.title} • {selectedRecruiter.company}</p>
+                                      </div>
+                                    </div>
+                                    <div className="text-right">
+                                      {(() => {
+                                        const scores = questions.map(q => mockScores[q.id]?.score || 0);
+                                        const avgScore = Math.round(scores.reduce((a, b) => a + b, 0) / (scores.length || 1));
+                                        let color = 'text-rose-400 bg-rose-955/20 border-rose-900/50';
+                                        let verdict = 'Hold / No Hire';
+                                        if (avgScore >= 85) { color = 'text-emerald-400 bg-emerald-955/30 border-emerald-900/50'; verdict = 'Strong Hire'; }
+                                        else if (avgScore >= 70) { color = 'text-emerald-400 bg-emerald-955/20 border-emerald-900/30'; verdict = 'Hire'; }
+                                        else if (avgScore >= 55) { color = 'text-amber-455 bg-amber-955/20 border-amber-900/30'; verdict = 'Leaning Hire'; }
+                                        
+                                        return (
+                                          <div className={`p-1.5 px-3 rounded-lg border text-center ${color}`}>
+                                            <div className="text-[10px] font-bold uppercase tracking-wider">Verdict</div>
+                                            <div className="text-xs font-black">{verdict} ({avgScore}%)</div>
+                                          </div>
+                                        );
+                                      })()}
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="p-3 bg-slate-955/60 rounded-xl border border-slate-850 text-[11px] text-slate-350 leading-relaxed">
+                                    <p className="font-bold text-[9px] text-violet-400 uppercase tracking-wider mb-1.5">📢 Recruiter Executive Assessment</p>
+                                    {isLoadingSummary ? (
+                                      <div className="flex items-center gap-2 py-2">
+                                        <span className="animate-spin text-sm">⏳</span>
+                                        <span className="text-[10px] text-slate-500 italic">Writing performance summary...</span>
+                                      </div>
+                                    ) : (
+                                      <p className="text-justify leading-relaxed whitespace-pre-line">{sessionSummaryFeedback}</p>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* Detailed Transcript / Question Logs */}
+                                <div className="space-y-2">
+                                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">📝 Detailed Round Logs</p>
+                                  {questions.map((q, idx) => {
+                                    const answer = mockAnswers[q.id] || '(No answer provided)';
+                                    const score = mockScores[q.id];
+                                    const reply = recruiterReplies[q.id];
+                                    
+                                    return (
+                                      <div key={q.id} className="rounded-xl border border-slate-800 bg-slate-955/25 overflow-hidden">
+                                        <div className="p-3 bg-slate-900/40 flex justify-between items-center gap-3">
+                                          <div className="flex items-center gap-2 min-w-0">
+                                            <span className="text-[10px] bg-slate-800 border border-slate-700 text-slate-400 font-bold w-5 h-5 rounded-full flex items-center justify-center shrink-0">Q{idx + 1}</span>
+                                            <p className="text-xs font-medium text-slate-200 truncate">{q.question}</p>
+                                          </div>
+                                          <div className="flex items-center gap-2 shrink-0">
+                                            {score ? (
+                                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${score.color.replace('bg-', 'bg-opacity-20 bg-')}`}>{score.grade} ({score.score} pts)</span>
+                                            ) : (
+                                              <span className="text-[9px] bg-slate-800 text-slate-500 px-1.5 py-0.5 rounded">Unscored</span>
+                                            )}
+                                          </div>
+                                        </div>
+
+                                        <div className="p-3.5 space-y-3">
+                                          {/* Question row */}
+                                          <div className="space-y-1">
+                                            <p className="text-[9px] font-bold text-slate-500 uppercase">Question asked by {selectedRecruiter.name}:</p>
+                                            <p className="text-xs text-slate-350">{q.question}</p>
+                                          </div>
+
+                                          {/* Answer row */}
+                                          <div className="space-y-1">
+                                            <p className="text-[9px] font-bold text-violet-400 uppercase">Your Response:</p>
+                                            <p className="text-xs text-slate-250 italic">"{answer}"</p>
+                                          </div>
+
+                                          {/* Recruiter reply row */}
+                                          {reply && (
+                                            <div className="space-y-1">
+                                              <p className="text-[9px] font-bold text-blue-400 uppercase">Recruiter Reaction:</p>
+                                              <p className="text-xs text-slate-300">"{reply}"</p>
+                                            </div>
+                                          )}
+
+                                          {/* Score Evaluation */}
+                                          {score && (
+                                            <div className="border-t border-slate-850 pt-2.5 grid grid-cols-1 md:grid-cols-2 gap-3 text-[11px]">
+                                              <div className="space-y-1 bg-emerald-950/10 border border-emerald-900/20 rounded-lg p-2">
+                                                <span className="text-[9px] text-emerald-450 font-bold uppercase tracking-wider block">✓ Strengths</span>
+                                                <ul className="list-disc pl-3 text-slate-300 space-y-0.5">
+                                                  {score.strengths.map((str, sIdx) => <li key={sIdx}>{str}</li>)}
+                                                  {score.strengths.length === 0 && <li>Good attempt.</li>}
+                                                </ul>
+                                              </div>
+                                              <div className="space-y-1 bg-amber-955/10 border border-amber-900/20 rounded-lg p-2">
+                                                <span className="text-[9px] text-amber-450 font-bold uppercase tracking-wider block">⚠ Improvements</span>
+                                                <ul className="list-disc pl-3 text-slate-300 space-y-0.5">
+                                                  {score.improvements.map((imp, iIdx) => <li key={iIdx}>{imp}</li>)}
+                                                  {score.improvements.length === 0 && <li>No critical improvements detected.</li>}
+                                                </ul>
+                                              </div>
+                                            </div>
+                                          )}
                                         </div>
                                       </div>
-                                      <span className="text-[10px] text-violet-400 font-bold opacity-0 group-hover:opacity-100 transition-opacity">Start →</span>
-                                    </div>
-                                  </button>
-                                ))}
+                                    );
+                                  })}
+                                </div>
                               </div>
-                            )}
-
-                            {(mockMode === 'answering' || mockMode === 'reviewed') && currentQ && (
+                            ) : (
                               <>
-                                {/* Progress */}
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-[10px] text-violet-400 font-bold">{currentRoundData.emoji} {currentRoundData.label}</span>
-                                    <span className="text-[10px] text-slate-400">Q {mockQuestionIdx + 1} / {totalQ}</span>
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                    <span className={`text-[11px] font-mono font-bold ${
-                                      mockMode === 'answering' ? 'text-violet-400' : 'text-slate-500'
-                                    }`}>⏱ {timerMins}:{timerSecs}</span>
-                                    <span className={`text-[9px] font-black px-1.5 py-0.5 rounded ${
-                                      currentQ.difficulty === 'hard' ? 'bg-rose-900/60 text-rose-400'
-                                      : currentQ.difficulty === 'medium' ? 'bg-amber-900/60 text-amber-400'
-                                      : 'bg-emerald-900/60 text-emerald-400'
-                                    }`}>{currentQ.difficulty.toUpperCase()}</span>
-                                  </div>
-                                </div>
-
-                                {/* Progress bar */}
-                                <div className="w-full h-1 bg-slate-800 rounded-full">
-                                  <div
-                                    className="h-1 bg-violet-500 rounded-full transition-all"
-                                    style={{ width: `${((mockQuestionIdx + 1) / totalQ) * 100}%` }}
-                                  />
-                                </div>
-
-                                {/* Question card */}
-                                <div className="p-4 rounded-xl bg-slate-950/50 border border-slate-700 relative group flex justify-between items-start gap-4">
-                                  <div className="flex-1">
-                                    <p className="text-xs font-medium text-slate-200 leading-relaxed">{currentQ.question}</p>
-                                    <p className="text-[10px] text-slate-500 mt-2">📍 {currentQ.source}</p>
-                                  </div>
-                                  <button
-                                    onClick={() => toggleSpeakQuestion(currentQ.id, currentQ.question)}
-                                    className={`p-2 rounded-xl border flex items-center justify-center transition-all ${
-                                      speakingQId === currentQ.id
-                                        ? 'bg-rose-950/40 border-rose-900/50 text-rose-450 animate-pulse shadow-md shadow-rose-950/40'
-                                        : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-violet-450 hover:border-violet-500/50 hover:bg-violet-950/10'
-                                    }`}
-                                    title={speakingQId === currentQ.id ? 'Stop reading' : 'Read question aloud'}
-                                  >
-                                    {speakingQId === currentQ.id ? (
-                                      <span className="text-xs font-bold">⏹ Stop</span>
-                                    ) : (
-                                      <span className="text-xs font-bold flex items-center gap-1">🔊 Listen</span>
-                                    )}
-                                  </button>
-                                </div>
-
-                                {/* Answer Mode Selector & Guided Builder */}
-                                {mockMode === 'answering' && (
-                                  <>
-                                    {geminiApiKey.trim() && (
-                                      <div className="mb-3 flex justify-between items-center bg-slate-900/50 p-2.5 rounded-xl border border-slate-800">
-                                        <div className="text-[10px] text-slate-400">
-                                          <span className="font-bold text-violet-400">🧠 AI Answer Assistant</span>: Get an ideal answer customized to your profile.
-                                        </div>
-                                        <button
-                                          type="button"
-                                          onClick={async () => {
-                                            if (loadingIdealAnswer) return;
-                                            const cached = idealAnswers[currentQ.id];
-                                            if (cached) {
-                                              setShowIdealAnswer(p => ({ ...p, [currentQ.id]: !p[currentQ.id] }));
-                                              return;
-                                            }
-                                            setLoadingIdealAnswer(true);
-                                            try {
-                                              const ans = await generateIdealAnswer(
-                                                geminiApiKey,
-                                                aiProvider,
-                                                currentQ.question,
-                                                interviewPositionName || interviewPlan.context.role,
-                                                resumeData,
-                                                starMode
-                                              );
-                                              setIdealAnswers(p => ({ ...p, [currentQ.id]: ans }));
-                                              setShowIdealAnswer(p => ({ ...p, [currentQ.id]: true }));
-                                            } catch (err: any) {
-                                              alert(`AI Error: ${err?.message || 'Failed to generate answer'}`);
-                                            } finally {
-                                              setLoadingIdealAnswer(false);
-                                            }
-                                          }}
-                                          className="px-2.5 py-1 rounded bg-violet-650 hover:bg-violet-600 text-[9px] font-bold text-white transition-colors"
-                                        >
-                                          {loadingIdealAnswer ? '⏳ Generating...' : showIdealAnswer[currentQ.id] ? '🙈 Hide Ideal' : '💡 Reveal Ideal'}
-                                        </button>
-                                      </div>
-                                    )}
-
-                                    {showIdealAnswer[currentQ.id] && idealAnswers[currentQ.id] && (
-                                      <div className="mb-3 p-3 rounded-xl bg-violet-500/5 border border-violet-500/20 space-y-2 animate-fadeIn">
-                                        <div className="flex justify-between items-center">
-                                          <span className="text-[9px] font-bold text-violet-400 uppercase">💡 Model Ideal Answer (Customized to Profile)</span>
-                                          <button
-                                            type="button"
-                                            onClick={() => {
-                                              const text = idealAnswers[currentQ.id];
-                                              let sit = text;
-                                              let tsk = '';
-                                              let act = '';
-                                              let res = '';
-                                              if (text.includes('[Situation]') || text.includes('[Task]') || text.includes('[Action]') || text.includes('[Result]')) {
-                                                const sitMatch = text.match(/\[Situation\]\s*([\s\S]*?)(?=\[Task\]|\[Action\]|\[Result\]|$)/i);
-                                                const tskMatch = text.match(/\[Task\]\s*([\s\S]*?)(?=\[Situation\]|\[Action\]|\[Result\]|$)/i);
-                                                const actMatch = text.match(/\[Action\]\s*([\s\S]*?)(?=\[Situation\]|\[Task\]|\[Result\]|$)/i);
-                                                const resMatch = text.match(/\[Result\]\s*([\s\S]*?)(?=\[Situation\]|\[Task\]|\[Action\]|$)/i);
-                                                if (sitMatch) sit = sitMatch[1].trim();
-                                                if (tskMatch) tsk = tskMatch[1].trim();
-                                                if (actMatch) act = actMatch[1].trim();
-                                                if (resMatch) res = resMatch[1].trim();
-                                              }
-                                              setStarSituation(sit);
-                                              setStarTask(tsk);
-                                              setStarAction(act);
-                                              setStarResult(res);
-                                              updateStarAnswer(sit, tsk, act, res);
-                                            }}
-                                            className="text-[9px] text-violet-400 hover:text-violet-300 font-bold transition-colors"
-                                          >📋 Copy to Draft</button>
-                                        </div>
-                                        <p className="text-[11px] text-slate-350 leading-relaxed text-justify">{idealAnswers[currentQ.id]}</p>
-                                      </div>
-                                    )}
-
-                                    <div className="flex items-center justify-between mb-2">
-                                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Your Answer</label>
-                                      <div className="flex p-0.5 bg-slate-955/60 rounded-lg border border-slate-800">
-                                        <button
-                                          type="button"
-                                          onClick={() => setStarMode(false)}
-                                          className={`px-2.5 py-1 rounded-md text-[9px] font-bold transition-all ${!starMode ? 'bg-violet-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}
-                                        >
-                                          ✍️ Freeform
-                                        </button>
-                                        <button
-                                          type="button"
-                                          onClick={enableStarMode}
-                                          className={`px-2.5 py-1 rounded-md text-[9px] font-bold transition-all ${starMode ? 'bg-violet-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-350'}`}
-                                        >
-                                          🧩 Guided STAR
-                                        </button>
-                                      </div>
+                                {/* mockMode === 'idle' */}
+                                {mockMode === 'idle' && (
+                                  <div className="space-y-3">
+                                    <div className="flex p-0.5 bg-slate-950 rounded-xl border border-slate-850 mb-1">
+                                      <button
+                                        type="button"
+                                        onClick={() => setMockInterfaceMode('standard')}
+                                        className={`flex-1 py-1.5 text-center rounded-lg text-[11px] font-bold transition-all ${mockInterfaceMode === 'standard' ? 'bg-violet-650 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
+                                      >
+                                        👤 Standard Mock (Self-paced)
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          setMockInterfaceMode('interactive');
+                                          const recruiter = getRecruiterPersona(interviewCompanyName || interviewPlan.context.company, interviewPlan.context.companyCulture);
+                                          setSelectedRecruiter(recruiter);
+                                        }}
+                                        className={`flex-1 py-1.5 text-center rounded-lg text-[11px] font-bold transition-all ${mockInterfaceMode === 'interactive' ? 'bg-violet-650 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
+                                      >
+                                        🎙️ Interactive Voice Recruiter
+                                      </button>
                                     </div>
 
-                                    {starMode ? (
-                                      <div className="space-y-3.5">
-                                        {/* Situation */}
-                                        <div className="space-y-1">
-                                          <div className="flex justify-between items-center">
-                                            <label className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1">
-                                              <span className="w-4 h-4 rounded-full bg-blue-550/20 text-blue-400 border border-blue-500/20 flex items-center justify-center text-[9px] font-black">S</span>
-                                              Situation
-                                            </label>
-                                            <span className="text-[9px] text-slate-500">Set the scene & context</span>
+                                    {mockInterfaceMode === 'interactive' ? (
+                                      <div className="space-y-3">
+                                        <div className="space-y-1.5">
+                                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Recruiter Persona</label>
+                                          <div className="grid grid-cols-5 gap-2">
+                                            {RECRUITER_PERSONAS.map(p => (
+                                              <button
+                                                key={p.id}
+                                                type="button"
+                                                onClick={() => setSelectedRecruiter(p)}
+                                                className={`p-2 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all ${selectedRecruiter.id === p.id ? 'bg-violet-955/20 border-violet-500 text-violet-300 shadow-sm' : 'bg-slate-900/50 border-slate-800 text-slate-500 hover:border-slate-700 hover:text-slate-350'}`}
+                                                title={`${p.name} - ${p.title} (${p.company})`}
+                                              >
+                                                <span className="text-base">{p.avatar}</span>
+                                                <span className="text-[8px] font-bold truncate max-w-full">{p.name.split(' ')[0]}</span>
+                                              </button>
+                                            ))}
                                           </div>
-                                          <textarea
-                                            value={starSituation}
-                                            onChange={e => {
-                                              setStarSituation(e.target.value);
-                                              updateStarAnswer(e.target.value, starTask, starAction, starResult);
-                                            }}
-                                            placeholder="What was the situation? (e.g., 'Our service latency spiked by 40% during a traffic spike...')"
-                                            className="w-full h-16 bg-slate-950/40 border border-slate-700 focus:border-violet-500 rounded-xl p-2.5 text-xs text-slate-300 placeholder-slate-650 resize-none focus:outline-none transition-colors"
-                                          />
                                         </div>
 
-                                        {/* Task */}
-                                        <div className="space-y-1">
-                                          <div className="flex justify-between items-center">
-                                            <label className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1">
-                                              <span className="w-4 h-4 rounded-full bg-amber-550/20 text-amber-400 border border-amber-500/20 flex items-center justify-center text-[9px] font-black">T</span>
-                                              Task
-                                            </label>
-                                            <span className="text-[9px] text-slate-500">What was your goal or challenge?</span>
+                                        <div className="p-3 rounded-xl border border-slate-800 bg-slate-900/35 space-y-1.5 animate-fadeIn">
+                                          <div className="flex justify-between items-center gap-2">
+                                            <span className="text-[11px] font-bold text-slate-200">{selectedRecruiter.name}</span>
+                                            <span className="text-[8px] px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-400 font-bold uppercase tracking-wider">{selectedRecruiter.company}</span>
                                           </div>
-                                          <textarea
-                                            value={starTask}
-                                            onChange={e => {
-                                              setStarTask(e.target.value);
-                                              updateStarAnswer(starSituation, e.target.value, starAction, starResult);
-                                            }}
-                                            placeholder="What did you need to do? (e.g., 'I was tasked with identifying the bottleneck and reducing latency under 200ms...')"
-                                            className="w-full h-16 bg-slate-950/40 border border-slate-700 focus:border-violet-500 rounded-xl p-2.5 text-xs text-slate-300 placeholder-slate-650 resize-none focus:outline-none transition-colors"
-                                          />
-                                        </div>
-
-                                        {/* Action */}
-                                        <div className="space-y-1">
-                                          <div className="flex justify-between items-center">
-                                            <label className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1">
-                                              <span className="w-4 h-4 rounded-full bg-emerald-550/20 text-emerald-400 border border-emerald-500/20 flex items-center justify-center text-[9px] font-black">A</span>
-                                              Action
+                                          <p className="text-[9px] text-slate-505 font-semibold">{selectedRecruiter.title} • Voice: {selectedRecruiter.voiceGender === 'female' ? 'Female' : 'Male'}</p>
+                                          <p className="text-[10px] text-slate-400 leading-relaxed text-justify">{selectedRecruiter.description}</p>
+                                          
+                                          {/* Audio settings */}
+                                          <div className="pt-2 flex items-center justify-between border-t border-slate-850">
+                                            <label className="flex items-center gap-1.5 text-[9px] text-slate-400 cursor-pointer">
+                                              <input
+                                                type="checkbox"
+                                                checked={autoPlayVoice}
+                                                onChange={e => setAutoPlayVoice(e.target.checked)}
+                                                className="rounded border-slate-700 bg-slate-955 text-violet-650 focus:ring-violet-500 w-3 h-3 cursor-pointer"
+                                              />
+                                              <span>Speak Questions (TTS)</span>
                                             </label>
-                                            <span className="text-[9px] font-semibold text-violet-400">Most important (60% of answer)</span>
-                                          </div>
-                                          <textarea
-                                            value={starAction}
-                                            onChange={e => {
-                                              setStarAction(e.target.value);
-                                              updateStarAnswer(starSituation, starTask, e.target.value, starResult);
-                                            }}
-                                            placeholder="What actions did you take? (e.g., 'I profiled the DB queries, added Redis caching, and optimized the indexes...')"
-                                            className="w-full h-20 bg-slate-950/40 border border-slate-700 focus:border-violet-500 rounded-xl p-2.5 text-xs text-slate-300 placeholder-slate-650 resize-none focus:outline-none transition-colors"
-                                          />
-                                        </div>
-
-                                        {/* Result */}
-                                        <div className="space-y-1">
-                                          <div className="flex justify-between items-center">
-                                            <label className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1">
-                                              <span className="w-4 h-4 rounded-full bg-rose-555/20 text-rose-450 border border-rose-500/20 flex items-center justify-center text-[9px] font-black">R</span>
-                                              Result
+                                            <label className="flex items-center gap-1.5 text-[9px] text-slate-400 cursor-pointer">
+                                              <input
+                                                type="checkbox"
+                                                checked={autoActivateMic}
+                                                onChange={e => setAutoActivateMic(e.target.checked)}
+                                                className="rounded border-slate-700 bg-slate-955 text-violet-650 focus:ring-violet-500 w-3 h-3 cursor-pointer"
+                                              />
+                                              <span>Auto-Activate Mic</span>
                                             </label>
-                                            <span className="text-[9px] text-slate-500">Outcome with quantitative metrics</span>
                                           </div>
-                                          <textarea
-                                            value={starResult}
-                                            onChange={e => {
-                                              setStarResult(e.target.value);
-                                              updateStarAnswer(starSituation, starTask, starAction, e.target.value);
-                                            }}
-                                            placeholder="What was the result? (e.g., 'We reduced p99 latency by 65% and saved $4k in server costs...')"
-                                            className="w-full h-16 bg-slate-950/40 border border-slate-700 focus:border-violet-500 rounded-xl p-2.5 text-xs text-slate-300 placeholder-slate-650 resize-none focus:outline-none transition-colors"
-                                          />
                                         </div>
                                       </div>
                                     ) : (
-                                      <div className="relative">
-                                        <textarea
-                                          value={currentAnswer}
-                                          onChange={e => setMockAnswers(p => ({ ...p, [currentQ.id]: e.target.value }))}
-                                          placeholder={isRecording ? '🎙️ Listening... speak your answer now' : 'Type your answer here or click the microphone to speak... Use the STAR method for behavioral questions: Situation → Task → Action → Result'}
-                                          className={`w-full h-36 bg-slate-950/50 border rounded-xl p-3 pr-12 text-xs text-slate-300 placeholder-slate-600 resize-none focus:outline-none transition-colors ${isRecording ? 'border-red-500 bg-red-950/10' : 'border-slate-700 focus:border-violet-500'}`}
-                                        />
-                                        {/* Microphone button */}
+                                      <p className="text-[11px] text-slate-400 leading-relaxed">Select a round to begin your self-paced mock interview. You will see scores and improvements immediately after submitting each answer.</p>
+                                    )}
+
+                                    {/* Rounds listing */}
+                                    <div className="space-y-2 pt-1">
+                                      {allRounds.map(r => (
                                         <button
-                                          onClick={() => {
-                                            if (isRecording) {
-                                              // Stop recording
-                                              recognitionRef.current?.stop();
-                                              mediaRecorderRef.current?.stop();
-                                              setIsRecording(false);
-                                            } else {
-                                              // Start recording
-                                              const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-                                              if (!SpeechRecognition) {
-                                                alert('Speech recognition is not supported in this browser. Please use Chrome or Edge.');
-                                                return;
-                                              }
-                                              const recognition = new SpeechRecognition();
-                                              recognition.continuous = true;
-                                              recognition.interimResults = true;
-                                              recognition.lang = 'en-US';
-                                              let finalTranscript = currentAnswer;
-                                              recognition.onresult = (event: any) => {
-                                                let interim = '';
-                                                for (let i = event.resultIndex; i < event.results.length; i++) {
-                                                  if (event.results[i].isFinal) {
-                                                    finalTranscript += (finalTranscript ? ' ' : '') + event.results[i][0].transcript;
-                                                  } else {
-                                                    interim += event.results[i][0].transcript;
-                                                  }
-                                                }
-                                                setMockAnswers(p => ({ ...p, [currentQ.id]: finalTranscript + (interim ? ' ' + interim : '') }));
-                                              };
-                                              recognition.onerror = () => setIsRecording(false);
-                                              recognition.onend = () => setIsRecording(false);
-                                              recognition.start();
-                                              recognitionRef.current = recognition;
-
-                                              // Also start audio recording for playback
-                                              navigator.mediaDevices.getUserMedia({ audio: true })
-                                                .then(stream => {
-                                                  const recorder = new MediaRecorder(stream);
-                                                  audioChunksRef.current = [];
-                                                  recorder.ondataavailable = (e) => audioChunksRef.current.push(e.data);
-                                                  recorder.onstop = () => {
-                                                    const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-                                                    setAudioUrl(URL.createObjectURL(blob));
-                                                    stream.getTracks().forEach(t => t.stop());
-                                                  };
-                                                  recorder.start();
-                                                  mediaRecorderRef.current = recorder;
-                                                })
-                                                .catch(() => { /* audio recording optional */ });
-
-                                              setIsRecording(true);
-                                              setAudioUrl(null);
-                                            }
-                                          }}
-                                          className={`absolute right-2 top-2 w-8 h-8 rounded-full flex items-center justify-center transition-all ${
-                                            isRecording
-                                              ? 'bg-red-500 text-white animate-pulse shadow-lg shadow-red-500/40'
-                                              : 'bg-slate-800 text-slate-400 hover:bg-violet-600 hover:text-white'
-                                          }`}
-                                          title={isRecording ? 'Stop recording' : 'Start voice recording'}
+                                          key={r.round}
+                                          type="button"
+                                          onClick={() => startQuestion(r.round, 0)}
+                                          className="w-full p-3 rounded-xl border border-slate-800 bg-slate-900/35 hover:border-violet-500 hover:bg-violet-650/5 transition-all text-left group"
                                         >
-                                          {isRecording ? '⏹' : '🎙️'}
+                                          <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                              <span className="text-base">{r.emoji}</span>
+                                              <div>
+                                                <p className="text-[11px] font-bold text-slate-200 group-hover:text-violet-300 transition-colors">{r.label}</p>
+                                                <p className="text-[9px] text-slate-500">{r.questions.length} questions</p>
+                                              </div>
+                                            </div>
+                                            <span className="text-[9px] text-violet-400 font-bold opacity-0 group-hover:opacity-100 transition-all transform translate-x-1 group-hover:translate-x-0">Start Screen →</span>
+                                          </div>
                                         </button>
-                                      </div>
-                                    )}
-
-                                    {/* Recording status */}
-                                    {isRecording && (
-                                      <div className="flex items-center gap-2 text-[10px] text-red-400 font-semibold">
-                                        <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                                        Recording... speak your answer clearly. Click ⏹ when done.
-                                      </div>
-                                    )}
-
-                                    {/* Audio playback */}
-                                    {audioUrl && !isRecording && (
-                                      <div className="flex items-center gap-2 p-2 rounded-lg bg-slate-900/60 border border-slate-800">
-                                        <span className="text-[10px] text-slate-400 font-bold">🔊 Playback:</span>
-                                        <audio src={audioUrl} controls className="h-8 flex-1" style={{ maxHeight: '32px' }} />
-                                      </div>
-                                    )}
-
-                                    <div className="flex gap-2">
-                                      <button
-                                        onClick={() => {
-                                          if (mockTimerRef.current) clearInterval(mockTimerRef.current);
-                                          if (isRecording) { recognitionRef.current?.stop(); mediaRecorderRef.current?.stop(); setIsRecording(false); }
-                                          setMockMode('idle');
-                                        }}
-                                        className="flex-1 py-2 rounded-xl border border-slate-700 text-xs font-bold text-slate-400 hover:text-slate-200 hover:border-slate-500 transition-all"
-                                      >✕ Skip</button>
-                                      <button
-                                        onClick={() => {
-                                          if (isRecording) { recognitionRef.current?.stop(); mediaRecorderRef.current?.stop(); setIsRecording(false); }
-                                          submitAnswer();
-                                        }}
-                                        disabled={!currentAnswer.trim()}
-                                        className="flex-1 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-40 text-white text-xs font-bold transition-all"
-                                      >✓ Submit Answer</button>
+                                      ))}
                                     </div>
-                                  </>
+                                  </div>
                                 )}
 
-                                {/* Score panel */}
-                                {mockMode === 'reviewed' && currentScore && (
-                                  <div className="space-y-3 animate-fadeIn">
-                                    {/* Score badge */}
-                                    <div className={`flex items-center gap-4 p-4 rounded-xl border ${currentScore.color}`}>
-                                      <div className="text-center">
-                                        <div className="text-3xl font-black">{currentScore.grade}</div>
-                                        <div className="text-[10px] font-bold mt-0.5">{currentScore.score}/100</div>
+                                {/* mockMode === 'answering' or 'reviewed' */}
+                                {(mockMode === 'answering' || mockMode === 'reviewed') && currentQ && (
+                                  <div className="space-y-3.5">
+                                    {/* Progress */}
+                                    <div className="flex items-center justify-between text-[10px]">
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-violet-400 font-bold">{currentRoundData.emoji} {currentRoundData.label}</span>
+                                        <span className="text-slate-400">Question {mockQuestionIdx + 1} of {totalQ}</span>
                                       </div>
-                                      <p className="text-xs leading-relaxed flex-grow">{currentScore.feedback}</p>
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-slate-500 font-mono font-bold">⏱ {timerMins}:{timerSecs}</span>
+                                        <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded ${
+                                          currentQ.difficulty === 'hard' ? 'bg-rose-900/60 text-rose-400'
+                                          : currentQ.difficulty === 'medium' ? 'bg-amber-900/60 text-amber-400'
+                                          : 'bg-emerald-900/60 text-emerald-400'
+                                        }`}>{currentQ.difficulty.toUpperCase()}</span>
+                                      </div>
                                     </div>
 
-                                    {/* Strengths */}
-                                    {currentScore.strengths.length > 0 && (
-                                      <div className="space-y-1.5">
-                                        <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">✅ Strengths</p>
-                                        {currentScore.strengths.map((s, i) => (
-                                          <p key={i} className="text-[11px] text-slate-300 bg-emerald-950/20 border border-emerald-900/30 rounded-lg p-2">{s}</p>
-                                        ))}
-                                      </div>
-                                    )}
+                                    {/* Progress bar */}
+                                    <div className="w-full h-1 bg-slate-800 rounded-full">
+                                      <div
+                                        className="h-1 bg-violet-500 rounded-full transition-all"
+                                        style={{ width: `${((mockQuestionIdx + 1) / totalQ) * 100}%` }}
+                                      />
+                                    </div>
 
-                                    {/* Improvements */}
-                                    {currentScore.improvements.length > 0 && (
-                                      <div className="space-y-1.5">
-                                        <p className="text-[10px] text-amber-400 font-bold uppercase tracking-wider">⚠️ Improve</p>
-                                        {currentScore.improvements.map((s, i) => (
-                                          <p key={i} className="text-[11px] text-slate-300 bg-amber-950/20 border border-amber-900/30 rounded-lg p-2">{s}</p>
-                                        ))}
-                                      </div>
-                                    )}
+                                    {/* INTERACTIVE VOICE RECRUITER SCREEN VIEW */}
+                                    {mockInterfaceMode === 'interactive' ? (
+                                      <div className="space-y-3">
+                                        {/* Recruiter Bubble */}
+                                        <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 flex gap-3.5 items-start">
+                                          <div className="w-10 h-10 rounded-full bg-violet-955 border border-violet-850 flex items-center justify-center text-xl shrink-0">
+                                            {selectedRecruiter.avatar}
+                                          </div>
+                                          <div className="flex-1 space-y-1.5 min-w-0">
+                                            <div className="flex items-center justify-between">
+                                              <span className="text-[10px] font-bold text-slate-200">{selectedRecruiter.name} • Recruiter</span>
+                                              
+                                              {/* Recruiter Speaking Bounce animation */}
+                                              {isRecruiterSpeaking && (
+                                                <div className="flex gap-0.5 items-center px-1.5 py-0.5 rounded bg-violet-955/45 border border-violet-900/50">
+                                                  <span className="text-[8px] text-violet-400 font-bold uppercase tracking-wider mr-1 animate-pulse">Speaking</span>
+                                                  <div className="w-0.5 h-1.5 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                                                  <div className="w-0.5 h-2.5 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                                                  <div className="w-0.5 h-2 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '0.3s' }}></div>
+                                                </div>
+                                              )}
+                                            </div>
+                                            <p className="text-xs text-slate-300 leading-relaxed text-justify">{currentQ.question}</p>
+                                            
+                                            <div className="flex items-center gap-2 pt-1">
+                                              <button
+                                                type="button"
+                                                onClick={() => speakRecruiterText(currentQ.question)}
+                                                className="text-[9px] text-slate-500 hover:text-slate-350 flex items-center gap-1 font-semibold"
+                                              >
+                                                🔊 Replay Voice
+                                              </button>
+                                              {currentQ.hint && (
+                                                <button
+                                                  type="button"
+                                                  onClick={() => setHintVisible(p => ({ ...p, [currentQ.id]: !p[currentQ.id] }))}
+                                                  className="text-[9px] text-slate-505 hover:text-slate-350 flex items-center gap-1 font-semibold"
+                                                >
+                                                  💡 {hintVisible[currentQ.id] ? 'Hide Hint' : 'View Hint'}
+                                                </button>
+                                              )}
+                                            </div>
 
-                                    {/* Sample answer toggle */}
-                                    {currentQ.sampleAnswer && (
+                                            {hintVisible[currentQ.id] && currentQ.hint && (
+                                              <p className="text-[10px] text-violet-300 bg-violet-950/20 border border-violet-900/20 rounded-lg p-2 animate-fadeIn">{currentQ.hint}</p>
+                                            )}
+                                          </div>
+                                        </div>
+
+                                        {/* Typing/Thinking indicator */}
+                                        {mockMode === 'reviewed' && isRecruiterTyping && (
+                                          <div className="flex gap-2 items-center p-3 rounded-xl bg-slate-900/30 border border-slate-800/50 w-fit">
+                                            <span className="text-[9px] text-slate-500 font-bold uppercase">{selectedRecruiter.name} is typing</span>
+                                            <div className="flex gap-1 items-center">
+                                              <span className="w-1 h-1 bg-violet-450 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></span>
+                                              <span className="w-1 h-1 bg-violet-450 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></span>
+                                              <span className="w-1 h-1 bg-violet-450 rounded-full animate-bounce" style={{ animationDelay: '0.3s' }}></span>
+                                            </div>
+                                          </div>
+                                        )}
+
+                                        {/* Recruiter Reply Card */}
+                                        {mockMode === 'reviewed' && !isRecruiterTyping && recruiterReplies[currentQ.id] && (
+                                          <div className="p-3.5 rounded-xl bg-violet-955/15 border border-violet-900/30 flex gap-3 items-start animate-fadeIn">
+                                            <div className="w-8 h-8 rounded-full bg-violet-900 border border-violet-850 flex items-center justify-center text-sm shrink-0">
+                                              {selectedRecruiter.avatar}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                              <span className="text-[9px] font-black text-violet-400 uppercase tracking-wider block mb-0.5">{selectedRecruiter.name} (Reaction)</span>
+                                              <p className="text-[11px] text-slate-300 leading-relaxed text-justify">"{recruiterReplies[currentQ.id]}"</p>
+                                            </div>
+                                          </div>
+                                        )}
+
+                                        {/* Candidate Answer Section */}
+                                        <div className="space-y-3 pt-1">
+                                          <div className="flex items-center justify-between">
+                                            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Candidate Draft Answer</span>
+                                            
+                                            {isRecording && (
+                                              <div className="flex gap-1.5 items-center px-2 py-0.5 rounded bg-red-955/30 border border-red-900/40">
+                                                <span className="text-[8px] text-red-400 font-bold uppercase tracking-wider animate-pulse">Mic Listening</span>
+                                                <div className="flex gap-0.5 items-center">
+                                                  <div className="w-0.5 h-1.5 bg-red-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                                                  <div className="w-0.5 h-3 bg-red-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                                                  <div className="w-0.5 h-2.5 bg-red-400 rounded-full animate-bounce" style={{ animationDelay: '0.3s' }}></div>
+                                                </div>
+                                              </div>
+                                            )}
+                                          </div>
+
+                                          {mockMode === 'answering' ? (
+                                            <div className="relative">
+                                              <textarea
+                                                value={currentAnswer}
+                                                onChange={e => setMockAnswers(p => ({ ...p, [currentQ.id]: e.target.value }))}
+                                                placeholder={isRecording ? '🎙️ Recruiter voice ended, microphone activated... Speak your answer now!' : 'Start speaking your answer, or type it directly here...'}
+                                                className={`w-full h-32 bg-slate-950/50 border rounded-xl p-3 pr-12 text-xs text-slate-300 placeholder-slate-600 resize-none focus:outline-none transition-all ${isRecording ? 'border-red-500/80 bg-red-950/10' : 'border-slate-700 focus:border-violet-500'}`}
+                                              />
+                                              
+                                              {/* Microphone Trigger */}
+                                              <button
+                                                type="button"
+                                                onClick={() => {
+                                                  if (isRecording) {
+                                                    stopListening();
+                                                  } else {
+                                                    startListening(currentQ.id);
+                                                  }
+                                                }}
+                                                className={`absolute right-3 top-3 w-8 h-8 rounded-full flex items-center justify-center transition-all ${
+                                                  isRecording
+                                                    ? 'bg-red-650 text-white animate-pulse shadow-md shadow-red-555/40'
+                                                    : 'bg-slate-800 text-slate-400 hover:bg-violet-655 hover:text-white'
+                                                }`}
+                                                title={isRecording ? 'Stop recording' : 'Start voice recording'}
+                                              >
+                                                {isRecording ? '⏹' : '🎙️'}
+                                              </button>
+                                            </div>
+                                          ) : (
+                                            <div className="p-3 rounded-xl border border-slate-800 bg-slate-955/40 text-xs text-slate-350 italic text-justify leading-relaxed">
+                                              "{currentAnswer || '(No answer recorded)'}"
+                                            </div>
+                                          )}
+
+                                          {/* Audio playback */}
+                                          {audioUrl && !isRecording && mockMode === 'answering' && (
+                                            <div className="flex items-center gap-2 p-1.5 px-2.5 rounded-xl bg-slate-900/60 border border-slate-850">
+                                              <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider shrink-0">🔊 Playback Draft:</span>
+                                              <audio src={audioUrl} controls className="h-6 flex-1" style={{ maxHeight: '24px' }} />
+                                            </div>
+                                          )}
+
+                                          {/* Action Buttons */}
+                                          {mockMode === 'answering' ? (
+                                            <div className="flex gap-2">
+                                              <button
+                                                type="button"
+                                                onClick={() => {
+                                                  if (mockTimerRef.current) clearInterval(mockTimerRef.current);
+                                                  stopListening();
+                                                  setMockMode('idle');
+                                                }}
+                                                className="flex-1 py-2 rounded-xl border border-slate-800 text-xs font-bold text-slate-500 hover:text-slate-300 hover:border-slate-650 transition-all"
+                                              >
+                                                ✕ Cancel
+                                              </button>
+                                              <button
+                                                type="button"
+                                                onClick={() => {
+                                                  stopListening();
+                                                  submitAnswer();
+                                                }}
+                                                disabled={!currentAnswer.trim()}
+                                                className="flex-1 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-40 text-white text-xs font-bold transition-all"
+                                              >
+                                                ✓ Submit Response
+                                              </button>
+                                            </div>
+                                          ) : (
+                                            <div className="flex gap-2 pt-1 animate-fadeIn">
+                                              <button
+                                                type="button"
+                                                onClick={() => {
+                                                  setMockMode('answering');
+                                                  setMockTimerSec(0);
+                                                  if (mockTimerRef.current) clearInterval(mockTimerRef.current);
+                                                  mockTimerRef.current = setInterval(() => setMockTimerSec(s => s + 1), 1000);
+                                                }}
+                                                className="flex-1 py-2 rounded-xl border border-slate-800 text-xs font-bold text-slate-500 hover:text-slate-300 hover:border-slate-750 transition-all"
+                                              >
+                                                🔄 Redo Answer
+                                              </button>
+                                              
+                                              {mockQuestionIdx + 1 < totalQ ? (
+                                                <button
+                                                  type="button"
+                                                  onClick={nextQuestion}
+                                                  className="flex-grow-[2] py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-xs font-bold text-white transition-all"
+                                                >
+                                                  Next Question →
+                                                </button>
+                                              ) : (
+                                                <button
+                                                  type="button"
+                                                  onClick={() => finishInteractiveSession(questions)}
+                                                  className="flex-grow-[2] py-2 rounded-xl bg-emerald-650 hover:bg-emerald-600 text-xs font-bold text-white transition-all shadow-md shadow-emerald-950/20"
+                                                >
+                                                  ✓ Complete Screen & Report
+                                                </button>
+                                              )}
+                                            </div>
+                                          )}
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      /* STANDARD SELF-PACED VIEW */
                                       <>
-                                        <button
-                                          onClick={() => setSampleVisible(p => ({ ...p, [currentQ.id]: !p[currentQ.id] }))}
-                                          className="w-full py-2 border border-slate-700 rounded-xl text-xs font-bold text-slate-400 hover:text-violet-300 hover:border-violet-500 transition-all"
-                                        >📝 {sampleVisible[currentQ.id] ? 'Hide' : 'View'} Sample Answer</button>
-                                        {sampleVisible[currentQ.id] && (
-                                          <div className="p-3 rounded-xl bg-violet-500/5 border border-violet-500/20 text-[11px] text-violet-200 leading-relaxed animate-fadeIn">
-                                            {currentQ.sampleAnswer}
+                                        {/* Question card */}
+                                        <div className="p-4 rounded-xl bg-slate-955/50 border border-slate-700 relative group flex justify-between items-start gap-4">
+                                          <div className="flex-grow">
+                                            <p className="text-xs font-medium text-slate-200 leading-relaxed">{currentQ.question}</p>
+                                            <p className="text-[10px] text-slate-500 mt-2">📍 {currentQ.source}</p>
+                                          </div>
+                                          <button
+                                            type="button"
+                                            onClick={() => toggleSpeakQuestion(currentQ.id, currentQ.question)}
+                                            className={`p-2 rounded-xl border flex items-center justify-center transition-all ${
+                                              speakingQId === currentQ.id
+                                                ? 'bg-rose-955/40 border-rose-900/50 text-rose-455 animate-pulse shadow-md shadow-rose-950/40'
+                                                : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-violet-450 hover:border-violet-500/50 hover:bg-violet-955/10'
+                                            }`}
+                                            title={speakingQId === currentQ.id ? 'Stop reading' : 'Read question aloud'}
+                                          >
+                                            {speakingQId === currentQ.id ? (
+                                              <span className="text-xs font-bold">⏹ Stop</span>
+                                            ) : (
+                                              <span className="text-xs font-bold flex items-center gap-1">🔊 Listen</span>
+                                            )}
+                                          </button>
+                                        </div>
+
+                                        {/* Answer Mode Selector & Guided Builder */}
+                                        {mockMode === 'answering' && (
+                                          <>
+                                            {geminiApiKey.trim() && (
+                                              <div className="mb-3 flex justify-between items-center bg-slate-900/50 p-2.5 rounded-xl border border-slate-800">
+                                                <div className="text-[10px] text-slate-400">
+                                                  <span className="font-bold text-violet-400">🧠 AI Answer Assistant</span>: Get an ideal answer customized to your profile.
+                                                </div>
+                                                <button
+                                                  type="button"
+                                                  onClick={async () => {
+                                                    if (loadingIdealAnswer) return;
+                                                    const cached = idealAnswers[currentQ.id];
+                                                    if (cached) {
+                                                      setShowIdealAnswer(p => ({ ...p, [currentQ.id]: !p[currentQ.id] }));
+                                                      return;
+                                                    }
+                                                    setLoadingIdealAnswer(true);
+                                                    try {
+                                                      const ans = await generateIdealAnswer(
+                                                        geminiApiKey,
+                                                        aiProvider,
+                                                        currentQ.question,
+                                                        interviewPositionName || interviewPlan.context.role,
+                                                        resumeData,
+                                                        starMode
+                                                      );
+                                                      setIdealAnswers(p => ({ ...p, [currentQ.id]: ans }));
+                                                      setShowIdealAnswer(p => ({ ...p, [currentQ.id]: true }));
+                                                    } catch (err: any) {
+                                                      alert(`AI Error: ${err?.message || 'Failed to generate answer'}`);
+                                                    } finally {
+                                                      setLoadingIdealAnswer(false);
+                                                    }
+                                                  }}
+                                                  className="px-2.5 py-1 rounded bg-violet-650 hover:bg-violet-600 text-[9px] font-bold text-white transition-colors"
+                                                >
+                                                  {loadingIdealAnswer ? '⏳ Generating...' : showIdealAnswer[currentQ.id] ? '🙈 Hide Ideal' : '💡 Reveal Ideal'}
+                                                </button>
+                                              </div>
+                                            )}
+
+                                            {showIdealAnswer[currentQ.id] && idealAnswers[currentQ.id] && (
+                                              <div className="mb-3 p-3 rounded-xl bg-violet-500/5 border border-violet-500/20 space-y-2 animate-fadeIn">
+                                                <div className="flex justify-between items-center">
+                                                  <span className="text-[9px] font-bold text-violet-400 uppercase">💡 Model Ideal Answer (Customized to Profile)</span>
+                                                  <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                      const text = idealAnswers[currentQ.id];
+                                                      let sit = text;
+                                                      let tsk = '';
+                                                      let act = '';
+                                                      let res = '';
+                                                      if (text.includes('[Situation]') || text.includes('[Task]') || text.includes('[Action]') || text.includes('[Result]')) {
+                                                        const sitMatch = text.match(/\[Situation\]\s*([\s\S]*?)(?=\[Task\]|\[Action\]|\[Result\]|$)/i);
+                                                        const tskMatch = text.match(/\[Task\]\s*([\s\S]*?)(?=\[Situation\]|\[Action\]|\[Result\]|$)/i);
+                                                        const actMatch = text.match(/\[Action\]\s*([\s\S]*?)(?=\[Situation\]|\[Task\]|\[Result\]|$)/i);
+                                                        const resMatch = text.match(/\[Result\]\s*([\s\S]*?)(?=\[Situation\]|\[Task\]|\[Action\]|$)/i);
+                                                        if (sitMatch) sit = sitMatch[1].trim();
+                                                        if (tskMatch) tsk = tskMatch[1].trim();
+                                                        if (actMatch) act = actMatch[1].trim();
+                                                        if (resMatch) res = resMatch[1].trim();
+                                                      }
+                                                      setStarSituation(sit);
+                                                      setStarTask(tsk);
+                                                      setStarAction(act);
+                                                      setStarResult(res);
+                                                      updateStarAnswer(sit, tsk, act, res);
+                                                    }}
+                                                    className="text-[9px] text-violet-400 hover:text-violet-300 font-bold transition-colors"
+                                                  >📋 Copy to Draft</button>
+                                                </div>
+                                                <p className="text-[11px] text-slate-350 leading-relaxed text-justify">{idealAnswers[currentQ.id]}</p>
+                                              </div>
+                                            )}
+
+                                            <div className="flex items-center justify-between mb-2">
+                                              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Your Answer</label>
+                                              <div className="flex p-0.5 bg-slate-950/60 rounded-lg border border-slate-800">
+                                                <button
+                                                  type="button"
+                                                  onClick={() => setStarMode(false)}
+                                                  className={`px-2.5 py-1 rounded-md text-[9px] font-bold transition-all ${!starMode ? 'bg-violet-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}
+                                                >
+                                                  ✍️ Freeform
+                                                </button>
+                                                <button
+                                                  type="button"
+                                                  onClick={enableStarMode}
+                                                  className={`px-2.5 py-1 rounded-md text-[9px] font-bold transition-all ${starMode ? 'bg-violet-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-350'}`}
+                                                >
+                                                  🧠 Guided STAR
+                                                </button>
+                                              </div>
+                                            </div>
+
+                                            {starMode ? (
+                                              <div className="space-y-3.5">
+                                                {/* Situation */}
+                                                <div className="space-y-1">
+                                                  <div className="flex justify-between items-center">
+                                                    <label className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1">
+                                                      <span className="w-4 h-4 rounded-full bg-blue-550/20 text-blue-400 border border-blue-500/20 flex items-center justify-center text-[9px] font-black">S</span>
+                                                      Situation
+                                                    </label>
+                                                    <span className="text-[9px] text-slate-500">Set the scene & context</span>
+                                                  </div>
+                                                  <textarea
+                                                    value={starSituation}
+                                                    onChange={e => {
+                                                      setStarSituation(e.target.value);
+                                                      updateStarAnswer(e.target.value, starTask, starAction, starResult);
+                                                    }}
+                                                    placeholder="What was the situation? (e.g., 'Our service latency spiked by 40% during a traffic spike...')"
+                                                    className="w-full h-16 bg-slate-950/40 border border-slate-700 focus:border-violet-500 rounded-xl p-2.5 text-xs text-slate-300 placeholder-slate-650 resize-none focus:outline-none transition-colors"
+                                                  />
+                                                </div>
+
+                                                {/* Task */}
+                                                <div className="space-y-1">
+                                                  <div className="flex justify-between items-center">
+                                                    <label className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1">
+                                                      <span className="w-4 h-4 rounded-full bg-amber-550/20 text-amber-400 border border-amber-500/20 flex items-center justify-center text-[9px] font-black">T</span>
+                                                      Task
+                                                    </label>
+                                                    <span className="text-[9px] text-slate-500">What was your goal or challenge?</span>
+                                                  </div>
+                                                  <textarea
+                                                    value={starTask}
+                                                    onChange={e => {
+                                                      setStarTask(e.target.value);
+                                                      updateStarAnswer(starSituation, e.target.value, starAction, starResult);
+                                                    }}
+                                                    placeholder="What did you need to do? (e.g., 'I was tasked with identifying the bottleneck and reducing latency under 200ms...')"
+                                                    className="w-full h-16 bg-slate-955/40 border border-slate-700 focus:border-violet-500 rounded-xl p-2.5 text-xs text-slate-300 placeholder-slate-650 resize-none focus:outline-none transition-colors"
+                                                  />
+                                                </div>
+
+                                                {/* Action */}
+                                                <div className="space-y-1">
+                                                  <div className="flex justify-between items-center">
+                                                    <label className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1">
+                                                      <span className="w-4 h-4 rounded-full bg-emerald-555/20 text-emerald-400 border border-emerald-500/20 flex items-center justify-center text-[9px] font-black">A</span>
+                                                      Action
+                                                    </label>
+                                                    <span className="text-[9px] font-semibold text-violet-400">Most important (60% of answer)</span>
+                                                  </div>
+                                                  <textarea
+                                                    value={starAction}
+                                                    onChange={e => {
+                                                      setStarAction(e.target.value);
+                                                      updateStarAnswer(starSituation, starTask, e.target.value, starResult);
+                                                    }}
+                                                    placeholder="What actions did you take? (e.g., 'I profiled the DB queries, added Redis caching, and optimized the indexes...')"
+                                                    className="w-full h-20 bg-slate-950/40 border border-slate-700 focus:border-violet-500 rounded-xl p-2.5 text-xs text-slate-300 placeholder-slate-650 resize-none focus:outline-none transition-colors"
+                                                  />
+                                                </div>
+
+                                                {/* Result */}
+                                                <div className="space-y-1">
+                                                  <div className="flex justify-between items-center">
+                                                    <label className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1">
+                                                      <span className="w-4 h-4 rounded-full bg-rose-555/20 text-rose-450 border border-rose-500/20 flex items-center justify-center text-[9px] font-black">R</span>
+                                                      Result
+                                                    </label>
+                                                    <span className="text-[9px] text-slate-500">Outcome with quantitative metrics</span>
+                                                  </div>
+                                                  <textarea
+                                                    value={starResult}
+                                                    onChange={e => {
+                                                      setStarResult(e.target.value);
+                                                      updateStarAnswer(starSituation, starTask, starAction, e.target.value);
+                                                    }}
+                                                    placeholder="What was the result? (e.g., 'We reduced p99 latency by 65% and saved $4k in server costs...')"
+                                                    className="w-full h-16 bg-slate-955/40 border border-slate-700 focus:border-violet-500 rounded-xl p-2.5 text-xs text-slate-300 placeholder-slate-650 resize-none focus:outline-none transition-colors"
+                                                  />
+                                                </div>
+                                              </div>
+                                            ) : (
+                                              <div className="relative">
+                                                <textarea
+                                                  value={currentAnswer}
+                                                  onChange={e => setMockAnswers(p => ({ ...p, [currentQ.id]: e.target.value }))}
+                                                  placeholder={isRecording ? '🎙️ Listening... speak your answer now' : 'Type your answer here or click the microphone to speak... Use the STAR method for behavioral questions: Situation → Task → Action → Result'}
+                                                  className={`w-full h-36 bg-slate-950/50 border rounded-xl p-3 pr-12 text-xs text-slate-300 placeholder-slate-600 resize-none focus:outline-none transition-colors ${isRecording ? 'border-red-500 bg-red-950/10' : 'border-slate-700 focus:border-violet-500'}`}
+                                                />
+                                                {/* Microphone button */}
+                                                <button
+                                                  onClick={() => {
+                                                    if (isRecording) {
+                                                      recognitionRef.current?.stop();
+                                                      mediaRecorderRef.current?.stop();
+                                                      setIsRecording(false);
+                                                    } else {
+                                                      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+                                                      if (!SpeechRecognition) {
+                                                        alert('Speech recognition is not supported in this browser. Please use Chrome or Edge.');
+                                                        return;
+                                                      }
+                                                      const recognition = new SpeechRecognition();
+                                                      recognition.continuous = true;
+                                                      recognition.interimResults = true;
+                                                      recognition.lang = 'en-US';
+                                                      let finalTranscript = currentAnswer;
+                                                      recognition.onresult = (event: any) => {
+                                                        let interim = '';
+                                                        for (let i = event.resultIndex; i < event.results.length; i++) {
+                                                          if (event.results[i].isFinal) {
+                                                            finalTranscript += (finalTranscript ? ' ' : '') + event.results[i][0].transcript;
+                                                          } else {
+                                                            interim += event.results[i][0].transcript;
+                                                          }
+                                                        }
+                                                        setMockAnswers(p => ({ ...p, [currentQ.id]: finalTranscript + (interim ? ' ' + interim : '') }));
+                                                      };
+                                                      recognition.onerror = () => setIsRecording(false);
+                                                      recognition.onend = () => setIsRecording(false);
+                                                      recognition.start();
+                                                      recognitionRef.current = recognition;
+
+                                                      navigator.mediaDevices.getUserMedia({ audio: true })
+                                                        .then(stream => {
+                                                          const recorder = new MediaRecorder(stream);
+                                                          audioChunksRef.current = [];
+                                                          recorder.ondataavailable = (e) => audioChunksRef.current.push(e.data);
+                                                          recorder.onstop = () => {
+                                                            const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+                                                            setAudioUrl(URL.createObjectURL(blob));
+                                                            stream.getTracks().forEach(t => t.stop());
+                                                          };
+                                                          recorder.start();
+                                                          mediaRecorderRef.current = recorder;
+                                                        })
+                                                        .catch(() => {});
+
+                                                      setIsRecording(true);
+                                                      setAudioUrl(null);
+                                                    }
+                                                  }}
+                                                  className={`absolute right-2 top-2 w-8 h-8 rounded-full flex items-center justify-center transition-all ${
+                                                    isRecording
+                                                      ? 'bg-red-500 text-white animate-pulse shadow-lg shadow-red-500/40'
+                                                      : 'bg-slate-800 text-slate-400 hover:bg-violet-600 hover:text-white'
+                                                  }`}
+                                                  title={isRecording ? 'Stop recording' : 'Start voice recording'}
+                                                >
+                                                  {isRecording ? '⏹' : '🎙️'}
+                                                </button>
+                                              </div>
+                                            )}
+
+                                            {/* Recording status */}
+                                            {isRecording && (
+                                              <div className="flex items-center gap-2 text-[10px] text-red-400 font-semibold">
+                                                <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                                                Recording... speak your answer clearly. Click ⏹ when done.
+                                              </div>
+                                            )}
+
+                                            {/* Audio playback */}
+                                            {audioUrl && !isRecording && (
+                                              <div className="flex items-center gap-2 p-2 rounded-lg bg-slate-900/60 border border-slate-800">
+                                                <span className="text-[10px] text-slate-400 font-bold">🔊 Playback:</span>
+                                                <audio src={audioUrl} controls className="h-8 flex-1" style={{ maxHeight: '32px' }} />
+                                              </div>
+                                            )}
+
+                                            <div className="flex gap-2">
+                                              <button
+                                                onClick={() => {
+                                                  if (mockTimerRef.current) clearInterval(mockTimerRef.current);
+                                                  if (isRecording) { recognitionRef.current?.stop(); mediaRecorderRef.current?.stop(); setIsRecording(false); }
+                                                  setMockMode('idle');
+                                                }}
+                                                className="flex-1 py-2 rounded-xl border border-slate-700 text-xs font-bold text-slate-400 hover:text-slate-200 hover:border-slate-500 transition-all"
+                                              >✕ Skip</button>
+                                              <button
+                                                onClick={() => {
+                                                  if (isRecording) { recognitionRef.current?.stop(); mediaRecorderRef.current?.stop(); setIsRecording(false); }
+                                                  submitAnswer();
+                                                }}
+                                                disabled={!currentAnswer.trim()}
+                                                className="flex-1 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-40 text-white text-xs font-bold transition-all"
+                                              >✓ Submit Answer</button>
+                                            </div>
+                                          </>
+                                        )}
+
+                                        {/* Score panel */}
+                                        {mockMode === 'reviewed' && currentScore && (
+                                          <div className="space-y-3 animate-fadeIn">
+                                            {/* Score badge */}
+                                            <div className={`flex items-center gap-4 p-4 rounded-xl border ${currentScore.color}`}>
+                                              <div className="text-center">
+                                                <div className="text-3xl font-black">{currentScore.grade}</div>
+                                                <div className="text-[10px] font-bold mt-0.5">{currentScore.score}/100</div>
+                                              </div>
+                                              <p className="text-xs leading-relaxed flex-grow">{currentScore.feedback}</p>
+                                            </div>
+
+                                            {/* Strengths */}
+                                            {currentScore.strengths.length > 0 && (
+                                              <div className="space-y-1.5">
+                                                <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">✓ Strengths</p>
+                                                {currentScore.strengths.map((s, i) => (
+                                                  <p key={i} className="text-[11px] text-slate-300 bg-emerald-950/20 border border-emerald-900/30 rounded-lg p-2">{s}</p>
+                                                ))}
+                                              </div>
+                                            )}
+
+                                            {/* Improvements */}
+                                            {currentScore.improvements.length > 0 && (
+                                              <div className="space-y-1.5">
+                                                <p className="text-[10px] text-amber-400 font-bold uppercase tracking-wider">⚠ Improve</p>
+                                                {currentScore.improvements.map((s, i) => (
+                                                  <p key={i} className="text-[11px] text-slate-300 bg-amber-955/20 border border-amber-900/30 rounded-lg p-2">{s}</p>
+                                                ))}
+                                              </div>
+                                            )}
+
+                                            {/* Sample answer toggle */}
+                                            {currentQ.sampleAnswer && (
+                                              <>
+                                                <button
+                                                  onClick={() => setSampleVisible(p => ({ ...p, [currentQ.id]: !p[currentQ.id] }))}
+                                                  className="w-full py-2 border border-slate-700 rounded-xl text-xs font-bold text-slate-400 hover:text-violet-300 hover:border-violet-500 transition-all"
+                                                >📝 {sampleVisible[currentQ.id] ? 'Hide' : 'View'} Sample Answer</button>
+                                                {sampleVisible[currentQ.id] && (
+                                                  <div className="p-3 rounded-xl bg-violet-500/5 border border-violet-500/20 text-[11px] text-violet-200 leading-relaxed animate-fadeIn">
+                                                    {currentQ.sampleAnswer}
+                                                  </div>
+                                                )}
+                                              </>
+                                            )}
+
+                                            {/* AI Answer Polishing & Rewrite */}
+                                            <div className="border-t border-slate-800 pt-3.5 space-y-2">
+                                              <div className="flex justify-between items-center">
+                                                <p className="text-[10px] text-violet-400 font-bold uppercase tracking-wider">✨ AI Response Optimizer & Coach</p>
+                                                {geminiApiKey.trim() && !optimizedResults[currentQ.id] && (
+                                                  <button
+                                                    type="button"
+                                                    onClick={async () => {
+                                                      if (loadingOptimization) return;
+                                                      setLoadingOptimization(true);
+                                                      try {
+                                                        const opt = await optimizeUserAnswer(
+                                                          geminiApiKey,
+                                                          aiProvider,
+                                                          currentQ.question,
+                                                          interviewPositionName || interviewPlan.context.role,
+                                                          currentAnswer,
+                                                          resumeData
+                                                        );
+                                                        setOptimizedResults(p => ({ ...p, [currentQ.id]: opt }));
+                                                      } catch (err: any) {
+                                                        alert(`AI Error: ${err?.message || 'Failed to optimize answer'}`);
+                                                      } finally {
+                                                        setLoadingOptimization(false);
+                                                      }
+                                                    }}
+                                                    className="px-2.5 py-1 rounded bg-violet-650 hover:bg-violet-600 text-[9px] font-bold text-white transition-colors"
+                                                  >
+                                                    {loadingOptimization ? '⏳ Polishing...' : '🧠 Polish & Rewrite My Answer'}
+                                                  </button>
+                                                )}
+                                              </div>
+
+                                              {!geminiApiKey.trim() ? (
+                                                <p className="text-[10px] text-slate-500 italic">🔑 Configure your Gemini or Groq API key in the configuration settings to enable real-time AI feedback and polished response rewrites.</p>
+                                              ) : optimizedResults[currentQ.id] ? (
+                                                <div className="space-y-3 animate-fadeIn">
+                                                  {/* Feedback card */}
+                                                  <div className="p-3.5 rounded-xl border border-violet-500/20 bg-violet-500/5 space-y-1.5">
+                                                    <p className="text-[9px] text-violet-400 font-bold uppercase">💡 AI Coach Suggestions</p>
+                                                    <p className="text-[11px] text-slate-350 leading-relaxed text-justify">{optimizedResults[currentQ.id].feedback}</p>
+                                                  </div>
+                                                  
+                                                  {/* Polished rewrite card */}
+                                                  <div className="p-3.5 rounded-xl border border-blue-500/25 bg-blue-500/5 space-y-2 relative group">
+                                                    <div className="flex justify-between items-center">
+                                                      <p className="text-[9px] text-blue-400 font-bold uppercase">✨ Your Response (Polished & Upgraded)</p>
+                                                      <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                          navigator.clipboard.writeText(optimizedResults[currentQ.id].optimizedAnswer);
+                                                          alert('📋 Copied optimized response to clipboard!');
+                                                        }}
+                                                        className="text-[9px] text-blue-400 hover:text-blue-355 font-bold transition-colors"
+                                                      >📋 Copy Answer</button>
+                                                    </div>
+                                                    <p className="text-[11px] text-slate-300 leading-relaxed text-justify italic">
+                                                      "{optimizedResults[currentQ.id].optimizedAnswer}"
+                                                    </p>
+                                                  </div>
+                                                </div>
+                                              ) : (
+                                                !loadingOptimization && (
+                                                  <p className="text-[10px] text-slate-500 italic">Click the button above to get a customized, professional rewrite of your response featuring advanced industry phrasing and metrics.</p>
+                                                )
+                                              )}
+                                            </div>
+
+                                            {/* Next button */}
+                                            <button
+                                              onClick={nextQuestion}
+                                              className="w-full py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-xs font-bold text-white transition-all"
+                                            >
+                                              {mockQuestionIdx + 1 < totalQ ? 'Next Question →' : '✓ Finish Round'}
+                                            </button>
                                           </div>
                                         )}
                                       </>
                                     )}
-
-                                    {/* AI Answer Polishing & Rewrite */}
-                                    <div className="border-t border-slate-800 pt-3.5 space-y-2">
-                                      <div className="flex justify-between items-center">
-                                        <p className="text-[10px] text-violet-400 font-bold uppercase tracking-wider">✨ AI Response Optimizer & Coach</p>
-                                        {geminiApiKey.trim() && !optimizedResults[currentQ.id] && (
-                                          <button
-                                            type="button"
-                                            onClick={async () => {
-                                              if (loadingOptimization) return;
-                                              setLoadingOptimization(true);
-                                              try {
-                                                const opt = await optimizeUserAnswer(
-                                                  geminiApiKey,
-                                                  aiProvider,
-                                                  currentQ.question,
-                                                  interviewPositionName || interviewPlan.context.role,
-                                                  currentAnswer,
-                                                  resumeData
-                                                );
-                                                setOptimizedResults(p => ({ ...p, [currentQ.id]: opt }));
-                                              } catch (err: any) {
-                                                alert(`AI Error: ${err?.message || 'Failed to optimize answer'}`);
-                                              } finally {
-                                                setLoadingOptimization(false);
-                                              }
-                                            }}
-                                            className="px-2.5 py-1 rounded bg-violet-650 hover:bg-violet-600 text-[9px] font-bold text-white transition-colors"
-                                          >
-                                            {loadingOptimization ? '⏳ Polishing...' : '🧠 Polish & Rewrite My Answer'}
-                                          </button>
-                                        )}
-                                      </div>
-
-                                      {!geminiApiKey.trim() ? (
-                                        <p className="text-[10px] text-slate-500 italic">🔑 Configure your Gemini or Groq API key in the configuration settings to enable real-time AI feedback and polished response rewrites.</p>
-                                      ) : optimizedResults[currentQ.id] ? (
-                                        <div className="space-y-3 animate-fadeIn">
-                                          {/* Feedback card */}
-                                          <div className="p-3.5 rounded-xl border border-violet-500/20 bg-violet-500/5 space-y-1.5">
-                                            <p className="text-[9px] text-violet-400 font-bold uppercase">💡 AI Coach Suggestions</p>
-                                            <p className="text-[11px] text-slate-350 leading-relaxed text-justify">{optimizedResults[currentQ.id].feedback}</p>
-                                          </div>
-                                          
-                                          {/* Polished rewrite card */}
-                                          <div className="p-3.5 rounded-xl border border-blue-500/25 bg-blue-500/5 space-y-2 relative group">
-                                            <div className="flex justify-between items-center">
-                                              <p className="text-[9px] text-blue-400 font-bold uppercase">✨ Your Response (Polished & Upgraded)</p>
-                                              <button
-                                                type="button"
-                                                onClick={() => {
-                                                  navigator.clipboard.writeText(optimizedResults[currentQ.id].optimizedAnswer);
-                                                  alert('📋 Copied optimized response to clipboard!');
-                                                }}
-                                                className="text-[9px] text-blue-400 hover:text-blue-350 font-bold transition-colors"
-                                              >📋 Copy Answer</button>
-                                            </div>
-                                            <p className="text-[11px] text-slate-300 leading-relaxed text-justify italic">
-                                              "{optimizedResults[currentQ.id].optimizedAnswer}"
-                                            </p>
-                                          </div>
-                                        </div>
-                                      ) : (
-                                        !loadingOptimization && (
-                                          <p className="text-[10px] text-slate-500 italic">Click the button above to get a customized, professional rewrite of your response featuring advanced industry phrasing and metrics.</p>
-                                        )
-                                      )}
-                                    </div>
-
-                                    {/* Next button */}
-                                    <button
-                                      onClick={nextQuestion}
-                                      className="w-full py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-xs font-bold text-white transition-all"
-                                    >
-                                      {mockQuestionIdx + 1 < totalQ ? 'Next Question →' : '✓ Finish Round'}
-                                    </button>
                                   </div>
                                 )}
                               </>

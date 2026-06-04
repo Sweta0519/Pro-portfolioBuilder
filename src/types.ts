@@ -215,6 +215,17 @@ export interface GeminiEnhancedData {
   searchSources: string[];
 }
 
+export interface RecruiterPersona {
+  id: string;
+  name: string;
+  title: string;
+  company: string;
+  avatar: string; // E.g. emoji
+  voiceGender: 'male' | 'female';
+  description: string;
+  stylePrompt: string; // Guidelines on how the recruiter reacts (e.g. conversational tone)
+}
+
 export interface InterviewSession {
   id: string;
   companyName: string;
@@ -227,5 +238,9 @@ export interface InterviewSession {
   mockScores: Record<string, AnswerScore>;
   idealAnswers?: Record<string, string>;
   optimizedResults?: Record<string, { optimizedAnswer: string; feedback: string }>;
+  recruiterPersonaId?: string;
+  recruiterReplies?: Record<string, string>; // Maps questionId -> recruiter's conversational reaction
+  interfaceMode?: 'standard' | 'interactive';
+  isCompleted?: boolean;
 }
 
