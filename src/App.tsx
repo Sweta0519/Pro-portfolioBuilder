@@ -27,9 +27,10 @@ import {
   RECRUITER_PERSONAS,
   getRecruiterPersona,
   generateRecruiterResponse,
-  generateSessionFeedbackSummary
+  generateSessionFeedbackSummary,
+  generateRecruiterRoundQuestions
 } from './interviewCoach';
-import type { AiProvider } from './interviewCoach';
+import type { AiProvider, RecruiterQuestion } from './interviewCoach';
 import { InterviewPlan, InterviewRound, AnswerScore, GeminiEnhancedData, InterviewSession, RecruiterPersona } from './types';
 import { analyzeATSCompliance, analyzeCoverLetter, autoTuneDesign, autoOptimizeResume } from './ats';
 import { ThemeRenderer } from './ThemeRenderer';
@@ -168,6 +169,9 @@ export default function App() {
   const [showIdealAnswer, setShowIdealAnswer] = useState<Record<string, boolean>>({});
   const [reportIdealLoadingMap, setReportIdealLoadingMap] = useState<Record<string, boolean>>({});
   const [reportShowIdealMap, setReportShowIdealMap] = useState<Record<string, boolean>>({});
+  // Company-specific recruiter round questions
+  const [recruiterQuestions, setRecruiterQuestions] = useState<RecruiterQuestion[] | null>(null);
+  const [isLoadingRecruiterQuestions, setIsLoadingRecruiterQuestions] = useState<boolean>(false);
 
   // ATS Scanner states
   const [jobDescription, setJobDescription] = useState<string>('');
@@ -469,8 +473,12 @@ export default function App() {
   useEffect(() => {
     if (!interviewPlan) return;
     if (interviewSubTab === 'mock' && mockMode === 'answering' && mockInterfaceMode === 'interactive') {
+      // Use company-specific recruiter questions when available, else fall back to hr round
       const allRounds = [...interviewPlan.rounds];
-      const currentRoundData = allRounds.find(r => r.round === mockRound) || allRounds[0];
+      let currentRoundData = allRounds.find(r => r.round === mockRound) || allRounds[0];
+      if (recruiterQuestions && recruiterQuestions.length > 0) {
+        currentRoundData = { ...currentRoundData, questions: recruiterQuestions as unknown as typeof currentRoundData.questions };
+      }
       const currentQ = currentRoundData?.questions[mockQuestionIdx];
       if (currentQ) {
         const textToSpeak = mockQuestionIdx === 0
@@ -480,14 +488,17 @@ export default function App() {
         speakRecruiterText(textToSpeak);
       }
     }
-  }, [interviewSubTab, mockMode, mockQuestionIdx, mockRound, mockInterfaceMode, selectedRecruiter, interviewPlan]);
+  }, [interviewSubTab, mockMode, mockQuestionIdx, mockRound, mockInterfaceMode, selectedRecruiter, interviewPlan, recruiterQuestions]);
 
   // Auto-activate microphone when recruiter stops speaking
   useEffect(() => {
     if (!interviewPlan) return;
     if (interviewSubTab === 'mock' && mockMode === 'answering' && mockInterfaceMode === 'interactive' && !isRecruiterSpeaking && !isRecruiterTyping) {
       const allRounds = [...interviewPlan.rounds];
-      const currentRoundData = allRounds.find(r => r.round === mockRound) || allRounds[0];
+      let currentRoundData = allRounds.find(r => r.round === mockRound) || allRounds[0];
+      if (recruiterQuestions && recruiterQuestions.length > 0) {
+        currentRoundData = { ...currentRoundData, questions: recruiterQuestions as unknown as typeof currentRoundData.questions };
+      }
       const currentQ = currentRoundData?.questions[mockQuestionIdx];
       if (currentQ && autoActivateMic && !isRecording) {
         const t = setTimeout(() => {
@@ -496,7 +507,7 @@ export default function App() {
         return () => clearTimeout(t);
       }
     }
-  }, [interviewSubTab, mockMode, isRecruiterSpeaking, isRecruiterTyping, mockQuestionIdx, mockRound, autoActivateMic, interviewPlan]);
+  }, [interviewSubTab, mockMode, isRecruiterSpeaking, isRecruiterTyping, mockQuestionIdx, mockRound, autoActivateMic, interviewPlan, recruiterQuestions]);
 
 
   // Forms helper states for adding items
@@ -4172,6 +4183,8 @@ export default function Portfolio() {
                             setShowIdealAnswer({});
                             setReportIdealLoadingMap({});
                             setReportShowIdealMap({});
+                            setRecruiterQuestions(null);
+                            setIsLoadingRecruiterQuestions(false);
                             setRecruiterReplies({});
                             setIsRecruiterSpeaking(false);
                             setIsRecruiterTyping(false);
@@ -4654,6 +4667,24 @@ export default function Portfolio() {
                           });
                         }
 
+                        // In interactive mode, override the hr round with company-specific recruiter questions
+                        if (mockInterfaceMode === 'interactive' && recruiterQuestions && recruiterQuestions.length > 0) {
+                          const hrIdx = allRounds.findIndex(r => r.round === 'hr');
+                          const hrRound = hrIdx >= 0 ? allRounds[hrIdx] : allRounds[0];
+                          const overrideRound = {
+                            ...hrRound,
+                            label: `🎙️ Recruiter Screen — ${interviewPlan.context.company}`,
+                            description: `Company-specific recruiter questions for ${interviewPlan.context.company}`,
+                            questions: recruiterQuestions.map(q => ({
+                              ...q,
+                              round: 'hr' as InterviewRound,
+                              tags: q.source ? [q.source] : [],
+                            }))
+                          };
+                          if (hrIdx >= 0) allRounds[hrIdx] = overrideRound;
+                          else allRounds.unshift(overrideRound);
+                        }
+
                         const currentRoundData = allRounds.find(r => r.round === mockRound) || allRounds[0];
                         const questions = currentRoundData.questions;
                         const currentQ = questions[mockQuestionIdx];
@@ -5033,18 +5064,46 @@ export default function Portfolio() {
                                         <button
                                           key={r.round}
                                           type="button"
-                                          onClick={() => startQuestion(r.round, 0)}
-                                          className="w-full p-3 rounded-xl border border-slate-800 bg-slate-900/35 hover:border-violet-500 hover:bg-violet-650/5 transition-all text-left group"
+                                          onClick={async () => {
+                                            // In interactive mode, fetch company-specific recruiter questions for the hr round
+                                            if (mockInterfaceMode === 'interactive' && r.round === 'hr' && !recruiterQuestions) {
+                                              setIsLoadingRecruiterQuestions(true);
+                                              try {
+                                                const qs = await generateRecruiterRoundQuestions(
+                                                  interviewCompanyName || interviewPlan.context.company,
+                                                  interviewPositionName || interviewPlan.context.role,
+                                                  geminiApiKey,
+                                                  aiProvider
+                                                );
+                                                setRecruiterQuestions(qs);
+                                              } catch (err) {
+                                                console.warn('Failed to fetch recruiter questions, using generic HR round:', err);
+                                              } finally {
+                                                setIsLoadingRecruiterQuestions(false);
+                                              }
+                                            }
+                                            startQuestion(r.round, 0);
+                                          }}
+                                          disabled={isLoadingRecruiterQuestions}
+                                          className={`w-full p-3 rounded-xl border border-slate-800 bg-slate-900/35 hover:border-violet-500 hover:bg-violet-650/5 transition-all text-left group ${isLoadingRecruiterQuestions ? 'opacity-60 cursor-wait' : ''}`}
                                         >
                                           <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-2">
                                               <span className="text-base">{r.emoji}</span>
                                               <div>
                                                 <p className="text-[11px] font-bold text-slate-200 group-hover:text-violet-300 transition-colors">{r.label}</p>
-                                                <p className="text-[9px] text-slate-500">{r.questions.length} questions</p>
+                                                <p className="text-[9px] text-slate-500">{r.questions.length} questions
+                                                  {mockInterfaceMode === 'interactive' && r.round === 'hr' && (
+                                                    <span className="ml-1.5 text-violet-400 font-bold">
+                                                      {recruiterQuestions ? `• ${interviewPlan.context.company}-specific` : isLoadingRecruiterQuestions ? '• Loading…' : '• Will load company questions'}
+                                                    </span>
+                                                  )}
+                                                </p>
                                               </div>
                                             </div>
-                                            <span className="text-[9px] text-violet-400 font-bold opacity-0 group-hover:opacity-100 transition-all transform translate-x-1 group-hover:translate-x-0">Start Screen →</span>
+                                            <span className="text-[9px] text-violet-400 font-bold opacity-0 group-hover:opacity-100 transition-all transform translate-x-1 group-hover:translate-x-0">
+                                              {isLoadingRecruiterQuestions ? '⏳ Loading…' : 'Start Screen →'}
+                                            </span>
                                           </div>
                                         </button>
                                       ))}

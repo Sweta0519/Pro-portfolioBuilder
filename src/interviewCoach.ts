@@ -432,6 +432,178 @@ const HR_QUESTIONS: Omit<InterviewQuestion, 'id'>[] = [
   { round: 'hr', question: 'Tell me about a weakness you\'ve been actively working to improve.', hint: 'Show real self-awareness + concrete steps taken. Avoid clichés like "I work too hard."', difficulty: 'medium', source: 'Universal — standard HR question', tags: ['self-awareness'] },
 ];
 
+// ─── Company-Specific Recruiter Phone-Screen Questions ────────────────────────
+// Curated from Glassdoor, Blind, LinkedIn, and community-reported interviews.
+// Keyed by lowercase company name fragment.
+
+const COMPANY_RECRUITER_QUESTIONS: Record<string, Omit<InterviewQuestion, 'id'>[]> = {
+  'google': [
+    { round: 'hr', question: 'Why Google? What specifically about Google\'s mission excites you?', hint: 'Reference Google\'s mission ("organize the world\'s information") and connect it to real products you use. Be specific.', difficulty: 'easy', source: 'Glassdoor — Google recruiter phone screen (frequently reported)', tags: ['motivation', 'google'] },
+    { round: 'hr', question: 'Walk me through your resume — what\'s the thread connecting your career choices?', hint: 'Frame your moves as intentional growth toward a goal, not opportunistic jumps.', difficulty: 'easy', source: 'Glassdoor — Google recruiter screen', tags: ['intro', 'google'] },
+    { round: 'hr', question: 'What does "impact" mean to you, and how have you measured it in your last role?', hint: 'Google values Googleyness and impact. Quantify: users affected, revenue, latency, cost savings.', difficulty: 'medium', source: 'Blind — Google recruiter round reports', tags: ['impact', 'google'] },
+    { round: 'hr', question: 'Tell me about a technically complex project you led. How did you make it successful?', hint: 'Show cross-functional ownership, technical depth, and your decision-making process.', difficulty: 'hard', source: 'Glassdoor — Google L4/L5 recruiter screens', tags: ['leadership', 'google'] },
+    { round: 'hr', question: 'How do you stay current with technology changes in your field?', hint: 'Mention specific sources: papers, open source contributions, internal tech talks, communities.', difficulty: 'easy', source: 'Glassdoor — Google HR screen', tags: ['growth', 'google'] },
+    { round: 'hr', question: 'What are your compensation expectations for this role?', hint: 'Research Levels.fyi for Google L4/L5/L6. Give a range; base + equity together. Don\'t anchor too low.', difficulty: 'medium', source: 'Standard Google recruiter screen', tags: ['compensation', 'google'] },
+    { round: 'hr', question: 'Are you interviewing with other companies? Where are you in those processes?', hint: 'Be honest but strategic. If you have competing offers or late-stage interviews, it creates urgency — mention them.', difficulty: 'easy', source: 'Glassdoor — Google phone screen, frequently reported', tags: ['pipeline', 'google'] },
+  ],
+  'amazon': [
+    { round: 'hr', question: 'Tell me about yourself and why Amazon?', hint: 'End with a specific Amazon business (AWS, Alexa, Prime, Advertising, etc.) that connects to this team.', difficulty: 'easy', source: 'Glassdoor — Amazon recruiter phone screen', tags: ['intro', 'amazon'] },
+    { round: 'hr', question: 'Which 2–3 of Amazon\'s Leadership Principles resonate with you most, and can you give an example for each?', hint: 'Pick LPs you have strong STAR examples for. Don\'t pick all the "cool" ones — pick ones you can back with evidence.', difficulty: 'hard', source: 'Glassdoor — Amazon recruiter screen, Blind — Amazon interview experiences', tags: ['leadership-principles', 'amazon'] },
+    { round: 'hr', question: 'Tell me about a time you had to make a decision with incomplete information or under a tight deadline.', hint: '"Bias for Action" and "Are Right, A Lot". Show structured thinking and clear trade-offs.', difficulty: 'medium', source: 'Glassdoor — Amazon recruiter round, top reported question', tags: ['decision-making', 'amazon'] },
+    { round: 'hr', question: 'Describe a time when you had to earn the trust of a skeptical stakeholder or customer.', hint: '"Earn Trust" LP. Show empathy, transparency, and how you changed their view through actions not words.', difficulty: 'hard', source: 'Glassdoor — Amazon L5/L6 recruiter screen', tags: ['trust', 'amazon'] },
+    { round: 'hr', question: 'What\'s your current compensation, and what are your expectations for this role at Amazon?', hint: 'Amazon\'s TC is heavily equity-weighted (RSU cliff + vest). Research Levels.fyi for your target level.', difficulty: 'medium', source: 'Standard Amazon recruiter screen', tags: ['compensation', 'amazon'] },
+    { round: 'hr', question: 'Can you relocate or are you open to hybrid/onsite requirements for this role?', hint: 'Be clear about your flexibility. Amazon RTO policy is 5 days/week in-office at most locations as of 2025.', difficulty: 'easy', source: 'Glassdoor — Amazon recruiter phone screen', tags: ['logistics', 'amazon'] },
+  ],
+  'meta': [
+    { round: 'hr', question: 'Why Meta? How do you feel about Meta\'s mission of connecting people?', hint: 'Be specific about products (Facebook, Instagram, WhatsApp, Reality Labs). Address any concerns authentically.', difficulty: 'easy', source: 'Glassdoor — Meta recruiter phone screen', tags: ['motivation', 'meta'] },
+    { round: 'hr', question: 'Tell me about the largest or most complex system you\'ve built. How did you scale it?', hint: 'Meta values scale. Numbers matter — MAUs, QPS, data volume. Show your architectural decisions.', difficulty: 'hard', source: 'Blind — Meta recruiter and technical screen reports', tags: ['scale', 'meta'] },
+    { round: 'hr', question: 'Describe a time you moved fast on a project despite uncertainty. What risks did you take?', hint: 'Meta\'s culture of "Move Fast" — show speed as a deliberate strategy, not carelessness.', difficulty: 'medium', source: 'Glassdoor — Meta recruiter phone screen, Blind', tags: ['speed', 'meta'] },
+    { round: 'hr', question: 'How do you handle competing priorities across multiple projects?', hint: 'Meta engineers often run multiple concurrent projects. Show your prioritization framework clearly.', difficulty: 'medium', source: 'Glassdoor — Meta L4/L5 recruiter screen', tags: ['prioritization', 'meta'] },
+    { round: 'hr', question: 'What\'s your approach to data-driven decision-making?', hint: 'Meta is deeply metrics-driven. Reference A/B testing, funnel analysis, experimentation — be specific.', difficulty: 'medium', source: 'Glassdoor — Meta recruiter round', tags: ['data', 'meta'] },
+    { round: 'hr', question: 'What are your total compensation expectations?', hint: 'Meta is competitive on cash + equity. Research Levels.fyi for E4/E5/E6. Be specific with your range.', difficulty: 'easy', source: 'Standard Meta recruiter screen', tags: ['compensation', 'meta'] },
+  ],
+  'netflix': [
+    { round: 'hr', question: 'Why Netflix, and what specifically about our culture document resonates with you?', hint: 'Read the Netflix Culture document. Pick 2-3 specific values and explain why they fit your work style.', difficulty: 'medium', source: 'Glassdoor — Netflix recruiter phone screen, Blind', tags: ['culture', 'netflix'] },
+    { round: 'hr', question: 'Netflix operates with a culture of "freedom and responsibility". Can you give an example of a time you took a big risk and owned the outcome?', hint: 'Netflix wants autonomous leaders who own decisions without excessive process. Show a bold, informed risk.', difficulty: 'hard', source: 'Glassdoor — Netflix recruiter screen, frequently reported', tags: ['ownership', 'netflix'] },
+    { round: 'hr', question: 'How do you handle receiving very direct, critical feedback?', hint: 'Netflix has a culture of radical candor. Show you actively seek it and act on it — not just tolerate it.', difficulty: 'medium', source: 'Blind — Netflix culture-fit recruiter screen', tags: ['feedback', 'netflix'] },
+    { round: 'hr', question: 'Netflix pays top of market. Walk me through your current compensation and expectations.', hint: 'Netflix is famous for top-of-market cash compensation. Come prepared with Levels.fyi data.', difficulty: 'easy', source: 'Glassdoor — Netflix recruiter screen', tags: ['compensation', 'netflix'] },
+    { round: 'hr', question: 'Tell me about a time you influenced a product or engineering direction without formal authority.', hint: 'Netflix values leaders who build influence through context-setting and data. Show persuasion, not mandate.', difficulty: 'hard', source: 'Glassdoor — Netflix L5/L6 phone screen', tags: ['influence', 'netflix'] },
+  ],
+  'microsoft': [
+    { round: 'hr', question: 'Why Microsoft, and why this specific team or product area?', hint: 'Reference Azure, M365, Copilot, or Xbox — whatever applies. Show genuine product curiosity.', difficulty: 'easy', source: 'Glassdoor — Microsoft recruiter phone screen', tags: ['motivation', 'microsoft'] },
+    { round: 'hr', question: 'Tell me about yourself and how your experience aligns with what we need in this role.', hint: 'Tailor this to the JD. Highlight Azure, cloud, or AI-related experience if relevant.', difficulty: 'easy', source: 'Glassdoor — Microsoft HR screen', tags: ['intro', 'microsoft'] },
+    { round: 'hr', question: 'How does this role align with your long-term career goals?', hint: 'Microsoft values growth mindset (per Satya Nadella). Show this is a deliberate career step.', difficulty: 'easy', source: 'Glassdoor — Microsoft recruiter screen', tags: ['growth', 'microsoft'] },
+    { round: 'hr', question: 'Tell me about a time you had to collaborate across very different teams or organizations.', hint: 'Microsoft is huge. Cross-org collaboration is critical. Show initiative and structured communication.', difficulty: 'medium', source: 'Glassdoor — Microsoft L61/L62 recruiter screen', tags: ['collaboration', 'microsoft'] },
+    { round: 'hr', question: 'What is your experience with cloud technologies, particularly Azure?', hint: 'Azure is core to Microsoft. If you\'re AWS/GCP-heavy, frame your cloud-agnostic expertise clearly.', difficulty: 'medium', source: 'Glassdoor — Microsoft SDE recruiter screen', tags: ['cloud', 'microsoft'] },
+    { round: 'hr', question: 'What are your compensation expectations?', hint: 'Microsoft uses a level-based salary band. Research Levels.fyi for L62/L63/L64. Include expected RSU grant.', difficulty: 'easy', source: 'Standard Microsoft recruiter screen', tags: ['compensation', 'microsoft'] },
+  ],
+  'apple': [
+    { round: 'hr', question: 'Why Apple? How do you feel about working on products used by over a billion people?', hint: 'Apple values passion for their ecosystem. Reference specific products, design philosophy, or recent launches.', difficulty: 'easy', source: 'Glassdoor — Apple recruiter phone screen', tags: ['motivation', 'apple'] },
+    { round: 'hr', question: 'Tell me about the most impactful project you\'ve shipped. How did you know it was the right thing to build?', hint: 'Apple is obsessed with product quality and deliberate decision-making. Show your judgment.', difficulty: 'hard', source: 'Glassdoor — Apple recruiter screen, Blind', tags: ['impact', 'apple'] },
+    { round: 'hr', question: 'How do you balance speed with the level of polish Apple products are known for?', hint: 'Apple moves slower and ships with more quality. Show you understand that trade-off and embrace it.', difficulty: 'medium', source: 'Blind — Apple recruiter round discussion', tags: ['quality', 'apple'] },
+    { round: 'hr', question: 'Apple products are often kept secret. How do you feel about working in a high-confidentiality environment?', hint: 'Be genuine. Apple NDAs are strict. Show you\'re comfortable with confidentiality as a professional norm.', difficulty: 'easy', source: 'Glassdoor — Apple recruiter screen', tags: ['culture', 'apple'] },
+    { round: 'hr', question: 'What are your salary expectations?', hint: 'Apple is competitive but RSUs vest over 4 years. Compare total comp on Levels.fyi. Ask about refresh grants.', difficulty: 'easy', source: 'Standard Apple recruiter screen', tags: ['compensation', 'apple'] },
+  ],
+  'stripe': [
+    { round: 'hr', question: 'Why Stripe? What about the payments / fintech space excites you?', hint: 'Reference Stripe\'s mission: increasing the GDP of the internet. Be specific about their product (Radar, Connect, Terminal, etc.).', difficulty: 'easy', source: 'Glassdoor — Stripe recruiter phone screen', tags: ['motivation', 'stripe'] },
+    { round: 'hr', question: 'Describe a time you had to understand a highly complex domain quickly to deliver results.', hint: 'Stripe deals with payments, compliance, tax, banking — show you can ramp up in complex domains fast.', difficulty: 'hard', source: 'Glassdoor — Stripe recruiter screen, Blind', tags: ['learning', 'stripe'] },
+    { round: 'hr', question: 'How do you think about writing code that is used by millions of developers as an API?', hint: 'Stripe\'s core product is APIs. Show awareness of DX, backward compatibility, and reliability at scale.', difficulty: 'hard', source: 'Blind — Stripe recruiter and technical screen', tags: ['api-design', 'stripe'] },
+    { round: 'hr', question: 'Tell me about a time you disagreed strongly with a technical decision. What did you do?', hint: 'Stripe values intellectual honesty and debate. Show you engage constructively with conviction.', difficulty: 'hard', source: 'Glassdoor — Stripe recruiter round', tags: ['conflict', 'stripe'] },
+    { round: 'hr', question: 'What are your current TC and expectations for this role?', hint: 'Stripe is competitive, especially equity. Research Levels.fyi and ask about cliff and vesting schedule.', difficulty: 'easy', source: 'Standard Stripe recruiter screen', tags: ['compensation', 'stripe'] },
+  ],
+  'airbnb': [
+    { round: 'hr', question: 'Why Airbnb? Why do you believe in the mission of "belonging anywhere"?', hint: 'Airbnb\'s culture is mission-driven. Show genuine belief in community, travel, or belonging — not just the brand.', difficulty: 'easy', source: 'Glassdoor — Airbnb recruiter phone screen', tags: ['motivation', 'airbnb'] },
+    { round: 'hr', question: 'Describe your experience building products for marketplace or two-sided platform businesses.', hint: 'Airbnb is a marketplace. Show you understand host/guest dynamics, trust, incentives, and conversion.', difficulty: 'hard', source: 'Glassdoor — Airbnb recruiter screen', tags: ['marketplace', 'airbnb'] },
+    { round: 'hr', question: 'Tell me about a time you used data to change a product or engineering direction.', hint: 'Airbnb is highly data-driven. Reference metrics: booking rate, conversion, host activation, etc.', difficulty: 'medium', source: 'Glassdoor — Airbnb recruiter round', tags: ['data', 'airbnb'] },
+    { round: 'hr', question: 'What are your compensation expectations?', hint: 'Airbnb went public in 2020. Research Levels.fyi for current bands and equity refresh rates.', difficulty: 'easy', source: 'Standard Airbnb recruiter screen', tags: ['compensation', 'airbnb'] },
+  ],
+  'uber': [
+    { round: 'hr', question: 'Why Uber? Which part of the business excites you most — Rides, Eats, Freight, or something else?', hint: 'Uber has multiple verticals. Show you\'ve researched the specific team\'s product area and challenges.', difficulty: 'easy', source: 'Glassdoor — Uber recruiter phone screen', tags: ['motivation', 'uber'] },
+    { round: 'hr', question: 'Describe a time you worked on a system with massive scale — millions of requests per second.', hint: 'Uber operates at extreme scale. Show comfort with distributed systems, reliability, and load.', difficulty: 'hard', source: 'Blind — Uber recruiter and technical phone screen', tags: ['scale', 'uber'] },
+    { round: 'hr', question: 'How do you make decisions when you have competing priorities across engineering, product, and business?', hint: 'Uber moves fast. Show a structured framework for trade-offs and stakeholder alignment.', difficulty: 'medium', source: 'Glassdoor — Uber recruiter screen', tags: ['prioritization', 'uber'] },
+    { round: 'hr', question: 'What are your compensation expectations?', hint: 'Research Levels.fyi for Uber L4/L5/L6. Uber is competitive on equity post-IPO.', difficulty: 'easy', source: 'Standard Uber recruiter screen', tags: ['compensation', 'uber'] },
+  ],
+  'salesforce': [
+    { round: 'hr', question: 'Why Salesforce? How do you connect with our "Ohana" culture?', hint: 'Salesforce has a strong culture of equality, giving back, and customer success. Reference Trailhead, Dreamforce, or specific cloud.', difficulty: 'easy', source: 'Glassdoor — Salesforce recruiter phone screen', tags: ['motivation', 'salesforce'] },
+    { round: 'hr', question: 'Tell me about your experience with enterprise software and working with large customer accounts.', hint: 'Salesforce is B2B enterprise. Show comfort with long sales cycles, customer success, and multi-stakeholder orgs.', difficulty: 'medium', source: 'Glassdoor — Salesforce recruiter screen', tags: ['enterprise', 'salesforce'] },
+    { round: 'hr', question: 'How do you balance feature velocity with technical debt in a large, mature codebase?', hint: 'Salesforce is 25+ years old. Show pragmatic judgment: when to refactor vs. ship, and how to get buy-in.', difficulty: 'hard', source: 'Glassdoor — Salesforce recruiter screen', tags: ['tech-debt', 'salesforce'] },
+    { round: 'hr', question: 'What are your salary and total comp expectations?', hint: 'Research Levels.fyi for Salesforce MTS/SMTS/Principal. Equity vests quarterly at Salesforce.', difficulty: 'easy', source: 'Standard Salesforce recruiter screen', tags: ['compensation', 'salesforce'] },
+  ],
+  'shopify': [
+    { round: 'hr', question: 'Why Shopify? What do you think about the future of commerce?', hint: 'Shopify is mission-driven around entrepreneurship. Reference specific products (Shop, Markets, POS, Checkout).', difficulty: 'easy', source: 'Glassdoor — Shopify recruiter phone screen', tags: ['motivation', 'shopify'] },
+    { round: 'hr', question: 'Shopify operates at a very high trust, low process environment. How do you do your best work?', hint: 'Shopify has no sprints, very few meetings. Show you can self-manage, prioritize, and communicate async.', difficulty: 'medium', source: 'Glassdoor — Shopify recruiter screen, Blind', tags: ['culture', 'shopify'] },
+    { round: 'hr', question: 'Tell me about a time you built something that directly helped small businesses or merchants succeed.', hint: 'Shopify\'s mission is removing barriers to entrepreneurship. Connect your work to merchant/customer outcomes.', difficulty: 'medium', source: 'Glassdoor — Shopify recruiter round', tags: ['impact', 'shopify'] },
+  ],
+  'linkedin': [
+    { round: 'hr', question: 'Why LinkedIn? How does your personal professional story connect to our mission of creating economic opportunity?', hint: 'Reference economic opportunity for the global workforce — not just networking. Show genuine belief in the mission.', difficulty: 'easy', source: 'Glassdoor — LinkedIn recruiter phone screen', tags: ['motivation', 'linkedin'] },
+    { round: 'hr', question: 'Tell me about the largest audience you\'ve built or served with a product or feature.', hint: 'LinkedIn has 1B+ users. Show you can think at scale and are excited by that challenge.', difficulty: 'medium', source: 'Glassdoor — LinkedIn recruiter screen', tags: ['scale', 'linkedin'] },
+    { round: 'hr', question: 'What are your compensation expectations?', hint: 'LinkedIn is a Microsoft subsidiary. Research Levels.fyi for IC4/IC5. Total comp includes RSUs + cash + bonus.', difficulty: 'easy', source: 'Standard LinkedIn recruiter screen', tags: ['compensation', 'linkedin'] },
+  ],
+  'twitter': [
+    { round: 'hr', question: 'Why X (Twitter)?', hint: 'The company has changed significantly post-acquisition. Be genuine about why you want to join in its current form.', difficulty: 'easy', source: 'Glassdoor — X/Twitter recruiter screen', tags: ['motivation', 'twitter'] },
+  ],
+  'palantir': [
+    { round: 'hr', question: 'Why Palantir? How do you feel about working on mission-critical government and enterprise software?', hint: 'Palantir works with defense, intelligence, and health agencies. Show genuine interest in real-world impact, not just the tech.', difficulty: 'medium', source: 'Glassdoor — Palantir recruiter phone screen', tags: ['motivation', 'palantir'] },
+    { round: 'hr', question: 'Tell me about a time you had to work directly with customers or end-users to solve a complex technical problem.', hint: 'Palantir Forward Deployed Engineers are embedded with clients. Show you can bridge technical and non-technical worlds.', difficulty: 'hard', source: 'Glassdoor — Palantir FDE recruiter screen', tags: ['customer-facing', 'palantir'] },
+    { round: 'hr', question: 'How do you handle working with incomplete, messy, or ambiguous data from the real world?', hint: 'Palantir\'s core challenge is making sense of real-world data. Show pragmatic problem-solving, not theory.', difficulty: 'hard', source: 'Blind — Palantir recruiter screen', tags: ['data', 'palantir'] },
+  ],
+};
+
+// ─── Recruiter Round Question Generator ───────────────────────────────────────
+
+export interface RecruiterQuestion { id: string; question: string; hint: string; source: string; difficulty: 'easy' | 'medium' | 'hard'; }
+
+function addRecruiterIds(questions: Omit<InterviewQuestion, 'id'>[]): RecruiterQuestion[] {
+  return questions.map((q, i) => ({ ...q, id: `rq-${Date.now()}-${i}`, question: q.question, hint: q.hint || '', source: q.source || 'Curated', difficulty: q.difficulty as 'easy' | 'medium' | 'hard' }));
+}
+
+/**
+ * Returns company-specific recruiter phone-screen questions.
+ * Priority: 1) Hardcoded curated bank → 2) AI-generated (if API key) → 3) Generic HR fallback.
+ */
+export async function generateRecruiterRoundQuestions(
+  company: string,
+  role: string,
+  apiKey: string,
+  provider: AiProvider,
+  count = 6
+): Promise<RecruiterQuestion[]> {
+  const companyLower = company.toLowerCase();
+
+  // 1. Check hardcoded curated bank
+  const bankKey = Object.keys(COMPANY_RECRUITER_QUESTIONS).find(k => companyLower.includes(k));
+  if (bankKey) {
+    const pool = COMPANY_RECRUITER_QUESTIONS[bankKey];
+    // Return up to `count` questions; always include intro + motivation first
+    const intro = pool.filter(q => q.tags?.includes('intro') || q.tags?.includes('motivation'));
+    const rest = pool.filter(q => !q.tags?.includes('intro') && !q.tags?.includes('motivation'));
+    const selected = [...intro, ...rest].slice(0, count);
+    return addRecruiterIds(selected);
+  }
+
+  // 2. Try AI generation if API key available
+  if (apiKey.trim()) {
+    try {
+      const systemPrompt = `You are a senior recruiter and hiring expert. Return ONLY valid JSON — no markdown, no explanation.`;
+      const userPrompt = `Generate exactly ${count} recruiter phone-screen questions that a recruiter at "${company}" would realistically ask a candidate applying for a "${role}" position.
+
+Bases these on:
+- Actual Glassdoor and Blind interview reports for ${company}
+- Common recruiter phone-screen patterns at ${company} (culture fit, motivation, compensation, logistics, background)
+- The specific culture and values of ${company}
+
+Return a JSON array of ${count} objects. Each object must have:
+- "question": the exact question text
+- "hint": a 1-sentence tip for the candidate on how to answer this
+- "source": where this type of question is typically reported (e.g. "Glassdoor — ${company} recruiter screen")
+- "difficulty": one of "easy", "medium", or "hard"
+
+Start with an intro question ("tell me about yourself") then motivation ("why ${company}?"), and end with compensation.
+Return only the JSON array.`;
+
+      const raw = await callAiChat(apiKey, provider, systemPrompt, userPrompt);
+      const jsonMatch = raw.match(/\[([\s\S]*)\]/);
+      if (jsonMatch) {
+        const parsed: Array<{ question: string; hint: string; source: string; difficulty: string }> = JSON.parse(`[${jsonMatch[1]}]`);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.slice(0, count).map((q, i) => ({
+            id: `rq-ai-${Date.now()}-${i}`,
+            question: q.question || '',
+            hint: q.hint || '',
+            source: q.source || `AI-generated for ${company}`,
+            difficulty: (['easy', 'medium', 'hard'].includes(q.difficulty) ? q.difficulty : 'medium') as 'easy' | 'medium' | 'hard',
+          }));
+        }
+      }
+    } catch (err) {
+      console.warn('generateRecruiterRoundQuestions AI fallback triggered:', err);
+    }
+  }
+
+  // 3. Generic HR fallback
+  return addRecruiterIds(HR_QUESTIONS.slice(0, count));
+}
+
 const BEHAVIORAL_QUESTIONS: Omit<InterviewQuestion, 'id'>[] = [
   { round: 'behavioral', question: 'Tell me about a time you disagreed with your manager\'s decision. What did you do?', hint: 'Use STAR. Show you raised concerns with data and respect, then committed to the final decision.', difficulty: 'hard', source: 'Amazon Leadership Principles — frequently reported on Glassdoor', tags: ['conflict', 'leadership'] },
   { round: 'behavioral', question: 'Describe a time you had to meet an extremely tight deadline. How did you manage it?', hint: 'Quantify the outcome. Show prioritization, communication, and trade-off decisions — not just "I worked late."', difficulty: 'medium', source: 'Glassdoor — Top behavioral question across all roles', tags: ['deadlines', 'prioritization'] },
