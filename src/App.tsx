@@ -4706,6 +4706,30 @@ export default function Portfolio() {
                         const timerMins = Math.floor(mockTimerSec / 60).toString().padStart(2, '0');
                         const timerSecs = (mockTimerSec % 60).toString().padStart(2, '0');
 
+                        const isStarApplicable = currentQ && 
+                          (mockRound === 'behavioral' || mockRound === 'hr' || mockRound === 'leadership' || mockRound === 'customer-scenarios') && 
+                          !isNonStarQuestion(currentQ.question);
+
+                        const getPlaceholderText = () => {
+                          if (isRecording) return '🎙️ Listening... speak your answer now';
+                          if (mockRound === 'dsa') {
+                            return 'Write your code implementation or algorithmic approach here... Be sure to explain your time and space complexity (e.g. O(N)).';
+                          }
+                          if (mockRound === 'system-design') {
+                            return 'Outline your high-level architecture here... Detail your database choice, scaling components, APIs, caching, and engineering trade-offs.';
+                          }
+                          if (mockRound === 'sql-analytics') {
+                            return 'Write your SQL query or database design schema here... Reference JOINs, indexes, window functions, or analytics metrics.';
+                          }
+                          if (['technical', 'infrastructure', 'ml-statistics', 'qa-testing'].includes(mockRound)) {
+                            return 'Describe your technical implementation, tools, and engineering trade-offs here... Be as specific as possible.';
+                          }
+                          if (currentQ && isNonStarQuestion(currentQ.question)) {
+                            return 'Type your answer here... speak naturally and share your story, motivation, or background clearly.';
+                          }
+                          return 'Type your answer here or click the microphone to speak... Use the STAR method for behavioral questions: Situation → Task → Action → Result.';
+                        };
+
                         const startQuestion = (roundType: InterviewRound, idx: number) => {
                           setMockRound(roundType);
                           setMockQuestionIdx(idx);
@@ -4722,6 +4746,7 @@ export default function Portfolio() {
                         };
 
                         const enableStarMode = async () => {
+                          if (!isStarApplicable) return;
                           if (isStarSplitting) return;
                           const text = currentAnswer.trim();
 
@@ -5606,7 +5631,7 @@ export default function Portfolio() {
                                             <div className="flex items-center justify-between mb-2">
                                               <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Your Answer</label>
                                               {/* Only show the Guided STAR toggle for questions that actually benefit from STAR structure */}
-                                              {!isNonStarQuestion(currentQ.question) && (
+                                              {isStarApplicable && (
                                                 <div className="flex p-0.5 bg-slate-950/60 rounded-lg border border-slate-800">
                                                   <button
                                                     type="button"
@@ -5619,7 +5644,7 @@ export default function Portfolio() {
                                                     type="button"
                                                     onClick={enableStarMode}
                                                     disabled={isStarSplitting}
-                                                    className={`px-2.5 py-1 rounded-md text-[9px] font-bold transition-all ${starMode ? 'bg-violet-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-350'} ${isStarSplitting ? 'opacity-70 cursor-wait' : ''}`}
+                                                    className={`px-2.5 py-1 rounded-md text-[9px] font-bold transition-all ${starMode ? 'bg-violet-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-355'} ${isStarSplitting ? 'opacity-70 cursor-wait' : ''}`}
                                                   >
                                                     {isStarSplitting ? '⏳ Analyzing...' : '🧠 Guided STAR'}
                                                   </button>
@@ -5627,7 +5652,7 @@ export default function Portfolio() {
                                               )}
                                             </div>
 
-                                            {starMode && !isNonStarQuestion(currentQ.question) ? (
+                                            {starMode && isStarApplicable ? (
                                               <div className="space-y-3.5">
                                                 {/* Situation */}
                                                 <div className="space-y-1">
@@ -5685,7 +5710,7 @@ export default function Portfolio() {
                                                       updateStarAnswer(starSituation, starTask, e.target.value, starResult);
                                                     }}
                                                     placeholder="What actions did you take? (e.g., 'I profiled the DB queries, added Redis caching, and optimized the indexes...')"
-                                                    className="w-full h-20 bg-slate-950/40 border border-slate-700 focus:border-violet-500 rounded-xl p-2.5 text-xs text-slate-300 placeholder-slate-650 resize-none focus:outline-none transition-colors"
+                                                    className="w-full h-20 bg-slate-955/40 border border-slate-700 focus:border-violet-500 rounded-xl p-2.5 text-xs text-slate-300 placeholder-slate-650 resize-none focus:outline-none transition-colors"
                                                   />
                                                 </div>
 
@@ -5693,7 +5718,7 @@ export default function Portfolio() {
                                                 <div className="space-y-1">
                                                   <div className="flex justify-between items-center">
                                                     <label className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1">
-                                                      <span className="w-4 h-4 rounded-full bg-rose-555/20 text-rose-450 border border-rose-500/20 flex items-center justify-center text-[9px] font-black">R</span>
+                                                      <span className="w-4 h-4 rounded-full bg-rose-555/20 text-rose-455 border border-rose-500/20 flex items-center justify-center text-[9px] font-black">R</span>
                                                       Result
                                                     </label>
                                                     <span className="text-[9px] text-slate-500">Outcome with quantitative metrics</span>
@@ -5714,13 +5739,7 @@ export default function Portfolio() {
                                                 <textarea
                                                   value={currentAnswer}
                                                   onChange={e => setMockAnswers(p => ({ ...p, [currentQ.id]: e.target.value }))}
-                                                  placeholder={
-                                                    isRecording
-                                                      ? '🎙️ Listening... speak your answer now'
-                                                      : isNonStarQuestion(currentQ.question)
-                                                        ? 'Type your answer here... For this question, speak naturally — tell your story, motivation, or perspective clearly and specifically.'
-                                                        : 'Type your answer here or click the microphone to speak... Use the STAR method for behavioral questions: Situation → Task → Action → Result'
-                                                  }
+                                                  placeholder={getPlaceholderText()}
                                                   className={`w-full h-36 bg-slate-950/50 border rounded-xl p-3 pr-12 text-xs text-slate-300 placeholder-slate-600 resize-none focus:outline-none transition-colors ${isRecording ? 'border-red-500 bg-red-950/10' : 'border-slate-700 focus:border-violet-500'}`}
                                                 />
                                                 {/* Microphone button */}
