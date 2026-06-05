@@ -244,5 +244,8 @@ export interface InterviewSession {
   recruiterQuestions?: Array<{ id: string; question: string; hint: string; source: string; difficulty: 'easy' | 'medium' | 'hard' }>; // Company-specific recruiter round questions
   interfaceMode?: 'standard' | 'interactive';
   isCompleted?: boolean;
+  mockRound?: InterviewRound;
+  mockQuestionIdx?: number;
+  mockMode?: 'idle' | 'answering' | 'reviewed';
 }
 

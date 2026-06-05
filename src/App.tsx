@@ -110,39 +110,94 @@ export default function App() {
   const [improvedBullets, setImprovedBullets] = useState<string[]>([]);
   const [copiedBulletIdx, setCopiedBulletIdx] = useState<number | null>(null);
 
+  // Load active session from localStorage if exists
+  const initialActiveSession = (() => {
+    try {
+      const activeId = localStorage.getItem('pro_portfolio_active_session_id');
+      if (activeId) {
+        const sessionsStr = localStorage.getItem('pro_portfolio_interview_sessions');
+        if (sessionsStr) {
+          const sessions: InterviewSession[] = JSON.parse(sessionsStr);
+          return sessions.find(s => s.id === activeId) || null;
+        }
+      }
+    } catch (e) {
+      console.error("Failed to load active session:", e);
+    }
+    return null;
+  })();
+
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(
+    initialActiveSession ? initialActiveSession.id : null
+  );
+
   // ─── Interview Prep Coach states ─────────────────────────────────────────
-  const [interviewPlan, setInterviewPlan] = useState<InterviewPlan | null>(null);
-  const [interviewJD, setInterviewJD] = useState<string>('');
-  const [interviewPositionName, setInterviewPositionName] = useState<string>('');
-  const [interviewCompanyName, setInterviewCompanyName] = useState<string>('');
-  const [interviewSubTab, setInterviewSubTab] = useState<'overview' | 'questions' | 'study-plan' | 'mock'>('overview');
+  const [interviewPlan, setInterviewPlan] = useState<InterviewPlan | null>(
+    initialActiveSession ? initialActiveSession.plan : null
+  );
+  const [interviewJD, setInterviewJD] = useState<string>(
+    initialActiveSession ? initialActiveSession.jobDescription : ''
+  );
+  const [interviewPositionName, setInterviewPositionName] = useState<string>(
+    initialActiveSession ? initialActiveSession.positionName : ''
+  );
+  const [interviewCompanyName, setInterviewCompanyName] = useState<string>(
+    initialActiveSession ? initialActiveSession.companyName : ''
+  );
+  const [interviewSubTab, setInterviewSubTab] = useState<'overview' | 'questions' | 'study-plan' | 'mock'>(
+    initialActiveSession ? (initialActiveSession.isCompleted ? 'mock' : 'overview') : 'overview'
+  );
   const [activeRound, setActiveRound] = useState<InterviewRound>('hr');
   const [isGeneratingPlan, setIsGeneratingPlan] = useState<boolean>(false);
-  const [mockAnswers, setMockAnswers] = useState<Record<string, string>>({});
-  const [mockScores, setMockScores] = useState<Record<string, AnswerScore>>({});
-  const [mockQuestionIdx, setMockQuestionIdx] = useState<number>(0);
-  const [mockRound, setMockRound] = useState<InterviewRound>('hr');
-  const [mockMode, setMockMode] = useState<'idle' | 'answering' | 'reviewed'>('idle');
+  const [mockAnswers, setMockAnswers] = useState<Record<string, string>>(
+    initialActiveSession ? initialActiveSession.mockAnswers : {}
+  );
+  const [mockScores, setMockScores] = useState<Record<string, AnswerScore>>(
+    initialActiveSession ? initialActiveSession.mockScores : {}
+  );
+  const [mockQuestionIdx, setMockQuestionIdx] = useState<number>(
+    initialActiveSession ? (initialActiveSession.mockQuestionIdx ?? 0) : 0
+  );
+  const [mockRound, setMockRound] = useState<InterviewRound>(
+    initialActiveSession ? (initialActiveSession.mockRound ?? 'hr') : 'hr'
+  );
+  const [mockMode, setMockMode] = useState<'idle' | 'answering' | 'reviewed'>(
+    initialActiveSession ? (initialActiveSession.mockMode ?? 'idle') : 'idle'
+  );
   const [mockTimerSec, setMockTimerSec] = useState<number>(0);
   const [hintVisible, setHintVisible] = useState<Record<string, boolean>>({});
   const [sampleVisible, setSampleVisible] = useState<Record<string, boolean>>({});
   const mockTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // ─── Interactive Voice Recruiter States ──────────────────────────────────
-  const [mockInterfaceMode, setMockInterfaceMode] = useState<'standard' | 'interactive'>('standard');
-  const [selectedRecruiter, setSelectedRecruiter] = useState<RecruiterPersona>(RECRUITER_PERSONAS[4]);
-  const [recruiterReplies, setRecruiterReplies] = useState<Record<string, string>>({});
+  const [mockInterfaceMode, setMockInterfaceMode] = useState<'standard' | 'interactive'>(
+    initialActiveSession ? (initialActiveSession.interfaceMode || 'standard') : 'standard'
+  );
+  const [selectedRecruiter, setSelectedRecruiter] = useState<RecruiterPersona>(
+    initialActiveSession && initialActiveSession.recruiterPersonaId
+      ? (RECRUITER_PERSONAS.find(p => p.id === initialActiveSession.recruiterPersonaId) || RECRUITER_PERSONAS[4])
+      : RECRUITER_PERSONAS[4]
+  );
+  const [recruiterReplies, setRecruiterReplies] = useState<Record<string, string>>(
+    initialActiveSession ? (initialActiveSession.recruiterReplies || {}) : {}
+  );
   const [isRecruiterSpeaking, setIsRecruiterSpeaking] = useState<boolean>(false);
   const [isRecruiterTyping, setIsRecruiterTyping] = useState<boolean>(false);
-  const [isSessionCompleted, setIsSessionCompleted] = useState<boolean>(false);
+  const [isSessionCompleted, setIsSessionCompleted] = useState<boolean>(
+    initialActiveSession ? (initialActiveSession.isCompleted || false) : false
+  );
   const [autoPlayVoice, setAutoPlayVoice] = useState<boolean>(true);
   const [autoActivateMic, setAutoActivateMic] = useState<boolean>(true);
-  const [sessionSummaryFeedback, setSessionSummaryFeedback] = useState<string>('');
+  const [sessionSummaryFeedback, setSessionSummaryFeedback] = useState<string>(
+    initialActiveSession ? (initialActiveSession.sessionSummaryFeedback || '') : ''
+  );
   const [isLoadingSummary, setIsLoadingSummary] = useState<boolean>(false);
 
   // ─── Gemini Google Search Enhancement ────────────────────────────────────
   const [geminiApiKey, setGeminiApiKey] = useState<string>(() => localStorage.getItem('gemini-api-key') || '');
-  const [geminiData, setGeminiData] = useState<GeminiEnhancedData | null>(null);
+  const [geminiData, setGeminiData] = useState<GeminiEnhancedData | null>(
+    initialActiveSession ? (initialActiveSession.geminiData || null) : null
+  );
   const [isFetchingGemini, setIsFetchingGemini] = useState<boolean>(false);
   const [geminiError, setGeminiError] = useState<string>('');
   const [showApiKeyInput, setShowApiKeyInput] = useState<boolean>(false);
@@ -166,14 +221,20 @@ export default function App() {
 
   // AI Mock Coaching States
   const [loadingIdealAnswer, setLoadingIdealAnswer] = useState<boolean>(false);
-  const [idealAnswers, setIdealAnswers] = useState<Record<string, string>>({});
+  const [idealAnswers, setIdealAnswers] = useState<Record<string, string>>(
+    initialActiveSession ? (initialActiveSession.idealAnswers || {}) : {}
+  );
   const [loadingOptimization, setLoadingOptimization] = useState<boolean>(false);
-  const [optimizedResults, setOptimizedResults] = useState<Record<string, { optimizedAnswer: string; feedback: string }>>({});
+  const [optimizedResults, setOptimizedResults] = useState<Record<string, { optimizedAnswer: string; feedback: string }>>(
+    initialActiveSession ? (initialActiveSession.optimizedResults || {}) : {}
+  );
   const [showIdealAnswer, setShowIdealAnswer] = useState<Record<string, boolean>>({});
   const [reportIdealLoadingMap, setReportIdealLoadingMap] = useState<Record<string, boolean>>({});
   const [reportShowIdealMap, setReportShowIdealMap] = useState<Record<string, boolean>>({});
   // Company-specific recruiter round questions
-  const [recruiterQuestions, setRecruiterQuestions] = useState<RecruiterQuestion[] | null>(null);
+  const [recruiterQuestions, setRecruiterQuestions] = useState<RecruiterQuestion[] | null>(
+    initialActiveSession ? (initialActiveSession.recruiterQuestions || null) : null
+  );
   const [isLoadingRecruiterQuestions, setIsLoadingRecruiterQuestions] = useState<boolean>(false);
 
   // ATS Scanner states
@@ -240,7 +301,7 @@ export default function App() {
     }
     return [];
   });
-  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+
 
   // Sync Interview Sessions to localStorage
   useEffect(() => {
@@ -275,6 +336,71 @@ export default function App() {
       return s;
     }));
   }, [currentSessionId, mockAnswers, mockScores, idealAnswers, optimizedResults, interviewPlan, geminiData, selectedRecruiter, recruiterReplies, sessionSummaryFeedback, recruiterQuestions, mockInterfaceMode, isSessionCompleted]);
+
+  // Sync current active session ID to localStorage
+  useEffect(() => {
+    try {
+      if (currentSessionId) {
+        localStorage.setItem('pro_portfolio_active_session_id', currentSessionId);
+      } else {
+        localStorage.removeItem('pro_portfolio_active_session_id');
+      }
+    } catch (e) {
+      console.error("Failed to save active session ID:", e);
+    }
+  }, [currentSessionId]);
+
+  // Resume timer on mount if mock mode is answering
+  useEffect(() => {
+    if (mockMode === 'answering' && currentSessionId) {
+      if (mockTimerRef.current) clearInterval(mockTimerRef.current);
+      mockTimerRef.current = setInterval(() => setMockTimerSec(s => s + 1), 1000);
+    }
+    return () => {
+      if (mockTimerRef.current) clearInterval(mockTimerRef.current);
+    };
+  }, [mockMode, currentSessionId]);
+
+  // Auto-restore STAR inputs on mount if draft answer has STAR tags
+  useEffect(() => {
+    if (!interviewPlan) return;
+    
+    // Find active round questions
+    let questions: any[] = [];
+    if (mockInterfaceMode === 'interactive' && mockRound === 'hr' && recruiterQuestions) {
+      questions = recruiterQuestions;
+    } else {
+      const activeRoundPlan = interviewPlan.rounds.find(r => r.round === mockRound);
+      if (activeRoundPlan) {
+        questions = activeRoundPlan.questions;
+      }
+    }
+    
+    const currentQ = questions[mockQuestionIdx];
+    if (mockMode === 'answering' && currentQ) {
+      const draftAns = mockAnswers[currentQ.id] || '';
+      const text = draftAns.trim();
+      const hasTags = text.includes('[Situation]') || text.includes('[Task]') || text.includes('[Action]') || text.includes('[Result]');
+      if (hasTags) {
+        const sitMatch = text.match(/\[Situation\]\s*([\s\S]*?)(?=\[Task\]|\[Action\]|\[Result\]|$)/i);
+        const tskMatch = text.match(/\[Task\]\s*([\s\S]*?)(?=\[Situation\]|\[Action\]|\[Result\]|$)/i);
+        const actMatch = text.match(/\[Action\]\s*([\s\S]*?)(?=\[Situation\]|\[Task\]|\[Result\]|$)/i);
+        const resMatch = text.match(/\[Result\]\s*([\s\S]*?)(?=\[Situation\]|\[Task\]|\[Action\]|$)/i);
+        setStarSituation(sitMatch ? sitMatch[1].trim() : '');
+        setStarTask(tskMatch ? tskMatch[1].trim() : '');
+        setStarAction(actMatch ? actMatch[1].trim() : '');
+        setStarResult(resMatch ? resMatch[1].trim() : '');
+        setStarMode(true);
+      } else {
+        setStarSituation('');
+        setStarTask('');
+        setStarAction('');
+        setStarResult('');
+        setStarMode(false);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mockQuestionIdx, mockRound, currentSessionId]);
 
   // ─── Text-to-Speech (TTS) for questions ─────────────────────────────────────
   const [speakingQId, setSpeakingQId] = useState<string | null>(null);
