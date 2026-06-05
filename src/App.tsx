@@ -28,7 +28,8 @@ import {
   getRecruiterPersona,
   generateRecruiterResponse,
   generateSessionFeedbackSummary,
-  generateRecruiterRoundQuestions
+  generateRecruiterRoundQuestions,
+  isNonStarQuestion
 } from './interviewCoach';
 import type { AiProvider, RecruiterQuestion } from './interviewCoach';
 import { InterviewPlan, InterviewRound, AnswerScore, GeminiEnhancedData, InterviewSession, RecruiterPersona } from './types';
@@ -5457,25 +5458,28 @@ export default function Portfolio() {
 
                                             <div className="flex items-center justify-between mb-2">
                                               <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Your Answer</label>
-                                              <div className="flex p-0.5 bg-slate-950/60 rounded-lg border border-slate-800">
-                                                <button
-                                                  type="button"
-                                                  onClick={() => setStarMode(false)}
-                                                  className={`px-2.5 py-1 rounded-md text-[9px] font-bold transition-all ${!starMode ? 'bg-violet-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}
-                                                >
-                                                  ✍️ Freeform
-                                                </button>
-                                                <button
-                                                  type="button"
-                                                  onClick={enableStarMode}
-                                                  className={`px-2.5 py-1 rounded-md text-[9px] font-bold transition-all ${starMode ? 'bg-violet-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-350'}`}
-                                                >
-                                                  🧠 Guided STAR
-                                                </button>
-                                              </div>
+                                              {/* Only show the Guided STAR toggle for questions that actually benefit from STAR structure */}
+                                              {!isNonStarQuestion(currentQ.question) && (
+                                                <div className="flex p-0.5 bg-slate-950/60 rounded-lg border border-slate-800">
+                                                  <button
+                                                    type="button"
+                                                    onClick={() => setStarMode(false)}
+                                                    className={`px-2.5 py-1 rounded-md text-[9px] font-bold transition-all ${!starMode ? 'bg-violet-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}
+                                                  >
+                                                    ✍️ Freeform
+                                                  </button>
+                                                  <button
+                                                    type="button"
+                                                    onClick={enableStarMode}
+                                                    className={`px-2.5 py-1 rounded-md text-[9px] font-bold transition-all ${starMode ? 'bg-violet-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-350'}`}
+                                                  >
+                                                    🧠 Guided STAR
+                                                  </button>
+                                                </div>
+                                              )}
                                             </div>
 
-                                            {starMode ? (
+                                            {starMode && !isNonStarQuestion(currentQ.question) ? (
                                               <div className="space-y-3.5">
                                                 {/* Situation */}
                                                 <div className="space-y-1">
@@ -5562,7 +5566,13 @@ export default function Portfolio() {
                                                 <textarea
                                                   value={currentAnswer}
                                                   onChange={e => setMockAnswers(p => ({ ...p, [currentQ.id]: e.target.value }))}
-                                                  placeholder={isRecording ? '🎙️ Listening... speak your answer now' : 'Type your answer here or click the microphone to speak... Use the STAR method for behavioral questions: Situation → Task → Action → Result'}
+                                                  placeholder={
+                                                    isRecording
+                                                      ? '🎙️ Listening... speak your answer now'
+                                                      : isNonStarQuestion(currentQ.question)
+                                                        ? 'Type your answer here... For this question, speak naturally — tell your story, motivation, or perspective clearly and specifically.'
+                                                        : 'Type your answer here or click the microphone to speak... Use the STAR method for behavioral questions: Situation → Task → Action → Result'
+                                                  }
                                                   className={`w-full h-36 bg-slate-950/50 border rounded-xl p-3 pr-12 text-xs text-slate-300 placeholder-slate-600 resize-none focus:outline-none transition-colors ${isRecording ? 'border-red-500 bg-red-950/10' : 'border-slate-700 focus:border-violet-500'}`}
                                                 />
                                                 {/* Microphone button */}

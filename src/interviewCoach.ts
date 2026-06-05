@@ -955,7 +955,7 @@ const NON_STAR_PATTERNS = [
   /tell me (more )?about your (background|experience|career)/i,
 ];
 
-function isNonStarQuestion(question: string): boolean {
+export function isNonStarQuestion(question: string): boolean {
   return NON_STAR_PATTERNS.some(p => p.test(question));
 }
 
