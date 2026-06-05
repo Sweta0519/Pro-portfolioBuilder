@@ -1433,6 +1433,63 @@ ${resumeContext}${previousContext}`;
   return response.trim().replace(/^```(markdown|text)?|```$/g, '').trim();
 }
 
+export interface StarSections {
+  situation: string;
+  task: string;
+  action: string;
+  result: string;
+}
+
+/**
+ * AI-powered: given a freeform narrative answer, intelligently split it into
+ * Situation / Task / Action / Result sections.
+ */
+export async function splitIntoStarSections(
+  apiKey: string,
+  provider: AiProvider,
+  answerText: string,
+  question: string
+): Promise<StarSections> {
+  const systemPrompt = `You are an expert interview coach. The candidate has written a narrative answer to a behavioral interview question. Your job is to intelligently split their existing answer text into the four STAR sections without adding new content — only redistribute what they have already written.
+
+Rules:
+- DO NOT invent new sentences or information. Only use text that exists in the answer.
+- Each section should be a clean excerpt from the original text.
+- If a section cannot be found in the text, use an empty string "".
+- Situation: the background/context (who, what, when, where).
+- Task: the goal, challenge, or responsibility they faced.
+- Action: the specific steps THEY personally took (usually the longest section).
+- Result: the outcome, impact, or lesson learned (preferably with metrics if present).
+
+CRITICAL: Respond with valid JSON only. No markdown, no explanation, no code fences. Start with { and end with }.
+{
+  "situation": "...",
+  "task": "...",
+  "action": "...",
+  "result": "..."
+}`;
+
+  const userPrompt = `Interview Question: "${question}"
+
+Candidate's Answer to distribute into STAR sections:
+"${answerText}"`;
+
+  const response = await callAiChat(apiKey, provider, systemPrompt, userPrompt);
+  let jsonStr = response.trim();
+  const fenceMatch = jsonStr.match(/```(?:json)?\s*([\s\S]*?)```/);
+  if (fenceMatch) jsonStr = fenceMatch[1].trim();
+  const jsonMatch = jsonStr.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) throw new Error('Failed to parse STAR split response from AI.');
+  const parsed = JSON.parse(jsonMatch[0]);
+  return {
+    situation: (parsed.situation || '').trim(),
+    task: (parsed.task || '').trim(),
+    action: (parsed.action || '').trim(),
+    result: (parsed.result || '').trim(),
+  };
+}
+
+
 export interface OptimizedAnswerResult {
   optimizedAnswer: string;
   feedback: string;

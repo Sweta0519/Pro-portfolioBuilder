@@ -24,6 +24,7 @@ import {
   testApiConnection, 
   generateIdealAnswer, 
   optimizeUserAnswer,
+  splitIntoStarSections,
   RECRUITER_PERSONAS,
   getRecruiterPersona,
   generateRecruiterResponse,
@@ -157,6 +158,7 @@ export default function App() {
 
   // STAR Guided Answer Builder states
   const [starMode, setStarMode] = useState<boolean>(false);
+  const [isStarSplitting, setIsStarSplitting] = useState<boolean>(false);
   const [starSituation, setStarSituation] = useState<string>('');
   const [starTask, setStarTask] = useState<string>('');
   const [starAction, setStarAction] = useState<string>('');
@@ -4719,32 +4721,74 @@ export default function Portfolio() {
                           mockTimerRef.current = setInterval(() => setMockTimerSec(s => s + 1), 1000);
                         };
 
-                        const enableStarMode = () => {
+                        const enableStarMode = async () => {
+                          if (isStarSplitting) return;
                           const text = currentAnswer.trim();
-                          let sit = '';
-                          let tsk = '';
-                          let act = '';
-                          let res = '';
 
+                          // Case 1: Text already has STAR tags — parse them directly (fast path)
                           if (text.includes('[Situation]') || text.includes('[Task]') || text.includes('[Action]') || text.includes('[Result]')) {
                             const sitMatch = text.match(/\[Situation\]\s*([\s\S]*?)(?=\[Task\]|\[Action\]|\[Result\]|$)/i);
                             const tskMatch = text.match(/\[Task\]\s*([\s\S]*?)(?=\[Situation\]|\[Action\]|\[Result\]|$)/i);
                             const actMatch = text.match(/\[Action\]\s*([\s\S]*?)(?=\[Situation\]|\[Task\]|\[Result\]|$)/i);
                             const resMatch = text.match(/\[Result\]\s*([\s\S]*?)(?=\[Situation\]|\[Task\]|\[Action\]|$)/i);
-
-                            if (sitMatch) sit = sitMatch[1].trim();
-                            if (tskMatch) tsk = tskMatch[1].trim();
-                            if (actMatch) act = actMatch[1].trim();
-                            if (resMatch) res = resMatch[1].trim();
-                          } else if (text) {
-                            sit = text;
+                            setStarSituation(sitMatch ? sitMatch[1].trim() : '');
+                            setStarTask(tskMatch ? tskMatch[1].trim() : '');
+                            setStarAction(actMatch ? actMatch[1].trim() : '');
+                            setStarResult(resMatch ? resMatch[1].trim() : '');
+                            setStarMode(true);
+                            return;
                           }
 
-                          setStarSituation(sit);
-                          setStarTask(tsk);
-                          setStarAction(act);
-                          setStarResult(res);
-                          setStarMode(true);
+                          // Case 2: No text — open empty STAR fields
+                          if (!text) {
+                            setStarSituation('');
+                            setStarTask('');
+                            setStarAction('');
+                            setStarResult('');
+                            setStarMode(true);
+                            return;
+                          }
+
+                          // Case 3: Narrative text without tags — use AI to intelligently distribute
+                          if (geminiApiKey.trim()) {
+                            setIsStarSplitting(true);
+                            try {
+                              const sections = await splitIntoStarSections(
+                                geminiApiKey,
+                                aiProvider,
+                                text,
+                                currentQ.question
+                              );
+                              setStarSituation(sections.situation);
+                              setStarTask(sections.task);
+                              setStarAction(sections.action);
+                              setStarResult(sections.result);
+                              // Update the compiled answer field too
+                              const parts: string[] = [];
+                              if (sections.situation) parts.push(`[Situation]\n${sections.situation}`);
+                              if (sections.task) parts.push(`[Task]\n${sections.task}`);
+                              if (sections.action) parts.push(`[Action]\n${sections.action}`);
+                              if (sections.result) parts.push(`[Result]\n${sections.result}`);
+                              setMockAnswers(p => ({ ...p, [currentQ.id]: parts.join('\n\n') }));
+                              setStarMode(true);
+                            } catch {
+                              // Fallback: put all text in Situation if AI fails
+                              setStarSituation(text);
+                              setStarTask('');
+                              setStarAction('');
+                              setStarResult('');
+                              setStarMode(true);
+                            } finally {
+                              setIsStarSplitting(false);
+                            }
+                          } else {
+                            // No API key: simple fallback — put text in Situation
+                            setStarSituation(text);
+                            setStarTask('');
+                            setStarAction('');
+                            setStarResult('');
+                            setStarMode(true);
+                          }
                         };
 
                         const updateStarAnswer = (sit: string, tsk: string, act: string, res: string) => {
@@ -5471,9 +5515,10 @@ export default function Portfolio() {
                                                   <button
                                                     type="button"
                                                     onClick={enableStarMode}
-                                                    className={`px-2.5 py-1 rounded-md text-[9px] font-bold transition-all ${starMode ? 'bg-violet-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-350'}`}
+                                                    disabled={isStarSplitting}
+                                                    className={`px-2.5 py-1 rounded-md text-[9px] font-bold transition-all ${starMode ? 'bg-violet-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-350'} ${isStarSplitting ? 'opacity-70 cursor-wait' : ''}`}
                                                   >
-                                                    🧠 Guided STAR
+                                                    {isStarSplitting ? '⏳ Analyzing...' : '🧠 Guided STAR'}
                                                   </button>
                                                 </div>
                                               )}
