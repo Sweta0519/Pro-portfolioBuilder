@@ -1,6 +1,8 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
+import { supabase } from './supabaseClient';
+import type { User as SupabaseUser } from '@supabase/supabase-js';
 import { 
   defaultResumeData, 
   defaultThemeSettings 
@@ -49,6 +51,87 @@ import {
 } from 'lucide-react';
 
 export default function App() {
+  // Saved Uploaded Resumes History (Jobscan Pro features clone)
+  const [savedResumes, setSavedResumes] = useState<Array<{
+    id: string;
+    name: string;
+    title: string;
+    date: string;
+    data: ResumeData;
+    theme: ThemeSettings;
+  }>>(() => {
+    try {
+      const local = localStorage.getItem('pro_portfolio_saved_resumes');
+      if (local) {
+        return JSON.parse(local);
+      }
+    } catch (e) {
+      console.error("Failed to read saved resumes:", e);
+    }
+    return [
+      {
+        id: 'default-rivera',
+        name: defaultResumeData.personal.name,
+        title: defaultResumeData.personal.title,
+        date: new Date().toLocaleDateString(),
+        data: defaultResumeData,
+        theme: defaultThemeSettings
+      }
+    ];
+  });
+
+  // Sync Saved Resumes to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('pro_portfolio_saved_resumes', JSON.stringify(savedResumes));
+    } catch (e) {
+      console.error("Failed to save resumes:", e);
+    }
+  }, [savedResumes]);
+
+  // Saved Interview Sessions History
+  const [savedSessions, setSavedSessions] = useState<InterviewSession[]>(() => {
+    try {
+      const local = localStorage.getItem('pro_portfolio_interview_sessions');
+      if (local) {
+        return JSON.parse(local);
+      }
+    } catch (e) {
+      console.error("Failed to read saved interview sessions:", e);
+    }
+    return [];
+  });
+
+  // Sync Interview Sessions to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('pro_portfolio_interview_sessions', JSON.stringify(savedSessions));
+    } catch (e) {
+      console.error("Failed to save interview sessions:", e);
+    }
+  }, [savedSessions]);
+
+  // Load active session from localStorage if exists
+  const initialActiveSession = (() => {
+    try {
+      const activeId = localStorage.getItem('pro_portfolio_active_session_id');
+      if (activeId) {
+        const sessionsStr = localStorage.getItem('pro_portfolio_interview_sessions');
+        if (sessionsStr) {
+          const sessions: InterviewSession[] = JSON.parse(sessionsStr);
+          return sessions.find(s => s.id === activeId) || null;
+        }
+      }
+    } catch (e) {
+      console.error("Failed to load active session:", e);
+    }
+    return null;
+  })();
+
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(
+    initialActiveSession ? initialActiveSession.id : null
+  );
+
   // Core states
   const [resumeData, setResumeData] = useState<ResumeData>(defaultResumeData);
   const [themeSettings, setThemeSettings] = useState<ThemeSettings>(defaultThemeSettings);
@@ -60,10 +143,266 @@ export default function App() {
   const [fullscreenPreview, setFullscreenPreview] = useState<boolean>(false);
   const [mobileActiveView, setMobileActiveView] = useState<'editor' | 'preview'>('editor');
 
+  // Auth & Sync states
+  const [user, setUser] = useState<SupabaseUser | null>(null);
+  const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
+  const [authEmail, setAuthEmail] = useState<string>('');
+  const [authPassword, setAuthPassword] = useState<string>('');
+  const [authLoading, setAuthLoading] = useState<boolean>(false);
+  const [authError, setAuthError] = useState<string>('');
+  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'synced' | 'error'>('idle');
+
   // Sync App Theme to localStorage
   useEffect(() => {
     localStorage.setItem('app_theme', appTheme);
   }, [appTheme]);
+
+  // Listen to Auth State Changes
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const handleEmailAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!authEmail.trim() || !authPassword.trim()) {
+      setAuthError('Please enter both email and password.');
+      return;
+    }
+    setAuthLoading(true);
+    setAuthError('');
+    try {
+      if (authMode === 'login') {
+        const { error } = await supabase.auth.signInWithPassword({
+          email: authEmail.trim(),
+          password: authPassword.trim()
+        });
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.auth.signUp({
+          email: authEmail.trim(),
+          password: authPassword.trim()
+        });
+        if (error) throw error;
+        alert('Verification email sent! Check your inbox to complete sign up.');
+      }
+      setShowAuthModal(false);
+      setAuthEmail('');
+      setAuthPassword('');
+    } catch (err: any) {
+      setAuthError(err.message || 'Authentication failed.');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleGoogleAuth = async () => {
+    setAuthLoading(true);
+    setAuthError('');
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin
+        }
+      });
+      if (error) throw error;
+    } catch (err: any) {
+      setAuthError(err.message || 'Google Authentication failed.');
+      setAuthLoading(false);
+    }
+  };
+
+  const handleSignOut = async () => {
+    if (confirm('Are you sure you want to sign out? Your current session remains in your browser storage.')) {
+      await supabase.auth.signOut();
+      setUser(null);
+    }
+  };
+
+  // Load / Sync User Data from/to Supabase on Login
+  useEffect(() => {
+    if (!user) return;
+
+    const syncOnLogin = async () => {
+      setSyncStatus('syncing');
+      try {
+        // 1. Sync Resumes
+        const { data: dbResumes, error: resError } = await supabase
+          .from('resumes')
+          .select('*');
+
+        if (resError) throw resError;
+
+        if (dbResumes && dbResumes.length > 0) {
+          const parsed = dbResumes.map(r => ({
+            id: r.id,
+            name: r.name,
+            title: r.resume_json.personal?.title || '',
+            date: new Date(r.updated_at).toLocaleDateString(),
+            data: r.resume_json,
+            theme: r.theme_settings
+          }));
+          setSavedResumes(parsed);
+        } else if (savedResumes.length > 0) {
+          for (const res of savedResumes) {
+            const isUuid = res.id.includes('-') && res.id.length === 36;
+            await supabase.from('resumes').upsert({
+              id: isUuid ? res.id : undefined,
+              user_id: user.id,
+              name: res.name,
+              resume_json: res.data,
+              theme_settings: res.theme
+            });
+          }
+        }
+
+        // 2. Sync Interview Sessions
+        const { data: dbSessions, error: sessError } = await supabase
+          .from('interview_sessions')
+          .select('*');
+
+        if (sessError) throw sessError;
+
+        if (dbSessions && dbSessions.length > 0) {
+          const parsed: InterviewSession[] = dbSessions.map(s => ({
+            id: s.id,
+            companyName: s.company_name,
+            positionName: s.position_name,
+            jobDescription: s.job_description,
+            generatedAt: s.generated_at,
+            plan: s.plan,
+            geminiData: s.gemini_data,
+            mockAnswers: s.mock_answers,
+            mockScores: s.mock_scores,
+            idealAnswers: s.ideal_answers,
+            recruiterPersonaId: s.recruiter_persona_id,
+            recruiterReplies: s.recruiter_replies,
+            sessionSummaryFeedback: s.session_summary_feedback,
+            recruiterQuestions: s.recruiter_questions,
+            interfaceMode: s.interface_mode,
+            isCompleted: s.is_completed,
+            mockRound: s.mock_round,
+            mockQuestionIdx: s.mock_question_idx,
+            mockMode: s.mock_mode
+          }));
+          setSavedSessions(parsed);
+        } else if (savedSessions.length > 0) {
+          for (const s of savedSessions) {
+            await supabase.from('interview_sessions').upsert({
+              id: s.id,
+              user_id: user.id,
+              company_name: s.companyName,
+              position_name: s.positionName,
+              job_description: s.jobDescription,
+              generated_at: s.generatedAt,
+              plan: s.plan,
+              gemini_data: s.geminiData,
+              mock_answers: s.mockAnswers,
+              mock_scores: s.mockScores,
+              ideal_answers: s.idealAnswers || {},
+              recruiter_persona_id: s.recruiterPersonaId,
+              recruiter_replies: s.recruiterReplies || {},
+              session_summary_feedback: s.sessionSummaryFeedback,
+              recruiter_questions: s.recruiterQuestions,
+              interface_mode: s.interfaceMode || 'standard',
+              is_completed: s.isCompleted || false,
+              mock_round: s.mockRound,
+              mock_question_idx: s.mockQuestionIdx,
+              mock_mode: s.mockMode
+            });
+          }
+        }
+
+        setSyncStatus('synced');
+      } catch (err) {
+        console.error('Initial sync failed:', err);
+        setSyncStatus('error');
+      }
+    };
+
+    syncOnLogin();
+  }, [user]);
+
+  // Auto-sync Resumes to Supabase
+  useEffect(() => {
+    if (!user || syncStatus === 'syncing') return;
+
+    const syncResumes = async () => {
+      setSyncStatus('syncing');
+      try {
+        for (const res of savedResumes) {
+          const isUuid = res.id.includes('-') && res.id.length === 36;
+          await supabase.from('resumes').upsert({
+            id: isUuid ? res.id : undefined,
+            user_id: user.id,
+            name: res.name,
+            resume_json: res.data,
+            theme_settings: res.theme
+          });
+        }
+        setSyncStatus('synced');
+      } catch (e) {
+        console.error("Failed to sync resumes to Supabase:", e);
+        setSyncStatus('error');
+      }
+    };
+
+    const timer = setTimeout(syncResumes, 1500);
+    return () => clearTimeout(timer);
+  }, [savedResumes, user]);
+
+  // Auto-sync Interview Sessions to Supabase
+  useEffect(() => {
+    if (!user || syncStatus === 'syncing') return;
+
+    const syncSessions = async () => {
+      setSyncStatus('syncing');
+      try {
+        for (const s of savedSessions) {
+          await supabase.from('interview_sessions').upsert({
+            id: s.id,
+            user_id: user.id,
+            company_name: s.companyName,
+            position_name: s.positionName,
+            job_description: s.jobDescription,
+            generated_at: s.generatedAt,
+            plan: s.plan,
+            gemini_data: s.geminiData,
+            mock_answers: s.mockAnswers,
+            mock_scores: s.mockScores,
+            ideal_answers: s.idealAnswers || {},
+            recruiter_persona_id: s.recruiterPersonaId,
+            recruiter_replies: s.recruiterReplies || {},
+            session_summary_feedback: s.sessionSummaryFeedback,
+            recruiter_questions: s.recruiterQuestions,
+            interface_mode: s.interfaceMode || 'standard',
+            is_completed: s.isCompleted || false,
+            mock_round: s.mockRound,
+            mock_question_idx: s.mockQuestionIdx,
+            mock_mode: s.mockMode
+          });
+        }
+        setSyncStatus('synced');
+      } catch (e) {
+        console.error("Failed to sync sessions to Supabase:", e);
+        setSyncStatus('error');
+      }
+    };
+
+    const timer = setTimeout(syncSessions, 1500);
+    return () => clearTimeout(timer);
+  }, [savedSessions, user]);
   
   // Form & helper states
   const [rawTextImport, setRawTextImport] = useState<string>('');
@@ -110,26 +449,7 @@ export default function App() {
   const [improvedBullets, setImprovedBullets] = useState<string[]>([]);
   const [copiedBulletIdx, setCopiedBulletIdx] = useState<number | null>(null);
 
-  // Load active session from localStorage if exists
-  const initialActiveSession = (() => {
-    try {
-      const activeId = localStorage.getItem('pro_portfolio_active_session_id');
-      if (activeId) {
-        const sessionsStr = localStorage.getItem('pro_portfolio_interview_sessions');
-        if (sessionsStr) {
-          const sessions: InterviewSession[] = JSON.parse(sessionsStr);
-          return sessions.find(s => s.id === activeId) || null;
-        }
-      }
-    } catch (e) {
-      console.error("Failed to load active session:", e);
-    }
-    return null;
-  })();
 
-  const [currentSessionId, setCurrentSessionId] = useState<string | null>(
-    initialActiveSession ? initialActiveSession.id : null
-  );
 
   // ─── Interview Prep Coach states ─────────────────────────────────────────
   const [interviewPlan, setInterviewPlan] = useState<InterviewPlan | null>(
@@ -251,66 +571,7 @@ export default function App() {
 
 
 
-  // Saved Uploaded Resumes History (Jobscan Pro features clone)
-  const [savedResumes, setSavedResumes] = useState<Array<{
-    id: string;
-    name: string;
-    title: string;
-    date: string;
-    data: ResumeData;
-    theme: ThemeSettings;
-  }>>(() => {
-    try {
-      const local = localStorage.getItem('pro_portfolio_saved_resumes');
-      if (local) {
-        return JSON.parse(local);
-      }
-    } catch (e) {
-      console.error("Failed to read saved resumes:", e);
-    }
-    return [
-      {
-        id: 'default-rivera',
-        name: defaultResumeData.personal.name,
-        title: defaultResumeData.personal.title,
-        date: new Date().toLocaleDateString(),
-        data: defaultResumeData,
-        theme: defaultThemeSettings
-      }
-    ];
-  });
 
-  // Sync Saved Resumes to localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem('pro_portfolio_saved_resumes', JSON.stringify(savedResumes));
-    } catch (e) {
-      console.error("Failed to save resumes:", e);
-    }
-  }, [savedResumes]);
-
-  // Saved Interview Sessions History
-  const [savedSessions, setSavedSessions] = useState<InterviewSession[]>(() => {
-    try {
-      const local = localStorage.getItem('pro_portfolio_interview_sessions');
-      if (local) {
-        return JSON.parse(local);
-      }
-    } catch (e) {
-      console.error("Failed to read saved interview sessions:", e);
-    }
-    return [];
-  });
-
-
-  // Sync Interview Sessions to localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem('pro_portfolio_interview_sessions', JSON.stringify(savedSessions));
-    } catch (e) {
-      console.error("Failed to save interview sessions:", e);
-    }
-  }, [savedSessions]);
 
   // Sync current active session state changes back to savedSessions list
   useEffect(() => {
@@ -1775,6 +2036,68 @@ export default function Portfolio() {
         </div>
 
         <div className="flex items-center gap-3">
+          {/* Supabase Auth & Sync Status */}
+          <div className="flex items-center gap-2">
+            {user ? (
+              <div className="flex items-center gap-2">
+                {/* Sync status indicator */}
+                <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold border transition-colors ${
+                  syncStatus === 'syncing'
+                    ? 'bg-blue-955/20 border-blue-900/50 text-blue-400 animate-pulse'
+                    : syncStatus === 'synced'
+                      ? 'bg-emerald-955/25 border-emerald-900/30 text-emerald-400'
+                      : syncStatus === 'error'
+                        ? 'bg-rose-955/20 border-rose-900/50 text-rose-400'
+                        : 'bg-slate-900 border-slate-800 text-slate-500'
+                }`}>
+                  {syncStatus === 'syncing' ? '⏳ Syncing' : syncStatus === 'synced' ? '☁ Saved' : syncStatus === 'error' ? '⚠ Sync Error' : '☁ Local'}
+                </span>
+
+                {/* User Info & Sign Out */}
+                <div className="relative group">
+                  <button
+                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
+                      appTheme === 'nord-light'
+                        ? 'bg-slate-100 border-slate-250 text-slate-705'
+                        : 'bg-slate-900 border-slate-800 text-slate-300'
+                    }`}
+                  >
+                    <div className="w-4 h-4 rounded-full bg-violet-600 text-white flex items-center justify-center text-[10px] font-black uppercase">
+                      {user.email ? user.email[0] : 'U'}
+                    </div>
+                    <span className="max-w-[80px] truncate hidden md:inline">{user.email}</span>
+                  </button>
+                  <div
+                    className={`absolute right-0 mt-1 w-36 rounded-xl border p-1 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-205 z-50 ${
+                      appTheme === 'nord-light'
+                        ? 'bg-white border-slate-200'
+                        : 'bg-slate-950 border-slate-800'
+                    }`}
+                  >
+                    <button
+                      type="button"
+                      onClick={handleSignOut}
+                      className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold text-rose-400 hover:bg-rose-955/20 transition-colors cursor-pointer"
+                    >
+                      🚪 Sign Out
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  setAuthMode('login');
+                  setAuthError('');
+                  setShowAuthModal(true);
+                }}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-550 text-white transition-all shadow-md cursor-pointer"
+              >
+                🔒 Sign In
+              </button>
+            )}
+          </div>
           {/* App Theme Selector Dropdown */}
           <div className="relative group">
             <button
@@ -2298,7 +2621,9 @@ export default function Portfolio() {
                           <FileCode className="w-3.5 h-3.5 text-indigo-400" />
                           <span>📂 Saved Resumes History ({savedResumes.length})</span>
                         </h3>
-                        <span className="text-[9px] text-slate-500 font-semibold">Saves automatically inside browser</span>
+                        <span className="text-[9px] text-slate-500 font-semibold lowercase">
+                          {user ? '☁ synced to cloud' : '💾 saved locally (sign in to sync)'}
+                        </span>
                       </div>
 
                       <div className="space-y-2 max-h-48 overflow-y-auto pr-1 scrollbar-thin">
@@ -4361,9 +4686,14 @@ export default function Portfolio() {
                     {/* Past Sessions History */}
                     {savedSessions.length > 0 && (
                       <div className="pt-6 border-t border-slate-800 space-y-3">
-                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                          <span>🕒 Past Sessions History</span>
-                          <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full lowercase font-semibold">{savedSessions.length} session{savedSessions.length > 1 ? 's' : ''}</span>
+                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center justify-between gap-1.5">
+                          <div className="flex items-center gap-1.5">
+                            <span>🕒 Past Sessions History</span>
+                            <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full lowercase font-semibold">{savedSessions.length} session{savedSessions.length > 1 ? 's' : ''}</span>
+                          </div>
+                          <span className="text-[9px] text-slate-550 lowercase font-medium flex items-center gap-1">
+                            {user ? '☁ synced to cloud' : '💾 saved locally (sign in to sync)'}
+                          </span>
                         </h3>
 
                         <div className="grid grid-cols-1 gap-2.5 max-h-96 overflow-y-auto scrollbar-thin pr-1">
@@ -6704,6 +7034,137 @@ export default function Portfolio() {
               </div>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* Supabase Authentication Modal Overlay */}
+      {showAuthModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-955/85 backdrop-blur-md animate-fadeIn">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden flex flex-col relative animate-scaleUp">
+            {/* Close Button */}
+            {!authLoading && (
+              <button 
+                onClick={() => setShowAuthModal(false)}
+                className="absolute top-4 right-4 text-slate-400 hover:text-white hover:bg-slate-800/50 p-1.5 rounded-lg transition-all cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
+
+            {/* Header */}
+            <div className="p-6 border-b border-slate-800 bg-slate-950/40">
+              <div className="flex items-center gap-3">
+                <div className="bg-indigo-650 text-white p-2 rounded-xl flex items-center justify-center shadow-lg">
+                  <span className="text-xl font-bold">🔒</span>
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-white">
+                    {authMode === 'login' ? 'Welcome Back' : 'Create Account'}
+                  </h3>
+                  <p className="text-[11px] text-slate-550 font-semibold">
+                    {authMode === 'login' ? 'Sign in to sync your data' : 'Register to save your progress'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Body */}
+            <div className="p-6 flex-1 flex flex-col overflow-y-auto">
+              <form onSubmit={handleEmailAuth} className="space-y-4">
+                {authError && (
+                  <div className="flex items-start gap-2.5 bg-rose-955/20 border border-rose-900/50 p-3 rounded-xl text-[11px] text-rose-350">
+                    <AlertCircle className="w-4 h-4 text-rose-450 shrink-0 mt-0.5" />
+                    <span>{authError}</span>
+                  </div>
+                )}
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-slate-450 uppercase tracking-wider">Email Address</label>
+                  <input
+                    type="email"
+                    required
+                    value={authEmail}
+                    onChange={(e) => setAuthEmail(e.target.value)}
+                    placeholder="e.g. you@example.com"
+                    className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-xl px-3.5 py-2 text-xs text-slate-100 placeholder-slate-650 focus:outline-none transition-colors"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] font-bold text-slate-450 uppercase tracking-wider">Password</label>
+                  <input
+                    type="password"
+                    required
+                    value={authPassword}
+                    onChange={(e) => setAuthPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full bg-slate-955 border border-slate-800 focus:border-indigo-500 rounded-xl px-3.5 py-2 text-xs text-slate-100 placeholder-slate-655 focus:outline-none transition-colors"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={authLoading}
+                  className="w-full bg-indigo-650 hover:bg-indigo-550 text-white font-extrabold py-2.5 rounded-xl text-xs transition-all shadow-md disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
+                >
+                  {authLoading ? (
+                    <><span className="animate-spin text-slate-300">⏳</span> Processing...</>
+                  ) : (
+                    <span>{authMode === 'login' ? '🔑 Sign In' : '📝 Register'}</span>
+                  )}
+                </button>
+              </form>
+
+              {/* Divider */}
+              <div className="relative my-5 text-center">
+                <hr className="border-slate-800" />
+                <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-900 px-3 text-[9px] font-bold text-slate-500 uppercase tracking-widest">Or</span>
+              </div>
+
+              {/* Google OAuth Button */}
+              <button
+                type="button"
+                onClick={handleGoogleAuth}
+                disabled={authLoading}
+                className="w-full bg-slate-950 border border-slate-800 hover:bg-slate-900 text-slate-200 font-extrabold py-2.5 rounded-xl text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+              >
+                <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
+                  <path
+                    fill="#EA4335"
+                    d="M12 5.04c1.65 0 3.14.57 4.3 1.68l3.22-3.22C17.56 1.7 15.01 1 12 1 7.37 1 3.42 3.66 1.48 7.55l3.86 3C6.26 7.6 8.9 5.04 12 5.04z"
+                  />
+                  <path
+                    fill="#4285F4"
+                    d="M23.49 12.27c0-.81-.07-1.59-.2-2.34H12v4.43h6.44c-.28 1.47-1.11 2.71-2.36 3.55l3.66 2.84c2.14-1.97 3.75-4.88 3.75-8.48z"
+                  />
+                  <path
+                    fill="#FBBC05"
+                    d="M5.34 14.55c-.24-.72-.38-1.5-.38-2.3 0-.8.14-1.58.38-2.3l-3.86-3C.53 8.89 0 10.39 0 12.01s.53 3.12 1.48 5.06l3.86-3z"
+                  />
+                  <path
+                    fill="#34A853"
+                    d="M12 23c3.24 0 5.97-1.07 7.96-2.91l-3.66-2.84c-1.01.68-2.32 1.09-4.3 1.09-3.1 0-5.74-2.56-6.68-5.51l-3.86 3C3.42 20.34 7.37 23 12 23z"
+                  />
+                </svg>
+                <span>Continue with Google</span>
+              </button>
+
+              {/* Mode Switcher */}
+              <p className="text-[10px] text-slate-500 font-medium text-center mt-5">
+                {authMode === 'login' ? "Don't have an account?" : "Already have an account?"}{' '}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthMode(authMode === 'login' ? 'signup' : 'login');
+                    setAuthError('');
+                  }}
+                  className="text-indigo-400 hover:text-indigo-300 font-bold underline transition-colors cursor-pointer"
+                >
+                  {authMode === 'login' ? 'Sign Up Free' : 'Sign In Here'}
+                </button>
+              </p>
+            </div>
           </div>
         </div>
       )}
