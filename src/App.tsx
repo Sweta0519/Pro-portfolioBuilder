@@ -4835,6 +4835,37 @@ export default function Portfolio() {
                           }
                         };
 
+                        // Navigate to a question without submitting — saves draft answer and moves freely
+                        const navigateToQuestion = (targetIdx: number) => {
+                          if (targetIdx < 0 || targetIdx >= totalQ || targetIdx === mockQuestionIdx) return;
+                          // Stop timer & recording
+                          if (mockTimerRef.current) clearInterval(mockTimerRef.current);
+                          if (isRecording) {
+                            recognitionRef.current?.stop();
+                            mediaRecorderRef.current?.stop();
+                            setIsRecording(false);
+                          }
+                          // Current answer is already in mockAnswers state — it persists
+                          // Reset STAR fields and mode
+                          setStarSituation('');
+                          setStarTask('');
+                          setStarAction('');
+                          setStarResult('');
+                          setStarMode(false);
+                          setAudioUrl(null);
+                          // Navigate
+                          setMockQuestionIdx(targetIdx);
+                          // Set mode: if already scored, show reviewed; otherwise answering
+                          const targetQ = questions[targetIdx];
+                          if (targetQ && mockScores[targetQ.id]) {
+                            setMockMode('reviewed');
+                          } else {
+                            setMockMode('answering');
+                            setMockTimerSec(0);
+                            mockTimerRef.current = setInterval(() => setMockTimerSec(s => s + 1), 1000);
+                          }
+                        };
+
                         return (
                           <div className="space-y-4 animate-fadeIn">
                             {/* SESSION COMPLETED FEEDBACK REPORT */}
@@ -5187,6 +5218,43 @@ export default function Portfolio() {
                                           : 'bg-emerald-900/60 text-emerald-400'
                                         }`}>{currentQ.difficulty.toUpperCase()}</span>
                                       </div>
+                                    </div>
+
+                                    {/* Question navigation arrows + dots */}
+                                    <div className="flex items-center gap-2">
+                                      <button
+                                        type="button"
+                                        onClick={() => navigateToQuestion(mockQuestionIdx - 1)}
+                                        disabled={mockQuestionIdx <= 0}
+                                        className="w-7 h-7 rounded-lg border border-slate-700 flex items-center justify-center text-[11px] text-slate-400 hover:text-white hover:border-violet-500 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                                        title="Previous question"
+                                      >←</button>
+                                      <div className="flex-1 flex items-center justify-center gap-1 flex-wrap">
+                                        {questions.map((q, i) => (
+                                          <button
+                                            key={q.id}
+                                            type="button"
+                                            onClick={() => navigateToQuestion(i)}
+                                            className={`w-2.5 h-2.5 rounded-full transition-all ${
+                                              i === mockQuestionIdx
+                                                ? 'bg-violet-500 ring-2 ring-violet-400/30 scale-125'
+                                                : mockScores[q.id]
+                                                  ? 'bg-emerald-500/70 hover:bg-emerald-400'
+                                                  : mockAnswers[q.id]?.trim()
+                                                    ? 'bg-amber-500/60 hover:bg-amber-400'
+                                                    : 'bg-slate-700 hover:bg-slate-500'
+                                            }`}
+                                            title={`Q${i + 1}: ${q.question.slice(0, 60)}${q.question.length > 60 ? '...' : ''}${mockScores[q.id] ? ` (${mockScores[q.id].grade})` : mockAnswers[q.id]?.trim() ? ' (draft)' : ''}`}
+                                          />
+                                        ))}
+                                      </div>
+                                      <button
+                                        type="button"
+                                        onClick={() => navigateToQuestion(mockQuestionIdx + 1)}
+                                        disabled={mockQuestionIdx >= totalQ - 1}
+                                        className="w-7 h-7 rounded-lg border border-slate-700 flex items-center justify-center text-[11px] text-slate-400 hover:text-white hover:border-violet-500 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                                        title="Next question"
+                                      >→</button>
                                     </div>
 
                                     {/* Progress bar */}
