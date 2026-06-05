@@ -5856,6 +5856,56 @@ export default function Portfolio() {
                                               <p className="text-xs leading-relaxed flex-grow">{currentScore.feedback}</p>
                                             </div>
 
+                                            {/* Your Submitted Response */}
+                                            <div className="space-y-1.5">
+                                              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Your Submitted Answer</p>
+                                              <div className="p-3 bg-slate-900/60 border border-slate-800 rounded-xl space-y-2.5 text-xs text-slate-300 leading-relaxed text-justify">
+                                                {(() => {
+                                                  const isStar = currentAnswer.includes('[Situation]') || currentAnswer.includes('[Task]') || currentAnswer.includes('[Action]') || currentAnswer.includes('[Result]');
+                                                  if (isStar) {
+                                                    const sitMatch = currentAnswer.match(/\[Situation\]\s*([\s\S]*?)(?=\[Task\]|\[Action\]|\[Result\]|$)/i);
+                                                    const tskMatch = currentAnswer.match(/\[Task\]\s*([\s\S]*?)(?=\[Situation\]|\[Action\]|\[Result\]|$)/i);
+                                                    const actMatch = currentAnswer.match(/\[Action\]\s*([\s\S]*?)(?=\[Situation\]|\[Task\]|\[Result\]|$)/i);
+                                                    const resMatch = currentAnswer.match(/\[Result\]\s*([\s\S]*?)(?=\[Situation\]|\[Task\]|\[Action\]|$)/i);
+                                                    const sit = sitMatch ? sitMatch[1].trim() : '';
+                                                    const tsk = tskMatch ? tskMatch[1].trim() : '';
+                                                    const act = actMatch ? actMatch[1].trim() : '';
+                                                    const res = resMatch ? resMatch[1].trim() : '';
+
+                                                    return (
+                                                      <div className="space-y-2 text-[11px]">
+                                                        {sit && (
+                                                          <div className="flex gap-2">
+                                                            <span className="w-5 h-5 rounded-full bg-blue-550/20 text-blue-400 border border-blue-500/20 flex items-center justify-center text-[10px] font-black shrink-0">S</span>
+                                                            <div className="flex-1"><span className="font-bold text-slate-400 text-[10px] uppercase block mb-0.5">Situation</span>{sit}</div>
+                                                          </div>
+                                                        )}
+                                                        {tsk && (
+                                                          <div className="flex gap-2">
+                                                            <span className="w-5 h-5 rounded-full bg-amber-550/20 text-amber-400 border border-amber-500/20 flex items-center justify-center text-[10px] font-black shrink-0">T</span>
+                                                            <div className="flex-1"><span className="font-bold text-slate-400 text-[10px] uppercase block mb-0.5">Task</span>{tsk}</div>
+                                                          </div>
+                                                        )}
+                                                        {act && (
+                                                          <div className="flex gap-2">
+                                                            <span className="w-5 h-5 rounded-full bg-emerald-555/20 text-emerald-400 border border-emerald-500/20 flex items-center justify-center text-[10px] font-black shrink-0">A</span>
+                                                            <div className="flex-1"><span className="font-bold text-slate-400 text-[10px] uppercase block mb-0.5">Action</span>{act}</div>
+                                                          </div>
+                                                        )}
+                                                        {res && (
+                                                          <div className="flex gap-2">
+                                                            <span className="w-5 h-5 rounded-full bg-rose-555/20 text-rose-455 border border-rose-500/20 flex items-center justify-center text-[10px] font-black shrink-0">R</span>
+                                                            <div className="flex-1"><span className="font-bold text-slate-400 text-[10px] uppercase block mb-0.5">Result</span>{res}</div>
+                                                          </div>
+                                                        )}
+                                                      </div>
+                                                    );
+                                                  }
+                                                  return <p className="whitespace-pre-wrap">{currentAnswer}</p>;
+                                                })()}
+                                              </div>
+                                            </div>
+
                                             {/* Strengths */}
                                             {currentScore.strengths.length > 0 && (
                                               <div className="space-y-1.5">
