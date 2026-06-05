@@ -237,92 +237,194 @@ export default function App() {
     const syncOnLogin = async () => {
       setSyncStatus('syncing');
       try {
-        // 1. Sync Resumes
+        // 1. Sync Resumes (Bidirectional Merge)
         const { data: dbResumes, error: resError } = await supabase
           .from('resumes')
           .select('*');
 
         if (resError) throw resError;
 
-        if (dbResumes && dbResumes.length > 0) {
-          const parsed = dbResumes.map(r => ({
-            id: r.id,
-            name: r.name,
-            title: r.resume_json.personal?.title || '',
-            date: new Date(r.updated_at).toLocaleDateString(),
-            data: r.resume_json,
-            theme: r.theme_settings
-          }));
-          setSavedResumes(parsed);
-        } else if (savedResumes.length > 0) {
-          for (const res of savedResumes) {
-            const isUuid = res.id.includes('-') && res.id.length === 36;
-            await supabase.from('resumes').upsert({
-              id: isUuid ? res.id : undefined,
-              user_id: user.id,
-              name: res.name,
-              resume_json: res.data,
-              theme_settings: res.theme
-            });
+        const parsedDbResumes = (dbResumes || []).map(r => ({
+          id: r.id,
+          name: r.name,
+          title: r.resume_json.personal?.title || '',
+          date: new Date(r.updated_at).toLocaleDateString() + ' ' + new Date(r.updated_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+          data: r.resume_json,
+          theme: r.theme_settings,
+          updatedAt: r.updated_at
+        }));
+
+        const mergedResumesMap = new Map<string, any>();
+
+        // Seed with DB resumes
+        parsedDbResumes.forEach(r => {
+          mergedResumesMap.set(r.id, r);
+        });
+
+        // Merge local resumes
+        const localResumesToUpload = [];
+        for (const localRes of savedResumes) {
+          const isUuid = localRes.id.includes('-') && localRes.id.length === 36;
+          let matchedDbResume = null;
+
+          if (isUuid) {
+            matchedDbResume = parsedDbResumes.find(r => r.id === localRes.id);
+          } else {
+            matchedDbResume = parsedDbResumes.find(r => r.name === localRes.name && r.title === (localRes.data?.personal?.title || ''));
+          }
+
+          if (matchedDbResume) {
+            const localTime = localRes.date ? new Date(localRes.date).getTime() : 0;
+            const dbTime = matchedDbResume.updatedAt ? new Date(matchedDbResume.updatedAt).getTime() : 0;
+
+            if (localTime > dbTime) {
+              const updatedRes = { ...matchedDbResume, data: localRes.data, theme: localRes.theme, name: localRes.name };
+              mergedResumesMap.set(matchedDbResume.id, updatedRes);
+              localResumesToUpload.push({
+                id: matchedDbResume.id,
+                user_id: user.id,
+                name: localRes.name,
+                resume_json: localRes.data,
+                theme_settings: localRes.theme
+              });
+            }
+          } else {
+            // New local resume, upload it and get its generated UUID
+            const { data: uploadData, error: uploadErr } = await supabase
+              .from('resumes')
+              .upsert({
+                id: isUuid ? localRes.id : undefined,
+                user_id: user.id,
+                name: localRes.name,
+                resume_json: localRes.data,
+                theme_settings: localRes.theme
+              })
+              .select();
+
+            if (!uploadErr && uploadData && uploadData.length > 0) {
+              const uploaded = uploadData[0];
+              mergedResumesMap.set(uploaded.id, {
+                id: uploaded.id,
+                name: uploaded.name,
+                title: uploaded.resume_json.personal?.title || '',
+                date: new Date(uploaded.updated_at).toLocaleDateString() + ' ' + new Date(uploaded.updated_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+                data: uploaded.resume_json,
+                theme: uploaded.theme_settings
+              });
+            }
           }
         }
 
-        // 2. Sync Interview Sessions
+        // Upload any updated local resumes
+        if (localResumesToUpload.length > 0) {
+          await supabase.from('resumes').upsert(localResumesToUpload);
+        }
+
+        const finalResumes = Array.from(mergedResumesMap.values());
+        setSavedResumes(finalResumes);
+
+        // 2. Sync Interview Sessions (Bidirectional Merge)
         const { data: dbSessions, error: sessError } = await supabase
           .from('interview_sessions')
           .select('*');
 
         if (sessError) throw sessError;
 
-        if (dbSessions && dbSessions.length > 0) {
-          const parsed: InterviewSession[] = dbSessions.map(s => ({
-            id: s.id,
-            companyName: s.company_name,
-            positionName: s.position_name,
-            jobDescription: s.job_description,
-            generatedAt: s.generated_at,
-            plan: s.plan,
-            geminiData: s.gemini_data,
-            mockAnswers: s.mock_answers,
-            mockScores: s.mock_scores,
-            idealAnswers: s.ideal_answers,
-            recruiterPersonaId: s.recruiter_persona_id,
-            recruiterReplies: s.recruiter_replies,
-            sessionSummaryFeedback: s.session_summary_feedback,
-            recruiterQuestions: s.recruiter_questions,
-            interfaceMode: s.interface_mode,
-            isCompleted: s.is_completed,
-            mockRound: s.mock_round,
-            mockQuestionIdx: s.mock_question_idx,
-            mockMode: s.mock_mode
-          }));
-          setSavedSessions(parsed);
-        } else if (savedSessions.length > 0) {
-          for (const s of savedSessions) {
-            await supabase.from('interview_sessions').upsert({
-              id: s.id,
+        const parsedDbSessions: InterviewSession[] = (dbSessions || []).map(s => ({
+          id: s.id,
+          companyName: s.company_name,
+          positionName: s.position_name,
+          jobDescription: s.job_description,
+          generatedAt: s.generated_at,
+          plan: s.plan,
+          geminiData: s.gemini_data,
+          mockAnswers: s.mock_answers,
+          mockScores: s.mock_scores,
+          idealAnswers: s.ideal_answers,
+          recruiterPersonaId: s.recruiter_persona_id,
+          recruiterReplies: s.recruiter_replies,
+          sessionSummaryFeedback: s.session_summary_feedback,
+          recruiterQuestions: s.recruiter_questions,
+          interfaceMode: s.interface_mode,
+          isCompleted: s.is_completed,
+          mockRound: s.mock_round,
+          mockQuestionIdx: s.mock_question_idx,
+          mockMode: s.mock_mode
+        }));
+
+        const mergedSessionsMap = new Map<string, InterviewSession>();
+
+        // Seed with DB sessions
+        parsedDbSessions.forEach(s => {
+          mergedSessionsMap.set(s.id, s);
+        });
+
+        const localSessionsToUpload = [];
+        for (const localSess of savedSessions) {
+          const matchedDbSess = mergedSessionsMap.get(localSess.id);
+
+          if (matchedDbSess) {
+            const localAnswersCount = Object.keys(localSess.mockAnswers || {}).length;
+            const dbAnswersCount = Object.keys(matchedDbSess.mockAnswers || {}).length;
+
+            if (localAnswersCount > dbAnswersCount || (localSess.isCompleted && !matchedDbSess.isCompleted)) {
+              mergedSessionsMap.set(localSess.id, localSess);
+              localSessionsToUpload.push({
+                id: localSess.id,
+                user_id: user.id,
+                company_name: localSess.companyName,
+                position_name: localSess.positionName,
+                job_description: localSess.jobDescription,
+                generated_at: localSess.generatedAt,
+                plan: localSess.plan,
+                gemini_data: localSess.geminiData,
+                mock_answers: localSess.mockAnswers,
+                mock_scores: localSess.mockScores,
+                ideal_answers: localSess.idealAnswers || {},
+                recruiter_persona_id: localSess.recruiterPersonaId,
+                recruiter_replies: localSess.recruiterReplies || {},
+                session_summary_feedback: localSess.sessionSummaryFeedback,
+                recruiter_questions: localSess.recruiterQuestions,
+                interface_mode: localSess.interfaceMode || 'standard',
+                is_completed: localSess.isCompleted || false,
+                mock_round: localSess.mockRound,
+                mock_question_idx: localSess.mockQuestionIdx,
+                mock_mode: localSess.mockMode
+              });
+            }
+          } else {
+            mergedSessionsMap.set(localSess.id, localSess);
+            localSessionsToUpload.push({
+              id: localSess.id,
               user_id: user.id,
-              company_name: s.companyName,
-              position_name: s.positionName,
-              job_description: s.jobDescription,
-              generated_at: s.generatedAt,
-              plan: s.plan,
-              gemini_data: s.geminiData,
-              mock_answers: s.mockAnswers,
-              mock_scores: s.mockScores,
-              ideal_answers: s.idealAnswers || {},
-              recruiter_persona_id: s.recruiterPersonaId,
-              recruiter_replies: s.recruiterReplies || {},
-              session_summary_feedback: s.sessionSummaryFeedback,
-              recruiter_questions: s.recruiterQuestions,
-              interface_mode: s.interfaceMode || 'standard',
-              is_completed: s.isCompleted || false,
-              mock_round: s.mockRound,
-              mock_question_idx: s.mockQuestionIdx,
-              mock_mode: s.mockMode
+              company_name: localSess.companyName,
+              position_name: localSess.positionName,
+              job_description: localSess.jobDescription,
+              generated_at: localSess.generatedAt,
+              plan: localSess.plan,
+              gemini_data: localSess.geminiData,
+              mock_answers: localSess.mockAnswers,
+              mock_scores: localSess.mockScores,
+              ideal_answers: localSess.idealAnswers || {},
+              recruiter_persona_id: localSess.recruiterPersonaId,
+              recruiter_replies: localSess.recruiterReplies || {},
+              session_summary_feedback: localSess.sessionSummaryFeedback,
+              recruiter_questions: localSess.recruiterQuestions,
+              interface_mode: localSess.interfaceMode || 'standard',
+              is_completed: localSess.isCompleted || false,
+              mock_round: localSess.mockRound,
+              mock_question_idx: localSess.mockQuestionIdx,
+              mock_mode: localSess.mockMode
             });
           }
         }
+
+        if (localSessionsToUpload.length > 0) {
+          await supabase.from('interview_sessions').upsert(localSessionsToUpload);
+        }
+
+        const finalSessions = Array.from(mergedSessionsMap.values());
+        setSavedSessions(finalSessions);
 
         setSyncStatus('synced');
       } catch (err) {
