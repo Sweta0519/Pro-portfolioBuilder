@@ -4771,7 +4771,8 @@ export default function Portfolio() {
                               if (sections.result) parts.push(`[Result]\n${sections.result}`);
                               setMockAnswers(p => ({ ...p, [currentQ.id]: parts.join('\n\n') }));
                               setStarMode(true);
-                            } catch {
+                            } catch (err) {
+                              console.error('STAR split failed:', err);
                               // Fallback: put all text in Situation if AI fails
                               setStarSituation(text);
                               setStarTask('');
@@ -5471,27 +5472,61 @@ export default function Portfolio() {
                                                   <span className="text-[9px] font-bold text-violet-400 uppercase">💡 Model Ideal Answer (Customized to Profile)</span>
                                                   <button
                                                     type="button"
-                                                    onClick={() => {
+                                                    onClick={async () => {
                                                       const text = idealAnswers[currentQ.id];
-                                                      let sit = text;
-                                                      let tsk = '';
-                                                      let act = '';
-                                                      let res = '';
+                                                      if (!text) return;
+
+                                                      // If NOT in STAR mode, just copy to freeform textarea
+                                                      if (!starMode) {
+                                                        setMockAnswers(p => ({ ...p, [currentQ.id]: text }));
+                                                        return;
+                                                      }
+
+                                                      // If text already has STAR tags, parse them directly
                                                       if (text.includes('[Situation]') || text.includes('[Task]') || text.includes('[Action]') || text.includes('[Result]')) {
                                                         const sitMatch = text.match(/\[Situation\]\s*([\s\S]*?)(?=\[Task\]|\[Action\]|\[Result\]|$)/i);
                                                         const tskMatch = text.match(/\[Task\]\s*([\s\S]*?)(?=\[Situation\]|\[Action\]|\[Result\]|$)/i);
                                                         const actMatch = text.match(/\[Action\]\s*([\s\S]*?)(?=\[Situation\]|\[Task\]|\[Result\]|$)/i);
                                                         const resMatch = text.match(/\[Result\]\s*([\s\S]*?)(?=\[Situation\]|\[Task\]|\[Action\]|$)/i);
-                                                        if (sitMatch) sit = sitMatch[1].trim();
-                                                        if (tskMatch) tsk = tskMatch[1].trim();
-                                                        if (actMatch) act = actMatch[1].trim();
-                                                        if (resMatch) res = resMatch[1].trim();
+                                                        const sit = sitMatch ? sitMatch[1].trim() : '';
+                                                        const tsk = tskMatch ? tskMatch[1].trim() : '';
+                                                        const act = actMatch ? actMatch[1].trim() : '';
+                                                        const res = resMatch ? resMatch[1].trim() : '';
+                                                        setStarSituation(sit);
+                                                        setStarTask(tsk);
+                                                        setStarAction(act);
+                                                        setStarResult(res);
+                                                        updateStarAnswer(sit, tsk, act, res);
+                                                        return;
                                                       }
-                                                      setStarSituation(sit);
-                                                      setStarTask(tsk);
-                                                      setStarAction(act);
-                                                      setStarResult(res);
-                                                      updateStarAnswer(sit, tsk, act, res);
+
+                                                      // Narrative text without tags — use AI to split into STAR
+                                                      if (geminiApiKey.trim()) {
+                                                        setIsStarSplitting(true);
+                                                        try {
+                                                          const sections = await splitIntoStarSections(
+                                                            geminiApiKey,
+                                                            aiProvider,
+                                                            text,
+                                                            currentQ.question
+                                                          );
+                                                          setStarSituation(sections.situation);
+                                                          setStarTask(sections.task);
+                                                          setStarAction(sections.action);
+                                                          setStarResult(sections.result);
+                                                          updateStarAnswer(sections.situation, sections.task, sections.action, sections.result);
+                                                        } catch {
+                                                          // Fallback: just put it all in freeform
+                                                          setStarMode(false);
+                                                          setMockAnswers(p => ({ ...p, [currentQ.id]: text }));
+                                                        } finally {
+                                                          setIsStarSplitting(false);
+                                                        }
+                                                      } else {
+                                                        // No API key: copy to freeform
+                                                        setStarMode(false);
+                                                        setMockAnswers(p => ({ ...p, [currentQ.id]: text }));
+                                                      }
                                                     }}
                                                     className="text-[9px] text-violet-400 hover:text-violet-300 font-bold transition-colors"
                                                   >📋 Copy to Draft</button>
