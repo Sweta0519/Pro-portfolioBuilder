@@ -977,10 +977,9 @@ export function scoreAnswer(question: string, answer: string, round: InterviewRo
   else { improvements.push(`Answer is too brief (${wordCount} words). Provide significantly more detail.`); }
 
   // 2. STAR for behavioral questions — but NOT for intro/motivation/culture-fit questions
+  const isIntroMotivationQuestion = isNonStarQuestion(question);
   const requiresStar = (round === 'behavioral' || round === 'hr' || round === 'leadership' || round === 'customer-scenarios')
-    && !isNonStarQuestion(question);
-
-  const isIntroMotivationQuestion = (round === 'hr') && isNonStarQuestion(question);
+    && !isIntroMotivationQuestion;
 
   if (requiresStar) {
     const star = {
@@ -998,6 +997,9 @@ export function scoreAnswer(question: string, answer: string, round: InterviewRo
     const hasPersonalBrand = /i am|i have|my background|my experience|i specialize|i focus|my career/i.test(answer);
     const hasMotivation = /because|excited|passionate|align|mission|values|opportunity|growth|impact|love|admire|inspires/i.test(answer);
     const hasSpecifics = /specifically|in particular|for example|such as|including|notably|at .+ i/i.test(answer);
+    const hasConfidence = /confident|proficient|expertise|strong|skilled|accomplished|proven|track record|consistently/i.test(answer);
+    const hasConnection = /your company|this role|this position|the team|your product|your mission|the opportunity/i.test(answer);
+    const hasFlow = wordCount >= 60 && answer.includes('.') && (answer.match(/\./g) || []).length >= 3;
     let narrativeScore = 0;
     if (hasPersonalBrand) { narrativeScore++; strengths.push('Clear personal narrative — you have articulated who you are and what you bring.'); }
     else { improvements.push('Start with a clear positioning statement: who you are, your background, and your key strengths.'); }
@@ -1005,7 +1007,11 @@ export function scoreAnswer(question: string, answer: string, round: InterviewRo
     else { improvements.push('Explain WHY this company/role specifically — show genuine interest, not just a generic statement.'); }
     if (hasSpecifics) { narrativeScore++; strengths.push('Good use of specific examples to back up your claims.'); }
     else { improvements.push('Add specific examples or achievements that support your narrative (e.g. a project, a result, a skill).'); }
-    score += narrativeScore >= 3 ? 20 : narrativeScore >= 2 ? 12 : narrativeScore >= 1 ? 6 : 0;
+    if (hasConfidence) { narrativeScore++; strengths.push('Confident language — you sound assured and experienced.'); }
+    if (hasConnection) { narrativeScore++; strengths.push('Good connection to the company/role — shows you have done your research.'); }
+    if (hasFlow) { narrativeScore++; strengths.push('Well-structured response with good flow and multiple clear points.'); }
+    // Scale: 6 criteria → up to 30 points (matching STAR's 20 + bonus for narrative depth)
+    score += narrativeScore >= 5 ? 30 : narrativeScore >= 4 ? 25 : narrativeScore >= 3 ? 20 : narrativeScore >= 2 ? 12 : narrativeScore >= 1 ? 6 : 0;
   }
 
   // 3. Metrics
