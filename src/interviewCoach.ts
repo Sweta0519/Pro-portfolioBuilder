@@ -934,7 +934,32 @@ export function generateInterviewPlan(resume: ResumeData, positionName: string, 
 
 // ─── Answer Scorer ────────────────────────────────────────────────────────────
 
-export function scoreAnswer(_question: string, answer: string, round: InterviewRound): AnswerScore {
+// Detects questions that should NOT use the STAR method (intro/motivation/culture-fit)
+const NON_STAR_PATTERNS = [
+  /tell me about yourself/i,
+  /introduce yourself/i,
+  /walk me through your (background|resume|experience|career)/i,
+  /who are you/i,
+  /why (do you want to|are you interested in) (join|work at|work for|this (role|company|position))/i,
+  /why (this company|this role|us|our company|amazon|google|netflix|stripe|apple|microsoft|meta|facebook)/i,
+  /what (attracts|drew|brings) you (to|here)/i,
+  /why are you (looking|applying|leaving|moving)/i,
+  /where do you see yourself in (5|five|3|three|10|ten) years/i,
+  /what are your (salary|compensation|pay) expectations/i,
+  /what is your (notice period|availability|start date)/i,
+  /are you (open to|comfortable with|willing to) (reloc|remote|hybrid|travel|onsite)/i,
+  /what (motivates|excites|drives) you/i,
+  /what are you (looking for|seeking) in/i,
+  /what do you know about (us|our company|this company)/i,
+  /how did you hear about/i,
+  /tell me (more )?about your (background|experience|career)/i,
+];
+
+function isNonStarQuestion(question: string): boolean {
+  return NON_STAR_PATTERNS.some(p => p.test(question));
+}
+
+export function scoreAnswer(question: string, answer: string, round: InterviewRound): AnswerScore {
   if (!answer.trim()) {
     return { score: 0, grade: 'Needs Work', color: 'text-rose-500 bg-rose-50 border-rose-200', feedback: 'No answer provided.', strengths: [], improvements: ['Please type your answer before submitting.'] };
   }
@@ -951,8 +976,13 @@ export function scoreAnswer(_question: string, answer: string, round: InterviewR
   else if (wordCount >= 40) { score += 8; improvements.push(`Answer is a bit short (${wordCount} words). Aim for at least 80 words.`); }
   else { improvements.push(`Answer is too brief (${wordCount} words). Provide significantly more detail.`); }
 
-  // 2. STAR for behavioral/hr
-  if (round === 'behavioral' || round === 'hr' || round === 'leadership' || round === 'customer-scenarios') {
+  // 2. STAR for behavioral questions — but NOT for intro/motivation/culture-fit questions
+  const requiresStar = (round === 'behavioral' || round === 'hr' || round === 'leadership' || round === 'customer-scenarios')
+    && !isNonStarQuestion(question);
+
+  const isIntroMotivationQuestion = (round === 'hr') && isNonStarQuestion(question);
+
+  if (requiresStar) {
     const star = {
       situation: ['situation', 'context', 'at the time', 'was working', 'we were', 'background'],
       task: ['task', 'responsible', 'goal', 'needed to', 'my role', 'challenge'],
@@ -963,6 +993,19 @@ export function scoreAnswer(_question: string, answer: string, round: InterviewR
     if (detected.length >= 3) { score += 20; strengths.push('Strong STAR structure — Situation, Task, Action, and Result are all present.'); }
     else if (detected.length >= 2) { score += 10; improvements.push('Partial STAR structure. Ensure you cover all four parts: Situation → Task → Action → Result.'); }
     else { improvements.push('Use the STAR method: Situation → Task → Action → Result. Structure your answer clearly.'); }
+  } else if (isIntroMotivationQuestion) {
+    // For intro/motivation questions: reward narrative clarity, enthusiasm, and specificity
+    const hasPersonalBrand = /i am|i have|my background|my experience|i specialize|i focus|my career/i.test(answer);
+    const hasMotivation = /because|excited|passionate|align|mission|values|opportunity|growth|impact|love|admire|inspires/i.test(answer);
+    const hasSpecifics = /specifically|in particular|for example|such as|including|notably|at .+ i/i.test(answer);
+    let narrativeScore = 0;
+    if (hasPersonalBrand) { narrativeScore++; strengths.push('Clear personal narrative — you have articulated who you are and what you bring.'); }
+    else { improvements.push('Start with a clear positioning statement: who you are, your background, and your key strengths.'); }
+    if (hasMotivation) { narrativeScore++; strengths.push('Good motivation expressed — you have explained why this opportunity excites you.'); }
+    else { improvements.push('Explain WHY this company/role specifically — show genuine interest, not just a generic statement.'); }
+    if (hasSpecifics) { narrativeScore++; strengths.push('Good use of specific examples to back up your claims.'); }
+    else { improvements.push('Add specific examples or achievements that support your narrative (e.g. a project, a result, a skill).'); }
+    score += narrativeScore >= 3 ? 20 : narrativeScore >= 2 ? 12 : narrativeScore >= 1 ? 6 : 0;
   }
 
   // 3. Metrics
@@ -1350,12 +1393,25 @@ export async function generateIdealAnswer(
   question: string,
   roleTitle: string,
   resumeData?: ResumeData,
-  formatAsStar?: boolean
+  formatAsStar?: boolean,
+  previousAnswers?: Array<{ question: string; answer: string }>
 ): Promise<string> {
-  const systemPrompt = `You are an elite interview coach. Generate a high-impact, professional, and perfect mock interview answer for the given question.
-If candidate resume details are provided, tailor the answer naturally to highlight their skills, technologies, and achievements. Keep the answer realistic, structured, and about 150-200 words. Do not include meta-commentary, return the direct answer only.
+  // Detect if this is an intro/motivation question (should NOT use STAR)
+  const nonStarQuestion = NON_STAR_PATTERNS.some(p => p.test(question));
+  const useStar = formatAsStar && !nonStarQuestion;
 
-${formatAsStar ? "CRITICAL: You MUST structure the response using explicit [Situation], [Task], [Action], and [Result] tag headers (e.g. '[Situation]\\n... \\n\\n[Task]\\n...') so the editor can parse it into separate guided fields." : "If the question is behavioral, structure it using standard paragraphs."}`;
+  const systemPrompt = `You are an elite interview coach. Generate a high-impact, professional, and realistic mock interview answer for the given question.
+
+IMPORTANT RULES:
+1. Tailor the answer naturally to the candidate's actual profile — use their specific companies, technologies, and achievements from the resume.
+2. Keep the answer to 150-200 words. Return the answer directly with no meta-commentary or preamble.
+3. AVOID REPETITION: If previous answers in this session have already mentioned specific facts (like years of experience, a specific company name, or a key achievement), do NOT repeat them verbatim. Reference them briefly or from a different angle, or omit them and highlight something new from the candidate's background.
+4. Match the question format:
+   - "Tell me about yourself" / "Why do you want to join" / motivation questions → Use a confident narrative pitch. Do NOT use STAR format.
+   - Behavioral questions ("Tell me about a time...") → Use STAR format.
+   - Technical/conceptual questions → Give a structured explanation with examples.
+
+${useStar ? "CRITICAL: Structure the response using explicit [Situation], [Task], [Action], and [Result] tag headers (e.g. '[Situation]\\n... \\n\\n[Task]\\n...') so the editor can parse it into separate guided fields." : ''}`;
 
   const resumeContext = resumeData
     ? `Candidate Profile:
@@ -1365,9 +1421,13 @@ Skills: ${resumeData.skills?.map(s => s.name).join(', ')}
 Top Experience: ${resumeData.experience?.slice(0, 2).map(e => `${e.position} at ${e.company} (${e.description.slice(0, 2).join('; ')})`).join('\n')}`
     : '';
 
+  const previousContext = previousAnswers && previousAnswers.length > 0
+    ? `\n\nPREVIOUS ANSWERS IN THIS SESSION (do NOT repeat these facts verbatim — vary the angle or highlight different details):\n${previousAnswers.slice(-3).map((pa, i) => `Q${i + 1}: "${pa.question}"\nA${i + 1}: "${pa.answer.slice(0, 200)}${pa.answer.length > 200 ? '...' : ''}"`).join('\n\n')}`
+    : '';
+
   const userPrompt = `Question: "${question}"
 Target Role: "${roleTitle}"
-${resumeContext}`;
+${resumeContext}${previousContext}`;
 
   const response = await callAiChat(apiKey, provider, systemPrompt, userPrompt);
   return response.trim().replace(/^```(markdown|text)?|```$/g, '').trim();

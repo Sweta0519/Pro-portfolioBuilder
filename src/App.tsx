@@ -4960,7 +4960,11 @@ export default function Portfolio() {
                                                           q.question,
                                                           interviewPositionName || interviewPlan.context.role,
                                                           resumeData,
-                                                          starMode
+                                                          starMode,
+                                                          // Pass already-answered questions so AI avoids repeating the same facts
+                                                          questions
+                                                            .filter(prevQ => prevQ.id !== q.id && mockAnswers[prevQ.id])
+                                                            .map(prevQ => ({ question: prevQ.question, answer: mockAnswers[prevQ.id] }))
                                                         );
                                                         setIdealAnswers(p => ({ ...p, [q.id]: ans }));
                                                         setReportShowIdealMap(p => ({ ...p, [q.id]: true }));
@@ -5395,7 +5399,11 @@ export default function Portfolio() {
                                                         currentQ.question,
                                                         interviewPositionName || interviewPlan.context.role,
                                                         resumeData,
-                                                        starMode
+                                                        starMode,
+                                                        // Pass already-answered questions so AI avoids repeating the same facts
+                                                        questions
+                                                          .filter(prevQ => prevQ.id !== currentQ.id && mockAnswers[prevQ.id])
+                                                          .map(prevQ => ({ question: prevQ.question, answer: mockAnswers[prevQ.id] }))
                                                       );
                                                       setIdealAnswers(p => ({ ...p, [currentQ.id]: ans }));
                                                       setShowIdealAnswer(p => ({ ...p, [currentQ.id]: true }));
