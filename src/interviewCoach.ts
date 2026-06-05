@@ -1461,7 +1461,7 @@ export async function splitIntoStarSections(
 Rules:
 - DO NOT invent new sentences or information. Only use text that exists in the answer.
 - Each section should be a clean excerpt from the original text.
-- If a section cannot be found in the text, use an empty string "".
+- IMPORTANT: You MUST distribute all sentences of the answer. Every sentence in the original text must be assigned to at least one of the four STAR sections. Do not leave any section empty unless the answer is extremely brief (less than 2 sentences). Map the sentences to the best-fitting section based on the STAR framework.
 - Situation: the background/context (who, what, when, where).
 - Task: the goal, challenge, or responsibility they faced.
 - Action: the specific steps THEY personally took (usually the longest section).
