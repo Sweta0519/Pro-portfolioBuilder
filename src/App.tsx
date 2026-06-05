@@ -44,7 +44,7 @@ import { generateWordDocument } from './wordExporter';
 import { ResumeInteractivePreview } from './ResumeInteractivePreview';
 import { extractTextFromFile } from './fileParser';
 import { 
-  Sparkles, User, Briefcase, Layers, Sliders, MessageSquare, 
+  Sparkles, User, Briefcase, Layers, Sliders, MessageSquare, Target, 
   FileCode, Smartphone, Tablet, Laptop, Trash2, Plus, 
   ChevronDown, ChevronUp, Download, 
   FileText, AlertCircle, CheckCircle, Copy, Check, Moon, Sun, X
@@ -138,7 +138,8 @@ export default function App() {
   const [appTheme, setAppTheme] = useState<'slate-dark' | 'indigo-midnight' | 'nord-light'>(
     () => (localStorage.getItem('app_theme') as any) || 'slate-dark'
   );
-  const [activeTab, setActiveTab] = useState<string>('coach');
+  const [leftTab, setLeftTab] = useState<string>('import');
+  const [rightTab, setRightTab] = useState<'coach' | 'interview' | 'inbox' | 'sandbox'>('coach');
   const [previewDevice, setPreviewDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
   const [fullscreenPreview, setFullscreenPreview] = useState<boolean>(false);
   const [mobileActiveView, setMobileActiveView] = useState<'editor' | 'preview'>('editor');
@@ -897,7 +898,7 @@ export default function App() {
     return () => {
       window.speechSynthesis.cancel();
     };
-  }, [interviewSubTab, mockQuestionIdx, activeTab]);
+  }, [interviewSubTab, mockQuestionIdx, leftTab, rightTab]);
 
   const submitAnswerInteractive = async (qId: string, question: string, answer: string) => {
     if (mockTimerRef.current) clearInterval(mockTimerRef.current);
@@ -1091,16 +1092,12 @@ export default function App() {
 
   // Cover Letter analysis calculation
   const coverLetterAnalysis = useMemo(() => analyzeCoverLetter(coverLetter, jobDescription), [coverLetter, jobDescription]);
-  
-  // Unread message count
-  const unreadCount = useMemo(() => contactMessages.filter(m => m.unread).length, [contactMessages]);
-
   // Automatically mark message as read when viewing inbox
   useEffect(() => {
-    if (activeTab === 'inbox') {
+    if (rightTab === 'inbox') {
       setContactMessages(prev => prev.map(m => ({ ...m, unread: false })));
     }
-  }, [activeTab]);
+  }, [rightTab]);
 
   const [uploadedResumeUrl, setUploadedResumeUrl] = useState<string | null>(null);
 
@@ -1129,7 +1126,8 @@ export default function App() {
             if (parsedJSON && parsedJSON.personal) {
               setResumeData(parsedJSON);
               setImportSuccess(true);
-              setActiveTab('coach');
+              setLeftTab('profile');
+              setRightTab('coach');
               setIsParsing(false);
             }
           } catch (err) {
@@ -1187,7 +1185,7 @@ export default function App() {
       setIsParsing(false);
       setImportSuccess(true);
       setFileErrorMessage(`Imported ${finalData.experience.length} roles, ${finalData.skills.length} skills, and ${finalData.projects.length} projects successfully.`);
-      setActiveTab('profile');
+      setLeftTab('profile');
       setTimeout(() => setFileErrorMessage(''), 6000);
     } catch (err: any) {
       console.error('File parsing error:', err);
@@ -1242,7 +1240,7 @@ export default function App() {
       setImportSuccess(true);
       setFileErrorMessage(`Imported ${finalData.experience.length} roles, ${finalData.skills.length} skills, and ${finalData.projects.length} projects successfully.`);
 
-      setActiveTab('profile');
+      setLeftTab('profile');
       setTimeout(() => {
         setImportSuccess(false);
         setFileErrorMessage('');
@@ -2483,20 +2481,9 @@ export default function Portfolio() {
             {/* TAB SELECTOR NAVBAR */}
             <div className="flex flex-nowrap lg:flex-wrap border-b border-slate-800 overflow-x-auto lg:overflow-x-visible scrollbar-none bg-slate-955/30 text-[10px] sm:text-xs font-semibold">
               <button 
-                onClick={() => setActiveTab('coach')} 
+                onClick={() => setLeftTab('import')} 
                 className={`flex-grow shrink-0 px-2 py-3.5 text-center border-b-2 transition-all whitespace-nowrap flex items-center justify-center gap-1 ${
-                  activeTab === 'coach' 
-                    ? 'border-indigo-500 text-indigo-400' 
-                    : 'border-transparent text-slate-500 hover:text-slate-300'
-                }`}
-              >
-                <Sparkles className="w-3 h-3" />
-                <span>AI Coach</span>
-              </button>
-              <button 
-                onClick={() => setActiveTab('import')} 
-                className={`flex-grow shrink-0 px-2 py-3.5 text-center border-b-2 transition-all whitespace-nowrap flex items-center justify-center gap-1 ${
-                  activeTab === 'import' 
+                  leftTab === 'import' 
                     ? 'border-indigo-500 text-indigo-400' 
                     : 'border-transparent text-slate-500 hover:text-slate-300'
                 }`}
@@ -2505,9 +2492,9 @@ export default function Portfolio() {
                 <span>Import</span>
               </button>
               <button 
-                onClick={() => setActiveTab('profile')} 
+                onClick={() => setLeftTab('profile')} 
                 className={`flex-grow shrink-0 px-2 py-3.5 text-center border-b-2 transition-all whitespace-nowrap flex items-center justify-center gap-1 ${
-                  activeTab === 'profile' 
+                  leftTab === 'profile' 
                     ? 'border-indigo-500 text-indigo-400' 
                     : 'border-transparent text-slate-500 hover:text-slate-300'
                 }`}
@@ -2516,9 +2503,9 @@ export default function Portfolio() {
                 <span>Profile</span>
               </button>
               <button 
-                onClick={() => setActiveTab('experience')} 
+                onClick={() => setLeftTab('experience')} 
                 className={`flex-grow shrink-0 px-2 py-3.5 text-center border-b-2 transition-all whitespace-nowrap flex items-center justify-center gap-1 ${
-                  activeTab === 'experience' 
+                  leftTab === 'experience' 
                     ? 'border-indigo-500 text-indigo-400' 
                     : 'border-transparent text-slate-500 hover:text-slate-300'
                 }`}
@@ -2527,9 +2514,9 @@ export default function Portfolio() {
                 <span>Jobs</span>
               </button>
               <button 
-                onClick={() => setActiveTab('projects')} 
+                onClick={() => setLeftTab('projects')} 
                 className={`flex-grow shrink-0 px-2 py-3.5 text-center border-b-2 transition-all whitespace-nowrap flex items-center justify-center gap-1 ${
-                  activeTab === 'projects' 
+                  leftTab === 'projects' 
                     ? 'border-indigo-500 text-indigo-400' 
                     : 'border-transparent text-slate-500 hover:text-slate-300'
                 }`}
@@ -2538,9 +2525,9 @@ export default function Portfolio() {
                 <span>Work</span>
               </button>
               <button 
-                onClick={() => setActiveTab('design')} 
+                onClick={() => setLeftTab('design')} 
                 className={`flex-grow shrink-0 px-2 py-3.5 text-center border-b-2 transition-all whitespace-nowrap flex items-center justify-center gap-1 ${
-                  activeTab === 'design' 
+                  leftTab === 'design' 
                     ? 'border-indigo-500 text-indigo-400' 
                     : 'border-transparent text-slate-500 hover:text-slate-300'
                 }`}
@@ -2548,40 +2535,13 @@ export default function Portfolio() {
                 <Sliders className="w-3 h-3" />
                 <span>Design</span>
               </button>
-              <button 
-                onClick={() => setActiveTab('inbox')} 
-                className={`flex-grow shrink-0 px-2 py-3.5 text-center border-b-2 transition-all whitespace-nowrap flex items-center justify-center gap-1 relative ${
-                  activeTab === 'inbox' 
-                    ? 'border-indigo-500 text-indigo-400' 
-                    : 'border-transparent text-slate-500 hover:text-slate-300'
-                }`}
-              >
-                <MessageSquare className="w-3 h-3" />
-                <span>Inbox</span>
-                {unreadCount > 0 && (
-                  <span className="absolute top-2 right-1.5 bg-rose-500 text-white text-[8px] font-bold w-3.5 h-3.5 flex items-center justify-center rounded-full animate-bounce">
-                    {unreadCount}
-                  </span>
-                )}
-              </button>
-              <button 
-                onClick={() => setActiveTab('interview')} 
-                className={`flex-grow shrink-0 px-2 py-3.5 text-center border-b-2 transition-all whitespace-nowrap flex items-center justify-center gap-1 ${
-                  activeTab === 'interview' 
-                    ? 'border-violet-500 text-violet-400' 
-                    : 'border-transparent text-slate-500 hover:text-slate-300'
-                }`}
-              >
-                <span className="text-[11px]">🎯</span>
-                <span>Interview</span>
-              </button>
             </div>
 
             {/* TAB CONTENT PANEL CONTAINER */}
             <div className="flex-grow overflow-y-auto p-6 space-y-6 scrollbar-thin">
               
               {/* TAB 1: QUICK IMPORT */}
-              {activeTab === 'import' && (
+              {leftTab === 'import' && (
                 <div className="space-y-5 animate-fadeIn">
                   <div>
                     <h2 className="text-base font-bold text-white">Upload & Auto-Build Magic</h2>
@@ -2591,9 +2551,21 @@ export default function Portfolio() {
                   </div>
 
                   {importSuccess && (
-                    <div className="flex items-center gap-2 bg-emerald-900/30 border border-emerald-800 rounded-xl p-3 text-xs text-emerald-400 animate-fadeIn">
-                      <CheckCircle className="w-4 h-4 flex-shrink-0" />
-                      <span>File parsed successfully! Your portfolio template is updated and live.</span>
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-emerald-900/30 border border-emerald-800 rounded-xl p-3.5 text-xs text-emerald-400 animate-fadeIn">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="w-4 h-4 flex-shrink-0" />
+                        <span>File parsed successfully! Your portfolio template is updated and live.</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setRightTab('sandbox');
+                          setMobileActiveView('preview');
+                        }}
+                        className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold rounded-lg transition-colors cursor-pointer text-[10px] whitespace-nowrap shadow-sm"
+                      >
+                        👁️ Preview Live Portfolio
+                      </button>
                     </div>
                   )}
 
@@ -2775,7 +2747,7 @@ export default function Portfolio() {
               )}
 
               {/* TAB 2: PERSONAL PROFILE */}
-              {activeTab === 'profile' && (
+              {leftTab === 'profile' && (
                 <div className="space-y-5 animate-fadeIn">
                   <div>
                     <h2 className="text-base font-bold text-white">Personal details</h2>
@@ -2943,7 +2915,7 @@ export default function Portfolio() {
               )}
 
               {/* TAB 3: WORK EXPERIENCE */}
-              {activeTab === 'experience' && (
+              {leftTab === 'experience' && (
                 <div className="space-y-6 animate-fadeIn">
                   <div className="flex justify-between items-center">
                     <div>
@@ -3139,7 +3111,7 @@ export default function Portfolio() {
               )}
 
               {/* TAB 4: PROJECTS & TECHNICAL SKILLS */}
-              {activeTab === 'projects' && (
+              {leftTab === 'projects' && (
                 <div className="space-y-8 animate-fadeIn">
                   
                   {/* Sub-section 1: Featured Projects */}
@@ -3719,7 +3691,7 @@ export default function Portfolio() {
               )}
 
               {/* TAB 5: DESIGN & STYLING PRESETS */}
-              {activeTab === 'design' && (
+              {leftTab === 'design' && (
                 <div className="space-y-6 animate-fadeIn">
                   <div>
                     <h2 className="text-base font-bold text-white">Layouts & Theme Palettes</h2>
@@ -3921,8 +3893,110 @@ export default function Portfolio() {
                 </div>
               )}
 
-              {/* TAB 6: RESUME ANALYZER COACH */}
-              {activeTab === 'coach' && (
+            </div>
+
+            {/* Sidebar Credits Footer */}
+            <div className="flex-shrink-0 px-6 py-3 border-t border-slate-800 bg-slate-950/20 flex items-center justify-between text-[10px] text-slate-500 font-medium">
+              <span>© {new Date().getFullYear()} ProPortfolio Builder</span>
+              <span>Developed by <span className="text-slate-400 font-semibold">Swetaprangya Sahoo</span></span>
+            </div>
+          </div>
+        )}
+
+        {/* RIGHT PANEL: DOUBLE-COLUMN AI WORKSPACE & PORTFOLIO SANDBOX */}
+        <div className={`flex-grow bg-slate-950 flex flex-col overflow-hidden relative ${
+          mobileActiveView === 'preview' ? 'flex' : 'hidden lg:flex'
+        }`}>
+          
+          {/* RIGHT PANEL HEADER / TAB SELECTOR */}
+          <div className="flex-shrink-0 h-12 border-b border-slate-900 bg-slate-950/80 flex items-center justify-between px-4 sm:px-6 z-20">
+            {/* Right Panel Tabs */}
+            <div className="flex gap-1 bg-slate-900 p-0.5 rounded-lg text-xs border border-slate-850">
+              {([
+                { id: 'coach', label: 'AI Coach', icon: Sparkles },
+                { id: 'interview', label: 'Interview Prep', icon: Target },
+                { id: 'inbox', label: 'Inbox', icon: MessageSquare, badge: contactMessages.filter(m => m.unread).length },
+                { id: 'sandbox', label: 'Live Sandbox', icon: Laptop }
+              ] as any[]).map(tab => (
+                <button
+                  key={tab.id}
+                  onClick={() => setRightTab(tab.id as any)}
+                  className={`p-1.5 px-3 rounded-md transition-all flex items-center gap-1.5 font-bold text-[10px] sm:text-xs cursor-pointer ${
+                    rightTab === tab.id
+                      ? 'bg-indigo-600 text-white shadow-md'
+                      : 'text-slate-500 hover:text-slate-350'
+                  }`}
+                >
+                  <tab.icon className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">{tab.label}</span>
+                  <span className="sm:hidden">{tab.id === 'interview' ? 'Interview' : tab.label.split(' ')[0]}</span>
+                  {tab.badge !== undefined && tab.badge > 0 && (
+                    <span className="bg-rose-500 text-white text-[8px] px-1 rounded-full">{tab.badge}</span>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            {/* Context-Aware Right Side Controls */}
+            {rightTab === 'sandbox' && (
+              <div className="flex items-center gap-4">
+                {/* Device switches */}
+                <div className="flex gap-1 bg-slate-900 p-0.5 rounded-lg text-xs border border-slate-850">
+                  {[
+                    { id: 'desktop', icon: Laptop, label: 'Desktop view' },
+                    { id: 'tablet', icon: Tablet, label: 'Tablet size' },
+                    { id: 'mobile', icon: Smartphone, label: 'Mobile view' }
+                  ].map(device => (
+                    <button
+                      key={device.id}
+                      onClick={() => setPreviewDevice(device.id as any)}
+                      className={`p-1 px-2.5 rounded-md transition-colors flex items-center gap-1 cursor-pointer ${
+                        previewDevice === device.id
+                          ? 'bg-slate-850 text-white'
+                          : 'text-slate-550 hover:text-slate-350'
+                      }`}
+                      title={device.label}
+                    >
+                      <device.icon className="w-3.5 h-3.5" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {rightTab === 'coach' && (
+              <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500">
+                <span className="hidden sm:inline">Resume Grade:</span>
+                <span className={`text-[11px] px-2 py-0.5 rounded bg-slate-900 border border-slate-800 ${activeAnalysis.color.split(' ')[0]}`}>
+                  {activeAnalysis.grade} ({activeAnalysis.score}/100)
+                </span>
+              </div>
+            )}
+
+            {rightTab === 'interview' && (
+              <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500">
+                <span className="hidden sm:inline">AI Provider:</span>
+                <span className="text-[11px] px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-violet-400">
+                  {aiProvider === 'groq' ? 'Groq (Llama 3)' : 'Gemini'}
+                </span>
+              </div>
+            )}
+            
+            {rightTab === 'inbox' && (
+              <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500">
+                <span className="hidden sm:inline">Total Leads:</span>
+                <span className="text-[11px] px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-indigo-400">
+                  {contactMessages.length}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Right Panel Tab Content Container */}
+          <div className="flex-grow overflow-y-auto p-6 space-y-6 scrollbar-thin">
+
+            {/* TAB 6: RESUME ANALYZER COACH */}
+            {rightTab === 'coach' && (
                 <div className="space-y-6 animate-fadeIn">
                   <div>
                     <h2 className="text-base font-bold text-white">AI Coach & ATS Keyword Scanner</h2>
@@ -4557,7 +4631,7 @@ export default function Portfolio() {
 
               {/* TAB 7: MOCK INBOX */}
               {/* INTERVIEW PREP COACH TAB */}
-              {activeTab === 'interview' && (
+              {rightTab === 'interview' && (
                 <div className="space-y-5 animate-fadeIn">
                   <div>
                     <h2 className="text-base font-bold text-white flex items-center gap-2">🎯 Interview Prep Coach</h2>
@@ -6590,7 +6664,7 @@ export default function Portfolio() {
                 </div>
               )}
 
-              {activeTab === 'inbox' && (
+              {rightTab === 'inbox' && (
                 <div className="space-y-6 animate-fadeIn">
                   <div>
                     <h2 className="text-base font-bold text-white">Mock Inbound Leads</h2>
@@ -6630,55 +6704,8 @@ export default function Portfolio() {
 
             </div>
 
-            {/* Sidebar Credits Footer */}
-            <div className="flex-shrink-0 px-6 py-3 border-t border-slate-800 bg-slate-950/20 flex items-center justify-between text-[10px] text-slate-500 font-medium">
-              <span>© {new Date().getFullYear()} ProPortfolio Builder</span>
-              <span>Developed by <span className="text-slate-400 font-semibold">Swetaprangya Sahoo</span></span>
-            </div>
-          </div>
-        )}
-
-        {/* RIGHT PANEL: INTERACTIVE PORTFOLIO PREVIEW FRAME */}
-        <div className={`flex-grow bg-slate-950 flex flex-col overflow-hidden relative ${
-          mobileActiveView === 'preview' ? 'flex' : 'hidden lg:flex'
-        }`}>
-          {/* Preview device controls */}
-          <div className="flex-shrink-0 h-12 border-b border-slate-900 bg-slate-950/80 flex items-center justify-between px-6 z-20">
-            <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-slate-500">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
-              <span>Real-Time Sandbox</span>
-            </div>
-
-            {/* Device switches */}
-            <div className="flex gap-1 bg-slate-900 p-0.5 rounded-lg text-xs border border-slate-850">
-              {[
-                { id: 'desktop', icon: Laptop, label: 'Desktop view' },
-                { id: 'tablet', icon: Tablet, label: 'Tablet size' },
-                { id: 'mobile', icon: Smartphone, label: 'Mobile view' }
-              ].map(device => (
-                <button
-                  key={device.id}
-                  onClick={() => setPreviewDevice(device.id as any)}
-                  className={`p-1 px-2.5 rounded-md transition-colors flex items-center gap-1 ${
-                    previewDevice === device.id
-                      ? 'bg-slate-850 text-white'
-                      : 'text-slate-500 hover:text-slate-300'
-                  }`}
-                  title={device.label}
-                >
-                  <device.icon className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline text-[10px]">{device.id.charAt(0).toUpperCase() + device.id.slice(1)}</span>
-                </button>
-              ))}
-            </div>
-
-            <div className="text-[10px] text-slate-500 font-semibold hidden lg:block">
-              Interactive Form Inputs Synced Instantly!
-            </div>
-          </div>
-
-          {/* Scrolling Workspace Content Frame */}
-          <div className="flex-grow p-6 md:p-8 overflow-y-auto flex flex-col items-center justify-center gap-4">
+            {rightTab === 'sandbox' && (
+              <div className="flex-grow p-6 md:p-8 overflow-y-auto flex flex-col items-center justify-center gap-4">
             
             {showRevisedPreview && revisedResumeData && (
               <div className="w-full max-w-4xl bg-indigo-900/95 border border-indigo-700 rounded-xl p-3 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-indigo-100 animate-fadeIn">
@@ -6737,9 +6764,9 @@ export default function Portfolio() {
             </div>
 
           </div>
-        </div>
-
+        )}
       </div>
+    </div>
 
 
 
