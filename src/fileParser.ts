@@ -6,6 +6,28 @@ import * as mammoth from 'mammoth';
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
 
 /**
+ * Helper to convert a file to ArrayBuffer, falling back to FileReader
+ * for older mobile browsers and in-app webviews lacking file.arrayBuffer()
+ */
+function fileToArrayBuffer(file: File): Promise<ArrayBuffer> {
+  if (typeof file.arrayBuffer === 'function') {
+    return file.arrayBuffer();
+  }
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (reader.result instanceof ArrayBuffer) {
+        resolve(reader.result);
+      } else {
+        reject(new Error('Failed to read file as ArrayBuffer.'));
+      }
+    };
+    reader.onerror = () => reject(reader.error || new Error('Failed to read file.'));
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+/**
  * Helper to wrap a promise in a timeout
  */
 function withTimeout<T>(promise: Promise<T>, ms: number, errorMessage: string): Promise<T> {
@@ -31,7 +53,7 @@ function withTimeout<T>(promise: Promise<T>, ms: number, errorMessage: string): 
  */
 export async function extractTextFromPDF(file: File): Promise<string> {
   const parsePromise = (async () => {
-    const arrayBuffer = await file.arrayBuffer();
+    const arrayBuffer = await fileToArrayBuffer(file);
     const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
     const pdf = await loadingTask.promise;
 
@@ -94,7 +116,7 @@ export async function extractTextFromPDF(file: File): Promise<string> {
  */
 export async function extractTextFromWord(file: File): Promise<string> {
   try {
-    const arrayBuffer = await file.arrayBuffer();
+    const arrayBuffer = await fileToArrayBuffer(file);
     const result = await mammoth.extractRawText({ arrayBuffer });
     return result.value;
   } catch (error) {
