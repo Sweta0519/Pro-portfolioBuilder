@@ -1082,8 +1082,49 @@ export function scoreAnswer(question: string, answer: string, round: InterviewRo
 
 export type AiProvider = 'gemini' | 'groq';
 
+/**
+ * Detects whether the Gemini key is an OAuth token (AQ. / ya29.) or a
+ * traditional API key (AIza...) and calls the API accordingly.
+ *
+ * - Traditional keys: sent as `?key=...` query param
+ * - OAuth tokens:     sent as `Authorization: Bearer ...` header
+ */
+function geminiIsOAuth(apiKey: string): boolean {
+  return apiKey.startsWith('AQ.') || apiKey.startsWith('ya29.');
+}
+
+async function geminiApiFetch(
+  apiKey: string,
+  body: Record<string, unknown>
+): Promise<Response> {
+  const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+  if (geminiIsOAuth(apiKey)) {
+    return fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+      body: JSON.stringify(body),
+    });
+  }
+  return fetch(`${url}?key=${apiKey}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+}
+
 export async function testApiConnection(apiKey: string, provider: AiProvider): Promise<{ ok: boolean; message: string }> {
   if (!apiKey.trim()) return { ok: false, message: 'No API key provided.' };
+
+  // ── Basic sanity checks (no hard format rules — Google changes key formats)
+  if (provider === 'gemini' && apiKey.length < 20) {
+    return { ok: false, message: '🔑 Key too short — make sure you copied the full key from aistudio.google.com/apikey.' };
+  }
+  if (provider === 'groq' && !apiKey.startsWith('gsk_')) {
+    return {
+      ok: false,
+      message: `🔑 Wrong key format — Groq API keys must start with "gsk_". You pasted "${apiKey.slice(0, 8)}...". Go to console.groq.com/keys and copy the correct key.`,
+    };
+  }
 
   try {
     if (provider === 'groq') {
@@ -1106,26 +1147,43 @@ export async function testApiConnection(apiKey: string, provider: AiProvider): P
       if (r.status === 429) return { ok: false, message: '⏳ Rate limited. Wait a moment and try again.' };
       return { ok: false, message: `❌ Error ${r.status}${errorMsg ? `: ${errorMsg}` : ''}` };
     } else {
-      const r = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: [{ text: 'Hi' }] }], generationConfig: { maxOutputTokens: 5 } }) }
-      );
-      if (r.ok) return { ok: true, message: '✅ Gemini connected! Ready to search.' };
-      
-      let errorMsg = '';
+      const keyType = geminiIsOAuth(apiKey) ? 'OAuth token (AQ./ya29.)' : 'API key (AIza...)';
+      const r = await geminiApiFetch(apiKey, {
+        contents: [{ parts: [{ text: 'Hi' }] }],
+        generationConfig: { maxOutputTokens: 5 },
+      });
+      if (r.ok) return { ok: true, message: `✅ Gemini connected (${keyType})! Ready to use.` };
+
+      // Always surface the real Google error
+      let rawMsg = '';
+      let errorCode = '';
       try {
         const data = await r.json();
-        errorMsg = data?.error?.message || '';
+        rawMsg = data?.error?.message || '';
+        errorCode = data?.error?.status || String(data?.error?.code || '');
       } catch {}
+      const msg = rawMsg.toLowerCase();
 
-      if (r.status === 401 || r.status === 403 || errorMsg.toLowerCase().includes('api key not valid') || errorMsg.toLowerCase().includes('invalid')) {
-        return { ok: false, message: '🔑 Invalid API key. Check at aistudio.google.com/apikey' };
+      // Invalid key
+      if (r.status === 400 && (msg.includes('api key not valid') || msg.includes('api_key_invalid'))) {
+        return { ok: false, message: `🔑 Invalid key — may be expired or deleted. Get a new one at aistudio.google.com/apikey. Google says: "${rawMsg}"` };
       }
-      if (errorMsg.toLowerCase().includes('location') || errorMsg.toLowerCase().includes('region') || errorMsg.toLowerCase().includes('unsupported')) {
-        return { ok: false, message: '🌍 Unsupported region. Gemini API keys are restricted in some regions (like EU/UK). Try a USA VPN or switch to Groq (free, no region locks).' };
+      // Permission / key rejected
+      if (r.status === 401 || (r.status === 403 && (msg.includes('permission') || msg.includes('api key') || errorCode === 'PERMISSION_DENIED'))) {
+        return { ok: false, message: `🔑 Key rejected (HTTP ${r.status}). If using an AQ. token, it may have expired — try generating a new one. Google says: "${rawMsg}"` };
       }
-      if (r.status === 429) return { ok: false, message: '⏳ Rate limited. Wait 60s or switch to Groq.' };
-      return { ok: false, message: `❌ Error ${r.status}: ${errorMsg || 'Connection failed'}` };
+      // Region block
+      if (msg.includes('location') || msg.includes('country') || msg.includes('region') || errorCode === 'USER_LOCATION_INVALID') {
+        return { ok: false, message: `🌍 Region blocked — Gemini is not available in your country/region. Use a US VPN or switch to Groq (free, no region limits). Google says: "${rawMsg}"` };
+      }
+      // API not enabled
+      if (msg.includes('not enabled') || errorCode === 'API_KEY_SERVICE_BLOCKED') {
+        return { ok: false, message: `🚫 Gemini API not enabled. Go to console.cloud.google.com → APIs & Services → Enable "Generative Language API". Google says: "${rawMsg}"` };
+      }
+      // Rate limit
+      if (r.status === 429) return { ok: false, message: `⏳ Rate limited. Wait 60s or switch to Groq. Google says: "${rawMsg || 'RESOURCE_EXHAUSTED'}"` };
+      // Show raw error always
+      return { ok: false, message: `❌ Google API error ${r.status} [${errorCode || 'UNKNOWN'}]: ${rawMsg || 'No details. Try a new key at aistudio.google.com/apikey'}` };
     }
   } catch (err: any) {
     const isGemini = provider === 'gemini';
@@ -1209,10 +1267,7 @@ async function fetchWithGemini(apiKey: string, prompt: string): Promise<GeminiEn
     };
     if (useGrounding) body.tools = [{ google_search: {} }];
 
-    return fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-      { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }
-    );
+    return geminiApiFetch(apiKey, body);
   }
 
   const groundingSupported = localStorage.getItem('gemini_grounding_supported') !== 'false';
@@ -1376,14 +1431,7 @@ async function callAiChat(
       contents: [{ parts: [{ text: `${systemPrompt}\n\nUser Request:\n${userPrompt}` }] }],
       generationConfig: { temperature: 0.5, maxOutputTokens: 2048 },
     };
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      }
-    );
+    const response = await geminiApiFetch(apiKey, body);
     if (!response.ok) {
       const errText = await response.text();
       throw new Error(`Gemini API error ${response.status}: ${errText}`);

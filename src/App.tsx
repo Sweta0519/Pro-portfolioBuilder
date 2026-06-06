@@ -4671,7 +4671,7 @@ export default function Portfolio() {
                               {aiProvider === 'groq' ? (
                                 <>Groq is <strong className="text-green-400">free with generous limits</strong> (30 req/min). Uses Llama 3.3 70B for high-quality results. <a href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer" className="text-green-400 hover:text-green-300 underline">Get a free Groq key →</a></>
                               ) : (
-                                <>Gemini uses Google Search grounding when available. Free tier: 15 req/min. <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" className="text-violet-400 hover:text-violet-300 underline">Get a free key →</a></>
+                                <>Gemini free tier: 15 req/min. Get your key from <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" className="text-violet-400 hover:text-violet-300 underline">aistudio.google.com/apikey →</a>. Keys may start with <strong className="text-yellow-400">AIza...</strong> or <strong className="text-yellow-400">AQ.</strong> — both are supported.</>
                               )}
                             </p>
                             <div className="flex gap-2">
@@ -4684,7 +4684,7 @@ export default function Portfolio() {
                                   localStorage.setItem('gemini-api-key', v);
                                   setConnectionTest({ testing: false, result: null });
                                 }}
-                                placeholder={aiProvider === 'groq' ? 'Paste your Groq API key (gsk_...)' : 'Paste your Gemini API key here...'}
+                                placeholder={aiProvider === 'groq' ? 'Paste your Groq API key (gsk_...)' : 'Paste your Gemini API key (AIza... or AQ....)'}
                                 className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-[10px] text-slate-300 placeholder-slate-600 focus:outline-none focus:border-violet-500 transition-colors font-mono"
                               />
                               {geminiApiKey && (
