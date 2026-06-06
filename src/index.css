@@ -280,61 +280,95 @@ html {
   background-color: #f8fafc !important;
   border-color: #cbd5e1 !important;
 }
-#app-root-container.theme-nord-light .w-\[520px\] .bg-slate-900,
-#app-root-container.theme-nord-light .w-\[520px\] .bg-slate-950,
-#app-root-container.theme-nord-light .w-\[520px\] .bg-slate-950\/40,
-#app-root-container.theme-nord-light .w-\[520px\] .bg-slate-950\/50,
-#app-root-container.theme-nord-light .w-\[520px\] .bg-slate-950\/30,
-#app-root-container.theme-nord-light .w-\[520px\] .bg-slate-950\/20,
-#app-root-container.theme-nord-light .w-\[520px\] .bg-slate-900\/80,
-#app-root-container.theme-nord-light .w-\[520px\] .bg-slate-900\/60 {
+
+/* General panel backgrounds */
+#app-root-container.theme-nord-light .bg-slate-900:not(.resume-preview-container *),
+#app-root-container.theme-nord-light .bg-slate-950:not(.resume-preview-container *),
+#app-root-container.theme-nord-light .bg-slate-955:not(.resume-preview-container *),
+#app-root-container.theme-nord-light .bg-slate-950\/40:not(.resume-preview-container *),
+#app-root-container.theme-nord-light .bg-slate-955\/40:not(.resume-preview-container *),
+#app-root-container.theme-nord-light .bg-slate-950\/50:not(.resume-preview-container *),
+#app-root-container.theme-nord-light .bg-slate-950\/30:not(.resume-preview-container *),
+#app-root-container.theme-nord-light .bg-slate-955\/30:not(.resume-preview-container *),
+#app-root-container.theme-nord-light .bg-slate-955\/25:not(.resume-preview-container *),
+#app-root-container.theme-nord-light .bg-slate-950\/20:not(.resume-preview-container *),
+#app-root-container.theme-nord-light .bg-slate-900\/80:not(.resume-preview-container *),
+#app-root-container.theme-nord-light .bg-slate-900\/60:not(.resume-preview-container *),
+#app-root-container.theme-nord-light .bg-slate-900\/40:not(.resume-preview-container *),
+#app-root-container.theme-nord-light .bg-slate-900\/20:not(.resume-preview-container *) {
   background-color: #ffffff !important;
   border-color: #e2e8f0 !important;
 }
-#app-root-container.theme-nord-light .w-\[520px\] .bg-slate-800,
-#app-root-container.theme-nord-light .w-\[520px\] .bg-slate-850 {
-  background-color: #e2e8f0 !important;
+
+/* Secondary panel backgrounds */
+#app-root-container.theme-nord-light .bg-slate-800:not(.resume-preview-container *),
+#app-root-container.theme-nord-light .bg-slate-850:not(.resume-preview-container *) {
+  background-color: #f1f5f9 !important;
   border-color: #cbd5e1 !important;
 }
-#app-root-container.theme-nord-light .w-\[520px\] .bg-slate-800:hover,
-#app-root-container.theme-nord-light .w-\[520px\] .bg-slate-850:hover,
-#app-root-container.theme-nord-light .w-\[520px\] .hover\:bg-slate-750:hover,
-#app-root-container.theme-nord-light .w-\[520px\] .hover\:bg-slate-800:hover,
-#app-root-container.theme-nord-light .w-\[520px\] .hover\:bg-slate-700:hover {
+
+/* Hover backgrounds */
+#app-root-container.theme-nord-light .bg-slate-800:hover:not(.resume-preview-container *),
+#app-root-container.theme-nord-light .bg-slate-850:hover:not(.resume-preview-container *),
+#app-root-container.theme-nord-light .hover\:bg-slate-750:hover:not(.resume-preview-container *),
+#app-root-container.theme-nord-light .hover\:bg-slate-800:hover:not(.resume-preview-container *),
+#app-root-container.theme-nord-light .hover\:bg-slate-700:hover:not(.resume-preview-container *) {
   background-color: #cbd5e1 !important;
 }
-#app-root-container.theme-nord-light .w-\[520px\] .disabled\:bg-slate-900:disabled {
+
+#app-root-container.theme-nord-light .disabled\:bg-slate-900:disabled:not(.resume-preview-container *) {
   background-color: #e2e8f0 !important;
   opacity: 0.6;
 }
-#app-root-container.theme-nord-light .w-\[520px\] .border-slate-800,
-#app-root-container.theme-nord-light .w-\[520px\] .border-slate-700,
-#app-root-container.theme-nord-light .w-\[520px\] .border-slate-850,
+
+/* General Borders */
+#app-root-container.theme-nord-light .border-slate-800:not(.resume-preview-container *),
+#app-root-container.theme-nord-light .border-slate-700:not(.resume-preview-container *),
+#app-root-container.theme-nord-light .border-slate-850:not(.resume-preview-container *),
+#app-root-container.theme-nord-light .border-slate-900:not(.resume-preview-container *),
 #app-root-container.theme-nord-light header .border-slate-800 {
   border-color: #cbd5e1 !important;
 }
-#app-root-container.theme-nord-light .w-\[520px\] .text-white:not(button):not(a),
-#app-root-container.theme-nord-light header .text-white:not(button):not(a) {
+
+/* Indigo and violet borders in light mode should be styled softly */
+#app-root-container.theme-nord-light .border-violet-900\/30:not(.resume-preview-container *),
+#app-root-container.theme-nord-light .border-indigo-900\/45:not(.resume-preview-container *),
+#app-root-container.theme-nord-light .border-indigo-850:not(.resume-preview-container *),
+#app-root-container.theme-nord-light .border-indigo-700:not(.resume-preview-container *),
+#app-root-container.theme-nord-light .border-violet-850:not(.resume-preview-container *) {
+  border-color: #a5b4fc !important;
+}
+#app-root-container.theme-nord-light .bg-indigo-950\/50:not(.resume-preview-container *),
+#app-root-container.theme-nord-light .bg-slate-900\/15:not(.resume-preview-container *) {
+  background-color: #f5f3ff !important;
+}
+
+/* Text colors */
+#app-root-container.theme-nord-light .text-white:not(button):not(a):not(span):not(.bg-indigo-600 *):not(.bg-rose-500 *):not(.resume-preview-container *),
+#app-root-container.theme-nord-light header .text-white:not(button):not(a):not(span) {
   color: #0f172a !important;
 }
-#app-root-container.theme-nord-light .w-\[520px\] .text-slate-100 {
+#app-root-container.theme-nord-light .text-slate-100:not(.resume-preview-container *) {
   color: #0f172a !important;
 }
-#app-root-container.theme-nord-light .w-\[520px\] .text-slate-200 {
+#app-root-container.theme-nord-light .text-slate-200:not(.resume-preview-container *) {
   color: #1e293b !important;
 }
-#app-root-container.theme-nord-light .w-\[520px\] .text-slate-300 {
+#app-root-container.theme-nord-light .text-slate-350:not(.resume-preview-container *),
+#app-root-container.theme-nord-light .text-slate-300:not(.resume-preview-container *) {
   color: #334155 !important;
 }
-#app-root-container.theme-nord-light .w-\[520px\] .text-slate-400 {
+#app-root-container.theme-nord-light .text-slate-400:not(.resume-preview-container *) {
   color: #475569 !important;
 }
-#app-root-container.theme-nord-light .w-\[520px\] .text-slate-500 {
+#app-root-container.theme-nord-light .text-slate-500:not(.resume-preview-container *) {
   color: #64748b !important;
 }
-#app-root-container.theme-nord-light .w-\[520px\] input,
-#app-root-container.theme-nord-light .w-\[520px\] textarea,
-#app-root-container.theme-nord-light .w-\[520px\] select,
+
+/* Form inputs styling */
+#app-root-container.theme-nord-light input:not(.resume-preview-container *),
+#app-root-container.theme-nord-light textarea:not(.resume-preview-container *),
+#app-root-container.theme-nord-light select:not(.resume-preview-container *),
 #app-root-container.theme-nord-light .fixed input,
 #app-root-container.theme-nord-light .fixed textarea,
 #app-root-container.theme-nord-light .fixed select {
@@ -342,8 +376,8 @@ html {
   color: #0f172a !important;
   border-color: #cbd5e1 !important;
 }
-#app-root-container.theme-nord-light .w-\[520px\] input::placeholder,
-#app-root-container.theme-nord-light .w-\[520px\] textarea::placeholder,
+#app-root-container.theme-nord-light input:not(.resume-preview-container *)::placeholder,
+#app-root-container.theme-nord-light textarea:not(.resume-preview-container *)::placeholder,
 #app-root-container.theme-nord-light .fixed input::placeholder,
 #app-root-container.theme-nord-light .fixed textarea::placeholder {
   color: #94a3b8 !important;
@@ -375,6 +409,7 @@ html {
 #app-root-container.theme-nord-light .fixed .bg-slate-955\/40,
 #app-root-container.theme-nord-light .fixed .bg-slate-950\/50,
 #app-root-container.theme-nord-light .fixed .bg-slate-950\/40,
+#app-root-container.theme-nord-light .fixed .bg-slate-955\/30,
 #app-root-container.theme-nord-light .fixed .bg-slate-950\/30,
 #app-root-container.theme-nord-light .fixed .bg-slate-950\/20,
 #app-root-container.theme-nord-light .fixed .bg-slate-900\/80,
@@ -403,6 +438,70 @@ html {
 #app-root-container.theme-nord-light .fixed .hover\:bg-slate-800:hover {
   background-color: #f1f5f9 !important;
   border-color: #94a3b8 !important;
+}
+
+/* Right Panel tabs header styling */
+#app-root-container.theme-nord-light .flex-grow.bg-slate-955,
+#app-root-container.theme-nord-light .flex-grow.bg-slate-950 {
+  background-color: #f1f5f9 !important;
+}
+#app-root-container.theme-nord-light .flex-grow.bg-slate-950 > .flex-shrink-0.h-12,
+#app-root-container.theme-nord-light .flex-grow.bg-slate-955 > .flex-shrink-0.h-12 {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+}
+#app-root-container.theme-nord-light .flex-grow.bg-slate-950 > .flex-shrink-0.h-12 .bg-slate-900,
+#app-root-container.theme-nord-light .flex-grow.bg-slate-955 > .flex-shrink-0.h-12 .bg-slate-900 {
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+}
+#app-root-container.theme-nord-light .flex-grow.bg-slate-955 > .flex-shrink-0.h-12 button:not(.bg-indigo-600),
+#app-root-container.theme-nord-light .flex-grow.bg-slate-950 > .flex-shrink-0.h-12 button:not(.bg-indigo-600) {
+  color: #475569 !important;
+}
+#app-root-container.theme-nord-light .flex-grow.bg-slate-955 > .flex-shrink-0.h-12 button:not(.bg-indigo-600):hover,
+#app-root-container.theme-nord-light .flex-grow.bg-slate-950 > .flex-shrink-0.h-12 button:not(.bg-indigo-600):hover {
+  color: #0f172a !important;
+}
+
+/* Sandbox Control Bar custom styling */
+#app-root-container.theme-nord-light .sandbox-control-bar {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+}
+#app-root-container.theme-nord-light .sandbox-control-bar button {
+  background-color: #f1f5f9 !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #475569 !important;
+}
+#app-root-container.theme-nord-light .sandbox-control-bar button:hover {
+  background-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+#app-root-container.theme-nord-light .sandbox-control-bar button.bg-white {
+  background-color: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #0f172a !important;
+}
+#app-root-container.theme-nord-light .sandbox-control-bar button.bg-white:hover {
+  background-color: #f8fafc !important;
+}
+#app-root-container.theme-nord-light .sandbox-control-bar button.bg-black {
+  background-color: #2e3440 !important;
+  border-color: #2e3440 !important;
+  color: #ffffff !important;
+}
+#app-root-container.theme-nord-light .sandbox-control-bar button.bg-black:hover {
+  background-color: #3b4252 !important;
+}
+
+/* Scrollbars overrides for Nord Light */
+#app-root-container.theme-nord-light ::-webkit-scrollbar-thumb {
+  background: rgba(203, 213, 225, 0.6) !important;
+}
+#app-root-container.theme-nord-light ::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.8) !important;
 }
 
 /* 2. INDIGO MIDNIGHT THEME OVERRIDES */

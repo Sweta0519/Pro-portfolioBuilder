@@ -8595,7 +8595,7 @@ export default function Portfolio() {
             <div className="flex-grow p-6 md:p-8 overflow-y-auto flex flex-col items-center justify-center gap-4">
               
               {/* EXPORT TOOLKIT MOVED TO SANDBOX */}
-              <div className="w-full max-w-4xl bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-wrap gap-3 items-center justify-center shadow-xl mb-4">
+              <div className="sandbox-control-bar w-full max-w-4xl bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-wrap gap-3 items-center justify-center shadow-xl mb-4">
                 <button
                   onClick={() => {
                     setVercelDeployState('idle');
@@ -8613,7 +8613,7 @@ export default function Portfolio() {
                 <button
                   onClick={handleZipDownload}
                   disabled={isZipping}
-                  className="flex items-center gap-1.5 bg-white text-slate-900 hover:bg-slate-200 text-white px-4 py-2 rounded-xl text-sm font-bold transition duration-200 ease-out shadow-lg shadow-black/10 active:scale-[0.97] cursor-pointer active:scale-[0.97] disabled:opacity-50"
+                  className="flex items-center gap-1.5 bg-white text-slate-900 hover:bg-slate-200 px-4 py-2 rounded-xl text-sm font-bold transition duration-200 ease-out shadow-lg shadow-black/10 active:scale-[0.97] cursor-pointer active:scale-[0.97] disabled:opacity-50"
                 >
                   {copiedZip ? <Check className="w-4 h-4 text-emerald-300 animate-pulse" /> : <Download className="w-4 h-4" />}
                   <span>{isZipping ? 'Creating ZIP...' : copiedZip ? 'Downloaded ZIP!' : 'Download Project (.zip)'}</span>
@@ -8686,7 +8686,7 @@ export default function Portfolio() {
               )}
 
               <div
-                className={`transition duration-500 h-full w-full overflow-y-auto border border-slate-850 rounded-2xl shadow-2xl scrollbar-thin ${
+                className={`resume-preview-container transition duration-500 h-full w-full overflow-y-auto border border-slate-850 rounded-2xl shadow-2xl scrollbar-thin ${
                   themeSettings.darkMode || themeSettings.id === 'cyberpunk' ? 'dark' : ''
                 } ${
                   previewDevice === 'desktop'
