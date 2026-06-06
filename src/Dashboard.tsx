@@ -1946,13 +1946,13 @@ export default function Portfolio() {
 
   // Theme mapping colors
   const colors = {
-    violet: { text: 'text-violet-600', bg: 'bg-violet-600', badge: 'bg-violet-50 text-violet-700 border-violet-100', ring: 'ring-violet-500' },
+    violet: { text: 'text-violet-600', bg: 'bg-slate-700', badge: 'bg-violet-50 text-violet-700 border-violet-100', ring: 'ring-violet-500' },
     emerald: { text: 'text-emerald-600', bg: 'bg-emerald-600', badge: 'bg-emerald-50 text-emerald-700 border-emerald-100', ring: 'ring-emerald-500' },
     blue: { text: 'text-blue-600', bg: 'bg-blue-600', badge: 'bg-blue-50 text-blue-700 border-blue-100', ring: 'ring-blue-500' },
     amber: { text: 'text-amber-600', bg: 'bg-amber-500', badge: 'bg-amber-50 text-amber-700 border-amber-100', ring: 'ring-amber-500' },
     rose: { text: 'text-rose-600', bg: 'bg-rose-500', badge: 'bg-rose-50 text-rose-700 border-rose-100', ring: 'ring-rose-500' },
     slate: { text: 'text-slate-700', bg: 'bg-slate-800', badge: 'bg-slate-100 text-slate-800 border-slate-200', ring: 'ring-slate-500' }
-  }[theme.primaryColor] || { text: 'text-violet-600', bg: 'bg-violet-600', badge: 'bg-violet-50 text-violet-700 border-violet-100', ring: 'ring-violet-500' };
+  }[theme.primaryColor] || { text: 'text-violet-600', bg: 'bg-slate-700', badge: 'bg-violet-50 text-violet-700 border-violet-100', ring: 'ring-violet-500' };
 
   const categories = ['All', ...Array.from(new Set(resumeData.projects.map(p => p.category)))];
   const filteredProjects = projectCategory === 'All' ? resumeData.projects : resumeData.projects.filter(p => p.category === projectCategory);
@@ -1988,7 +1988,7 @@ export default function Portfolio() {
               <button 
                 key={exp.id} 
                 onClick={() => setActiveExperience(exp.id)}
-                className={\`w-full text-left px-4 py-2 border-l-2 \${activeExperience === exp.id ? colors.text + ' border-current font-semibold' : 'border-transparent text-slate-400'}\`}
+                className={\`w-full text-left px-4 py-2 border-l-2 \${activeExperience === exp.id ? colors.text + ' border-current font-semibold' : 'border-transparent text-slate-300'}\`}
               >
                 {exp.company} ({exp.period})
               </button>
@@ -2026,7 +2026,7 @@ export default function Portfolio() {
       </section>
 
       {/* Footer */}
-      <footer className="py-12 border-t text-center text-slate-400 text-xs">
+      <footer className="py-12 border-t text-center text-slate-300 text-xs">
         <p>© {new Date().getFullYear()} {resumeData.personal.name} • Built with ProPortfolio Builder • Developed by Swetaprangya Sahoo</p>
       </footer>
     </div>
@@ -2408,10 +2408,10 @@ export default function Portfolio() {
                     className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition duration-200 ease-out ${
                       appTheme === 'nord-light'
                         ? 'bg-slate-100 border-slate-250 text-slate-705'
-                        : 'bg-slate-900 border-slate-800 text-slate-300'
+                        : 'bg-slate-900 border-slate-800 text-slate-200'
                     }`}
                   >
-                    <div className="w-4 h-4 rounded-full bg-violet-600 text-white flex items-center justify-center text-[10px] font-black uppercase">
+                    <div className="w-4 h-4 rounded-full bg-slate-700 text-white flex items-center justify-center text-[10px] font-black uppercase">
                       {user.email ? user.email[0] : 'U'}
                     </div>
                     <span className="max-w-[80px] truncate hidden md:inline">{user.email}</span>
@@ -2437,7 +2437,7 @@ export default function Portfolio() {
                   setAuthError('');
                   setShowAuthModal(true);
                 }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white transition duration-200 ease-out shadow-lg shadow-indigo-500/25 active:scale-[0.97] cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-slate-700 text-white transition duration-200 ease-out shadow-lg shadow-black/10 active:scale-[0.97] cursor-pointer"
               >
                 🔒 Sign In
               </button>
@@ -2452,8 +2452,8 @@ export default function Portfolio() {
                 appTheme === 'nord-light'
                   ? 'bg-slate-100 hover:bg-slate-200 border-slate-250 text-slate-700 hover:text-slate-955'
                   : appTheme === 'indigo-midnight'
-                    ? 'bg-[#0c0920] hover:bg-[#17123d] border-[#2b1f63] text-indigo-200 hover:text-white'
-                    : 'bg-slate-900 hover:bg-slate-850 border-slate-800 text-slate-300 hover:text-white'
+                    ? 'bg-[#0c0920] hover:bg-[#17123d] border-[#2b1f63] text-slate-300 hover:text-white'
+                    : 'bg-slate-900 hover:bg-slate-850 border-slate-800 text-slate-200 hover:text-white'
               }`}
             >
               {appTheme === 'nord-light' ? (
@@ -2461,7 +2461,7 @@ export default function Portfolio() {
               ) : appTheme === 'indigo-midnight' ? (
                 <Sparkles className="w-3.5 h-3.5 text-indigo-405 animate-pulse" />
               ) : (
-                <Moon className="w-3.5 h-3.5 text-indigo-400" />
+                <Moon className="w-3.5 h-3.5 text-slate-200" />
               )}
               <span>
                 <span className="hidden sm:inline">Theme: </span>
@@ -2491,7 +2491,7 @@ export default function Portfolio() {
                       ? 'bg-indigo-650 text-white'
                       : appTheme === 'nord-light'
                         ? 'text-slate-650 hover:bg-slate-100 hover:text-slate-900'
-                        : 'text-slate-400 hover:bg-slate-900 hover:text-white'
+                        : 'text-slate-300 hover:bg-slate-900 hover:text-white'
                   }`}
                 >
                   Slate Dark
@@ -2504,7 +2504,7 @@ export default function Portfolio() {
                       ? 'bg-indigo-650 text-white'
                       : appTheme === 'nord-light'
                         ? 'text-slate-650 hover:bg-slate-100 hover:text-slate-900'
-                        : 'text-slate-400 hover:bg-slate-900/60 hover:text-white'
+                        : 'text-slate-300 hover:bg-slate-900/60 hover:text-white'
                   }`}
                 >
                   Indigo Midnight
@@ -2515,7 +2515,7 @@ export default function Portfolio() {
                   className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
                     appTheme === 'nord-light'
                       ? 'bg-indigo-650 text-white'
-                      : 'text-slate-400 hover:bg-slate-900/60 hover:text-white'
+                      : 'text-slate-300 hover:bg-slate-900/60 hover:text-white'
                   }`}
                 >
                   Nord Light
@@ -2533,8 +2533,8 @@ export default function Portfolio() {
                 appTheme === 'nord-light'
                   ? 'bg-slate-100 hover:bg-slate-200 border-slate-250 text-slate-700 hover:text-slate-955 shadow-sm'
                   : appTheme === 'indigo-midnight'
-                    ? 'bg-[#0c0920] hover:bg-[#17123d] border-[#2b1f63] text-indigo-200 hover:text-white'
-                    : 'bg-slate-900 hover:bg-slate-850 border-slate-800 text-slate-300 hover:text-white'
+                    ? 'bg-[#0c0920] hover:bg-[#17123d] border-[#2b1f63] text-slate-300 hover:text-white'
+                    : 'bg-slate-900 hover:bg-slate-850 border-slate-800 text-slate-200 hover:text-white'
               }`}
             >
               <Download className="w-3.5 h-3.5" />
@@ -2562,8 +2562,8 @@ export default function Portfolio() {
                   appTheme === 'nord-light'
                     ? 'text-slate-700 hover:bg-slate-100'
                     : appTheme === 'indigo-midnight'
-                      ? 'text-indigo-250 hover:bg-indigo-950/40'
-                      : 'text-slate-300 hover:bg-slate-900'
+                      ? 'text-slate-300 hover:bg-slate-800/40'
+                      : 'text-slate-200 hover:bg-slate-900'
                 }`}
               >
                 <svg
@@ -2583,11 +2583,11 @@ export default function Portfolio() {
                   appTheme === 'nord-light'
                     ? 'text-slate-700 hover:bg-slate-100'
                     : appTheme === 'indigo-midnight'
-                      ? 'text-indigo-250 hover:bg-indigo-950/40'
-                      : 'text-slate-300 hover:bg-slate-900'
+                      ? 'text-slate-300 hover:bg-slate-800/40'
+                      : 'text-slate-200 hover:bg-slate-900'
                 }`}
               >
-                <Download className="w-3.5 h-3.5 text-indigo-400" />
+                <Download className="w-3.5 h-3.5 text-slate-200" />
                 <span>{isZipping ? 'Creating ZIP...' : 'Download Project (.zip)'}</span>
               </button>
 
@@ -2598,11 +2598,11 @@ export default function Portfolio() {
                   appTheme === 'nord-light'
                     ? 'text-slate-700 hover:bg-slate-100'
                     : appTheme === 'indigo-midnight'
-                      ? 'text-indigo-250 hover:bg-indigo-950/40'
-                      : 'text-slate-300 hover:bg-slate-900'
+                      ? 'text-slate-300 hover:bg-slate-800/40'
+                      : 'text-slate-200 hover:bg-slate-900'
                 }`}
               >
-                <FileText className="w-3.5 h-3.5 text-indigo-400" />
+                <FileText className="w-3.5 h-3.5 text-slate-200" />
                 <span>Download Word (.doc)</span>
               </button>
 
@@ -2613,8 +2613,8 @@ export default function Portfolio() {
                   appTheme === 'nord-light'
                     ? 'text-slate-700 hover:bg-slate-100'
                     : appTheme === 'indigo-midnight'
-                      ? 'text-indigo-250 hover:bg-indigo-950/40'
-                      : 'text-slate-300 hover:bg-slate-900'
+                      ? 'text-slate-300 hover:bg-slate-800/40'
+                      : 'text-slate-200 hover:bg-slate-900'
                 }`}
               >
                 <Download className="w-3.5 h-3.5 text-emerald-400" />
@@ -2628,11 +2628,11 @@ export default function Portfolio() {
                   appTheme === 'nord-light'
                     ? 'text-slate-700 hover:bg-slate-100'
                     : appTheme === 'indigo-midnight'
-                      ? 'text-indigo-250 hover:bg-indigo-950/40'
-                      : 'text-slate-300 hover:bg-slate-900'
+                      ? 'text-slate-300 hover:bg-slate-800/40'
+                      : 'text-slate-200 hover:bg-slate-900'
                 }`}
               >
-                <FileCode className="w-3.5 h-3.5 text-indigo-400" />
+                <FileCode className="w-3.5 h-3.5 text-slate-200" />
                 <span>React Code</span>
               </button>
             </div>
@@ -2644,12 +2644,12 @@ export default function Portfolio() {
             onClick={() => setFullscreenPreview(!fullscreenPreview)}
             className={`hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
               fullscreenPreview
-                ? 'bg-indigo-600 border-indigo-500 text-white shadow-md'
+                ? 'bg-indigo-600 border-slate-600 text-white shadow-md'
                 : appTheme === 'nord-light'
                   ? 'bg-slate-100 hover:bg-slate-200 border-slate-200 text-slate-700 hover:text-slate-955 shadow-sm'
                   : appTheme === 'indigo-midnight'
-                    ? 'bg-[#0c0920] hover:bg-[#17123d] border-[#2b1f63] text-indigo-300 hover:text-white'
-                    : 'bg-slate-900 hover:bg-slate-850 border-slate-800 text-slate-400 hover:text-white'
+                    ? 'bg-[#0c0920] hover:bg-[#17123d] border-[#2b1f63] text-slate-300 hover:text-white'
+                    : 'bg-slate-900 hover:bg-slate-850 border-slate-800 text-slate-300 hover:text-white'
             }`}
           >
             <Laptop className="w-3.5 h-3.5" />
@@ -2675,8 +2675,8 @@ export default function Portfolio() {
                 onClick={() => setLeftTab('import')}
                 className={`flex-grow shrink-0 px-2 py-3.5 text-center border-b-2 transition duration-200 ease-out whitespace-nowrap flex items-center justify-center gap-1 ${
                   leftTab === 'import'
-                    ? 'border-indigo-500 text-indigo-400'
-                    : 'border-transparent text-slate-500 hover:text-slate-300'
+                    ? 'border-slate-600 text-slate-200'
+                    : 'border-transparent text-slate-500 hover:text-slate-200'
                 }`}
               >
                 <FileText className="w-3 h-3" />
@@ -2686,8 +2686,8 @@ export default function Portfolio() {
                 onClick={() => setLeftTab('profile')}
                 className={`flex-grow shrink-0 px-2 py-3.5 text-center border-b-2 transition duration-200 ease-out whitespace-nowrap flex items-center justify-center gap-1 ${
                   leftTab === 'profile'
-                    ? 'border-indigo-500 text-indigo-400'
-                    : 'border-transparent text-slate-500 hover:text-slate-300'
+                    ? 'border-slate-600 text-slate-200'
+                    : 'border-transparent text-slate-500 hover:text-slate-200'
                 }`}
               >
                 <User className="w-3 h-3" />
@@ -2697,8 +2697,8 @@ export default function Portfolio() {
                 onClick={() => setLeftTab('experience')}
                 className={`flex-grow shrink-0 px-2 py-3.5 text-center border-b-2 transition duration-200 ease-out whitespace-nowrap flex items-center justify-center gap-1 ${
                   leftTab === 'experience'
-                    ? 'border-indigo-500 text-indigo-400'
-                    : 'border-transparent text-slate-500 hover:text-slate-300'
+                    ? 'border-slate-600 text-slate-200'
+                    : 'border-transparent text-slate-500 hover:text-slate-200'
                 }`}
               >
                 <Briefcase className="w-3 h-3" />
@@ -2708,8 +2708,8 @@ export default function Portfolio() {
                 onClick={() => setLeftTab('projects')}
                 className={`flex-grow shrink-0 px-2 py-3.5 text-center border-b-2 transition duration-200 ease-out whitespace-nowrap flex items-center justify-center gap-1 ${
                   leftTab === 'projects'
-                    ? 'border-indigo-500 text-indigo-400'
-                    : 'border-transparent text-slate-500 hover:text-slate-300'
+                    ? 'border-slate-600 text-slate-200'
+                    : 'border-transparent text-slate-500 hover:text-slate-200'
                 }`}
               >
                 <Layers className="w-3 h-3" />
@@ -2719,8 +2719,8 @@ export default function Portfolio() {
                 onClick={() => setLeftTab('design')}
                 className={`flex-grow shrink-0 px-2 py-3.5 text-center border-b-2 transition duration-200 ease-out whitespace-nowrap flex items-center justify-center gap-1 ${
                   leftTab === 'design'
-                    ? 'border-indigo-500 text-indigo-400'
-                    : 'border-transparent text-slate-500 hover:text-slate-300'
+                    ? 'border-slate-600 text-slate-200'
+                    : 'border-transparent text-slate-500 hover:text-slate-200'
                 }`}
               >
                 <Sliders className="w-3 h-3" />
@@ -2735,7 +2735,7 @@ export default function Portfolio() {
                 <div className="space-y-5 animate-fadeIn">
                   <div>
                     <h2 className="text-base font-bold text-white">Upload & Auto-Build Magic</h2>
-                    <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                    <p className="text-xs text-slate-300 mt-1 leading-relaxed">
                       Upload your resume document or paste standard plain text. Jobscan Pro parsing
                       algorithms will extract details to generate your layout instantly.
                     </p>
@@ -2770,16 +2770,16 @@ export default function Portfolio() {
                   )}
 
                   {/* Pro Tip Alert Banner for PDF/Word files */}
-                  <div className="p-4 bg-indigo-950/40 border border-indigo-850 rounded-2xl text-xs space-y-2 text-left animate-fadeIn">
-                    <h4 className="font-bold text-indigo-400 flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 text-indigo-400 animate-pulse" />
+                  <div className="p-4 bg-slate-800/40 border border-indigo-850 rounded-2xl text-xs space-y-2 text-left animate-fadeIn">
+                    <h4 className="font-bold text-slate-200 flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-slate-200 animate-pulse" />
                       <span>💡 High-Fidelity Document Parsing Enabled</span>
                     </h4>
                     <p className="text-[11px] text-slate-350 leading-relaxed">
                       We've integrated <b>PDF.js</b> and <b>Mammoth</b> to extract clean text
                       directly from your documents. You can now:
                     </p>
-                    <ol className="list-decimal pl-5 text-[11px] text-slate-400 space-y-1.5 leading-relaxed">
+                    <ol className="list-decimal pl-5 text-[11px] text-slate-300 space-y-1.5 leading-relaxed">
                       <li>
                         Upload your <b>PDF</b> or <b>Word (.docx)</b> resume directly.
                       </li>
@@ -2795,18 +2795,18 @@ export default function Portfolio() {
                   </div>
 
                   {/* Premium Drag & Drop File Upload Zone */}
-                  <div className="border-2 border-dashed border-slate-800 hover:border-indigo-500/60 rounded-xl p-5 bg-slate-950/30 text-center transition duration-200 ease-out">
+                  <div className="border-2 border-dashed border-slate-800 hover:border-slate-600/60 rounded-xl p-5 bg-slate-950/30 text-center transition duration-200 ease-out">
                     <div className="space-y-2.5">
-                      <div className="w-10 h-10 rounded-full bg-indigo-950/80 text-indigo-400 mx-auto flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-full bg-slate-800/80 text-slate-200 mx-auto flex items-center justify-center">
                         <Download
-                          className="w-5 h-5 animate-bounce"
+                          className="w-5 h-5 animate-pulse"
                           style={{ animationDuration: '2.5s' }}
                         />
                       </div>
                       <div>
                         <label
                           htmlFor="resume-file-upload"
-                          className="text-xs font-bold text-indigo-400 hover:text-indigo-300 hover:underline cursor-pointer block"
+                          className="text-xs font-bold text-slate-200 hover:text-slate-300 hover:underline cursor-pointer block"
                         >
                           Upload PDF, Word, or Text Resume
                         </label>
@@ -2827,7 +2827,7 @@ export default function Portfolio() {
                       />
 
                       {uploadedFileName && (
-                        <div className="inline-flex items-center gap-1.5 bg-indigo-950/40 border border-indigo-900/45 px-3 py-1 rounded-full text-[10px] text-slate-300">
+                        <div className="inline-flex items-center gap-1.5 bg-slate-800/40 border border-indigo-900/45 px-3 py-1 rounded-full text-[10px] text-slate-200">
                           <Check className="w-3 h-3 text-emerald-400 animate-pulse" />
                           <span className="font-semibold truncate max-w-[160px]">
                             {uploadedFileName}
@@ -2841,7 +2841,7 @@ export default function Portfolio() {
                   {uploadedResumeUrl && (
                     <div className="space-y-2 border border-slate-800 rounded-xl p-3 bg-slate-950/50">
                       <div className="flex justify-between items-center px-1">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase">
+                        <span className="text-[10px] font-bold text-slate-300 uppercase">
                           Original Document Preview
                         </span>
                         <button
@@ -2864,7 +2864,7 @@ export default function Portfolio() {
                   {/* Standard Plaintext paste fallback */}
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
-                      <label className="text-xs font-medium text-slate-300">
+                      <label className="text-xs font-medium text-slate-200">
                         Paste plain text here:
                       </label>
                       {rawTextImport.trim().length > 0 && (
@@ -2883,7 +2883,7 @@ export default function Portfolio() {
                       rows={8}
                       value={rawTextImport}
                       onChange={(e) => setRawTextImport(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-300 focus:outline-none focus:border-indigo-500 transition-colors resize-none leading-relaxed"
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 focus:outline-none focus:border-slate-600 transition-colors resize-none leading-relaxed"
                       placeholder="Paste text copied from PDF or Word here... e.g.&#10;&#10;Jane Doe&#10;Senior React Developer&#10;jane.doe@example.com | (555) 123-4567&#10;&#10;Experience:&#10;Enterprise Corp - Senior Developer (2022 - Present)&#10;• Developed and shipped 12 client websites..."
                     ></textarea>
                   </div>
@@ -2910,8 +2910,8 @@ export default function Portfolio() {
                   {savedResumes.length > 0 && (
                     <div className="pt-4 border-t border-slate-800/60 space-y-3">
                       <div className="flex justify-between items-center">
-                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                          <FileCode className="w-3.5 h-3.5 text-indigo-400" />
+                        <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                          <FileCode className="w-3.5 h-3.5 text-slate-200" />
                           <span>📂 Saved Resumes History ({savedResumes.length})</span>
                         </h3>
                         <span className="text-[9px] text-slate-500 font-semibold lowercase">
@@ -2930,8 +2930,8 @@ export default function Portfolio() {
                               onClick={() => loadResumeFromHistory(item.id)}
                               className={`p-3 rounded-xl border text-xs flex justify-between items-center gap-3 transition duration-200 cursor-pointer ${
                                 isActive
-                                  ? 'bg-indigo-950/35 border-indigo-500/60 text-white shadow'
-                                  : 'bg-slate-950/25 border-slate-850 text-slate-400 hover:border-slate-750 hover:bg-slate-950/40'
+                                  ? 'bg-slate-800/35 border-slate-600/60 text-white shadow'
+                                  : 'bg-slate-950/25 border-slate-850 text-slate-300 hover:border-slate-750 hover:bg-slate-950/40'
                               }`}
                             >
                               <div className="min-w-0 space-y-0.5">
@@ -2943,7 +2943,7 @@ export default function Portfolio() {
                                     </span>
                                   )}
                                 </div>
-                                <div className="text-[10px] text-slate-400 truncate">
+                                <div className="text-[10px] text-slate-300 truncate">
                                   {item.title}
                                 </div>
                                 <div className="text-[8px] text-slate-500">Parsed: {item.date}</div>
@@ -2972,7 +2972,7 @@ export default function Portfolio() {
                 <div className="space-y-5 animate-fadeIn">
                   <div>
                     <h2 className="text-base font-bold text-white">Personal details</h2>
-                    <p className="text-xs text-slate-400 mt-1">
+                    <p className="text-xs text-slate-300 mt-1">
                       Update your identity, bio, and professional summary.
                     </p>
                   </div>
@@ -2987,14 +2987,14 @@ export default function Portfolio() {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <span className="text-lg font-black text-slate-400 uppercase">
+                        <span className="text-lg font-black text-slate-300 uppercase">
                           {resumeData.personal.avatar || '??'}
                         </span>
                       )}
                     </div>
 
                     <div className="flex-1 text-center sm:text-left space-y-1">
-                      <label className="text-xs font-bold text-slate-300 block">
+                      <label className="text-xs font-bold text-slate-200 block">
                         Profile Picture
                       </label>
                       <p className="text-[10px] text-slate-500 leading-normal">
@@ -3018,7 +3018,7 @@ export default function Portfolio() {
                         <button
                           type="button"
                           onClick={handleRemoveAvatar}
-                          className="bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-slate-750 text-slate-400 hover:text-slate-350 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer"
+                          className="bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-slate-750 text-slate-300 hover:text-slate-350 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer"
                         >
                           Remove
                         </button>
@@ -3028,40 +3028,40 @@ export default function Portfolio() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-slate-400">Full Name</label>
+                      <label className="text-xs font-semibold text-slate-300">Full Name</label>
                       <input
                         type="text"
                         value={resumeData.personal.name}
                         onChange={(e) => handlePersonalChange('name', e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
+                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-slate-600"
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-slate-400">
+                      <label className="text-xs font-semibold text-slate-300">
                         Professional Title
                       </label>
                       <input
                         type="text"
                         value={resumeData.personal.title}
                         onChange={(e) => handlePersonalChange('title', e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
+                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-slate-600"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-slate-400">Short Tagline</label>
+                    <label className="text-xs font-semibold text-slate-300">Short Tagline</label>
                     <input
                       type="text"
                       value={resumeData.personal.subtitle}
                       onChange={(e) => handlePersonalChange('subtitle', e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
+                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-slate-600"
                     />
                   </div>
 
                   <div className="space-y-1.5">
                     <div className="flex justify-between text-xs">
-                      <label className="font-semibold text-slate-400">
+                      <label className="font-semibold text-slate-300">
                         Biography / Professional Summary
                       </label>
                       <span className="text-slate-500">
@@ -3072,40 +3072,40 @@ export default function Portfolio() {
                       rows={4}
                       value={resumeData.personal.bio}
                       onChange={(e) => handlePersonalChange('bio', e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs text-white focus:outline-none focus:border-indigo-500 resize-none leading-relaxed"
+                      className="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs text-white focus:outline-none focus:border-slate-600 resize-none leading-relaxed"
                     ></textarea>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-slate-400">Email</label>
+                      <label className="text-xs font-semibold text-slate-300">Email</label>
                       <input
                         type="email"
                         value={resumeData.personal.email}
                         onChange={(e) => handlePersonalChange('email', e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
+                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-slate-600"
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-slate-400">Phone Number</label>
+                      <label className="text-xs font-semibold text-slate-300">Phone Number</label>
                       <input
                         type="text"
                         value={resumeData.personal.phone}
                         onChange={(e) => handlePersonalChange('phone', e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
+                        className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-slate-600"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-slate-400">
+                    <label className="text-xs font-semibold text-slate-300">
                       Location (e.g. Austin, TX)
                     </label>
                     <input
                       type="text"
                       value={resumeData.personal.location}
                       onChange={(e) => handlePersonalChange('location', e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500"
+                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-slate-600"
                     />
                   </div>
 
@@ -3156,7 +3156,7 @@ export default function Portfolio() {
                   <div className="flex justify-between items-center">
                     <div>
                       <h2 className="text-base font-bold text-white">Work History Timeline</h2>
-                      <p className="text-xs text-slate-400 mt-1">
+                      <p className="text-xs text-slate-300 mt-1">
                         Add and adjust bullet points for your roles.
                       </p>
                     </div>
@@ -3178,7 +3178,7 @@ export default function Portfolio() {
                           <div>
                             <span className="font-bold text-white">{exp.position}</span>
                             <span className="text-slate-500 mx-1.5">•</span>
-                            <span className="text-slate-400 font-medium">{exp.company}</span>
+                            <span className="text-slate-300 font-medium">{exp.company}</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <span className="text-[10px] text-slate-500 font-semibold">
@@ -3205,7 +3205,7 @@ export default function Portfolio() {
                                   onChange={(e) =>
                                     handleJobChange(exp.id, 'company', e.target.value)
                                   }
-                                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-slate-600"
                                 />
                               </div>
                               <div className="space-y-1">
@@ -3218,7 +3218,7 @@ export default function Portfolio() {
                                   onChange={(e) =>
                                     handleJobChange(exp.id, 'position', e.target.value)
                                   }
-                                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-slate-600"
                                 />
                               </div>
                             </div>
@@ -3234,7 +3234,7 @@ export default function Portfolio() {
                                   onChange={(e) =>
                                     handleJobChange(exp.id, 'period', e.target.value)
                                   }
-                                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-slate-600"
                                 />
                               </div>
                               <div className="space-y-1">
@@ -3247,7 +3247,7 @@ export default function Portfolio() {
                                   onChange={(e) =>
                                     handleJobChange(exp.id, 'location', e.target.value)
                                   }
-                                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-slate-600"
                                 />
                               </div>
                             </div>
@@ -3260,7 +3260,7 @@ export default function Portfolio() {
                                 </label>
                                 <button
                                   onClick={() => handleAddBullet(exp.id)}
-                                  className="text-[10px] text-indigo-400 hover:text-indigo-300 font-semibold flex items-center gap-1"
+                                  className="text-[10px] text-slate-200 hover:text-slate-300 font-semibold flex items-center gap-1"
                                 >
                                   <Plus className="w-3 h-3" />
                                   <span>Add Bullet</span>
@@ -3277,7 +3277,7 @@ export default function Portfolio() {
                                       onChange={(e) =>
                                         handleBulletChange(exp.id, bulletIdx, e.target.value)
                                       }
-                                      className="w-full bg-slate-950 border border-slate-850 rounded-lg p-2 text-xs text-slate-300 focus:outline-none focus:border-indigo-500 resize-none"
+                                      className="w-full bg-slate-950 border border-slate-850 rounded-lg p-2 text-xs text-slate-200 focus:outline-none focus:border-slate-600 resize-none"
                                     />
                                     <button
                                       onClick={() => handleRemoveBullet(exp.id, bulletIdx)}
@@ -3308,7 +3308,7 @@ export default function Portfolio() {
                                       .filter(Boolean)
                                   )
                                 }
-                                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                                className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-slate-600"
                                 placeholder="React, TypeScript, CSS"
                               />
                             </div>
@@ -3332,7 +3332,7 @@ export default function Portfolio() {
                   {/* Add New Job Block */}
                   <div className="border border-dashed border-slate-800 rounded-xl p-4 bg-slate-950/10 space-y-4">
                     <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
-                      <Plus className="w-3.5 h-3.5 text-indigo-400" />
+                      <Plus className="w-3.5 h-3.5 text-slate-200" />
                       <span>Add New Experience</span>
                     </h3>
 
@@ -3344,7 +3344,7 @@ export default function Portfolio() {
                         onChange={(e) =>
                           setNewJob((prev) => ({ ...prev, company: e.target.value }))
                         }
-                        className="bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                        className="bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-slate-600"
                       />
                       <input
                         type="text"
@@ -3353,7 +3353,7 @@ export default function Portfolio() {
                         onChange={(e) =>
                           setNewJob((prev) => ({ ...prev, position: e.target.value }))
                         }
-                        className="bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                        className="bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-slate-600"
                       />
                     </div>
 
@@ -3363,7 +3363,7 @@ export default function Portfolio() {
                         placeholder="Period (e.g. 2024)"
                         value={newJob.period}
                         onChange={(e) => setNewJob((prev) => ({ ...prev, period: e.target.value }))}
-                        className="bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                        className="bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-slate-600"
                       />
                       <input
                         type="text"
@@ -3372,7 +3372,7 @@ export default function Portfolio() {
                         onChange={(e) =>
                           setNewJob((prev) => ({ ...prev, location: e.target.value }))
                         }
-                        className="bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                        className="bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-slate-600"
                       />
                     </div>
 
@@ -3381,13 +3381,13 @@ export default function Portfolio() {
                       placeholder="Technologies (comma separated, e.g. Python, AWS)"
                       value={newJobTechInput}
                       onChange={(e) => setNewJobTechInput(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                      className="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-slate-600"
                     />
 
                     <button
                       onClick={handleAddJob}
                       disabled={!newJob.company || !newJob.position}
-                      className="w-full bg-slate-800 hover:bg-slate-750 disabled:bg-slate-900 text-slate-300 disabled:text-slate-600 py-2 rounded-lg text-xs font-bold transition-colors"
+                      className="w-full bg-slate-800 hover:bg-slate-750 disabled:bg-slate-900 text-slate-200 disabled:text-slate-600 py-2 rounded-lg text-xs font-bold transition-colors"
                     >
                       Append Experience to Timeline
                     </button>
@@ -3402,7 +3402,7 @@ export default function Portfolio() {
                   <div className="space-y-6">
                     <div>
                       <h2 className="text-base font-bold text-white">Projects Showcase</h2>
-                      <p className="text-xs text-slate-400 mt-1">
+                      <p className="text-xs text-slate-300 mt-1">
                         Detail key personal projects and custom code implementations.
                       </p>
                     </div>
@@ -3425,7 +3425,7 @@ export default function Portfolio() {
                           >
                             <div className="flex items-center gap-2">
                               <span className="font-bold text-white">{proj.title}</span>
-                              <span className="text-[10px] bg-indigo-950 text-indigo-300 px-1.5 py-0.5 rounded-md font-semibold">
+                              <span className="text-[10px] bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded-md font-semibold">
                                 {proj.category}
                               </span>
                             </div>
@@ -3461,7 +3461,7 @@ export default function Portfolio() {
                                     onChange={(e) =>
                                       handleProjChange(proj.id, 'category', e.target.value)
                                     }
-                                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-300 focus:outline-none"
+                                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none"
                                   >
                                     <option value="Frontend">Frontend</option>
                                     <option value="Backend">Backend</option>
@@ -3565,7 +3565,7 @@ export default function Portfolio() {
                     {/* Add new project */}
                     <div className="border border-dashed border-slate-800 rounded-xl p-4 bg-slate-950/10 space-y-4">
                       <h3 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
-                        <Plus className="w-3.5 h-3.5 text-indigo-400" />
+                        <Plus className="w-3.5 h-3.5 text-slate-200" />
                         <span>Add New Project</span>
                       </h3>
 
@@ -3577,7 +3577,7 @@ export default function Portfolio() {
                           onChange={(e) =>
                             setNewProj((prev) => ({ ...prev, title: e.target.value }))
                           }
-                          className="bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                          className="bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-slate-600"
                         />
                         <select
                           value={newProj.category}
@@ -3587,7 +3587,7 @@ export default function Portfolio() {
                               category: e.target.value as Project['category'],
                             }))
                           }
-                          className="bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-indigo-500"
+                          className="bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-slate-600"
                         >
                           <option value="Frontend">Frontend</option>
                           <option value="Backend">Backend</option>
@@ -3605,7 +3605,7 @@ export default function Portfolio() {
                         onChange={(e) =>
                           setNewProj((prev) => ({ ...prev, description: e.target.value }))
                         }
-                        className="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                        className="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-slate-600"
                       />
 
                       <input
@@ -3619,7 +3619,7 @@ export default function Portfolio() {
                       <button
                         onClick={handleAddProj}
                         disabled={!newProj.title || !newProj.description}
-                        className="w-full bg-slate-800 hover:bg-slate-750 disabled:bg-slate-900 text-slate-300 disabled:text-slate-600 py-2 rounded-lg text-xs font-bold transition-colors"
+                        className="w-full bg-slate-800 hover:bg-slate-750 disabled:bg-slate-900 text-slate-200 disabled:text-slate-600 py-2 rounded-lg text-xs font-bold transition-colors"
                       >
                         Insert Project Card
                       </button>
@@ -3630,7 +3630,7 @@ export default function Portfolio() {
                   <div className="border-t border-slate-800 pt-6 space-y-6">
                     <div>
                       <h2 className="text-base font-bold text-white">Skills & Fluencies</h2>
-                      <p className="text-xs text-slate-400 mt-1">
+                      <p className="text-xs text-slate-300 mt-1">
                         Calibrate skill score levels and category allocations.
                       </p>
                     </div>
@@ -3645,7 +3645,7 @@ export default function Portfolio() {
                           onChange={(e) =>
                             setNewSkill((prev) => ({ ...prev, name: e.target.value }))
                           }
-                          className="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                          className="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-slate-600"
                         />
 
                         <select
@@ -3656,7 +3656,7 @@ export default function Portfolio() {
                               category: e.target.value as Skill['category'],
                             }))
                           }
-                          className="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-indigo-500"
+                          className="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-slate-600"
                         >
                           <option value="Frontend">Frontend</option>
                           <option value="Backend">Backend</option>
@@ -3668,7 +3668,7 @@ export default function Portfolio() {
                       </div>
 
                       <div className="flex flex-col justify-between">
-                        <span className="text-[10px] text-slate-400 text-center font-semibold">
+                        <span className="text-[10px] text-slate-300 text-center font-semibold">
                           Level: {newSkill.level}%
                         </span>
                         <input
@@ -3718,7 +3718,7 @@ export default function Portfolio() {
                               }
                               className="w-full accent-indigo-500 cursor-pointer"
                             />
-                            <span className="w-8 text-right text-slate-400 font-semibold">
+                            <span className="w-8 text-right text-slate-300 font-semibold">
                               {skill.level}%
                             </span>
                           </div>
@@ -3738,7 +3738,7 @@ export default function Portfolio() {
                   <div className="border-t border-slate-800 pt-6 space-y-6">
                     <div>
                       <h2 className="text-base font-bold text-white">Academics & Education</h2>
-                      <p className="text-xs text-slate-400 mt-1">
+                      <p className="text-xs text-slate-300 mt-1">
                         Manage school enrollment, degrees, locations, and achievements.
                       </p>
                     </div>
@@ -3761,7 +3761,7 @@ export default function Portfolio() {
                                 <span className="font-bold text-white">
                                   {edu.institution || 'New Institution'}
                                 </span>
-                                <span className="text-[10px] text-indigo-400 font-medium">
+                                <span className="text-[10px] text-slate-200 font-medium">
                                   {edu.degree} {edu.fieldOfStudy ? `in ${edu.fieldOfStudy}` : ''}
                                 </span>
                               </div>
@@ -3888,7 +3888,7 @@ export default function Portfolio() {
 
                     {/* Quick Add Education */}
                     <div className="bg-slate-950/40 p-4 rounded-xl border border-slate-850 space-y-3">
-                      <span className="text-xs font-bold text-slate-300 block">
+                      <span className="text-xs font-bold text-slate-200 block">
                         Add New School / Degree
                       </span>
                       <div className="grid grid-cols-2 gap-3">
@@ -3899,7 +3899,7 @@ export default function Portfolio() {
                           onChange={(e) =>
                             setNewEducation((prev) => ({ ...prev, institution: e.target.value }))
                           }
-                          className="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                          className="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-slate-600"
                         />
                         <input
                           type="text"
@@ -3908,7 +3908,7 @@ export default function Portfolio() {
                           onChange={(e) =>
                             setNewEducation((prev) => ({ ...prev, degree: e.target.value }))
                           }
-                          className="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                          className="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-slate-600"
                         />
                       </div>
                       <div className="grid grid-cols-2 gap-3">
@@ -3919,7 +3919,7 @@ export default function Portfolio() {
                           onChange={(e) =>
                             setNewEducation((prev) => ({ ...prev, fieldOfStudy: e.target.value }))
                           }
-                          className="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                          className="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-slate-600"
                         />
                         <input
                           type="text"
@@ -3928,7 +3928,7 @@ export default function Portfolio() {
                           onChange={(e) =>
                             setNewEducation((prev) => ({ ...prev, location: e.target.value }))
                           }
-                          className="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                          className="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-slate-600"
                         />
                       </div>
                       <div className="grid grid-cols-2 gap-3">
@@ -3939,7 +3939,7 @@ export default function Portfolio() {
                           onChange={(e) =>
                             setNewEducation((prev) => ({ ...prev, period: e.target.value }))
                           }
-                          className="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                          className="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-slate-600"
                         />
                         <input
                           type="text"
@@ -3948,13 +3948,13 @@ export default function Portfolio() {
                           onChange={(e) =>
                             setNewEducation((prev) => ({ ...prev, grade: e.target.value }))
                           }
-                          className="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                          className="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-slate-600"
                         />
                       </div>
                       <button
                         onClick={handleAddEdu}
                         disabled={!newEducation.institution || !newEducation.degree}
-                        className="w-full bg-slate-800 hover:bg-slate-750 disabled:bg-slate-900 text-slate-300 disabled:text-slate-600 py-2 rounded-lg text-xs font-bold transition-colors"
+                        className="w-full bg-slate-800 hover:bg-slate-750 disabled:bg-slate-900 text-slate-200 disabled:text-slate-600 py-2 rounded-lg text-xs font-bold transition-colors"
                       >
                         Insert Education Entry
                       </button>
@@ -3965,7 +3965,7 @@ export default function Portfolio() {
                   <div className="border-t border-slate-800 pt-6 space-y-6">
                     <div>
                       <h2 className="text-base font-bold text-white">Awards & Certifications</h2>
-                      <p className="text-xs text-slate-400 mt-1">
+                      <p className="text-xs text-slate-300 mt-1">
                         Showcase your industry certifications, accolades, and honors.
                       </p>
                     </div>
@@ -3988,7 +3988,7 @@ export default function Portfolio() {
                                 <span className="font-bold text-white">
                                   {cert.name || 'New Credential'}
                                 </span>
-                                <span className="text-[10px] text-indigo-400 font-medium">
+                                <span className="text-[10px] text-slate-200 font-medium">
                                   Issuer: {cert.issuer}
                                 </span>
                               </div>
@@ -4084,7 +4084,7 @@ export default function Portfolio() {
 
                     {/* Quick Add Certificate */}
                     <div className="bg-slate-950/40 p-4 rounded-xl border border-slate-850 space-y-3">
-                      <span className="text-xs font-bold text-slate-300 block">
+                      <span className="text-xs font-bold text-slate-200 block">
                         Add New Certificate / Award
                       </span>
                       <div className="grid grid-cols-2 gap-3">
@@ -4095,7 +4095,7 @@ export default function Portfolio() {
                           onChange={(e) =>
                             setNewCertificate((prev) => ({ ...prev, name: e.target.value }))
                           }
-                          className="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                          className="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-slate-600"
                         />
                         <input
                           type="text"
@@ -4104,7 +4104,7 @@ export default function Portfolio() {
                           onChange={(e) =>
                             setNewCertificate((prev) => ({ ...prev, issuer: e.target.value }))
                           }
-                          className="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                          className="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-slate-600"
                         />
                       </div>
                       <div className="grid grid-cols-2 gap-3">
@@ -4115,7 +4115,7 @@ export default function Portfolio() {
                           onChange={(e) =>
                             setNewCertificate((prev) => ({ ...prev, date: e.target.value }))
                           }
-                          className="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                          className="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-slate-600"
                         />
                         <input
                           type="text"
@@ -4124,13 +4124,13 @@ export default function Portfolio() {
                           onChange={(e) =>
                             setNewCertificate((prev) => ({ ...prev, link: e.target.value }))
                           }
-                          className="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+                          className="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-slate-600"
                         />
                       </div>
                       <button
                         onClick={handleAddCert}
                         disabled={!newCertificate.name || !newCertificate.issuer}
-                        className="w-full bg-slate-800 hover:bg-slate-750 disabled:bg-slate-900 text-slate-300 disabled:text-slate-600 py-2 rounded-lg text-xs font-bold transition-colors"
+                        className="w-full bg-slate-800 hover:bg-slate-750 disabled:bg-slate-900 text-slate-200 disabled:text-slate-600 py-2 rounded-lg text-xs font-bold transition-colors"
                       >
                         Insert Certificate / Award
                       </button>
@@ -4144,14 +4144,14 @@ export default function Portfolio() {
                 <div className="space-y-6 animate-fadeIn">
                   <div>
                     <h2 className="text-base font-bold text-white">Layouts & Theme Palettes</h2>
-                    <p className="text-xs text-slate-400 mt-1">
+                    <p className="text-xs text-slate-300 mt-1">
                       Fine tune details to change the style of your website.
                     </p>
                   </div>
 
                   {/* Theme presets */}
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
+                    <label className="text-xs font-bold text-slate-300 uppercase tracking-wider block">
                       Theme Engine
                     </label>
                     <div className="grid grid-cols-2 gap-2.5">
@@ -4173,11 +4173,11 @@ export default function Portfolio() {
                           className={`p-3 text-left rounded-xl border transition duration-200 ease-out cursor-pointer ${
                             themeSettings.id === t.id
                               ? appTheme === 'nord-light'
-                                ? 'bg-indigo-600 border-indigo-500 text-white shadow-sm'
-                                : 'bg-indigo-950/40 border-indigo-500 text-white'
+                                ? 'bg-indigo-600 border-slate-600 text-white shadow-sm'
+                                : 'bg-slate-800/40 border-slate-600 text-white'
                               : appTheme === 'nord-light'
                                 ? 'bg-white border-slate-200 text-slate-650 hover:border-slate-350'
-                                : 'bg-slate-950/40 border-slate-850 text-slate-400 hover:border-slate-750'
+                                : 'bg-slate-950/40 border-slate-850 text-slate-300 hover:border-slate-750'
                           }`}
                         >
                           <span className="text-xs font-bold block">{t.label}</span>
@@ -4189,7 +4189,7 @@ export default function Portfolio() {
 
                   {/* Primary Color Presets */}
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
+                    <label className="text-xs font-bold text-slate-300 uppercase tracking-wider block">
                       Primary Accent Color
                     </label>
                     <div className="flex items-center gap-3.5 py-2 bg-slate-950/30 rounded-xl border border-slate-850 px-4">
@@ -4230,14 +4230,14 @@ export default function Portfolio() {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <span className="text-lg font-black text-slate-400 uppercase">
+                        <span className="text-lg font-black text-slate-300 uppercase">
                           {resumeData.personal.avatar || '??'}
                         </span>
                       )}
                     </div>
 
                     <div className="flex-1 text-center sm:text-left space-y-1">
-                      <label className="text-xs font-bold text-slate-300 block">
+                      <label className="text-xs font-bold text-slate-200 block">
                         Profile Picture
                       </label>
                       <p className="text-[10px] text-slate-500 leading-normal">
@@ -4260,7 +4260,7 @@ export default function Portfolio() {
                         <button
                           type="button"
                           onClick={handleRemoveAvatar}
-                          className="bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-slate-750 text-slate-400 hover:text-slate-350 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer"
+                          className="bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-slate-750 text-slate-300 hover:text-slate-350 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer"
                         >
                           Remove
                         </button>
@@ -4270,7 +4270,7 @@ export default function Portfolio() {
 
                   {/* Typography Controls */}
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
+                    <label className="text-xs font-bold text-slate-300 uppercase tracking-wider block">
                       Font Family
                     </label>
                     <div
@@ -4298,7 +4298,7 @@ export default function Portfolio() {
                               ? 'bg-indigo-600 text-white shadow-sm'
                               : appTheme === 'nord-light'
                                 ? 'text-slate-550 hover:text-slate-900'
-                                : 'text-slate-500 hover:text-slate-300'
+                                : 'text-slate-500 hover:text-slate-200'
                           }`}
                         >
                           <span className={font.font}>{font.label}</span>
@@ -4333,7 +4333,7 @@ export default function Portfolio() {
                       <div
                         className={`w-4.5 h-4.5 rounded-full bg-white absolute top-[3px] transition duration-200 ease-out flex items-center justify-center text-[8px] ${
                           themeSettings.darkMode
-                            ? 'left-[25px] text-indigo-600'
+                            ? 'left-[25px] text-slate-200'
                             : 'left-[4px] text-slate-500'
                         }`}
                       >
@@ -4371,11 +4371,11 @@ export default function Portfolio() {
                           className={`p-2.5 text-left rounded-xl border transition duration-200 ease-out cursor-pointer ${
                             appTheme === t.id
                               ? appTheme === 'nord-light'
-                                ? 'bg-indigo-600 border-indigo-500 text-white shadow-sm'
-                                : 'bg-indigo-950/40 border-indigo-500 text-white'
+                                ? 'bg-indigo-600 border-slate-600 text-white shadow-sm'
+                                : 'bg-slate-800/40 border-slate-600 text-white'
                               : appTheme === 'nord-light'
                                 ? 'bg-white border-slate-200 text-slate-650 hover:border-slate-350'
-                                : 'bg-slate-950/40 border-slate-850 text-slate-400 hover:border-slate-750'
+                                : 'bg-slate-950/40 border-slate-850 text-slate-300 hover:border-slate-750'
                           }`}
                         >
                           <span className="text-xs font-bold block">{t.label}</span>
@@ -4395,7 +4395,7 @@ export default function Portfolio() {
               <span>© {new Date().getFullYear()} ProPortfolio Builder</span>
               <span>
                 Developed by{' '}
-                <span className="text-slate-400 font-semibold">Swetaprangya Sahoo</span>
+                <span className="text-slate-300 font-semibold">Swetaprangya Sahoo</span>
               </span>
             </div>
           </div>
@@ -4488,7 +4488,7 @@ export default function Portfolio() {
             {rightTab === 'interview' && (
               <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500">
                 <span className="hidden sm:inline">AI Provider:</span>
-                <span className="text-[11px] px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-violet-400">
+                <span className="text-[11px] px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-200">
                   {aiProvider === 'groq'
                     ? 'Groq (Llama 3)'
                     : aiProvider === 'openrouter'
@@ -4501,7 +4501,7 @@ export default function Portfolio() {
             {rightTab === 'inbox' && (
               <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500">
                 <span className="hidden sm:inline">Total Leads:</span>
-                <span className="text-[11px] px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-indigo-400">
+                <span className="text-[11px] px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-slate-200">
                   {contactMessages.length}
                 </span>
               </div>
@@ -4515,7 +4515,7 @@ export default function Portfolio() {
               <div className="space-y-6 animate-fadeIn">
                 <div>
                   <h2 className="text-base font-bold text-white">AI Coach & ATS Keyword Scanner</h2>
-                  <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                  <p className="text-xs text-slate-300 mt-1 leading-relaxed">
                     Double-check ATS readability, audit layout parsing structures, and optimize
                     target keywords.
                   </p>
@@ -4535,8 +4535,8 @@ export default function Portfolio() {
                       onClick={() => setCoachSubTab(tab.id as any)}
                       className={`flex-1 px-2 py-2.5 text-center border-b-2 whitespace-nowrap transition-colors cursor-pointer ${
                         coachSubTab === tab.id
-                          ? 'border-indigo-500 text-indigo-400'
-                          : 'border-transparent text-slate-500 hover:text-slate-300'
+                          ? 'border-slate-600 text-slate-200'
+                          : 'border-transparent text-slate-500 hover:text-slate-200'
                       }`}
                     >
                       {tab.label}
@@ -4562,7 +4562,7 @@ export default function Portfolio() {
 
                       <div className="col-span-2 pl-2 space-y-1.5">
                         <div className="flex justify-between text-xs font-bold">
-                          <span className="text-slate-400">Layout Quality Score</span>
+                          <span className="text-slate-300">Layout Quality Score</span>
                           <span className={activeAnalysis.color.split(' ')[0]}>
                             {activeAnalysis.score}/100
                           </span>
@@ -4571,7 +4571,7 @@ export default function Portfolio() {
                         {/* Progress bar */}
                         <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
                           <div
-                            className={`h-full rounded-full bg-indigo-500 transition duration-500`}
+                            className={`h-full rounded-full bg-slate-700 transition duration-500`}
                             style={{ width: `${activeAnalysis.score}%` }}
                           ></div>
                         </div>
@@ -4585,7 +4585,7 @@ export default function Portfolio() {
 
                     {/* Recommendations list */}
                     <div className="space-y-3">
-                      <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider block">
+                      <h3 className="text-xs font-bold uppercase text-slate-300 tracking-wider block">
                         Improvement Recommendations
                       </h3>
 
@@ -4606,7 +4606,7 @@ export default function Portfolio() {
                                     +{rec.scoreImpact} pts
                                   </span>
                                 </h4>
-                                <p className="text-slate-400 text-[11px]">{rec.description}</p>
+                                <p className="text-slate-300 text-[11px]">{rec.description}</p>
                               </div>
                             </div>
                           ))}
@@ -4633,25 +4633,25 @@ export default function Portfolio() {
                         <span className="text-[9px] font-bold uppercase text-slate-500 tracking-wider text-center">
                           Overall ATS Match
                         </span>
-                        <span className="text-3xl font-extrabold mt-1.5 text-indigo-400">
+                        <span className="text-3xl font-extrabold mt-1.5 text-slate-200">
                           {activeAtsAnalysis.overallAtsScore}%
                         </span>
                       </div>
 
                       <div className="col-span-2 pl-2 space-y-1">
                         <div className="flex justify-between text-xs">
-                          <span className="text-slate-400 font-semibold">
+                          <span className="text-slate-300 font-semibold">
                             Keyword Density Score
                           </span>
-                          <span className="text-indigo-300 font-bold">
+                          <span className="text-slate-300 font-bold">
                             {activeAtsAnalysis.matchScore}%
                           </span>
                         </div>
                         <div className="flex justify-between text-xs">
-                          <span className="text-slate-400 font-semibold">
+                          <span className="text-slate-300 font-semibold">
                             Compliance Format Score
                           </span>
-                          <span className="text-indigo-300 font-bold">
+                          <span className="text-slate-300 font-bold">
                             {activeAtsAnalysis.complianceScore}%
                           </span>
                         </div>
@@ -4665,7 +4665,7 @@ export default function Portfolio() {
 
                     {/* Job Description paste field */}
                     <div className="space-y-1.5">
-                      <label className="text-[10px] uppercase font-bold text-slate-400">
+                      <label className="text-[10px] uppercase font-bold text-slate-300">
                         Target Job Description
                       </label>
                       <textarea
@@ -4673,19 +4673,19 @@ export default function Portfolio() {
                         value={jobDescription}
                         onChange={(e) => setJobDescription(e.target.value)}
                         placeholder="Paste target requirements here... e.g. 'Seeking 5+ years experience in React, TypeScript, AWS Cloud, Jest, Docker...'"
-                        className="w-full bg-slate-950 border border-slate-850 rounded-lg p-2.5 text-xs text-slate-300 focus:outline-none resize-none"
+                        className="w-full bg-slate-950 border border-slate-850 rounded-lg p-2.5 text-xs text-slate-200 focus:outline-none resize-none"
                       />
                     </div>
 
                     {/* Premium AI Auto-Optimizer Section */}
-                    <div className="p-4 rounded-2xl bg-gradient-to-br from-indigo-950/50 to-violet-950/40 border border-indigo-800/50 space-y-4">
+                    <div className="p-4 rounded-2xl bg-slate-900/50 border border-slate-800/50 space-y-4">
                       <div className="flex justify-between items-start">
                         <div>
-                          <h3 className="text-xs font-bold text-indigo-350 uppercase tracking-wider flex items-center gap-1.5">
-                            <Sparkles className="w-3.5 h-3.5 text-indigo-400 animate-pulse" />
+                          <h3 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                            <Sparkles className="w-3.5 h-3.5 text-slate-200 animate-pulse" />
                             <span>Jobscan Auto-Score Optimizer</span>
                           </h3>
-                          <p className="text-[10px] text-slate-400 mt-0.5 leading-relaxed">
+                          <p className="text-[10px] text-slate-300 mt-0.5 leading-relaxed">
                             Generate an optimized copy in the <b>exact same format & design</b>{' '}
                             instantly.
                           </p>
@@ -4706,7 +4706,7 @@ export default function Portfolio() {
                             <p className="text-[10px] font-bold text-amber-400">
                               Placeholder Data Detected
                             </p>
-                            <p className="text-[9px] text-slate-400 leading-relaxed">
+                            <p className="text-[9px] text-slate-300 leading-relaxed">
                               You are currently viewing the default sample profile (Alex Rivera).
                               For best results, go to the <b>Import</b> tab to upload your own
                               resume first!
@@ -4723,12 +4723,12 @@ export default function Portfolio() {
                               <span className="text-[9px] font-bold uppercase text-slate-500 block">
                                 Current Score
                               </span>
-                              <span className="text-xl font-extrabold text-slate-300 mt-1 block">
+                              <span className="text-xl font-extrabold text-slate-200 mt-1 block">
                                 {atsAnalysis.overallAtsScore}%
                               </span>
                             </div>
-                            <div className="p-2.5 rounded-xl bg-indigo-950/40 border border-indigo-900/40 animate-pulse">
-                              <span className="text-[9px] font-bold uppercase text-indigo-400 block">
+                            <div className="p-2.5 rounded-xl bg-slate-800/40 border border-indigo-900/40 animate-pulse">
+                              <span className="text-[9px] font-bold uppercase text-slate-200 block">
                                 Revised Score
                               </span>
                               <span className="text-xl font-extrabold text-emerald-400 mt-1 block">
@@ -4743,8 +4743,8 @@ export default function Portfolio() {
                               onClick={() => setShowRevisedPreview(true)}
                               className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold border transition duration-200 ease-out cursor-pointer ${
                                 showRevisedPreview
-                                  ? 'bg-indigo-900/45 border-indigo-500 text-indigo-300'
-                                  : 'border-slate-800 text-slate-400 hover:text-slate-300'
+                                  ? 'bg-slate-800/45 border-slate-600 text-slate-300'
+                                  : 'border-slate-800 text-slate-300 hover:text-slate-200'
                               }`}
                             >
                               👁️ View Revised Preview
@@ -4754,7 +4754,7 @@ export default function Portfolio() {
                               className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold border transition duration-200 ease-out cursor-pointer ${
                                 !showRevisedPreview
                                   ? 'bg-slate-800 border-slate-700 text-slate-350'
-                                  : 'border-slate-800 text-slate-400 hover:text-slate-300'
+                                  : 'border-slate-800 text-slate-300 hover:text-slate-200'
                               }`}
                             >
                               👁️ View Original Preview
@@ -4763,9 +4763,9 @@ export default function Portfolio() {
 
                           <button
                             onClick={() => setShowOptimizerModal(true)}
-                            className="w-full py-2.5 bg-indigo-600/20 hover:bg-indigo-600/40 border border-indigo-500/30 text-indigo-300 rounded-xl text-[10px] font-black tracking-wider transition duration-200 ease-out cursor-pointer flex items-center justify-center gap-2 shadow-sm"
+                            className="w-full py-2.5 bg-indigo-600/20 hover:bg-indigo-600/40 border border-slate-600/30 text-slate-300 rounded-xl text-[10px] font-black tracking-wider transition duration-200 ease-out cursor-pointer flex items-center justify-center gap-2 shadow-sm"
                           >
-                            <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+                            <Sparkles className="w-3.5 h-3.5 text-slate-200" />
                             <span>REVIEW AI DRAFT INTERACTIVELY</span>
                           </button>
 
@@ -4775,7 +4775,7 @@ export default function Portfolio() {
                               onClick={() => handleWordDownload()}
                               className="bg-slate-950 hover:bg-slate-900 border border-slate-850 text-slate-200 text-[10px] py-2 rounded-lg font-bold transition-colors cursor-pointer flex items-center justify-center gap-1"
                             >
-                              <FileText className="w-3 h-3 text-indigo-400" />
+                              <FileText className="w-3 h-3 text-slate-200" />
                               <span>Download Word (.doc)</span>
                             </button>
 
@@ -4793,7 +4793,7 @@ export default function Portfolio() {
                             <span className="text-[9px] font-bold uppercase text-slate-500 block">
                               AI Adjustments Applied:
                             </span>
-                            <ul className="space-y-1 pl-4 list-disc text-slate-400 leading-relaxed">
+                            <ul className="space-y-1 pl-4 list-disc text-slate-300 leading-relaxed">
                               {appliedFixes.map((fix, i) => (
                                 <li key={i}>{fix}</li>
                               ))}
@@ -4814,7 +4814,7 @@ export default function Portfolio() {
 
                     {/* Jobscan Recruiter Findings Checklist */}
                     <div className="space-y-2.5">
-                      <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">
+                      <span className="text-[10px] uppercase font-bold text-slate-300 tracking-wider block">
                         Recruiter Optimization Findings
                       </span>
 
@@ -4831,7 +4831,7 @@ export default function Portfolio() {
                                   ({insight.value})
                                 </span>
                               </div>
-                              <p className="text-[11px] text-slate-400">{insight.tip}</p>
+                              <p className="text-[11px] text-slate-300">{insight.tip}</p>
                             </div>
 
                             <span
@@ -4851,7 +4851,7 @@ export default function Portfolio() {
                     {/* Hard & Soft Skills Density Analysis */}
                     <div className="space-y-3 border-t border-slate-800/60 pt-4">
                       <div className="flex justify-between items-center">
-                        <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                        <span className="text-[10px] uppercase font-bold text-slate-300 tracking-wider">
                           Keyword Density Analysis
                         </span>
                         <span className="text-[9px] text-slate-500">
@@ -4875,7 +4875,7 @@ export default function Portfolio() {
                             </div>
 
                             <div className="text-right">
-                              <div className="text-slate-300 font-bold">
+                              <div className="text-slate-200 font-bold">
                                 {density.count} matches
                               </div>
                               <div className="text-[9px] text-slate-500">
@@ -4889,7 +4889,7 @@ export default function Portfolio() {
 
                     {/* ATS formatting checklist */}
                     <div className="space-y-2 border-t border-slate-800/60 pt-4">
-                      <span className="text-[10px] uppercase font-bold text-slate-400">
+                      <span className="text-[10px] uppercase font-bold text-slate-300">
                         ATS Compliance Checklist
                       </span>
                       <div className="space-y-1.5 text-xs">
@@ -4930,21 +4930,21 @@ export default function Portfolio() {
                         <span className="text-[9px] font-bold uppercase text-slate-500 tracking-wider text-center">
                           Cover Letter Match
                         </span>
-                        <span className="text-3xl font-extrabold mt-1.5 text-indigo-450">
+                        <span className="text-3xl font-extrabold mt-1.5 text-slate-200">
                           {coverLetterAnalysis.score}%
                         </span>
                       </div>
 
                       <div className="col-span-2 pl-2 space-y-1">
                         <div className="flex justify-between text-xs">
-                          <span className="text-slate-400">Word Count</span>
-                          <span className="text-slate-300 font-bold">
+                          <span className="text-slate-300">Word Count</span>
+                          <span className="text-slate-200 font-bold">
                             {coverLetterAnalysis.wordCount} words
                           </span>
                         </div>
                         <div className="flex justify-between text-xs">
-                          <span className="text-slate-400">Keyword Matches</span>
-                          <span className="text-slate-300 font-bold">
+                          <span className="text-slate-300">Keyword Matches</span>
+                          <span className="text-slate-200 font-bold">
                             {coverLetterAnalysis.matchedKeywords.length} matched
                           </span>
                         </div>
@@ -4956,7 +4956,7 @@ export default function Portfolio() {
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-[10px] uppercase font-bold text-slate-400 block">
+                      <label className="text-[10px] uppercase font-bold text-slate-300 block">
                         Paste Cover Letter
                       </label>
                       <textarea
@@ -4964,13 +4964,13 @@ export default function Portfolio() {
                         value={coverLetter}
                         onChange={(e) => setCoverLetter(e.target.value)}
                         placeholder="Paste cover letter content here...&#10;e.g. 'Dear Hiring Manager, I am thrilled to apply for the Senior React Developer role...'"
-                        className="w-full bg-slate-950 border border-slate-850 rounded-lg p-3 text-xs text-slate-300 focus:outline-none"
+                        className="w-full bg-slate-950 border border-slate-850 rounded-lg p-3 text-xs text-slate-200 focus:outline-none"
                       />
                     </div>
 
                     {/* Cover Letter Insights */}
                     <div className="space-y-2">
-                      <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">
+                      <span className="text-[10px] uppercase font-bold text-slate-300 tracking-wider block">
                         Jobscan Cover Letter Audits
                       </span>
                       <div className="space-y-1.5 text-xs">
@@ -4979,10 +4979,10 @@ export default function Portfolio() {
                             key={i}
                             className="p-2.5 rounded bg-slate-950/20 border border-slate-850 flex items-start gap-2"
                           >
-                            <div className="p-0.5 rounded bg-indigo-950 text-indigo-400 flex-shrink-0 mt-0.5">
+                            <div className="p-0.5 rounded bg-slate-800 text-slate-200 flex-shrink-0 mt-0.5">
                               <Check className="w-3.5 h-3.5" />
                             </div>
-                            <span className="text-slate-300 leading-relaxed">{insight}</span>
+                            <span className="text-slate-200 leading-relaxed">{insight}</span>
                           </div>
                         ))}
                       </div>
@@ -4990,13 +4990,13 @@ export default function Portfolio() {
 
                     {/* Matched vs Missing in Cover Letter */}
                     <div className="grid grid-cols-2 gap-3">
-                      <div className="p-3 rounded-xl bg-indigo-950/10 border border-indigo-900/35 space-y-1.5">
-                        <span className="text-[9px] font-bold text-indigo-400 uppercase tracking-wider block">
+                      <div className="p-3 rounded-xl bg-slate-800/10 border border-indigo-900/35 space-y-1.5">
+                        <span className="text-[9px] font-bold text-slate-200 uppercase tracking-wider block">
                           Matches ({coverLetterAnalysis.matchedKeywords.length})
                         </span>
                         <div className="flex flex-wrap gap-1 text-[9px]">
                           {coverLetterAnalysis.matchedKeywords.map((kw) => (
-                            <span key={kw} className="px-1 rounded bg-indigo-950 text-indigo-300">
+                            <span key={kw} className="px-1 rounded bg-slate-800 text-slate-300">
                               {kw}
                             </span>
                           ))}
@@ -5021,11 +5021,11 @@ export default function Portfolio() {
                 {/* SUB-TAB 4: LINKEDIN PROFILE AUDITOR */}
                 {coachSubTab === 'linkedin' && (
                   <div className="space-y-5 animate-fadeIn">
-                    <div className="p-4 rounded-2xl bg-indigo-950/10 border border-indigo-900/35 space-y-2">
-                      <h3 className="text-xs font-bold text-indigo-400 uppercase tracking-wider">
+                    <div className="p-4 rounded-2xl bg-slate-800/10 border border-indigo-900/35 space-y-2">
+                      <h3 className="text-xs font-bold text-slate-200 uppercase tracking-wider">
                         Jobscan LinkedIn Recruiter Search Optimizations
                       </h3>
-                      <p className="text-[11px] text-slate-400 leading-relaxed">
+                      <p className="text-[11px] text-slate-300 leading-relaxed">
                         Recruiters search LinkedIn using Boolean search queries matching standard
                         title structures and key technical acronyms. Double-check your status:
                       </p>
@@ -5086,7 +5086,7 @@ export default function Portfolio() {
                       <span className="font-bold text-white block">
                         Taleo & Greenhouse Parseable Plaintext
                       </span>
-                      <p className="text-[10px] text-slate-400">
+                      <p className="text-[10px] text-slate-300">
                         Jobscan Pro validates that legacy ATS parses (such as Taleo or Workday) can
                         read your details when converted to simple raw plain text. View and copy
                         your optimized plain text below:
@@ -5094,7 +5094,7 @@ export default function Portfolio() {
                     </div>
 
                     {/* Plaintext preview container */}
-                    <div className="p-3 rounded-xl bg-slate-950 border border-slate-850 font-mono text-[10px] text-slate-400 leading-normal h-64 overflow-y-auto select-text scrollbar-thin">
+                    <div className="p-3 rounded-xl bg-slate-950 border border-slate-850 font-mono text-[10px] text-slate-300 leading-normal h-64 overflow-y-auto select-text scrollbar-thin">
                       <div className="border-b border-slate-900 pb-2 mb-3 text-slate-200">
                         <div className="font-bold text-xs">
                           {activeData.personal.name.toUpperCase()}
@@ -5114,7 +5114,7 @@ export default function Portfolio() {
                         </div>
                         {activeData.experience.map((exp) => (
                           <div key={exp.id} className="mb-2.5">
-                            <div className="font-bold text-slate-300">
+                            <div className="font-bold text-slate-200">
                               {exp.position} - {exp.company} | {exp.period}
                             </div>
                             <div className="text-[9px] text-slate-500">
@@ -5147,7 +5147,7 @@ export default function Portfolio() {
                         </div>
                         {resumeData.education.map((edu) => (
                           <div key={edu.id}>
-                            <div className="font-bold text-slate-300">
+                            <div className="font-bold text-slate-200">
                               {edu.degree} in {edu.fieldOfStudy}
                             </div>
                             <div className="text-[9px] text-slate-500">
@@ -5204,7 +5204,7 @@ export default function Portfolio() {
                 {/* Bullet Improver Sandbox */}
                 <div className="border-t border-slate-800 pt-5 space-y-4">
                   <div>
-                    <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider">
+                    <h3 className="text-xs font-bold uppercase text-slate-300 tracking-wider">
                       Action Verb Bullet Improver
                     </h3>
                     <p className="text-[10px] text-slate-500 mt-0.5">
@@ -5241,7 +5241,7 @@ export default function Portfolio() {
                         <button
                           key={i}
                           onClick={() => setBulletInput(preset.text)}
-                          className="px-2 py-1 rounded bg-slate-850 hover:bg-slate-800 text-slate-400 hover:text-white cursor-pointer"
+                          className="px-2 py-1 rounded bg-slate-850 hover:bg-slate-800 text-slate-300 hover:text-white cursor-pointer"
                         >
                           {preset.label}
                         </button>
@@ -5260,8 +5260,8 @@ export default function Portfolio() {
                           onClick={() => setBulletStyle(style.id as any)}
                           className={`py-1.5 rounded-md border transition duration-200 ease-out ${
                             bulletStyle === style.id
-                              ? 'bg-indigo-650 border-indigo-500 text-white'
-                              : 'border-slate-800 text-slate-500 hover:text-slate-300'
+                              ? 'bg-indigo-650 border-slate-600 text-white'
+                              : 'border-slate-800 text-slate-500 hover:text-slate-200'
                           }`}
                         >
                           {style.label}
@@ -5272,7 +5272,7 @@ export default function Portfolio() {
                     <button
                       onClick={handleImproveBullet}
                       disabled={!bulletInput.trim()}
-                      className="w-full bg-slate-800 hover:bg-slate-750 disabled:bg-slate-900 text-slate-300 disabled:text-slate-600 py-2 rounded-lg text-xs font-bold transition-colors"
+                      className="w-full bg-slate-800 hover:bg-slate-750 disabled:bg-slate-900 text-slate-200 disabled:text-slate-600 py-2 rounded-lg text-xs font-bold transition-colors"
                     >
                       Generate Optimized Bullet Variations
                     </button>
@@ -5291,10 +5291,10 @@ export default function Portfolio() {
                             key={idx}
                             className="p-2 rounded-lg bg-slate-900 border border-slate-850 flex gap-2 justify-between items-start text-xs"
                           >
-                            <p className="text-slate-300 leading-relaxed pr-4">{bullet}</p>
+                            <p className="text-slate-200 leading-relaxed pr-4">{bullet}</p>
                             <button
                               onClick={() => copyToClipboard(bullet, 'bullet', idx)}
-                              className="p-1 rounded hover:bg-slate-800 text-slate-500 hover:text-indigo-400 flex-shrink-0 transition-colors"
+                              className="p-1 rounded hover:bg-slate-800 text-slate-500 hover:text-slate-200 flex-shrink-0 transition-colors"
                               title="Copy Bullet Point"
                             >
                               {copiedBulletIdx === idx ? (
@@ -5320,7 +5320,7 @@ export default function Portfolio() {
                   <h2 className="text-base font-bold text-white flex items-center gap-2">
                     🎯 Interview Prep Coach
                   </h2>
-                  <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                  <p className="text-xs text-slate-300 mt-1 leading-relaxed">
                     Paste a job description to get a tailored interview plan with real questions,
                     study topics, and a live mock interview simulator.
                   </p>
@@ -5334,7 +5334,7 @@ export default function Portfolio() {
                       <div className="rounded-xl border border-slate-800 bg-slate-950/40 overflow-hidden">
                         <button
                           onClick={() => setShowApiKeyInput(!showApiKeyInput)}
-                          className="w-full flex items-center justify-between px-3 py-2 text-[10px] font-bold text-slate-400 hover:text-slate-300 transition-colors"
+                          className="w-full flex items-center justify-between px-3 py-2 text-[10px] font-bold text-slate-300 hover:text-slate-200 transition-colors"
                         >
                           <span className="flex items-center gap-1.5">
                             {geminiApiKey ? '🟢' : '⚪'}{' '}
@@ -5362,7 +5362,7 @@ export default function Portfolio() {
                                   localStorage.removeItem('gemini-api-key');
                                   setConnectionTest({ testing: false, result: null });
                                 }}
-                                className={`px-3 py-1 rounded-md text-[10px] font-bold transition duration-200 ease-out ${aiProvider === 'groq' ? 'bg-green-600 text-white' : 'text-slate-500 hover:text-slate-300'}`}
+                                className={`px-3 py-1 rounded-md text-[10px] font-bold transition duration-200 ease-out ${aiProvider === 'groq' ? 'bg-green-600 text-white' : 'text-slate-500 hover:text-slate-200'}`}
                               >
                                 🟢 Groq
                               </button>
@@ -5374,7 +5374,7 @@ export default function Portfolio() {
                                   localStorage.removeItem('gemini-api-key');
                                   setConnectionTest({ testing: false, result: null });
                                 }}
-                                className={`px-3 py-1 rounded-md text-[10px] font-bold transition duration-200 ease-out ${aiProvider === 'openrouter' ? 'bg-purple-600 text-white' : 'text-slate-500 hover:text-slate-300'}`}
+                                className={`px-3 py-1 rounded-md text-[10px] font-bold transition duration-200 ease-out ${aiProvider === 'openrouter' ? 'bg-purple-600 text-white' : 'text-slate-500 hover:text-slate-200'}`}
                               >
                                 🟣 OpenRouter
                               </button>
@@ -5386,7 +5386,7 @@ export default function Portfolio() {
                                   localStorage.removeItem('gemini-api-key');
                                   setConnectionTest({ testing: false, result: null });
                                 }}
-                                className={`px-3 py-1 rounded-md text-[10px] font-bold transition duration-200 ease-out ${aiProvider === 'gemini' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:text-slate-300'}`}
+                                className={`px-3 py-1 rounded-md text-[10px] font-bold transition duration-200 ease-out ${aiProvider === 'gemini' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:text-slate-200'}`}
                               >
                                 🔵 Gemini
                               </button>
@@ -5430,7 +5430,7 @@ export default function Portfolio() {
                                     href="https://aistudio.google.com/apikey"
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="text-violet-400 hover:text-violet-300 underline"
+                                    className="text-slate-200 hover:text-slate-300 underline"
                                   >
                                     aistudio.google.com/apikey →
                                   </a>
@@ -5455,7 +5455,7 @@ export default function Portfolio() {
                                     localStorage.setItem('openrouter_model', e.target.value);
                                     setConnectionTest({ testing: false, result: null });
                                   }}
-                                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-[10px] text-slate-300 focus:outline-none focus:border-purple-500 transition-colors cursor-pointer"
+                                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-[10px] text-slate-200 focus:outline-none focus:border-purple-500 transition-colors cursor-pointer"
                                 >
                                   <optgroup label="🆓 Free — Verified Working (auto-fallback)">
                                     <option value="google/gemma-4-31b-it:free">
@@ -5520,7 +5520,7 @@ export default function Portfolio() {
                                       ? 'Paste your OpenRouter key (sk-or-...)'
                                       : 'Paste your Gemini key (AIza... or AQ....)'
                                 }
-                                className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-[10px] text-slate-300 placeholder-slate-600 focus:outline-none focus:border-violet-500 transition-colors font-mono"
+                                className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-[10px] text-slate-200 placeholder-slate-600 focus:outline-none focus:border-violet-500 transition-colors font-mono"
                               />
                               {geminiApiKey && (
                                 <button
@@ -5550,7 +5550,7 @@ export default function Portfolio() {
                                       setConnectionTest({ testing: false, result });
                                     }}
                                     disabled={connectionTest.testing}
-                                    className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-[10px] font-bold text-slate-300 transition duration-200 ease-out flex items-center gap-1.5"
+                                    className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-[10px] font-bold text-slate-200 transition duration-200 ease-out flex items-center gap-1.5"
                                   >
                                     {connectionTest.testing ? (
                                       <>
@@ -5583,7 +5583,7 @@ export default function Portfolio() {
 
                       {/* Company Name input */}
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                        <label className="block text-[10px] font-bold text-slate-300 uppercase tracking-wider mb-1.5">
                           Company Name
                         </label>
                         <input
@@ -5593,7 +5593,7 @@ export default function Portfolio() {
                           placeholder="e.g. Google, Amazon, Stripe, Infosys..."
                           className="w-full bg-slate-950/50 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-violet-500 transition-colors"
                         />
-                        <p className="text-[10px] text-slate-400 mt-1">
+                        <p className="text-[10px] text-slate-300 mt-1">
                           {aiProvider === 'groq'
                             ? 'Groq'
                             : aiProvider === 'openrouter'
@@ -5606,7 +5606,7 @@ export default function Portfolio() {
 
                       {/* Position Name input */}
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                        <label className="block text-[10px] font-bold text-slate-300 uppercase tracking-wider mb-1.5">
                           Position / Job Title *
                         </label>
                         <input
@@ -5616,7 +5616,7 @@ export default function Portfolio() {
                           placeholder="e.g. Senior Software Engineer, Tech Support Specialist, Product Manager..."
                           className="w-full bg-slate-950/50 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-violet-500 transition-colors"
                         />
-                        <p className="text-[10px] text-slate-400 mt-1">
+                        <p className="text-[10px] text-slate-300 mt-1">
                           Used to tailor the question bank specifically for your role — a support
                           engineer won't get DSA questions!
                         </p>
@@ -5624,14 +5624,14 @@ export default function Portfolio() {
 
                       {/* JD textarea */}
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                        <label className="block text-[10px] font-bold text-slate-300 uppercase tracking-wider mb-1.5">
                           Job Description
                         </label>
                         <textarea
                           value={interviewJD}
                           onChange={(e) => setInterviewJD(e.target.value)}
                           placeholder="Paste the full job description here (include company name, role, requirements, and any culture info)..."
-                          className="w-full h-44 bg-slate-950/50 border border-slate-700 rounded-xl p-3 text-xs text-slate-300 placeholder-slate-600 resize-none focus:outline-none focus:border-violet-500 transition-colors"
+                          className="w-full h-44 bg-slate-950/50 border border-slate-700 rounded-xl p-3 text-xs text-slate-200 placeholder-slate-600 resize-none focus:outline-none focus:border-violet-500 transition-colors"
                         />
                       </div>
 
@@ -5740,7 +5740,7 @@ export default function Portfolio() {
                         disabled={
                           isGeneratingPlan || (!interviewPositionName.trim() && !interviewJD.trim())
                         }
-                        className="w-full py-3 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-40 text-white text-xs font-bold transition duration-200 ease-out flex items-center justify-center gap-2"
+                        className="w-full py-3 rounded-xl bg-slate-700 hover:bg-violet-500 disabled:opacity-40 text-white text-xs font-bold transition duration-200 ease-out flex items-center justify-center gap-2"
                       >
                         {isGeneratingPlan ? (
                           <>
@@ -5755,10 +5755,10 @@ export default function Portfolio() {
                     {/* Past Sessions History */}
                     {savedSessions.length > 0 && (
                       <div className="pt-6 border-t border-slate-800 space-y-3">
-                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center justify-between gap-1.5">
+                        <h3 className="text-xs font-bold text-slate-300 uppercase tracking-widest flex items-center justify-between gap-1.5">
                           <div className="flex items-center gap-1.5">
                             <span>🕒 Past Sessions History</span>
-                            <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full lowercase font-semibold">
+                            <span className="text-[10px] bg-slate-800 text-slate-200 px-2 py-0.5 rounded-full lowercase font-semibold">
                               {savedSessions.length} session{savedSessions.length > 1 ? 's' : ''}
                             </span>
                           </div>
@@ -5786,14 +5786,14 @@ export default function Portfolio() {
                                     <h4 className="font-bold text-slate-200 truncate max-w-[150px]">
                                       {session.companyName}
                                     </h4>
-                                    <span className="text-[9px] bg-violet-950/40 border border-violet-900 text-violet-400 px-1.5 py-0.5 rounded-md font-semibold truncate max-w-[120px]">
+                                    <span className="text-[9px] bg-slate-900/40 border border-violet-900 text-slate-200 px-1.5 py-0.5 rounded-md font-semibold truncate max-w-[120px]">
                                       {session.positionName}
                                     </span>
                                   </div>
                                   <p className="text-[10px] text-slate-500 font-medium">
                                     Created: {session.generatedAt}
                                   </p>
-                                  <div className="flex gap-3 text-[10px] text-slate-400 font-semibold pt-1">
+                                  <div className="flex gap-3 text-[10px] text-slate-300 font-semibold pt-1">
                                     <span>📋 {totalQuestions} Qs</span>
                                     <span>✍️ {answeredCount} Answered</span>
                                     <span>⭐ {scoredCount} Scored</span>
@@ -5837,7 +5837,7 @@ export default function Portfolio() {
                                       );
                                       setIsSessionCompleted(session.isCompleted || false);
                                     }}
-                                    className="px-3 py-1.5 rounded-lg bg-violet-600/80 hover:bg-violet-600 text-white font-bold transition duration-200 ease-out text-[11px]"
+                                    className="px-3 py-1.5 rounded-lg bg-slate-700/80 hover:bg-slate-700 text-white font-bold transition duration-200 ease-out text-[11px]"
                                   >
                                     {session.isCompleted ? 'View Report' : 'Resume'}
                                   </button>
@@ -5880,7 +5880,7 @@ export default function Portfolio() {
                         <h3 className="text-sm font-bold text-white">
                           {interviewPlan.context.company}
                         </h3>
-                        <p className="text-[11px] text-violet-400 font-semibold">
+                        <p className="text-[11px] text-slate-200 font-semibold">
                           {interviewPlan.context.role} · {interviewPlan.context.seniority}
                         </p>
                       </div>
@@ -5908,8 +5908,8 @@ export default function Portfolio() {
                           onClick={() => setInterviewSubTab(tab)}
                           className={`flex-1 py-1.5 px-2 rounded-lg whitespace-nowrap transition duration-200 ease-out ${
                             interviewSubTab === tab
-                              ? 'bg-violet-600 text-white'
-                              : 'text-slate-500 hover:text-slate-300'
+                              ? 'bg-slate-700 text-white'
+                              : 'text-slate-500 hover:text-slate-200'
                           }`}
                         >
                           {tab === 'overview'
@@ -5947,7 +5947,7 @@ export default function Portfolio() {
                                     : 'Gemini'}
                                 ...
                               </p>
-                              <p className="text-[10px] text-slate-400 font-mono">
+                              <p className="text-[10px] text-slate-300 font-mono">
                                 {aiProgress || 'Initializing connection...'}
                               </p>
                             </div>
@@ -5974,7 +5974,7 @@ export default function Portfolio() {
                               >
                                 <div className="flex items-center justify-between flex-wrap gap-2">
                                   <p
-                                    className={`text-[10px] font-black uppercase tracking-wider ${isGemini ? 'text-blue-400' : 'text-violet-400'}`}
+                                    className={`text-[10px] font-black uppercase tracking-wider ${isGemini ? 'text-blue-400' : 'text-slate-200'}`}
                                   >
                                     🔍 What People Do In This Role
                                   </p>
@@ -6022,10 +6022,10 @@ export default function Portfolio() {
                                     {insights.whatYouDo.map((item, i) => (
                                       <li
                                         key={i}
-                                        className="flex items-start gap-2 text-[11px] text-slate-300"
+                                        className="flex items-start gap-2 text-[11px] text-slate-200"
                                       >
                                         <span
-                                          className={`mt-0.5 flex-shrink-0 ${isGemini ? 'text-blue-400' : 'text-violet-400'}`}
+                                          className={`mt-0.5 flex-shrink-0 ${isGemini ? 'text-blue-400' : 'text-slate-200'}`}
                                         >
                                           ▸
                                         </span>
@@ -6040,7 +6040,7 @@ export default function Portfolio() {
                                   <p className="text-[10px] text-amber-400 font-bold mb-1">
                                     ⏰ Typical Day at {interviewPlan.context.company}
                                   </p>
-                                  <p className="text-[11px] text-slate-400 leading-relaxed">
+                                  <p className="text-[11px] text-slate-300 leading-relaxed">
                                     {insights.typicalDay}
                                   </p>
                                 </div>
@@ -6053,7 +6053,7 @@ export default function Portfolio() {
                                     </p>
                                     <ul className="space-y-0.5">
                                       {insights.keySkills.map((s, i) => (
-                                        <li key={i} className="text-[10px] text-slate-400">
+                                        <li key={i} className="text-[10px] text-slate-300">
                                           • {s}
                                         </li>
                                       ))}
@@ -6065,7 +6065,7 @@ export default function Portfolio() {
                                     </p>
                                     <ul className="space-y-0.5">
                                       {insights.topChallenges.map((c, i) => (
-                                        <li key={i} className="text-[10px] text-slate-400">
+                                        <li key={i} className="text-[10px] text-slate-300">
                                           • {c}
                                         </li>
                                       ))}
@@ -6076,7 +6076,7 @@ export default function Portfolio() {
                                 {/* Gemini search sources */}
                                 {isGemini && geminiData!.searchSources.length > 0 && (
                                   <div className="pt-1 border-t border-slate-800">
-                                    <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-1">
+                                    <p className="text-[9px] text-slate-300 font-bold uppercase tracking-wider mb-1">
                                       Sources
                                     </p>
                                     <div className="flex flex-wrap gap-1">
@@ -6129,15 +6129,15 @@ export default function Portfolio() {
                               key={i}
                               className="flex items-start gap-3 p-3 rounded-xl bg-slate-950/40 border border-slate-800"
                             >
-                              <span className="text-[11px] font-black text-violet-400 bg-violet-500/10 w-5 h-5 flex items-center justify-center rounded-full flex-shrink-0 mt-0.5">
+                              <span className="text-[11px] font-black text-slate-200 bg-violet-500/10 w-5 h-5 flex items-center justify-center rounded-full flex-shrink-0 mt-0.5">
                                 {i + 1}
                               </span>
-                              <span className="text-xs text-slate-300">{step}</span>
+                              <span className="text-xs text-slate-200">{step}</span>
                             </div>
                           ))}
                         </div>
                         <div className="p-3 rounded-xl bg-violet-500/5 border border-violet-500/20">
-                          <p className="text-[11px] text-violet-300 leading-relaxed">
+                          <p className="text-[11px] text-slate-300 leading-relaxed">
                             💡 <strong>Tip:</strong> Switch to <strong>Questions</strong> to see
                             curated real interview questions by round, or jump to{' '}
                             <strong>Mock</strong> to practice answering them live.
@@ -6146,7 +6146,7 @@ export default function Portfolio() {
                         <div className="flex gap-2">
                           <button
                             onClick={() => setInterviewSubTab('questions')}
-                            className="flex-1 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300 transition-colors"
+                            className="flex-1 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 transition-colors"
                           >
                             📋 View Questions →
                           </button>
@@ -6156,7 +6156,7 @@ export default function Portfolio() {
                               setMockMode('idle');
                               setMockQuestionIdx(0);
                             }}
-                            className="flex-1 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-xs font-bold text-white transition-colors"
+                            className="flex-1 py-2 rounded-xl bg-slate-700 hover:bg-violet-500 text-xs font-bold text-white transition-colors"
                           >
                             🎤 Start Mock →
                           </button>
@@ -6188,10 +6188,10 @@ export default function Portfolio() {
                                     <div className="flex-1">
                                       <p className="text-[11px] text-slate-200">{q.question}</p>
                                       <div className="flex items-center gap-2 mt-1">
-                                        <span className="text-[9px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded font-medium">
+                                        <span className="text-[9px] bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded font-medium">
                                           {q.round}
                                         </span>
-                                        <span className="text-[9px] text-slate-400">
+                                        <span className="text-[9px] text-slate-300">
                                           Source: {q.source}
                                         </span>
                                       </div>
@@ -6221,7 +6221,7 @@ export default function Portfolio() {
                                           className={`text-[10px] font-bold transition-colors ${
                                             speakingQId === `reported-${i}`
                                               ? 'text-rose-450 hover:text-rose-400'
-                                              : 'text-slate-400 hover:text-blue-400'
+                                              : 'text-slate-300 hover:text-blue-400'
                                           }`}
                                         >
                                           {speakingQId === `reported-${i}` ? '⏹ Stop' : '🔊 Listen'}
@@ -6247,8 +6247,8 @@ export default function Portfolio() {
                               onClick={() => setActiveRound(r.round)}
                               className={`px-3 py-1.5 rounded-full text-[10px] font-bold transition duration-200 ease-out border ${
                                 activeRound === r.round
-                                  ? 'bg-violet-600 text-white border-violet-600'
-                                  : 'bg-slate-900 text-slate-400 border-slate-700 hover:border-violet-500 hover:text-slate-200'
+                                  ? 'bg-slate-700 text-white border-violet-600'
+                                  : 'bg-slate-900 text-slate-300 border-slate-700 hover:border-violet-500 hover:text-slate-200'
                               }`}
                             >
                               {r.emoji} {r.label}
@@ -6264,7 +6264,7 @@ export default function Portfolio() {
                               <p className="text-[11px] text-slate-500 leading-relaxed">
                                 {r.description}
                               </p>
-                              <p className="text-[10px] text-violet-400 font-bold">
+                              <p className="text-[10px] text-slate-200 font-bold">
                                 {r.questions.length} questions · sorted by difficulty
                               </p>
                               {r.questions.map((q) => (
@@ -6294,14 +6294,14 @@ export default function Portfolio() {
                                       {q.difficulty.toUpperCase()}
                                     </span>
                                   </div>
-                                  <p className="text-[10px] text-slate-400">📍 {q.source}</p>
+                                  <p className="text-[10px] text-slate-300">📍 {q.source}</p>
                                   <div className="flex gap-2">
                                     {q.hint && (
                                       <button
                                         onClick={() =>
                                           setHintVisible((p) => ({ ...p, [q.id]: !p[q.id] }))
                                         }
-                                        className="text-[10px] text-violet-400 hover:text-violet-300 font-bold transition-colors"
+                                        className="text-[10px] text-slate-200 hover:text-slate-300 font-bold transition-colors"
                                       >
                                         💡 {hintVisible[q.id] ? 'Hide Hint' : 'Show Hint'}
                                       </button>
@@ -6326,7 +6326,7 @@ export default function Portfolio() {
                                         );
                                         setInterviewSubTab('mock');
                                       }}
-                                      className="text-[10px] text-slate-400 hover:text-white font-bold transition-colors"
+                                      className="text-[10px] text-slate-300 hover:text-white font-bold transition-colors"
                                     >
                                       🎤 Practice This
                                     </button>
@@ -6335,14 +6335,14 @@ export default function Portfolio() {
                                       className={`text-[10px] font-bold transition-colors ${
                                         speakingQId === q.id
                                           ? 'text-rose-450 hover:text-rose-400'
-                                          : 'text-slate-400 hover:text-violet-400'
+                                          : 'text-slate-300 hover:text-slate-200'
                                       }`}
                                     >
                                       {speakingQId === q.id ? '⏹ Stop' : '🔊 Listen'}
                                     </button>
                                   </div>
                                   {hintVisible[q.id] && q.hint && (
-                                    <div className="mt-1 p-2.5 rounded-lg bg-violet-500/10 border border-violet-500/20 text-[11px] text-violet-300 leading-relaxed animate-fadeIn">
+                                    <div className="mt-1 p-2.5 rounded-lg bg-violet-500/10 border border-violet-500/20 text-[11px] text-slate-300 leading-relaxed animate-fadeIn">
                                       {q.hint}
                                     </div>
                                   )}
@@ -6385,11 +6385,11 @@ export default function Portfolio() {
                               </span>
                               <p className="text-xs font-bold text-slate-200">{topic.topic}</p>
                             </div>
-                            <p className="text-[11px] text-slate-400 leading-relaxed">
+                            <p className="text-[11px] text-slate-300 leading-relaxed">
                               {topic.reason}
                             </p>
                             <div className="space-y-1 pt-1">
-                              <p className="text-[10px] text-slate-400 font-bold uppercase">
+                              <p className="text-[10px] text-slate-300 font-bold uppercase">
                                 Resources
                               </p>
                               {topic.resources.map((res, ri) => (
@@ -6398,7 +6398,7 @@ export default function Portfolio() {
                                   href={res.url}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="flex items-center gap-1.5 text-[11px] text-violet-400 hover:text-violet-300 transition-colors"
+                                  className="flex items-center gap-1.5 text-[11px] text-slate-200 hover:text-slate-300 transition-colors"
                                 >
                                   <span>🔗</span>
                                   {res.label}
@@ -6757,7 +6757,7 @@ export default function Portfolio() {
                                       setMockMode('idle');
                                       setMockQuestionIdx(0);
                                     }}
-                                    className="px-3 py-1 rounded-lg border border-slate-800 text-slate-400 hover:text-white text-[10px] font-bold transition duration-200 ease-out"
+                                    className="px-3 py-1 rounded-lg border border-slate-800 text-slate-300 hover:text-white text-[10px] font-bold transition duration-200 ease-out"
                                   >
                                     ← Back to Rounds
                                   </button>
@@ -6767,7 +6767,7 @@ export default function Portfolio() {
                                 <div className="p-4 rounded-xl bg-slate-900/50 border border-slate-800 space-y-3">
                                   <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-3">
-                                      <div className="w-10 h-10 rounded-full bg-violet-955 border border-violet-850 flex items-center justify-center text-xl">
+                                      <div className="w-10 h-10 rounded-full bg-slate-900 border border-violet-850 flex items-center justify-center text-xl">
                                         {selectedRecruiter.avatar}
                                       </div>
                                       <div>
@@ -6821,7 +6821,7 @@ export default function Portfolio() {
                                   </div>
 
                                   <div className="p-3 bg-slate-955/60 rounded-xl border border-slate-850 text-[11px] text-slate-350 leading-relaxed">
-                                    <p className="font-bold text-[9px] text-violet-400 uppercase tracking-wider mb-1.5">
+                                    <p className="font-bold text-[9px] text-slate-200 uppercase tracking-wider mb-1.5">
                                       📢 Recruiter Executive Assessment
                                     </p>
                                     {isLoadingSummary ? (
@@ -6841,7 +6841,7 @@ export default function Portfolio() {
 
                                 {/* Detailed Transcript / Question Logs */}
                                 <div className="space-y-2">
-                                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                  <p className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">
                                     📝 Detailed Round Logs
                                   </p>
                                   {questions.map((q, idx) => {
@@ -6856,7 +6856,7 @@ export default function Portfolio() {
                                       >
                                         <div className="p-3 bg-slate-900/40 flex justify-between items-center gap-3">
                                           <div className="flex items-center gap-2 min-w-0">
-                                            <span className="text-[10px] bg-slate-800 border border-slate-700 text-slate-400 font-bold w-5 h-5 rounded-full flex items-center justify-center shrink-0">
+                                            <span className="text-[10px] bg-slate-800 border border-slate-700 text-slate-300 font-bold w-5 h-5 rounded-full flex items-center justify-center shrink-0">
                                               Q{idx + 1}
                                             </span>
                                             <p className="text-xs font-medium text-slate-200 truncate">
@@ -6889,7 +6889,7 @@ export default function Portfolio() {
 
                                           {/* Answer row */}
                                           <div className="space-y-1">
-                                            <p className="text-[9px] font-bold text-violet-400 uppercase">
+                                            <p className="text-[9px] font-bold text-slate-200 uppercase">
                                               Your Response:
                                             </p>
                                             <p className="text-xs text-slate-250 italic">
@@ -6903,7 +6903,7 @@ export default function Portfolio() {
                                               <p className="text-[9px] font-bold text-blue-400 uppercase">
                                                 Recruiter Reaction:
                                               </p>
-                                              <p className="text-xs text-slate-300">"{reply}"</p>
+                                              <p className="text-xs text-slate-200">"{reply}"</p>
                                             </div>
                                           )}
 
@@ -6914,7 +6914,7 @@ export default function Portfolio() {
                                                 <span className="text-[9px] text-emerald-450 font-bold uppercase tracking-wider block">
                                                   ✓ Strengths
                                                 </span>
-                                                <ul className="list-disc pl-3 text-slate-300 space-y-0.5">
+                                                <ul className="list-disc pl-3 text-slate-200 space-y-0.5">
                                                   {score.strengths.map((str, sIdx) => (
                                                     <li key={sIdx}>{str}</li>
                                                   ))}
@@ -6927,7 +6927,7 @@ export default function Portfolio() {
                                                 <span className="text-[9px] text-amber-450 font-bold uppercase tracking-wider block">
                                                   ⚠ Improvements
                                                 </span>
-                                                <ul className="list-disc pl-3 text-slate-300 space-y-0.5">
+                                                <ul className="list-disc pl-3 text-slate-200 space-y-0.5">
                                                   {score.improvements.map((imp, iIdx) => (
                                                     <li key={iIdx}>{imp}</li>
                                                   ))}
@@ -6951,7 +6951,7 @@ export default function Portfolio() {
                                                       [q.id]: !p[q.id],
                                                     }))
                                                   }
-                                                  className="flex items-center gap-1.5 text-[9px] font-bold text-violet-400 uppercase tracking-wider hover:text-violet-300 transition-colors"
+                                                  className="flex items-center gap-1.5 text-[9px] font-bold text-slate-200 uppercase tracking-wider hover:text-slate-300 transition-colors"
                                                 >
                                                   <span className="text-xs">
                                                     {reportShowIdealMap[q.id] ? '▾' : '▸'}
@@ -6960,8 +6960,8 @@ export default function Portfolio() {
                                                   {reportShowIdealMap[q.id] ? '(hide)' : '(show)'}
                                                 </button>
                                                 {reportShowIdealMap[q.id] && (
-                                                  <div className="p-3 rounded-xl bg-violet-955/15 border border-violet-900/40 space-y-1.5 animate-fadeIn">
-                                                    <p className="text-[9px] font-bold text-violet-400 uppercase tracking-wider">
+                                                  <div className="p-3 rounded-xl bg-slate-900/15 border border-violet-900/40 space-y-1.5 animate-fadeIn">
+                                                    <p className="text-[9px] font-bold text-slate-200 uppercase tracking-wider">
                                                       ✨ What a strong answer looks like:
                                                     </p>
                                                     <p className="text-[11px] text-slate-250 leading-relaxed whitespace-pre-line">
@@ -7025,7 +7025,7 @@ export default function Portfolio() {
                                                         }));
                                                       }
                                                     }}
-                                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold bg-violet-955/20 border border-violet-900/50 text-violet-400 hover:bg-violet-955/40 hover:text-violet-300 transition duration-200 ease-out"
+                                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold bg-slate-900/20 border border-violet-900/50 text-slate-200 hover:bg-slate-900/40 hover:text-slate-300 transition duration-200 ease-out"
                                                   >
                                                     ✨ Generate Suggested Answer
                                                   </button>
@@ -7058,7 +7058,7 @@ export default function Portfolio() {
                                       <button
                                         type="button"
                                         onClick={() => setMockInterfaceMode('standard')}
-                                        className={`flex-1 py-1.5 text-center rounded-lg text-[11px] font-bold transition duration-200 ease-out ${mockInterfaceMode === 'standard' ? 'bg-violet-650 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
+                                        className={`flex-1 py-1.5 text-center rounded-lg text-[11px] font-bold transition duration-200 ease-out ${mockInterfaceMode === 'standard' ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-300 hover:text-slate-200'}`}
                                       >
                                         👤 Standard Mock (Self-paced)
                                       </button>
@@ -7072,7 +7072,7 @@ export default function Portfolio() {
                                           );
                                           setSelectedRecruiter(recruiter);
                                         }}
-                                        className={`flex-1 py-1.5 text-center rounded-lg text-[11px] font-bold transition duration-200 ease-out ${mockInterfaceMode === 'interactive' ? 'bg-violet-650 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
+                                        className={`flex-1 py-1.5 text-center rounded-lg text-[11px] font-bold transition duration-200 ease-out ${mockInterfaceMode === 'interactive' ? 'bg-slate-800 text-white shadow-sm' : 'text-slate-300 hover:text-slate-200'}`}
                                       >
                                         🎙️ Interactive Voice Recruiter
                                       </button>
@@ -7090,7 +7090,7 @@ export default function Portfolio() {
                                                 key={p.id}
                                                 type="button"
                                                 onClick={() => setSelectedRecruiter(p)}
-                                                className={`p-2 rounded-xl border flex flex-col items-center justify-center gap-1 transition duration-200 ease-out ${selectedRecruiter.id === p.id ? 'bg-violet-955/20 border-violet-500 text-violet-300 shadow-sm' : 'bg-slate-900/50 border-slate-800 text-slate-500 hover:border-slate-700 hover:text-slate-350'}`}
+                                                className={`p-2 rounded-xl border flex flex-col items-center justify-center gap-1 transition duration-200 ease-out ${selectedRecruiter.id === p.id ? 'bg-slate-900/20 border-violet-500 text-slate-300 shadow-sm' : 'bg-slate-900/50 border-slate-800 text-slate-500 hover:border-slate-700 hover:text-slate-350'}`}
                                                 title={`${p.name} - ${p.title} (${p.company})`}
                                               >
                                                 <span className="text-base">{p.avatar}</span>
@@ -7107,7 +7107,7 @@ export default function Portfolio() {
                                             <span className="text-[11px] font-bold text-slate-200">
                                               {selectedRecruiter.name}
                                             </span>
-                                            <span className="text-[8px] px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-400 font-bold uppercase tracking-wider">
+                                            <span className="text-[8px] px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300 font-bold uppercase tracking-wider">
                                               {selectedRecruiter.company}
                                             </span>
                                           </div>
@@ -7117,13 +7117,13 @@ export default function Portfolio() {
                                               ? 'Female'
                                               : 'Male'}
                                           </p>
-                                          <p className="text-[10px] text-slate-400 leading-relaxed text-justify">
+                                          <p className="text-[10px] text-slate-300 leading-relaxed text-justify">
                                             {selectedRecruiter.description}
                                           </p>
 
                                           {/* Audio settings */}
                                           <div className="pt-2 flex items-center justify-between border-t border-slate-850">
-                                            <label className="flex items-center gap-1.5 text-[9px] text-slate-400 cursor-pointer">
+                                            <label className="flex items-center gap-1.5 text-[9px] text-slate-300 cursor-pointer">
                                               <input
                                                 type="checkbox"
                                                 checked={autoPlayVoice}
@@ -7132,7 +7132,7 @@ export default function Portfolio() {
                                               />
                                               <span>Speak Questions (TTS)</span>
                                             </label>
-                                            <label className="flex items-center gap-1.5 text-[9px] text-slate-400 cursor-pointer">
+                                            <label className="flex items-center gap-1.5 text-[9px] text-slate-300 cursor-pointer">
                                               <input
                                                 type="checkbox"
                                                 checked={autoActivateMic}
@@ -7147,7 +7147,7 @@ export default function Portfolio() {
                                         </div>
                                       </div>
                                     ) : (
-                                      <p className="text-[11px] text-slate-400 leading-relaxed">
+                                      <p className="text-[11px] text-slate-300 leading-relaxed">
                                         Select a round to begin your self-paced mock interview. You
                                         will see scores and improvements immediately after
                                         submitting each answer.
@@ -7190,20 +7190,20 @@ export default function Portfolio() {
                                             startQuestion(r.round, 0);
                                           }}
                                           disabled={isLoadingRecruiterQuestions}
-                                          className={`w-full p-3 rounded-xl border border-slate-800 bg-slate-900/35 hover:border-violet-500 hover:bg-violet-650/5 transition duration-200 ease-out text-left group ${isLoadingRecruiterQuestions ? 'opacity-60 cursor-wait' : ''}`}
+                                          className={`w-full p-3 rounded-xl border border-slate-800 bg-slate-900/35 hover:border-violet-500 hover:bg-slate-800/5 transition duration-200 ease-out text-left group ${isLoadingRecruiterQuestions ? 'opacity-60 cursor-wait' : ''}`}
                                         >
                                           <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-2">
                                               <span className="text-base">{r.emoji}</span>
                                               <div>
-                                                <p className="text-[11px] font-bold text-slate-200 group-hover:text-violet-300 transition-colors">
+                                                <p className="text-[11px] font-bold text-slate-200 group-hover:text-slate-300 transition-colors">
                                                   {r.label}
                                                 </p>
                                                 <p className="text-[9px] text-slate-500">
                                                   {r.questions.length} questions
                                                   {mockInterfaceMode === 'interactive' &&
                                                     r.round === 'hr' && (
-                                                      <span className="ml-1.5 text-violet-400 font-bold">
+                                                      <span className="ml-1.5 text-slate-200 font-bold">
                                                         {recruiterQuestions
                                                           ? `• ${interviewPlan.context.company}-specific`
                                                           : isLoadingRecruiterQuestions
@@ -7214,7 +7214,7 @@ export default function Portfolio() {
                                                 </p>
                                               </div>
                                             </div>
-                                            <span className="text-[9px] text-violet-400 font-bold opacity-0 group-hover:opacity-100 transition duration-200 ease-out transform translate-x-1 group-hover:translate-x-0">
+                                            <span className="text-[9px] text-slate-200 font-bold opacity-0 group-hover:opacity-100 transition duration-200 ease-out transform translate-x-1 group-hover:translate-x-0">
                                               {isLoadingRecruiterQuestions
                                                 ? '⏳ Loading…'
                                                 : 'Start Screen →'}
@@ -7233,10 +7233,10 @@ export default function Portfolio() {
                                       {/* Progress */}
                                       <div className="flex items-center justify-between text-[10px]">
                                         <div className="flex items-center gap-2">
-                                          <span className="text-violet-400 font-bold">
+                                          <span className="text-slate-200 font-bold">
                                             {currentRoundData.emoji} {currentRoundData.label}
                                           </span>
-                                          <span className="text-slate-400">
+                                          <span className="text-slate-300">
                                             Question {mockQuestionIdx + 1} of {totalQ}
                                           </span>
                                         </div>
@@ -7264,7 +7264,7 @@ export default function Portfolio() {
                                           type="button"
                                           onClick={() => navigateToQuestion(mockQuestionIdx - 1)}
                                           disabled={mockQuestionIdx <= 0}
-                                          className="w-7 h-7 rounded-lg border border-slate-700 flex items-center justify-center text-[11px] text-slate-400 hover:text-white hover:border-violet-500 disabled:opacity-30 disabled:cursor-not-allowed transition duration-200 ease-out"
+                                          className="w-7 h-7 rounded-lg border border-slate-700 flex items-center justify-center text-[11px] text-slate-300 hover:text-white hover:border-violet-500 disabled:opacity-30 disabled:cursor-not-allowed transition duration-200 ease-out"
                                           title="Previous question"
                                         >
                                           ←
@@ -7292,7 +7292,7 @@ export default function Portfolio() {
                                           type="button"
                                           onClick={() => navigateToQuestion(mockQuestionIdx + 1)}
                                           disabled={mockQuestionIdx >= totalQ - 1}
-                                          className="w-7 h-7 rounded-lg border border-slate-700 flex items-center justify-center text-[11px] text-slate-400 hover:text-white hover:border-violet-500 disabled:opacity-30 disabled:cursor-not-allowed transition duration-200 ease-out"
+                                          className="w-7 h-7 rounded-lg border border-slate-700 flex items-center justify-center text-[11px] text-slate-300 hover:text-white hover:border-violet-500 disabled:opacity-30 disabled:cursor-not-allowed transition duration-200 ease-out"
                                           title="Next question"
                                         >
                                           →
@@ -7314,7 +7314,7 @@ export default function Portfolio() {
                                         <div className="space-y-3">
                                           {/* Recruiter Bubble */}
                                           <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 flex gap-3.5 items-start">
-                                            <div className="w-10 h-10 rounded-full bg-violet-955 border border-violet-850 flex items-center justify-center text-xl shrink-0">
+                                            <div className="w-10 h-10 rounded-full bg-slate-900 border border-violet-850 flex items-center justify-center text-xl shrink-0">
                                               {selectedRecruiter.avatar}
                                             </div>
                                             <div className="flex-1 space-y-1.5 min-w-0">
@@ -7325,26 +7325,26 @@ export default function Portfolio() {
 
                                                 {/* Recruiter Speaking Bounce animation */}
                                                 {isRecruiterSpeaking && (
-                                                  <div className="flex gap-0.5 items-center px-1.5 py-0.5 rounded bg-violet-955/45 border border-violet-900/50">
-                                                    <span className="text-[8px] text-violet-400 font-bold uppercase tracking-wider mr-1 animate-pulse">
+                                                  <div className="flex gap-0.5 items-center px-1.5 py-0.5 rounded bg-slate-900/45 border border-violet-900/50">
+                                                    <span className="text-[8px] text-slate-200 font-bold uppercase tracking-wider mr-1 animate-pulse">
                                                       Speaking
                                                     </span>
                                                     <div
-                                                      className="w-0.5 h-1.5 bg-violet-400 rounded-full animate-bounce"
+                                                      className="w-0.5 h-1.5 bg-slate-300 rounded-full animate-pulse"
                                                       style={{ animationDelay: '0.1s' }}
                                                     ></div>
                                                     <div
-                                                      className="w-0.5 h-2.5 bg-violet-400 rounded-full animate-bounce"
+                                                      className="w-0.5 h-2.5 bg-slate-300 rounded-full animate-pulse"
                                                       style={{ animationDelay: '0.2s' }}
                                                     ></div>
                                                     <div
-                                                      className="w-0.5 h-2 bg-violet-400 rounded-full animate-bounce"
+                                                      className="w-0.5 h-2 bg-slate-300 rounded-full animate-pulse"
                                                       style={{ animationDelay: '0.3s' }}
                                                     ></div>
                                                   </div>
                                                 )}
                                               </div>
-                                              <p className="text-xs text-slate-300 leading-relaxed text-justify">
+                                              <p className="text-xs text-slate-200 leading-relaxed text-justify">
                                                 {currentQ.question}
                                               </p>
 
@@ -7378,7 +7378,7 @@ export default function Portfolio() {
                                               </div>
 
                                               {hintVisible[currentQ.id] && currentQ.hint && (
-                                                <p className="text-[10px] text-violet-300 bg-violet-950/20 border border-violet-900/20 rounded-lg p-2 animate-fadeIn">
+                                                <p className="text-[10px] text-slate-300 bg-slate-900/20 border border-violet-900/20 rounded-lg p-2 animate-fadeIn">
                                                   {currentQ.hint}
                                                 </p>
                                               )}
@@ -7393,15 +7393,15 @@ export default function Portfolio() {
                                               </span>
                                               <div className="flex gap-1 items-center">
                                                 <span
-                                                  className="w-1 h-1 bg-violet-450 rounded-full animate-bounce"
+                                                  className="w-1 h-1 bg-slate-300 rounded-full animate-pulse"
                                                   style={{ animationDelay: '0.1s' }}
                                                 ></span>
                                                 <span
-                                                  className="w-1 h-1 bg-violet-450 rounded-full animate-bounce"
+                                                  className="w-1 h-1 bg-slate-300 rounded-full animate-pulse"
                                                   style={{ animationDelay: '0.2s' }}
                                                 ></span>
                                                 <span
-                                                  className="w-1 h-1 bg-violet-450 rounded-full animate-bounce"
+                                                  className="w-1 h-1 bg-slate-300 rounded-full animate-pulse"
                                                   style={{ animationDelay: '0.3s' }}
                                                 ></span>
                                               </div>
@@ -7411,15 +7411,15 @@ export default function Portfolio() {
                                           {mockMode === 'reviewed' &&
                                             !isRecruiterTyping &&
                                             recruiterReplies[currentQ.id] && (
-                                              <div className="p-3.5 rounded-xl bg-violet-955/15 border border-violet-900/30 flex gap-3 items-start animate-fadeIn">
+                                              <div className="p-3.5 rounded-xl bg-slate-900/15 border border-violet-900/30 flex gap-3 items-start animate-fadeIn">
                                                 <div className="w-8 h-8 rounded-full bg-violet-900 border border-violet-850 flex items-center justify-center text-sm shrink-0">
                                                   {selectedRecruiter.avatar}
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                  <span className="text-[9px] font-black text-violet-400 uppercase tracking-wider block mb-0.5">
+                                                  <span className="text-[9px] font-black text-slate-200 uppercase tracking-wider block mb-0.5">
                                                     {selectedRecruiter.name} (Reaction)
                                                   </span>
-                                                  <p className="text-[11px] text-slate-300 leading-relaxed text-justify">
+                                                  <p className="text-[11px] text-slate-200 leading-relaxed text-justify">
                                                     "{recruiterReplies[currentQ.id]}"
                                                   </p>
                                                 </div>
@@ -7430,8 +7430,8 @@ export default function Portfolio() {
                                           <div className="space-y-3 pt-1">
                                             {mockMode === 'answering' && geminiApiKey.trim() && (
                                               <div className="flex justify-between items-center bg-slate-900/50 p-2 rounded-xl border border-slate-850">
-                                                <div className="text-[10px] text-slate-400 pl-2">
-                                                  <span className="font-bold text-violet-400">
+                                                <div className="text-[10px] text-slate-300 pl-2">
+                                                  <span className="font-bold text-slate-200">
                                                     🧠 AI Answer Assistant
                                                   </span>
                                                   : Need help? Reveal custom ideal answer.
@@ -7485,7 +7485,7 @@ export default function Portfolio() {
                                                       setLoadingIdealAnswer(false);
                                                     }
                                                   }}
-                                                  className="px-2.5 py-0.5 rounded bg-violet-650 hover:bg-violet-600 text-[9px] font-bold text-white transition-colors"
+                                                  className="px-2.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-[9px] font-bold text-white transition-colors"
                                                 >
                                                   {loadingIdealAnswer
                                                     ? '⏳ Generating...'
@@ -7516,15 +7516,15 @@ export default function Portfolio() {
                                                   </span>
                                                   <div className="flex gap-0.5 items-center">
                                                     <div
-                                                      className="w-0.5 h-1.5 bg-red-400 rounded-full animate-bounce"
+                                                      className="w-0.5 h-1.5 bg-red-400 rounded-full animate-pulse"
                                                       style={{ animationDelay: '0.1s' }}
                                                     ></div>
                                                     <div
-                                                      className="w-0.5 h-3 bg-red-400 rounded-full animate-bounce"
+                                                      className="w-0.5 h-3 bg-red-400 rounded-full animate-pulse"
                                                       style={{ animationDelay: '0.2s' }}
                                                     ></div>
                                                     <div
-                                                      className="w-0.5 h-2.5 bg-red-400 rounded-full animate-bounce"
+                                                      className="w-0.5 h-2.5 bg-red-400 rounded-full animate-pulse"
                                                       style={{ animationDelay: '0.3s' }}
                                                     ></div>
                                                   </div>
@@ -7547,7 +7547,7 @@ export default function Portfolio() {
                                                       ? '🎙️ Recruiter voice ended, microphone activated... Speak your answer now!'
                                                       : 'Start speaking your answer, or type it directly here...'
                                                   }
-                                                  className={`w-full h-32 bg-slate-950/50 border rounded-xl p-3 pr-12 text-xs text-slate-300 placeholder-slate-600 resize-none focus:outline-none transition duration-200 ease-out ${isRecording ? 'border-red-500/80 bg-red-950/10' : 'border-slate-700 focus:border-violet-500'}`}
+                                                  className={`w-full h-32 bg-slate-950/50 border rounded-xl p-3 pr-12 text-xs text-slate-200 placeholder-slate-600 resize-none focus:outline-none transition duration-200 ease-out ${isRecording ? 'border-red-500/80 bg-red-950/10' : 'border-slate-700 focus:border-violet-500'}`}
                                                 />
 
                                                 {/* Microphone Trigger */}
@@ -7563,7 +7563,7 @@ export default function Portfolio() {
                                                   className={`absolute right-3 top-3 w-8 h-8 rounded-full flex items-center justify-center transition duration-200 ease-out ${
                                                     isRecording
                                                       ? 'bg-red-650 text-white animate-pulse shadow-md shadow-red-555/40'
-                                                      : 'bg-slate-800 text-slate-400 hover:bg-violet-655 hover:text-white'
+                                                      : 'bg-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white'
                                                   }`}
                                                   title={
                                                     isRecording
@@ -7585,7 +7585,7 @@ export default function Portfolio() {
                                               !isRecording &&
                                               mockMode === 'answering' && (
                                                 <div className="flex items-center gap-2 p-1.5 px-2.5 rounded-xl bg-slate-900/60 border border-slate-850">
-                                                  <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider shrink-0">
+                                                  <span className="text-[9px] text-slate-300 font-bold uppercase tracking-wider shrink-0">
                                                     🔊 Playback Draft:
                                                   </span>
                                                   <audio
@@ -7608,7 +7608,7 @@ export default function Portfolio() {
                                                     stopListening();
                                                     setMockMode('idle');
                                                   }}
-                                                  className="flex-1 py-2 rounded-xl border border-slate-800 text-xs font-bold text-slate-500 hover:text-slate-300 hover:border-slate-650 transition duration-200 ease-out"
+                                                  className="flex-1 py-2 rounded-xl border border-slate-800 text-xs font-bold text-slate-500 hover:text-slate-200 hover:border-slate-650 transition duration-200 ease-out"
                                                 >
                                                   ✕ Cancel
                                                 </button>
@@ -7619,7 +7619,7 @@ export default function Portfolio() {
                                                     submitAnswer();
                                                   }}
                                                   disabled={!currentAnswer.trim()}
-                                                  className="flex-1 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-40 text-white text-xs font-bold transition duration-200 ease-out"
+                                                  className="flex-1 py-2 rounded-xl bg-slate-700 hover:bg-violet-500 disabled:opacity-40 text-white text-xs font-bold transition duration-200 ease-out"
                                                 >
                                                   ✓ Submit Response
                                                 </button>
@@ -7638,7 +7638,7 @@ export default function Portfolio() {
                                                       1000
                                                     );
                                                   }}
-                                                  className="flex-1 py-2 rounded-xl border border-slate-800 text-xs font-bold text-slate-500 hover:text-slate-300 hover:border-slate-750 transition duration-200 ease-out"
+                                                  className="flex-1 py-2 rounded-xl border border-slate-800 text-xs font-bold text-slate-500 hover:text-slate-200 hover:border-slate-750 transition duration-200 ease-out"
                                                 >
                                                   🔄 Redo Answer
                                                 </button>
@@ -7647,7 +7647,7 @@ export default function Portfolio() {
                                                   <button
                                                     type="button"
                                                     onClick={nextQuestion}
-                                                    className="flex-grow-[2] py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-xs font-bold text-white transition duration-200 ease-out"
+                                                    className="flex-grow-[2] py-2 rounded-xl bg-slate-700 hover:bg-violet-500 text-xs font-bold text-white transition duration-200 ease-out"
                                                   >
                                                     Next Question →
                                                   </button>
@@ -7687,7 +7687,7 @@ export default function Portfolio() {
                                               className={`p-2 rounded-xl border flex items-center justify-center transition duration-200 ease-out ${
                                                 speakingQId === currentQ.id
                                                   ? 'bg-rose-955/40 border-rose-900/50 text-rose-455 animate-pulse shadow-md shadow-rose-950/40'
-                                                  : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-violet-450 hover:border-violet-500/50 hover:bg-violet-955/10'
+                                                  : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-violet-450 hover:border-violet-500/50 hover:bg-slate-900/10'
                                               }`}
                                               title={
                                                 speakingQId === currentQ.id
@@ -7710,8 +7710,8 @@ export default function Portfolio() {
                                             <>
                                               {geminiApiKey.trim() && (
                                                 <div className="mb-3 flex justify-between items-center bg-slate-900/50 p-2.5 rounded-xl border border-slate-800">
-                                                  <div className="text-[10px] text-slate-400">
-                                                    <span className="font-bold text-violet-400">
+                                                  <div className="text-[10px] text-slate-300">
+                                                    <span className="font-bold text-slate-200">
                                                       🧠 AI Answer Assistant
                                                     </span>
                                                     : Get an ideal answer customized to your
@@ -7767,7 +7767,7 @@ export default function Portfolio() {
                                                         setLoadingIdealAnswer(false);
                                                       }
                                                     }}
-                                                    className="px-2.5 py-1 rounded bg-violet-650 hover:bg-violet-600 text-[9px] font-bold text-white transition-colors"
+                                                    className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-[9px] font-bold text-white transition-colors"
                                                   >
                                                     {loadingIdealAnswer
                                                       ? '⏳ Generating...'
@@ -7782,7 +7782,7 @@ export default function Portfolio() {
                                                 idealAnswers[currentQ.id] && (
                                                   <div className="mb-3 p-3 rounded-xl bg-violet-500/5 border border-violet-500/20 space-y-2 animate-fadeIn">
                                                     <div className="flex justify-between items-center">
-                                                      <span className="text-[9px] font-bold text-violet-400 uppercase">
+                                                      <span className="text-[9px] font-bold text-slate-200 uppercase">
                                                         💡 Model Ideal Answer (Customized to
                                                         Profile)
                                                       </span>
@@ -7880,7 +7880,7 @@ export default function Portfolio() {
                                                             }));
                                                           }
                                                         }}
-                                                        className="text-[9px] text-violet-400 hover:text-violet-300 font-bold transition-colors"
+                                                        className="text-[9px] text-slate-200 hover:text-slate-300 font-bold transition-colors"
                                                       >
                                                         📋 Copy to Draft
                                                       </button>
@@ -7892,7 +7892,7 @@ export default function Portfolio() {
                                                 )}
 
                                               <div className="flex items-center justify-between mb-2">
-                                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                                <label className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">
                                                   Your Answer
                                                 </label>
                                                 {/* Only show the Guided STAR toggle for questions that actually benefit from STAR structure */}
@@ -7901,7 +7901,7 @@ export default function Portfolio() {
                                                     <button
                                                       type="button"
                                                       onClick={() => setStarMode(false)}
-                                                      className={`px-2.5 py-1 rounded-md text-[9px] font-bold transition duration-200 ease-out ${!starMode ? 'bg-violet-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}
+                                                      className={`px-2.5 py-1 rounded-md text-[9px] font-bold transition duration-200 ease-out ${!starMode ? 'bg-slate-700 text-white shadow-sm' : 'text-slate-500 hover:text-slate-200'}`}
                                                     >
                                                       ✍️ Freeform
                                                     </button>
@@ -7909,7 +7909,7 @@ export default function Portfolio() {
                                                       type="button"
                                                       onClick={enableStarMode}
                                                       disabled={isStarSplitting}
-                                                      className={`px-2.5 py-1 rounded-md text-[9px] font-bold transition duration-200 ease-out ${starMode ? 'bg-violet-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-355'} ${isStarSplitting ? 'opacity-70 cursor-wait' : ''}`}
+                                                      className={`px-2.5 py-1 rounded-md text-[9px] font-bold transition duration-200 ease-out ${starMode ? 'bg-slate-700 text-white shadow-sm' : 'text-slate-500 hover:text-slate-355'} ${isStarSplitting ? 'opacity-70 cursor-wait' : ''}`}
                                                     >
                                                       {isStarSplitting
                                                         ? '⏳ Analyzing...'
@@ -7924,7 +7924,7 @@ export default function Portfolio() {
                                                   {/* Situation */}
                                                   <div className="space-y-1">
                                                     <div className="flex justify-between items-center">
-                                                      <label className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1">
+                                                      <label className="text-[10px] font-bold text-slate-300 uppercase flex items-center gap-1">
                                                         <span className="w-4 h-4 rounded-full bg-blue-550/20 text-blue-400 border border-blue-500/20 flex items-center justify-center text-[9px] font-black">
                                                           S
                                                         </span>
@@ -7946,14 +7946,14 @@ export default function Portfolio() {
                                                         );
                                                       }}
                                                       placeholder="What was the situation? (e.g., 'Our service latency spiked by 40% during a traffic spike...')"
-                                                      className="w-full h-16 bg-slate-950/40 border border-slate-700 focus:border-violet-500 rounded-xl p-2.5 text-xs text-slate-300 placeholder-slate-650 resize-none focus:outline-none transition-colors"
+                                                      className="w-full h-16 bg-slate-950/40 border border-slate-700 focus:border-violet-500 rounded-xl p-2.5 text-xs text-slate-200 placeholder-slate-650 resize-none focus:outline-none transition-colors"
                                                     />
                                                   </div>
 
                                                   {/* Task */}
                                                   <div className="space-y-1">
                                                     <div className="flex justify-between items-center">
-                                                      <label className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1">
+                                                      <label className="text-[10px] font-bold text-slate-300 uppercase flex items-center gap-1">
                                                         <span className="w-4 h-4 rounded-full bg-amber-550/20 text-amber-400 border border-amber-500/20 flex items-center justify-center text-[9px] font-black">
                                                           T
                                                         </span>
@@ -7975,20 +7975,20 @@ export default function Portfolio() {
                                                         );
                                                       }}
                                                       placeholder="What did you need to do? (e.g., 'I was tasked with identifying the bottleneck and reducing latency under 200ms...')"
-                                                      className="w-full h-16 bg-slate-955/40 border border-slate-700 focus:border-violet-500 rounded-xl p-2.5 text-xs text-slate-300 placeholder-slate-650 resize-none focus:outline-none transition-colors"
+                                                      className="w-full h-16 bg-slate-955/40 border border-slate-700 focus:border-violet-500 rounded-xl p-2.5 text-xs text-slate-200 placeholder-slate-650 resize-none focus:outline-none transition-colors"
                                                     />
                                                   </div>
 
                                                   {/* Action */}
                                                   <div className="space-y-1">
                                                     <div className="flex justify-between items-center">
-                                                      <label className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1">
+                                                      <label className="text-[10px] font-bold text-slate-300 uppercase flex items-center gap-1">
                                                         <span className="w-4 h-4 rounded-full bg-emerald-555/20 text-emerald-400 border border-emerald-500/20 flex items-center justify-center text-[9px] font-black">
                                                           A
                                                         </span>
                                                         Action
                                                       </label>
-                                                      <span className="text-[9px] font-semibold text-violet-400">
+                                                      <span className="text-[9px] font-semibold text-slate-200">
                                                         Most important (60% of answer)
                                                       </span>
                                                     </div>
@@ -8004,14 +8004,14 @@ export default function Portfolio() {
                                                         );
                                                       }}
                                                       placeholder="What actions did you take? (e.g., 'I profiled the DB queries, added Redis caching, and optimized the indexes...')"
-                                                      className="w-full h-20 bg-slate-955/40 border border-slate-700 focus:border-violet-500 rounded-xl p-2.5 text-xs text-slate-300 placeholder-slate-650 resize-none focus:outline-none transition-colors"
+                                                      className="w-full h-20 bg-slate-955/40 border border-slate-700 focus:border-violet-500 rounded-xl p-2.5 text-xs text-slate-200 placeholder-slate-650 resize-none focus:outline-none transition-colors"
                                                     />
                                                   </div>
 
                                                   {/* Result */}
                                                   <div className="space-y-1">
                                                     <div className="flex justify-between items-center">
-                                                      <label className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1">
+                                                      <label className="text-[10px] font-bold text-slate-300 uppercase flex items-center gap-1">
                                                         <span className="w-4 h-4 rounded-full bg-rose-555/20 text-rose-455 border border-rose-500/20 flex items-center justify-center text-[9px] font-black">
                                                           R
                                                         </span>
@@ -8033,7 +8033,7 @@ export default function Portfolio() {
                                                         );
                                                       }}
                                                       placeholder="What was the result? (e.g., 'We reduced p99 latency by 65% and saved $4k in server costs...')"
-                                                      className="w-full h-16 bg-slate-955/40 border border-slate-700 focus:border-violet-500 rounded-xl p-2.5 text-xs text-slate-300 placeholder-slate-650 resize-none focus:outline-none transition-colors"
+                                                      className="w-full h-16 bg-slate-955/40 border border-slate-700 focus:border-violet-500 rounded-xl p-2.5 text-xs text-slate-200 placeholder-slate-650 resize-none focus:outline-none transition-colors"
                                                     />
                                                   </div>
                                                 </div>
@@ -8048,7 +8048,7 @@ export default function Portfolio() {
                                                       }))
                                                     }
                                                     placeholder={getPlaceholderText()}
-                                                    className={`w-full h-36 bg-slate-950/50 border rounded-xl p-3 pr-12 text-xs text-slate-300 placeholder-slate-600 resize-none focus:outline-none transition-colors ${isRecording ? 'border-red-500 bg-red-950/10' : 'border-slate-700 focus:border-violet-500'}`}
+                                                    className={`w-full h-36 bg-slate-950/50 border rounded-xl p-3 pr-12 text-xs text-slate-200 placeholder-slate-600 resize-none focus:outline-none transition-colors ${isRecording ? 'border-red-500 bg-red-950/10' : 'border-slate-700 focus:border-violet-500'}`}
                                                   />
                                                   {/* Microphone button */}
                                                   <button
@@ -8135,7 +8135,7 @@ export default function Portfolio() {
                                                     className={`absolute right-2 top-2 w-8 h-8 rounded-full flex items-center justify-center transition duration-200 ease-out ${
                                                       isRecording
                                                         ? 'bg-red-500 text-white animate-pulse shadow-lg shadow-red-500/40'
-                                                        : 'bg-slate-800 text-slate-400 hover:bg-violet-600 hover:text-white'
+                                                        : 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white'
                                                     }`}
                                                     title={
                                                       isRecording
@@ -8160,7 +8160,7 @@ export default function Portfolio() {
                                               {/* Audio playback */}
                                               {audioUrl && !isRecording && (
                                                 <div className="flex items-center gap-2 p-2 rounded-lg bg-slate-900/60 border border-slate-800">
-                                                  <span className="text-[10px] text-slate-400 font-bold">
+                                                  <span className="text-[10px] text-slate-300 font-bold">
                                                     🔊 Playback:
                                                   </span>
                                                   <audio
@@ -8184,7 +8184,7 @@ export default function Portfolio() {
                                                     }
                                                     setMockMode('idle');
                                                   }}
-                                                  className="flex-1 py-2 rounded-xl border border-slate-700 text-xs font-bold text-slate-400 hover:text-slate-200 hover:border-slate-500 transition duration-200 ease-out"
+                                                  className="flex-1 py-2 rounded-xl border border-slate-700 text-xs font-bold text-slate-300 hover:text-slate-200 hover:border-slate-500 transition duration-200 ease-out"
                                                 >
                                                   ✕ Skip
                                                 </button>
@@ -8198,7 +8198,7 @@ export default function Portfolio() {
                                                     submitAnswer();
                                                   }}
                                                   disabled={!currentAnswer.trim()}
-                                                  className="flex-1 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-40 text-white text-xs font-bold transition duration-200 ease-out"
+                                                  className="flex-1 py-2 rounded-xl bg-slate-700 hover:bg-violet-500 disabled:opacity-40 text-white text-xs font-bold transition duration-200 ease-out"
                                                 >
                                                   ✓ Submit Answer
                                                 </button>
@@ -8228,10 +8228,10 @@ export default function Portfolio() {
 
                                               {/* Your Submitted Response */}
                                               <div className="space-y-1.5">
-                                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                                                <p className="text-[10px] text-slate-300 font-bold uppercase tracking-wider">
                                                   Your Submitted Answer
                                                 </p>
-                                                <div className="p-3 bg-slate-900/60 border border-slate-800 rounded-xl space-y-2.5 text-xs text-slate-300 leading-relaxed text-justify">
+                                                <div className="p-3 bg-slate-900/60 border border-slate-800 rounded-xl space-y-2.5 text-xs text-slate-200 leading-relaxed text-justify">
                                                   {(() => {
                                                     const isStar =
                                                       currentAnswer.includes('[Situation]') ||
@@ -8272,7 +8272,7 @@ export default function Portfolio() {
                                                                 S
                                                               </span>
                                                               <div className="flex-1">
-                                                                <span className="font-bold text-slate-400 text-[10px] uppercase block mb-0.5">
+                                                                <span className="font-bold text-slate-300 text-[10px] uppercase block mb-0.5">
                                                                   Situation
                                                                 </span>
                                                                 {sit}
@@ -8285,7 +8285,7 @@ export default function Portfolio() {
                                                                 T
                                                               </span>
                                                               <div className="flex-1">
-                                                                <span className="font-bold text-slate-400 text-[10px] uppercase block mb-0.5">
+                                                                <span className="font-bold text-slate-300 text-[10px] uppercase block mb-0.5">
                                                                   Task
                                                                 </span>
                                                                 {tsk}
@@ -8298,7 +8298,7 @@ export default function Portfolio() {
                                                                 A
                                                               </span>
                                                               <div className="flex-1">
-                                                                <span className="font-bold text-slate-400 text-[10px] uppercase block mb-0.5">
+                                                                <span className="font-bold text-slate-300 text-[10px] uppercase block mb-0.5">
                                                                   Action
                                                                 </span>
                                                                 {act}
@@ -8311,7 +8311,7 @@ export default function Portfolio() {
                                                                 R
                                                               </span>
                                                               <div className="flex-1">
-                                                                <span className="font-bold text-slate-400 text-[10px] uppercase block mb-0.5">
+                                                                <span className="font-bold text-slate-300 text-[10px] uppercase block mb-0.5">
                                                                   Result
                                                                 </span>
                                                                 {res}
@@ -8339,7 +8339,7 @@ export default function Portfolio() {
                                                   {currentScore.strengths.map((s, i) => (
                                                     <p
                                                       key={i}
-                                                      className="text-[11px] text-slate-300 bg-emerald-950/20 border border-emerald-900/30 rounded-lg p-2"
+                                                      className="text-[11px] text-slate-200 bg-emerald-950/20 border border-emerald-900/30 rounded-lg p-2"
                                                     >
                                                       {s}
                                                     </p>
@@ -8356,7 +8356,7 @@ export default function Portfolio() {
                                                   {currentScore.improvements.map((s, i) => (
                                                     <p
                                                       key={i}
-                                                      className="text-[11px] text-slate-300 bg-amber-955/20 border border-amber-900/30 rounded-lg p-2"
+                                                      className="text-[11px] text-slate-200 bg-amber-955/20 border border-amber-900/30 rounded-lg p-2"
                                                     >
                                                       {s}
                                                     </p>
@@ -8374,7 +8374,7 @@ export default function Portfolio() {
                                                         [currentQ.id]: !p[currentQ.id],
                                                       }))
                                                     }
-                                                    className="w-full py-2 border border-slate-700 rounded-xl text-xs font-bold text-slate-400 hover:text-violet-300 hover:border-violet-500 transition duration-200 ease-out"
+                                                    className="w-full py-2 border border-slate-700 rounded-xl text-xs font-bold text-slate-300 hover:text-slate-300 hover:border-violet-500 transition duration-200 ease-out"
                                                   >
                                                     📝{' '}
                                                     {sampleVisible[currentQ.id] ? 'Hide' : 'View'}{' '}
@@ -8391,7 +8391,7 @@ export default function Portfolio() {
                                               {/* AI Answer Polishing & Rewrite */}
                                               <div className="border-t border-slate-800 pt-3.5 space-y-2">
                                                 <div className="flex justify-between items-center">
-                                                  <p className="text-[10px] text-violet-400 font-bold uppercase tracking-wider">
+                                                  <p className="text-[10px] text-slate-200 font-bold uppercase tracking-wider">
                                                     ✨ AI Response Optimizer & Coach
                                                   </p>
                                                   {geminiApiKey.trim() &&
@@ -8423,7 +8423,7 @@ export default function Portfolio() {
                                                             setLoadingOptimization(false);
                                                           }
                                                         }}
-                                                        className="px-2.5 py-1 rounded bg-violet-650 hover:bg-violet-600 text-[9px] font-bold text-white transition-colors"
+                                                        className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-[9px] font-bold text-white transition-colors"
                                                       >
                                                         {loadingOptimization
                                                           ? '⏳ Polishing...'
@@ -8448,7 +8448,7 @@ export default function Portfolio() {
                                                   <div className="space-y-3 animate-fadeIn">
                                                     {/* Feedback card */}
                                                     <div className="p-3.5 rounded-xl border border-violet-500/20 bg-violet-500/5 space-y-1.5">
-                                                      <p className="text-[9px] text-violet-400 font-bold uppercase">
+                                                      <p className="text-[9px] text-slate-200 font-bold uppercase">
                                                         💡 AI Coach Suggestions
                                                       </p>
                                                       <p className="text-[11px] text-slate-350 leading-relaxed text-justify">
@@ -8478,7 +8478,7 @@ export default function Portfolio() {
                                                           📋 Copy Answer
                                                         </button>
                                                       </div>
-                                                      <p className="text-[11px] text-slate-300 leading-relaxed text-justify italic">
+                                                      <p className="text-[11px] text-slate-200 leading-relaxed text-justify italic">
                                                         "
                                                         {
                                                           optimizedResults[currentQ.id]
@@ -8503,7 +8503,7 @@ export default function Portfolio() {
                                               {/* Next button */}
                                               <button
                                                 onClick={nextQuestion}
-                                                className="w-full py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-xs font-bold text-white transition duration-200 ease-out"
+                                                className="w-full py-2.5 rounded-xl bg-slate-700 hover:bg-violet-500 text-xs font-bold text-white transition duration-200 ease-out"
                                               >
                                                 {mockQuestionIdx + 1 < totalQ
                                                   ? 'Next Question →'
@@ -8529,7 +8529,7 @@ export default function Portfolio() {
               <div className="space-y-6 animate-fadeIn">
                 <div>
                   <h2 className="text-base font-bold text-white">Mock Inbound Leads</h2>
-                  <p className="text-xs text-slate-400 mt-1">
+                  <p className="text-xs text-slate-300 mt-1">
                     Inspect mock inquiries received via the contact form in the live portfolio
                     preview.
                   </p>
@@ -8543,7 +8543,7 @@ export default function Portfolio() {
                         className="p-4 rounded-xl bg-slate-950/30 border border-slate-800 space-y-2 text-xs relative"
                       >
                         {msg.unread && (
-                          <span className="absolute top-3 right-3 w-2 h-2 bg-indigo-500 rounded-full"></span>
+                          <span className="absolute top-3 right-3 w-2 h-2 bg-slate-700 rounded-full"></span>
                         )}
 
                         <div className="flex justify-between items-start">
@@ -8557,10 +8557,10 @@ export default function Portfolio() {
                         </div>
 
                         <div className="border-t border-slate-850 pt-2 space-y-1">
-                          <span className="font-bold text-indigo-400 block text-[10px] uppercase">
+                          <span className="font-bold text-slate-200 block text-[10px] uppercase">
                             Subject: {msg.subject}
                           </span>
-                          <p className="text-slate-400 leading-relaxed leading-normal font-normal">
+                          <p className="text-slate-300 leading-relaxed leading-normal font-normal">
                             {msg.message}
                           </p>
                         </div>
@@ -8599,7 +8599,7 @@ export default function Portfolio() {
                 <button
                   onClick={handleZipDownload}
                   disabled={isZipping}
-                  className="flex items-center gap-1.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition duration-200 ease-out shadow-lg shadow-indigo-500/25 active:scale-[0.97] cursor-pointer disabled:opacity-50"
+                  className="flex items-center gap-1.5 bg-white text-slate-900 hover:bg-slate-200 text-white px-4 py-2 rounded-xl text-sm font-bold transition duration-200 ease-out shadow-lg shadow-black/10 active:scale-[0.97] cursor-pointer disabled:opacity-50"
                 >
                   {copiedZip ? <Check className="w-4 h-4 text-emerald-300 animate-pulse" /> : <Download className="w-4 h-4" />}
                   <span>{isZipping ? 'Creating ZIP...' : copiedZip ? 'Downloaded ZIP!' : 'Download Project (.zip)'}</span>
@@ -8617,7 +8617,7 @@ export default function Portfolio() {
                   onClick={() => handleWordDownload()}
                   className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-4 py-2 rounded-xl text-sm font-semibold transition duration-200 ease-out cursor-pointer"
                 >
-                  <FileText className="w-4 h-4 text-indigo-400" />
+                  <FileText className="w-4 h-4 text-slate-200" />
                   <span>Word (.doc)</span>
                 </button>
 
@@ -8631,15 +8631,15 @@ export default function Portfolio() {
               </div>
 
               {showRevisedPreview && revisedResumeData && (
-                <div className="w-full max-w-4xl bg-indigo-900/95 border border-indigo-700 rounded-xl p-3 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-indigo-100 animate-fadeIn">
+                <div className="w-full max-w-4xl bg-slate-800/95 border border-indigo-700 rounded-xl p-3 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-indigo-100 animate-fadeIn">
                   <div className="flex items-center gap-3">
-                    <span className="p-1 px-2 rounded bg-indigo-950 text-indigo-400 font-bold uppercase text-[9px]">
+                    <span className="p-1 px-2 rounded bg-slate-800 text-slate-200 font-bold uppercase text-[9px]">
                       AI ACTIVE PREVIEW
                     </span>
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => setHighlightChanges(!highlightChanges)}
-                        className={`flex items-center gap-1.5 px-2 py-1 rounded transition-colors ${highlightChanges ? 'bg-indigo-400 text-indigo-950' : 'bg-indigo-800 text-indigo-300'}`}
+                        className={`flex items-center gap-1.5 px-2 py-1 rounded transition-colors ${highlightChanges ? 'bg-slate-600 text-indigo-950' : 'bg-indigo-800 text-slate-300'}`}
                       >
                         {highlightChanges ? (
                           <CheckCircle className="w-3.5 h-3.5" />
@@ -8663,7 +8663,7 @@ export default function Portfolio() {
                         setRevisedResumeData(null);
                         setAppliedFixes([]);
                       }}
-                      className="bg-indigo-950/50 text-indigo-300 px-3 py-1.5 rounded-lg font-bold hover:bg-indigo-900 transition-colors cursor-pointer border border-indigo-700"
+                      className="bg-slate-800/50 text-slate-300 px-3 py-1.5 rounded-lg font-bold hover:bg-slate-800 transition-colors cursor-pointer border border-indigo-700"
                     >
                       Discard Draft
                     </button>
@@ -8719,7 +8719,7 @@ export default function Portfolio() {
 
               <div className="p-5 flex-1 overflow-y-auto space-y-6">
                 <div>
-                  <p className="text-xs text-slate-400 mb-4 leading-relaxed">
+                  <p className="text-xs text-slate-300 mb-4 leading-relaxed">
                     Select a professional layout below. When you click download, your browser's
                     print dialog will open—be sure to select{' '}
                     <strong className="text-slate-200">Save as PDF</strong>.
@@ -8761,9 +8761,9 @@ export default function Portfolio() {
                             <div className="w-full h-full bg-white p-2 font-sans text-[4px]">
                               <div className="flex justify-between border-b-2 border-indigo-600 mb-1 pb-1">
                                 <div className="font-black text-[6px] text-slate-900">ALEX R.</div>
-                                <div className="text-[3px] text-indigo-600">alex@mail.com</div>
+                                <div className="text-[3px] text-slate-200">alex@mail.com</div>
                               </div>
-                              <div className="text-[3px] font-bold text-slate-400 mb-1">
+                              <div className="text-[3px] font-bold text-slate-300 mb-1">
                                 EXPERIENCE
                               </div>
                               <div className="border-l-2 border-indigo-100 pl-1 mb-1">
@@ -8842,9 +8842,9 @@ export default function Portfolio() {
                           atsScore: 65,
                           atsLevel: 'MODERATE',
                           preview: (
-                            <div className="w-full h-full bg-slate-950 p-2 font-mono text-[3.5px] text-slate-300">
-                              <div className="border border-indigo-500/30 p-1 mb-2">
-                                <div className="text-indigo-400 font-bold tracking-tighter">
+                            <div className="w-full h-full bg-slate-950 p-2 font-mono text-[3.5px] text-slate-200">
+                              <div className="border border-slate-600/30 p-1 mb-2">
+                                <div className="text-slate-200 font-bold tracking-tighter">
                                   ALEX_RIVERA.v1
                                 </div>
                               </div>
@@ -8867,7 +8867,7 @@ export default function Portfolio() {
                               <div className="mb-2">
                                 <div className="font-light text-[6px]">Alex Rivera</div>
                               </div>
-                              <div className="text-slate-400 mb-2 font-normal uppercase tracking-widest text-[4px]">
+                              <div className="text-slate-300 mb-2 font-normal uppercase tracking-widest text-[4px]">
                                 Experience
                               </div>
                             </div>
@@ -8898,7 +8898,7 @@ export default function Portfolio() {
                         onClick={() => setPrintTemplate(t.id)}
                         className={`group relative p-3 rounded-2xl border text-left transition duration-300 ${
                           printTemplate === t.id
-                            ? 'bg-indigo-900/40 border-indigo-500 ring-4 ring-indigo-500/20'
+                            ? 'bg-slate-800/40 border-slate-600 ring-4 ring-indigo-500/20'
                             : 'bg-slate-900/50 border-slate-800 hover:border-slate-600 hover:bg-slate-800'
                         }`}
                       >
@@ -8919,8 +8919,8 @@ export default function Portfolio() {
                                   t.atsLevel === 'PERFECT'
                                     ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                                     : t.atsLevel === 'EXCELLENT'
-                                      ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
-                                      : 'bg-slate-500/10 text-slate-400 border border-slate-500/20'
+                                      ? 'bg-slate-700/10 text-slate-200 border border-slate-600/20'
+                                      : 'bg-slate-500/10 text-slate-300 border border-slate-500/20'
                                 }`}
                               >
                                 ATS: {t.atsLevel} ({t.atsScore}%)
@@ -8932,7 +8932,7 @@ export default function Portfolio() {
                           </span>
                         </div>
                         {printTemplate === t.id && (
-                          <div className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-indigo-500 rounded-full flex items-center justify-center shadow-lg border-2 border-slate-900">
+                          <div className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-slate-700 rounded-full flex items-center justify-center shadow-lg border-2 border-slate-900">
                             <Check className="w-3 h-3 text-white" />
                           </div>
                         )}
@@ -8943,7 +8943,7 @@ export default function Portfolio() {
 
                 {/* Paper Size Selector */}
                 <div>
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">
+                  <label className="text-xs font-bold text-slate-300 uppercase tracking-wider block mb-2">
                     Paper Size
                   </label>
                   <div className="flex gap-2">
@@ -8951,8 +8951,8 @@ export default function Portfolio() {
                       onClick={() => setPaperSize('letter')}
                       className={`flex-1 py-2 rounded-lg border text-xs font-bold transition duration-200 ease-out ${
                         paperSize === 'letter'
-                          ? 'bg-indigo-900/40 border-indigo-500 text-white'
-                          : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-600'
+                          ? 'bg-slate-800/40 border-slate-600 text-white'
+                          : 'bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-600'
                       }`}
                     >
                       US Letter
@@ -8961,8 +8961,8 @@ export default function Portfolio() {
                       onClick={() => setPaperSize('a4')}
                       className={`flex-1 py-2 rounded-lg border text-xs font-bold transition duration-200 ease-out ${
                         paperSize === 'a4'
-                          ? 'bg-indigo-900/40 border-indigo-500 text-white'
-                          : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-600'
+                          ? 'bg-slate-800/40 border-slate-600 text-white'
+                          : 'bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-600'
                       }`}
                     >
                       A4 (International)
@@ -8973,11 +8973,11 @@ export default function Portfolio() {
                 {/* Spacing & Page Fit Selector */}
                 <div>
                   <div className="flex justify-between items-center mb-2">
-                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">
                       Spacing & Page Fit
                     </label>
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] text-slate-400 font-semibold">
+                      <span className="text-[10px] text-slate-300 font-semibold">
                         Auto-Fit 1 Page
                       </span>
                       <button
@@ -9018,22 +9018,22 @@ export default function Portfolio() {
                         onClick={() => setSpacingDensity(opt.id as any)}
                         className={`w-full p-2.5 rounded-lg border text-left transition duration-200 ease-out flex items-center justify-between ${
                           spacingDensity === opt.id
-                            ? 'bg-indigo-900/40 border-indigo-500 text-white'
-                            : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-600'
+                            ? 'bg-slate-800/40 border-slate-600 text-white'
+                            : 'bg-slate-900 border-slate-800 text-slate-300 hover:border-slate-600'
                         }`}
                       >
                         <div>
                           <div className="text-xs font-bold">{opt.label}</div>
                           <div className="text-[9px] text-slate-500 mt-0.5">{opt.desc}</div>
                         </div>
-                        {spacingDensity === opt.id && <Check className="w-4 h-4 text-indigo-400" />}
+                        {spacingDensity === opt.id && <Check className="w-4 h-4 text-slate-200" />}
                       </button>
                     ))}
                   </div>
 
                   {autoFitToPage && printScaleFactor < 1 && (
-                    <div className="mt-3 p-2.5 bg-indigo-950/40 border border-indigo-900/40 rounded-xl flex items-center gap-2 text-indigo-300 animate-fadeIn">
-                      <Sparkles className="w-3.5 h-3.5 text-indigo-400 shrink-0 animate-pulse" />
+                    <div className="mt-3 p-2.5 bg-slate-800/40 border border-indigo-900/40 rounded-xl flex items-center gap-2 text-slate-300 animate-fadeIn">
+                      <Sparkles className="w-3.5 h-3.5 text-slate-200 shrink-0 animate-pulse" />
                       <span className="text-[10px] font-medium leading-tight">
                         Auto-scaled to{' '}
                         <strong className="text-white">
@@ -9050,7 +9050,7 @@ export default function Portfolio() {
                 <button
                   onClick={triggerPdfPrint}
                   disabled={isGeneratingPdf}
-                  className="w-full py-4 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-850 text-white rounded-2xl font-black text-sm shadow-xl shadow-indigo-900/40 transition duration-200 ease-out flex justify-center items-center gap-3 active:scale-[0.97] disabled:opacity-75 disabled:cursor-not-allowed"
+                  className="w-full py-4 bg-indigo-600 hover:bg-slate-700 disabled:bg-indigo-850 text-white rounded-2xl font-black text-sm shadow-xl shadow-indigo-900/40 transition duration-200 ease-out flex justify-center items-center gap-3 active:scale-[0.97] disabled:opacity-75 disabled:cursor-not-allowed"
                 >
                   {isGeneratingPdf ? (
                     <>
@@ -9067,30 +9067,30 @@ export default function Portfolio() {
                 <button
                   onClick={() => handleWordDownload(printTemplate)}
                   disabled={isGeneratingPdf}
-                  className="w-full py-3 bg-slate-800 hover:bg-slate-700 disabled:bg-slate-900 text-slate-300 rounded-2xl text-xs font-bold transition duration-200 ease-out flex justify-center items-center gap-2 disabled:opacity-50"
+                  className="w-full py-3 bg-slate-800 hover:bg-slate-700 disabled:bg-slate-900 text-slate-200 rounded-2xl text-xs font-bold transition duration-200 ease-out flex justify-center items-center gap-2 disabled:opacity-50"
                 >
                   <FileText className="w-4 h-4 text-slate-500" />
                   <span>Export to Word / OpenOffice (.docx)</span>
                 </button>
-                <div className="text-[10px] text-center text-slate-400 mt-1">
+                <div className="text-[10px] text-center text-slate-300 mt-1">
                   ✨ Optimized for MS Word, OpenOffice, LibreOffice, & Google Docs
                 </div>
                 <button
                   onClick={() => window.print()}
                   disabled={isGeneratingPdf}
-                  className="w-full py-2.5 bg-slate-950 hover:bg-slate-900 text-slate-400 border border-slate-800 hover:text-slate-200 rounded-2xl text-xs font-bold transition duration-200 ease-out flex justify-center items-center gap-2 disabled:opacity-50"
+                  className="w-full py-2.5 bg-slate-950 hover:bg-slate-900 text-slate-300 border border-slate-800 hover:text-slate-200 rounded-2xl text-xs font-bold transition duration-200 ease-out flex justify-center items-center gap-2 disabled:opacity-50"
                 >
                   <Sparkles className="w-3.5 h-3.5 text-slate-500" />
                   <span>Open Browser System Printer...</span>
                 </button>
 
                 {jobDescription && !showRevisedPreview && (
-                  <div className="bg-indigo-950/30 border border-indigo-900/50 rounded-2xl p-4 space-y-3">
-                    <div className="flex items-center gap-2 text-indigo-400 font-bold text-[10px] uppercase tracking-widest">
+                  <div className="bg-slate-800/30 border border-indigo-900/50 rounded-2xl p-4 space-y-3">
+                    <div className="flex items-center gap-2 text-slate-200 font-bold text-[10px] uppercase tracking-widest">
                       <Sparkles className="w-4 h-4 animate-pulse" />
                       <span>AI Optimization Available</span>
                     </div>
-                    <p className="text-[10px] text-slate-400 leading-relaxed">
+                    <p className="text-[10px] text-slate-300 leading-relaxed">
                       We can auto-rewrite your bullets to match the target job description while
                       maintaining this exact design.
                     </p>
@@ -9161,7 +9161,7 @@ export default function Portfolio() {
             {!authLoading && (
               <button
                 onClick={() => setShowAuthModal(false)}
-                className="absolute top-4 right-4 text-slate-400 hover:text-white hover:bg-slate-800/50 p-1.5 rounded-lg transition duration-200 ease-out cursor-pointer"
+                className="absolute top-4 right-4 text-slate-300 hover:text-white hover:bg-slate-800/50 p-1.5 rounded-lg transition duration-200 ease-out cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -9206,7 +9206,7 @@ export default function Portfolio() {
                     value={authEmail}
                     onChange={(e) => setAuthEmail(e.target.value)}
                     placeholder="e.g. you@example.com"
-                    className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-xl px-3.5 py-2 text-xs text-slate-100 placeholder-slate-650 focus:outline-none transition-colors"
+                    className="w-full bg-slate-950 border border-slate-800 focus:border-slate-600 rounded-xl px-3.5 py-2 text-xs text-slate-100 placeholder-slate-650 focus:outline-none transition-colors"
                   />
                 </div>
 
@@ -9220,7 +9220,7 @@ export default function Portfolio() {
                     value={authPassword}
                     onChange={(e) => setAuthPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full bg-slate-955 border border-slate-800 focus:border-indigo-500 rounded-xl px-3.5 py-2 text-xs text-slate-100 placeholder-slate-655 focus:outline-none transition-colors"
+                    className="w-full bg-slate-955 border border-slate-800 focus:border-slate-600 rounded-xl px-3.5 py-2 text-xs text-slate-100 placeholder-slate-655 focus:outline-none transition-colors"
                   />
                 </div>
 
@@ -9231,7 +9231,7 @@ export default function Portfolio() {
                 >
                   {authLoading ? (
                     <>
-                      <span className="animate-spin text-slate-300">⏳</span> Processing...
+                      <span className="animate-spin text-slate-200">⏳</span> Processing...
                     </>
                   ) : (
                     <span>{authMode === 'login' ? '🔑 Sign In' : '📝 Register'}</span>
@@ -9284,7 +9284,7 @@ export default function Portfolio() {
                     setAuthMode(authMode === 'login' ? 'signup' : 'login');
                     setAuthError('');
                   }}
-                  className="text-indigo-400 hover:text-indigo-300 font-bold underline transition-colors cursor-pointer"
+                  className="text-slate-200 hover:text-slate-300 font-bold underline transition-colors cursor-pointer"
                 >
                   {authMode === 'login' ? 'Sign Up Free' : 'Sign In Here'}
                 </button>
@@ -9304,7 +9304,7 @@ export default function Portfolio() {
               vercelDeployState === 'error') && (
               <button
                 onClick={() => setShowVercelModal(false)}
-                className="absolute top-4 right-4 text-slate-400 hover:text-white hover:bg-slate-800/50 p-1.5 rounded-lg transition duration-200 ease-out"
+                className="absolute top-4 right-4 text-slate-300 hover:text-white hover:bg-slate-800/50 p-1.5 rounded-lg transition duration-200 ease-out"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -9332,7 +9332,7 @@ export default function Portfolio() {
               {/* IDLE / INPUT STATE */}
               {(vercelDeployState === 'idle' || vercelDeployState === 'error') && (
                 <div className="space-y-5">
-                  <p className="text-xs text-slate-400 leading-relaxed font-semibold">
+                  <p className="text-xs text-slate-300 leading-relaxed font-semibold">
                     Deploy your high-fidelity React + Vite portfolio website directly to Vercel
                     production. No command lines, git pushes, or configuration files required.
                   </p>
@@ -9351,14 +9351,14 @@ export default function Portfolio() {
                     {/* Access Token Field */}
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-between">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                        <label className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">
                           Vercel Personal Access Token
                         </label>
                         <a
                           href="https://vercel.com/account/tokens"
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-[10px] text-indigo-400 hover:text-indigo-300 font-bold underline transition-colors"
+                          className="text-[10px] text-slate-200 hover:text-slate-300 font-bold underline transition-colors"
                         >
                           Generate Token →
                         </a>
@@ -9369,7 +9369,7 @@ export default function Portfolio() {
                           value={vercelToken}
                           onChange={(e) => setVercelToken(e.target.value)}
                           placeholder="paste your vercel token (e.g. v2_...)"
-                          className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-600 focus:outline-none transition-colors"
+                          className="w-full bg-slate-950 border border-slate-800 focus:border-slate-600 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-600 focus:outline-none transition-colors"
                         />
                       </div>
                       <p className="text-[10px] text-slate-500 leading-normal">
@@ -9380,7 +9380,7 @@ export default function Portfolio() {
 
                     {/* Project Name Field */}
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                      <label className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">
                         Vercel Project Name
                       </label>
                       <div className="relative">
@@ -9393,12 +9393,12 @@ export default function Portfolio() {
                             )
                           }
                           placeholder="e.g. my-awesome-portfolio"
-                          className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-600 focus:outline-none transition-colors"
+                          className="w-full bg-slate-950 border border-slate-800 focus:border-slate-600 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-600 focus:outline-none transition-colors"
                         />
                       </div>
                       <div className="flex items-center gap-1.5 text-[10px] text-slate-500 font-semibold">
                         <span>Expected subdomain:</span>
-                        <span className="font-mono text-indigo-400 bg-slate-950 px-1.5 py-0.5 rounded border border-slate-850">
+                        <span className="font-mono text-slate-200 bg-slate-950 px-1.5 py-0.5 rounded border border-slate-850">
                           {vercelProjectName || 'project-name'}.vercel.app
                         </span>
                       </div>
@@ -9407,7 +9407,7 @@ export default function Portfolio() {
 
                   <button
                     onClick={handleVercelDeploy}
-                    className="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-extrabold py-3 rounded-xl text-xs transition duration-200 ease-out shadow-lg hover:shadow-indigo-500/20 active:scale-[0.97] cursor-pointer flex items-center justify-center gap-2 mt-2"
+                    className="w-full bg-white text-slate-900 hover:bg-slate-200 text-white font-extrabold py-3 rounded-xl text-xs transition duration-200 ease-out shadow-lg hover:shadow-black/10 active:scale-[0.97] cursor-pointer flex items-center justify-center gap-2 mt-2"
                   >
                     <svg className="w-3.5 h-3.5 fill-current text-white" viewBox="0 0 512 512">
                       <path d="M256,48,496,464H16Z" />
@@ -9424,10 +9424,10 @@ export default function Portfolio() {
                 <div className="py-8 flex flex-col items-center justify-center text-center space-y-6">
                   {/* Glowing Pulse Spinner */}
                   <div className="relative flex items-center justify-center animate-pulse">
-                    <div className="absolute inset-0 bg-indigo-500/10 rounded-full blur-xl w-24 h-24 animate-pulse"></div>
-                    <div className="relative w-16 h-16 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin"></div>
+                    <div className="absolute inset-0 bg-slate-700/10 rounded-full blur-xl w-24 h-24 animate-pulse"></div>
+                    <div className="relative w-16 h-16 border-4 border-slate-600/20 border-t-indigo-500 rounded-full animate-spin"></div>
                     <div className="absolute flex items-center justify-center text-black">
-                      <svg className="w-6 h-6 fill-current text-indigo-400" viewBox="0 0 512 512">
+                      <svg className="w-6 h-6 fill-current text-slate-200" viewBox="0 0 512 512">
                         <path d="M256,48,496,464H16Z" />
                       </svg>
                     </div>
@@ -9437,7 +9437,7 @@ export default function Portfolio() {
                     <h4 className="text-sm font-bold text-white tracking-wide">
                       Publishing Live Portfolio
                     </h4>
-                    <p className="text-xs text-slate-400 leading-relaxed font-medium">
+                    <p className="text-xs text-slate-300 leading-relaxed font-medium">
                       {vercelDeployProgress}
                     </p>
                   </div>
@@ -9455,7 +9455,7 @@ export default function Portfolio() {
                         {vercelDeployState !== 'preparing' ? '✓' : '1'}
                       </div>
                       <span
-                        className={`text-[11px] font-semibold ${vercelDeployState !== 'preparing' ? 'text-slate-300' : 'text-indigo-400 font-bold'}`}
+                        className={`text-[11px] font-semibold ${vercelDeployState !== 'preparing' ? 'text-slate-200' : 'text-slate-200 font-bold'}`}
                       >
                         Compiling responsive portfolio modules
                       </span>
@@ -9481,9 +9481,9 @@ export default function Portfolio() {
                         className={`text-[11px] font-semibold ${
                           vercelDeployState === 'polling' ||
                           (vercelDeployState as string) === 'success'
-                            ? 'text-slate-300'
+                            ? 'text-slate-200'
                             : vercelDeployState === 'deploying'
-                              ? 'text-indigo-400 font-bold'
+                              ? 'text-slate-200 font-bold'
                               : 'text-slate-500'
                         }`}
                       >
@@ -9506,9 +9506,9 @@ export default function Portfolio() {
                       <span
                         className={`text-[11px] font-semibold ${
                           (vercelDeployState as string) === 'success'
-                            ? 'text-slate-300'
+                            ? 'text-slate-200'
                             : vercelDeployState === 'polling'
-                              ? 'text-indigo-400 font-bold'
+                              ? 'text-slate-200 font-bold'
                               : 'text-slate-500'
                         }`}
                       >
@@ -9529,7 +9529,7 @@ export default function Portfolio() {
                     <h4 className="text-sm font-extrabold text-white tracking-wide">
                       Deploy Complete!
                     </h4>
-                    <p className="text-xs text-slate-400 leading-normal max-w-xs">
+                    <p className="text-xs text-slate-300 leading-normal max-w-xs">
                       Your premium portfolio is now live on the Vercel edge CDN globally!
                     </p>
                   </div>
@@ -9545,7 +9545,7 @@ export default function Portfolio() {
                           href={vercelDeployUrl}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-xs text-indigo-400 hover:text-indigo-300 font-bold underline truncate font-semibold"
+                          className="text-xs text-slate-200 hover:text-slate-300 font-bold underline truncate font-semibold"
                         >
                           {vercelDeployUrl}
                         </a>
@@ -9555,7 +9555,7 @@ export default function Portfolio() {
                             setCopiedVercelUrl(true);
                             setTimeout(() => setCopiedVercelUrl(false), 2000);
                           }}
-                          className="text-slate-400 hover:text-white p-1 rounded transition-colors shrink-0 cursor-pointer"
+                          className="text-slate-300 hover:text-white p-1 rounded transition-colors shrink-0 cursor-pointer"
                           title="Copy Link"
                         >
                           {copiedVercelUrl ? (
@@ -9609,7 +9609,7 @@ export default function Portfolio() {
                       href={vercelDeployUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-extrabold py-3 rounded-xl text-xs transition duration-200 ease-out shadow-lg hover:shadow-indigo-500/25 flex items-center justify-center gap-2 cursor-pointer"
+                      className="w-full bg-white text-slate-900 hover:bg-slate-200 text-white font-extrabold py-3 rounded-xl text-xs transition duration-200 ease-out shadow-lg hover:shadow-black/10 flex items-center justify-center gap-2 cursor-pointer"
                     >
                       <span>Visit Live Website</span>
                     </a>
@@ -9792,8 +9792,8 @@ export default function Portfolio() {
               mobileActiveView === 'editor'
                 ? appTheme === 'nord-light'
                   ? 'text-indigo-650 font-bold font-semibold'
-                  : 'text-indigo-400 font-bold font-semibold'
-                : 'text-slate-500 hover:text-slate-400'
+                  : 'text-slate-200 font-bold font-semibold'
+                : 'text-slate-500 hover:text-slate-300'
             }`}
           >
             <FileText className="w-5 h-5" />
@@ -9805,8 +9805,8 @@ export default function Portfolio() {
               mobileActiveView === 'preview'
                 ? appTheme === 'nord-light'
                   ? 'text-indigo-650 font-bold font-semibold'
-                  : 'text-indigo-400 font-bold font-semibold'
-                : 'text-slate-500 hover:text-slate-400'
+                  : 'text-slate-200 font-bold font-semibold'
+                : 'text-slate-500 hover:text-slate-300'
             }`}
           >
             <Smartphone className="w-5 h-5" />
