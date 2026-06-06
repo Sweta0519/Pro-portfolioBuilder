@@ -2636,6 +2636,7 @@ export default function Portfolio() {
                 <span>React Code</span>
               </button>
             </div>
+            )}
           </div>
 
           {/* Fullscreen Toggle */}
