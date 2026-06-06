@@ -1385,8 +1385,30 @@ async function fetchWithGroq(apiKey: string, prompt: string): Promise<GeminiEnha
   return parseInsightsResponse(textContent);
 }
 
+const VALID_OPENROUTER_MODELS = [
+  'meta-llama/llama-3.3-70b-instruct:free',
+  'deepseek/deepseek-r1:free',
+  'deepseek/deepseek-r1-distill-llama-70b:free',
+  'google/gemma-3-27b-it:free',
+  'mistralai/mistral-7b-instruct:free',
+  'qwen/qwen-2.5-72b-instruct:free',
+  'microsoft/phi-3-mini-128k-instruct:free',
+  'anthropic/claude-3.5-sonnet',
+  'openai/gpt-4o',
+  'google/gemini-2.0-flash-001',
+  'meta-llama/llama-3.3-70b-instruct'
+];
+
+function getValidOpenRouterModel(): string {
+  const model = localStorage.getItem('openrouter_model');
+  if (!model || !VALID_OPENROUTER_MODELS.includes(model)) {
+    return 'meta-llama/llama-3.3-70b-instruct:free';
+  }
+  return model;
+}
+
 async function fetchWithOpenRouter(apiKey: string, prompt: string): Promise<GeminiEnhancedData | null> {
-  const model = localStorage.getItem('openrouter_model') || 'meta-llama/llama-3.3-70b-instruct:free';
+  const model = getValidOpenRouterModel();
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -1455,7 +1477,7 @@ async function callAiChat(
       : 'https://openrouter.ai/api/v1/chat/completions';
     const model = provider === 'groq'
       ? 'llama-3.3-70b-versatile'
-      : (localStorage.getItem('openrouter_model') || 'meta-llama/llama-3.3-70b-instruct:free');
+      : getValidOpenRouterModel();
     const extraHeaders = provider === 'openrouter'
       ? { 'HTTP-Referer': 'https://pro-portfolio-builder.vercel.app', 'X-Title': 'Pro Portfolio Builder' }
       : {};

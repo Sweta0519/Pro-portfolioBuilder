@@ -625,7 +625,28 @@ export default function App() {
   const [geminiError, setGeminiError] = useState<string>('');
   const [showApiKeyInput, setShowApiKeyInput] = useState<boolean>(false);
   const [aiProvider, setAiProvider] = useState<AiProvider>(() => (localStorage.getItem('ai_provider') as AiProvider) || 'groq');
-  const [openRouterModel, setOpenRouterModel] = useState<string>(() => localStorage.getItem('openrouter_model') || 'meta-llama/llama-3.3-70b-instruct:free');
+  const [openRouterModel, setOpenRouterModel] = useState<string>(() => {
+    const stored = localStorage.getItem('openrouter_model');
+    const validModels = [
+      'meta-llama/llama-3.3-70b-instruct:free',
+      'deepseek/deepseek-r1:free',
+      'deepseek/deepseek-r1-distill-llama-70b:free',
+      'google/gemma-3-27b-it:free',
+      'mistralai/mistral-7b-instruct:free',
+      'qwen/qwen-2.5-72b-instruct:free',
+      'microsoft/phi-3-mini-128k-instruct:free',
+      'anthropic/claude-3.5-sonnet',
+      'openai/gpt-4o',
+      'google/gemini-2.0-flash-001',
+      'meta-llama/llama-3.3-70b-instruct'
+    ];
+    if (stored && validModels.includes(stored)) {
+      return stored;
+    }
+    // Update legacy/empty stored value to default
+    localStorage.setItem('openrouter_model', 'meta-llama/llama-3.3-70b-instruct:free');
+    return 'meta-llama/llama-3.3-70b-instruct:free';
+  });
   const [connectionTest, setConnectionTest] = useState<{ testing: boolean; result: { ok: boolean; message: string } | null }>({ testing: false, result: null });
 
   // ─── Voice Recording for Mock Interview ─────────────────────────────────────
