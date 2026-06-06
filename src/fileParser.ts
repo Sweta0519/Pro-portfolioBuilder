@@ -1,9 +1,10 @@
 import * as pdfjsLib from 'pdfjs-dist';
 import * as mammoth from 'mammoth';
 
-// Set up PDF.js worker using a robust URL resolution for Vite
-const pdfWorkerUrl = new URL('pdfjs-dist/build/pdf.worker.mjs', import.meta.url).toString();
-pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
+// Use CDN for the worker — vite-plugin-singlefile inlines everything,
+// so the local worker .mjs file doesn't exist as a separate asset.
+// This CDN approach works reliably on both desktop and mobile browsers.
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
 
 /**
  * Extracts raw text from a PDF file
