@@ -2665,11 +2665,12 @@ export default function Portfolio() {
         {/* LEFT PANEL: BUILDER CONTROLS */}
         {!fullscreenPreview && (
           <div
-            className={`w-[520px] flex-shrink-0 bg-slate-900/80 border-r border-slate-800 flex flex-col overflow-hidden ${
+            className={`w-full lg:w-[520px] flex-shrink-0 bg-slate-900/80 border-r border-slate-800 flex flex-col overflow-hidden ${
               mobileActiveView === 'editor' ? 'flex' : 'hidden lg:flex'
             }`}
           >
-            {/* TAB SELECTOR NAVBAR */}
+            {/* TAB SELECTOR NAVBAR — scroll fade on mobile */}
+            <div className="relative">
             <div className="flex flex-nowrap lg:flex-wrap border-b border-slate-800 overflow-x-auto lg:overflow-x-visible scrollbar-none bg-slate-955/30 text-[10px] sm:text-xs font-semibold">
               <button
                 onClick={() => setLeftTab('import')}
@@ -2726,6 +2727,9 @@ export default function Portfolio() {
                 <Sliders className="w-3 h-3" />
                 <span>Design</span>
               </button>
+            </div>
+            {/* Right-edge scroll fade indicator — mobile only */}
+            <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-slate-900/80 to-transparent pointer-events-none lg:hidden"></div>
             </div>
 
             {/* TAB CONTENT PANEL CONTAINER */}
@@ -3026,7 +3030,7 @@ export default function Portfolio() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
                       <label className="text-xs font-semibold text-slate-300">Full Name</label>
                       <input
@@ -3076,7 +3080,7 @@ export default function Portfolio() {
                     ></textarea>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
                       <label className="text-xs font-semibold text-slate-300">Email</label>
                       <input
@@ -9777,8 +9781,11 @@ export default function Portfolio() {
 
       {/* MOBILE BOTTOM VIEW TOGGLER */}
       {!fullscreenPreview && (
+        <>
+        {/* Spacer for fixed bottom bar */}
+        <div className="lg:hidden h-14 flex-shrink-0"></div>
         <div
-          className={`lg:hidden flex-shrink-0 h-14 border-t flex items-center justify-around px-4 z-40 ${
+          className={`lg:hidden fixed bottom-0 left-0 right-0 h-14 border-t flex items-center justify-around px-4 z-50 ${
             appTheme === 'nord-light'
               ? 'bg-white border-slate-200 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]'
               : appTheme === 'indigo-midnight'
@@ -9813,6 +9820,7 @@ export default function Portfolio() {
             <span className="text-[10px] font-bold uppercase tracking-wider">Preview</span>
           </button>
         </div>
+        </>
       )}
     </div>
   );
