@@ -3995,7 +3995,7 @@ export default function Portfolio() {
               <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500">
                 <span className="hidden sm:inline">AI Provider:</span>
                 <span className="text-[11px] px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-violet-400">
-                  {aiProvider === 'groq' ? 'Groq (Llama 3)' : 'Gemini'}
+                  {aiProvider === 'groq' ? 'Groq (Llama 3)' : aiProvider === 'openrouter' ? 'OpenRouter' : 'Gemini'}
                 </span>
               </div>
             )}
@@ -4805,7 +4805,7 @@ export default function Portfolio() {
                           placeholder="e.g. Google, Amazon, Stripe, Infosys..."
                           className="w-full bg-slate-950/50 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-violet-500 transition-colors"
                         />
-                        <p className="text-[10px] text-slate-400 mt-1">Gemini will search Google for this company's real interview process, questions, and what people do in this role.</p>
+                        <p className="text-[10px] text-slate-400 mt-1">{aiProvider === 'groq' ? 'Groq' : aiProvider === 'openrouter' ? 'OpenRouter' : 'Gemini'} will search for this company's real interview process, questions, and what people do in this role.</p>
                       </div>
 
                       {/* Position Name input */}
@@ -5067,8 +5067,8 @@ export default function Portfolio() {
                           {/* Gemini Loading Indicator */}
                           {isFetchingGemini && (
                             <div className="flex items-center gap-2 p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 animate-pulse">
-                              <span className="animate-spin text-sm">🌐</span>
-                              <p className="text-[11px] text-blue-300 font-semibold">Searching Google for real data about this role at {interviewPlan.context.company}...</p>
+                              <span className="animate-spin text-sm">{aiProvider === 'groq' ? '⚡' : aiProvider === 'openrouter' ? '🟣' : '🌐'}</span>
+                              <p className="text-[11px] text-blue-300 font-semibold">Fetching real data about this role at {interviewPlan.context.company} via {aiProvider === 'groq' ? 'Groq' : aiProvider === 'openrouter' ? 'OpenRouter' : 'Gemini'}...</p>
                             </div>
                           )}
                           {geminiError && (
@@ -5786,7 +5786,7 @@ export default function Portfolio() {
                                                 )}
                                               </div>
                                             ) : (
-                                              <p className="text-[9px] text-slate-600 italic">Add a Gemini/Groq API key to generate suggested answers.</p>
+                                              <p className="text-[9px] text-slate-600 italic">Add a {aiProvider === 'groq' ? 'Groq' : aiProvider === 'openrouter' ? 'OpenRouter' : 'Gemini'} API key to generate suggested answers.</p>
                                             )}
                                           </div>
                                         </div>
@@ -6678,7 +6678,7 @@ export default function Portfolio() {
                                               </div>
 
                                               {!geminiApiKey.trim() ? (
-                                                <p className="text-[10px] text-slate-500 italic">🔑 Configure your Gemini or Groq API key in the configuration settings to enable real-time AI feedback and polished response rewrites.</p>
+                                                <p className="text-[10px] text-slate-500 italic">🔑 Configure your {aiProvider === 'groq' ? 'Groq' : aiProvider === 'openrouter' ? 'OpenRouter' : 'Gemini'} API key in the configuration settings to enable real-time AI feedback and polished response rewrites.</p>
                                               ) : optimizedResults[currentQ.id] ? (
                                                 <div className="space-y-3 animate-fadeIn">
                                                   {/* Feedback card */}
