@@ -94,7 +94,8 @@ export default function Dashboard() {
     try {
       const local = localStorage.getItem('pro_portfolio_saved_resumes');
       if (local) {
-        return JSON.parse(local);
+        const parsed = JSON.parse(local);
+        if (Array.isArray(parsed)) return parsed;
       }
     } catch (e) {
       console.error('Failed to read saved resumes:', e);
@@ -125,7 +126,8 @@ export default function Dashboard() {
     try {
       const local = localStorage.getItem('pro_portfolio_interview_sessions');
       if (local) {
-        return JSON.parse(local);
+        const parsed = JSON.parse(local);
+        if (Array.isArray(parsed)) return parsed;
       }
     } catch (e) {
       console.error('Failed to read saved interview sessions:', e);
@@ -304,7 +306,8 @@ export default function Dashboard() {
 
         // Merge local resumes
         const localResumesToUpload = [];
-        for (const localRes of savedResumes) {
+        const localResList = Array.isArray(savedResumes) ? savedResumes : [];
+        for (const localRes of localResList) {
           const isUuid = localRes.id.includes('-') && localRes.id.length === 36;
           let matchedDbResume = null;
 
@@ -416,7 +419,8 @@ export default function Dashboard() {
         });
 
         const localSessionsToUpload = [];
-        for (const localSess of savedSessions) {
+        const localSessList = Array.isArray(savedSessions) ? savedSessions : [];
+        for (const localSess of localSessList) {
           const matchedDbSess = mergedSessionsMap.get(localSess.id);
 
           if (matchedDbSess) {
@@ -502,7 +506,8 @@ export default function Dashboard() {
     const syncResumes = async () => {
       setSyncStatus('syncing');
       try {
-        for (const res of savedResumes) {
+        const resList = Array.isArray(savedResumes) ? savedResumes : [];
+        for (const res of resList) {
           const isUuid = res.id.includes('-') && res.id.length === 36;
           await supabase.from('resumes').upsert({
             id: isUuid ? res.id : undefined,
@@ -530,7 +535,8 @@ export default function Dashboard() {
     const syncSessions = async () => {
       setSyncStatus('syncing');
       try {
-        for (const s of savedSessions) {
+        const sessList = Array.isArray(savedSessions) ? savedSessions : [];
+        for (const s of sessList) {
           await supabase.from('interview_sessions').upsert({
             id: s.id,
             user_id: user.id,

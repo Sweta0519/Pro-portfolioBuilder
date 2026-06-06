@@ -63,11 +63,16 @@ export async function extractTextFromPDF(file: File): Promise<string> {
       const page = await pdf.getPage(i);
       const textContent = await page.getTextContent();
 
-      // More sophisticated text extraction that preserves layout/lines
+      // Ensure textContent and textContent.items are valid
+      if (!textContent || !Array.isArray(textContent.items)) continue;
+
       const items = textContent.items as any[];
       const lineMap: { [key: number]: any[] } = {};
 
       items.forEach((item) => {
+        // Ensure item exists and has a valid transform array (MarkedContent doesn't have transform)
+        if (!item || !Array.isArray(item.transform) || item.transform.length < 6) return;
+
         // Round Y coordinate to group items on the same visual line
         // We use a small threshold (5 units) to account for slight misalignments
         const y = Math.round(item.transform[5] / 5) * 5;
