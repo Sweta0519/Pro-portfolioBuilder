@@ -4737,29 +4737,42 @@ export default function Portfolio() {
 
                             {/* Test Connection Button */}
                             {geminiApiKey && (
-                              <div className="flex items-center gap-2">
-                                <button
-                                  onClick={async () => {
-                                    setConnectionTest({ testing: true, result: null });
-                                    const result = await testApiConnection(geminiApiKey, aiProvider);
-                                    setConnectionTest({ testing: false, result });
-                                  }}
-                                  disabled={connectionTest.testing}
-                                  className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-[10px] font-bold text-slate-300 transition-all flex items-center gap-1.5"
-                                >
-                                  {connectionTest.testing ? (
-                                    <><span className="w-3 h-3 border-2 border-slate-500 border-t-violet-400 rounded-full animate-spin" /> Testing...</>
-                                  ) : (
-                                    <>🔌 Test Connection</>
-                                  )}
-                                </button>
-                                {connectionTest.result && (
-                                  <span className={`text-[10px] font-semibold ${connectionTest.result.ok ? 'text-green-400' : 'text-rose-400'}`}>
-                                    {connectionTest.result.message}
-                                  </span>
+                              <div className="space-y-1.5">
+                                {aiProvider === 'openrouter' ? (
+                                  <div className="flex items-start gap-2 p-2 rounded-lg bg-yellow-950/40 border border-yellow-800/50">
+                                    <span className="text-yellow-400 text-[11px] mt-0.5">⚠️</span>
+                                    <p className="text-[10px] text-yellow-300/80 leading-relaxed">
+                                      <strong>Skip the test button for OpenRouter.</strong> Even a single test ping can trigger a false 429 rate-limit on new accounts. Just paste your key and go straight to <strong>Interview Prep</strong> → enter a company → click the AI insights button to try it for real.
+                                    </p>
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      onClick={async () => {
+                                        setConnectionTest({ testing: true, result: null });
+                                        const result = await testApiConnection(geminiApiKey, aiProvider);
+                                        setConnectionTest({ testing: false, result });
+                                      }}
+                                      disabled={connectionTest.testing}
+                                      className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-[10px] font-bold text-slate-300 transition-all flex items-center gap-1.5"
+                                    >
+                                      {connectionTest.testing ? (
+                                        <><span className="w-3 h-3 border-2 border-slate-500 border-t-violet-400 rounded-full animate-spin" /> Testing...</>
+                                      ) : (
+                                        <>🔌 Test Connection</>
+                                      )}
+                                    </button>
+                                    {connectionTest.result && (
+                                      <span className={`text-[10px] font-semibold ${connectionTest.result.ok ? 'text-green-400' : 'text-rose-400'}`}>
+                                        {connectionTest.result.message}
+                                      </span>
+                                    )}
+                                  </div>
                                 )}
                               </div>
                             )}
+
+
                           </div>
                         )}
                       </div>
