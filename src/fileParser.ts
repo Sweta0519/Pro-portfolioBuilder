@@ -1,5 +1,5 @@
 import * as pdfjsLib from 'pdfjs-dist';
-import * as mammoth from 'mammoth';
+import { loadScript } from './utils/cdnLoader';
 
 // Use jsDelivr CDN for the classic .js worker instead of modern ESM .mjs.
 // Downgraded to pdfjs-dist@3.11.174 which uses classic worker JS. Classic workers are 
@@ -123,7 +123,11 @@ export async function extractTextFromPDF(file: File): Promise<string> {
 export async function extractTextFromWord(file: File): Promise<string> {
   try {
     const arrayBuffer = await fileToArrayBuffer(file);
-    const result = await mammoth.extractRawText({ arrayBuffer });
+    const mammothInstance = await loadScript(
+      'https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.8.0/mammoth.browser.min.js',
+      'mammoth'
+    );
+    const result = await mammothInstance.extractRawText({ arrayBuffer });
     return result.value;
   } catch (error) {
     console.error('Word extraction error:', error);

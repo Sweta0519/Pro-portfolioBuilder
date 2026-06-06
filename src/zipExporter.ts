@@ -1,4 +1,4 @@
-import JSZip from 'jszip';
+import { loadScript } from './utils/cdnLoader';
 import { ResumeData, ThemeSettings } from './types';
 
 export interface VercelFile {
@@ -1337,7 +1337,11 @@ export async function generatePortfolioZip(
   resumeData: ResumeData,
   theme: ThemeSettings
 ): Promise<Blob> {
-  const zip = new JSZip();
+  const JSZipLib = await loadScript(
+    'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js',
+    'JSZip'
+  );
+  const zip = new JSZipLib();
   const files = getPortfolioFiles(resumeData, theme);
   for (const item of files) {
     zip.file(item.file, item.data);

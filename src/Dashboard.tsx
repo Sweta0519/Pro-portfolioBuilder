@@ -1,6 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { jsPDF } from 'jspdf';
-import html2canvas from 'html2canvas';
+import { loadScript } from './utils/cdnLoader';
 import { supabase } from './supabaseClient';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
 import { defaultResumeData, defaultThemeSettings } from './sampleData';
@@ -1601,6 +1600,11 @@ export default function Dashboard() {
   const triggerPdfPrint = async () => {
     try {
       setIsGeneratingPdf(true);
+      const [html2canvasLib, jsPdfModule] = await Promise.all([
+        loadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js', 'html2canvas'),
+        loadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js', 'jspdf')
+      ]);
+
       const element = document.getElementById('pdf-render-target');
       if (!element) {
         throw new Error('PDF render target element was not found in active document body');
@@ -1609,7 +1613,7 @@ export default function Dashboard() {
       // Allow DOM scheduler buffer to stabilize
       await new Promise((resolve) => setTimeout(resolve, 200));
 
-      const canvas = await html2canvas(element, {
+      const canvas = await html2canvasLib(element, {
         scale: 2.5, // Ultra-sharp 2.5x retina-density resolution
         useCORS: true,
         allowTaint: true,
@@ -1619,7 +1623,8 @@ export default function Dashboard() {
 
       const imgData = canvas.toDataURL('image/jpeg', 0.98);
 
-      const pdf = new jsPDF({
+      const jsPDFClass = jsPdfModule.jsPDF || (window as any).jspdf.jsPDF;
+      const pdf = new jsPDFClass({
         orientation: 'portrait',
         unit: 'in',
         format: paperSize === 'letter' ? 'letter' : 'a4',

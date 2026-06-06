@@ -1,21 +1,35 @@
-import {
-  Document,
-  Packer,
-  Paragraph,
-  TextRun,
-  AlignmentType,
-  Table,
-  TableRow,
-  TableCell,
-  BorderStyle,
-  WidthType,
-} from 'docx';
+import { loadScript } from './utils/cdnLoader';
 import { ResumeData } from './types';
+
+let Document: any;
+let Packer: any;
+let Paragraph: any;
+let TextRun: any;
+let AlignmentType: any;
+let Table: any;
+let TableRow: any;
+let TableCell: any;
+let BorderStyle: any;
+let WidthType: any;
 
 export async function generateWordDocument(
   data: ResumeData,
   templateId: string = 'classic'
 ): Promise<Blob> {
+  const docxLib = await loadScript(
+    'https://cdn.jsdelivr.net/npm/docx@9.0.3/build/index.umd.min.js',
+    'docx'
+  );
+  Document = docxLib.Document;
+  Packer = docxLib.Packer;
+  Paragraph = docxLib.Paragraph;
+  TextRun = docxLib.TextRun;
+  AlignmentType = docxLib.AlignmentType;
+  Table = docxLib.Table;
+  TableRow = docxLib.TableRow;
+  TableCell = docxLib.TableCell;
+  BorderStyle = docxLib.BorderStyle;
+  WidthType = docxLib.WidthType;
   // Safe fallbacks for all data fields to prevent silent crashes
   const personal = data?.personal || {
     name: 'Resume',
