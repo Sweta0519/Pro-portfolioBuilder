@@ -1082,32 +1082,21 @@ export function scoreAnswer(question: string, answer: string, round: InterviewRo
 
 export type AiProvider = 'gemini' | 'groq';
 
-/**
- * Detects whether the Gemini key is an OAuth token (AQ. / ya29.) or a
- * traditional API key (AIza...) and calls the API accordingly.
- *
- * - Traditional keys: sent as `?key=...` query param
- * - OAuth tokens:     sent as `Authorization: Bearer ...` header
- */
-function geminiIsOAuth(apiKey: string): boolean {
-  return apiKey.startsWith('AQ.') || apiKey.startsWith('ya29.');
-}
 
 async function geminiApiFetch(
   apiKey: string,
   body: Record<string, unknown>
 ): Promise<Response> {
+  // Both AIza... and AQ. keys are sent via x-goog-api-key header.
+  // AQ. keys MUST use this header (not Authorization: Bearer, not ?key= query param).
+  // AIza... keys also work with this header, so we use it universally.
   const url = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
-  if (geminiIsOAuth(apiKey)) {
-    return fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-      body: JSON.stringify(body),
-    });
-  }
-  return fetch(`${url}?key=${apiKey}`, {
+  return fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      'x-goog-api-key': apiKey,
+    },
     body: JSON.stringify(body),
   });
 }
@@ -1147,12 +1136,11 @@ export async function testApiConnection(apiKey: string, provider: AiProvider): P
       if (r.status === 429) return { ok: false, message: '⏳ Rate limited. Wait a moment and try again.' };
       return { ok: false, message: `❌ Error ${r.status}${errorMsg ? `: ${errorMsg}` : ''}` };
     } else {
-      const keyType = geminiIsOAuth(apiKey) ? 'OAuth token (AQ./ya29.)' : 'API key (AIza...)';
       const r = await geminiApiFetch(apiKey, {
         contents: [{ parts: [{ text: 'Hi' }] }],
         generationConfig: { maxOutputTokens: 5 },
       });
-      if (r.ok) return { ok: true, message: `✅ Gemini connected (${keyType})! Ready to use.` };
+      if (r.ok) return { ok: true, message: `✅ Gemini connected! Ready to use.` };
 
       // Always surface the real Google error
       let rawMsg = '';
