@@ -625,6 +625,7 @@ export default function App() {
   const [geminiError, setGeminiError] = useState<string>('');
   const [showApiKeyInput, setShowApiKeyInput] = useState<boolean>(false);
   const [aiProvider, setAiProvider] = useState<AiProvider>(() => (localStorage.getItem('ai_provider') as AiProvider) || 'groq');
+  const [openRouterModel, setOpenRouterModel] = useState<string>(() => localStorage.getItem('openrouter_model') || 'meta-llama/llama-3.3-70b-instruct:free');
   const [connectionTest, setConnectionTest] = useState<{ testing: boolean; result: { ok: boolean; message: string } | null }>({ testing: false, result: null });
 
   // ─── Voice Recording for Mock Interview ─────────────────────────────────────
@@ -4675,11 +4676,44 @@ export default function Portfolio() {
                               {aiProvider === 'groq' ? (
                                 <>Groq is <strong className="text-green-400">free with generous limits</strong> (30 req/min). Uses Llama 3.3 70B. <a href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer" className="text-green-400 hover:text-green-300 underline">Get a free Groq key →</a></>
                               ) : aiProvider === 'openrouter' ? (
-                                <>OpenRouter gives access to <strong className="text-purple-400">100+ free models</strong> under one key. Uses Llama 3.3 70B (free). No region locks. <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300 underline">Get a free OpenRouter key (sk-or-...) →</a></>
+                                <>OpenRouter gives access to <strong className="text-purple-400">100+ free models</strong> under one key. No region locks. <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300 underline">Get a free OpenRouter key (sk-or-...) →</a></>
                               ) : (
                                 <>Gemini free tier: 15 req/min. Get your key from <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" className="text-violet-400 hover:text-violet-300 underline">aistudio.google.com/apikey →</a>. Keys may start with <strong className="text-yellow-400">AIza...</strong> or <strong className="text-yellow-400">AQ.</strong> — both are supported.</>
                               )}
                             </p>
+
+                            {/* OpenRouter Model Selector */}
+                            {aiProvider === 'openrouter' && (
+                              <div className="space-y-1">
+                                <label className="block text-[10px] font-bold text-purple-400 uppercase tracking-wider">Model</label>
+                                <select
+                                  value={openRouterModel}
+                                  onChange={e => {
+                                    setOpenRouterModel(e.target.value);
+                                    localStorage.setItem('openrouter_model', e.target.value);
+                                    setConnectionTest({ testing: false, result: null });
+                                  }}
+                                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-[10px] text-slate-300 focus:outline-none focus:border-purple-500 transition-colors cursor-pointer"
+                                >
+                                  <optgroup label="🆓 Free — Recommended">
+                                    <option value="meta-llama/llama-3.3-70b-instruct:free">Llama 3.3 70B Instruct (free) — Best all-round</option>
+                                    <option value="qwen/qwen3-235b-a22b:free">Qwen3 235B (free) — Most powerful free model</option>
+                                    <option value="deepseek/deepseek-r1:free">DeepSeek R1 (free) — Best reasoning / analysis</option>
+                                    <option value="google/gemma-3-27b-it:free">Gemma 3 27B (free) — Google's open model</option>
+                                    <option value="mistralai/mistral-7b-instruct:free">Mistral 7B (free) — Fast &amp; lightweight</option>
+                                    <option value="nousresearch/hermes-3-llama-3.1-405b:free">Hermes 3 405B (free) — Largest free model</option>
+                                    <option value="microsoft/phi-3-mini-128k-instruct:free">Phi-3 Mini 128K (free) — Long context</option>
+                                  </optgroup>
+                                  <optgroup label="💎 Paid (credits required)">
+                                    <option value="anthropic/claude-3.5-sonnet">Claude 3.5 Sonnet — Premium quality</option>
+                                    <option value="openai/gpt-4o">GPT-4o — OpenAI flagship</option>
+                                    <option value="google/gemini-2.0-flash-001">Gemini 2.0 Flash — Google paid tier</option>
+                                    <option value="meta-llama/llama-3.3-70b-instruct">Llama 3.3 70B (paid) — Faster, no limits</option>
+                                  </optgroup>
+                                </select>
+                                <p className="text-[9px] text-slate-600">Free models are marked with <span className="text-green-500">:free</span>. Paid models require OpenRouter credits.</p>
+                              </div>
+                            )}
                             <div className="flex gap-2">
                               <input
                                 type="password"

@@ -1386,6 +1386,7 @@ async function fetchWithGroq(apiKey: string, prompt: string): Promise<GeminiEnha
 }
 
 async function fetchWithOpenRouter(apiKey: string, prompt: string): Promise<GeminiEnhancedData | null> {
+  const model = localStorage.getItem('openrouter_model') || 'meta-llama/llama-3.3-70b-instruct:free';
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -1395,7 +1396,7 @@ async function fetchWithOpenRouter(apiKey: string, prompt: string): Promise<Gemi
       'X-Title': 'Pro Portfolio Builder',
     },
     body: JSON.stringify({
-      model: 'meta-llama/llama-3.3-70b-instruct:free',
+      model,
       messages: [
         { role: 'system', content: 'You are a career research assistant. Always respond with valid JSON only.' },
         { role: 'user', content: prompt },
@@ -1452,7 +1453,9 @@ async function callAiChat(
     const url = provider === 'groq'
       ? 'https://api.groq.com/openai/v1/chat/completions'
       : 'https://openrouter.ai/api/v1/chat/completions';
-    const model = provider === 'groq' ? 'llama-3.3-70b-versatile' : 'meta-llama/llama-3.3-70b-instruct:free';
+    const model = provider === 'groq'
+      ? 'llama-3.3-70b-versatile'
+      : (localStorage.getItem('openrouter_model') || 'meta-llama/llama-3.3-70b-instruct:free');
     const extraHeaders = provider === 'openrouter'
       ? { 'HTTP-Referer': 'https://pro-portfolio-builder.vercel.app', 'X-Title': 'Pro Portfolio Builder' }
       : {};
