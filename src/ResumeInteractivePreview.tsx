@@ -44,7 +44,7 @@ export const ResumeInteractivePreview: React.FC<ResumePreviewProps> = ({
           </button>
           <button
             onClick={onDiscard}
-            className="bg-white/10 text-white px-5 py-2 rounded-xl font-bold text-xs hover:bg-white/20 transition-colors flex items-center gap-2 border border-white/20"
+            className="bg-white/10 text-white px-5 py-2 rounded-xl font-bold text-xs hover:bg-white/20 transition duration-200 ease-out flex items-center gap-2 border border-white/20"
           >
             <X className="w-4 h-4" />
             Discard Changes

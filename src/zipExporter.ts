@@ -349,7 +349,7 @@ export default function App() {
       accentBg: 'bg-indigo-50/50 dark:bg-indigo-900/20',
       gradient: 'from-indigo-600 to-violet-600',
       badge: 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300',
-      glow: 'shadow-indigo-500/20 shadow-lg'
+      glow: 'shadow-black/10 shadow-lg'
     },
     emerald: {
       bg: 'bg-emerald-600',
@@ -403,7 +403,7 @@ export default function App() {
     accentBg: 'bg-indigo-50/50 dark:bg-indigo-900/20',
     gradient: 'from-indigo-600 to-violet-600',
     badge: 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300',
-    glow: 'shadow-indigo-500/20 shadow-lg'
+    glow: 'shadow-black/10 shadow-lg'
   };
 
   const groupedSkills = useMemo(() => {
@@ -479,7 +479,7 @@ export default function App() {
 
   if (theme.id === 'creative') {
     return (
-      <div className={\`min-h-screen \${bgColor} \${fontClass} relative overflow-hidden transition-colors duration-500\`}>
+      <div className={\`min-h-screen \${bgColor} \${fontClass} relative overflow-hidden transition duration-200 ease-out duration-500\`}>
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className={\`absolute top-[-10%] left-[-10%] w-[60%] h-[60%] rounded-full opacity-20 blur-[120px] \${primaryBg} animate-pulse\`}></div>
           <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full opacity-20 blur-[120px] bg-indigo-500 animate-pulse" style={{ animationDelay: '2s' }}></div>
@@ -501,7 +501,7 @@ export default function App() {
               
               <div className="mt-6 md:mt-8 space-y-3 w-full text-left">
                 {resumeData.personal.email && (
-                  <div className={\`flex items-center gap-3 \${textBody} text-xs \${cardBg} p-2.5 md:p-3 rounded-xl border \${cardHoverBg} transition-colors\`}>
+                  <div className={\`flex items-center gap-3 \${textBody} text-xs \${cardBg} p-2.5 md:p-3 rounded-xl border \${cardHoverBg} transition duration-200 ease-out\`}>
                     <Mail className={\`w-3.5 h-3.5 md:w-4 md:h-4 \${primaryClass} flex-shrink-0\`} />
                     <span className="truncate">{resumeData.personal.email}</span>
                   </div>
@@ -608,7 +608,7 @@ export default function App() {
                 {resumeData.skills.map((skill: any) => (
                   <div key={skill.name} className={\`\${cardBg} border rounded-2xl p-5 md:p-6 \${cardHoverBg} transition duration-200 ease-out group\`}>
                     <div className="flex justify-between items-center mb-3 md:mb-4">
-                      <div className={\`text-xs md:text-sm font-bold \${textHeading} group-hover:text-indigo-400 transition-colors\`}>{skill.name}</div>
+                      <div className={\`text-xs md:text-sm font-bold \${textHeading} group-hover:text-indigo-400 transition duration-200 ease-out\`}>{skill.name}</div>
                       <span className="text-[10px] text-slate-500 font-black">{skill.level}%</span>
                     </div>
                     <div className="h-1.5 w-full bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden">
@@ -641,24 +641,24 @@ export default function App() {
             )}
 
             <section id="contact" className="py-24 scroll-slide">
-              <div className="p-10 rounded-[2.5rem] bg-gradient-to-br from-indigo-600 to-violet-700 text-white relative overflow-hidden shadow-2xl shadow-indigo-500/20">
+              <div className="p-10 rounded-[2.5rem] bg-gradient-to-br from-indigo-600 to-violet-700 text-white relative overflow-hidden shadow-2xl shadow-black/10">
                 <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-12">
                   <div className="space-y-6">
                     <h3 className="text-4xl font-black tracking-tight leading-none">Let's build <br/> something epic.</h3>
                     <p className="text-indigo-100 font-medium">I'm currently available for freelance projects and full-time opportunities.</p>
                     <div className="pt-4 flex gap-4">
                       {resumeData.personal.socials.linkedin && (
-                        <a href={resumeData.personal.socials.linkedin} target="_blank" rel="noreferrer" className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
+                        <a href={resumeData.personal.socials.linkedin} target="_blank" rel="noreferrer" className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center hover:bg-white/20 transition duration-200 ease-out">
                           <SocialIcon type="linkedin" />
                         </a>
                       )}
                       {resumeData.personal.socials.twitter && (
-                        <a href={resumeData.personal.socials.twitter} target="_blank" rel="noreferrer" className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
+                        <a href={resumeData.personal.socials.twitter} target="_blank" rel="noreferrer" className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center hover:bg-white/20 transition duration-200 ease-out">
                           <SocialIcon type="twitter" />
                         </a>
                       )}
                       {resumeData.personal.socials.github && (
-                        <a href={resumeData.personal.socials.github} target="_blank" rel="noreferrer" className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
+                        <a href={resumeData.personal.socials.github} target="_blank" rel="noreferrer" className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center hover:bg-white/20 transition duration-200 ease-out">
                           <SocialIcon type="github" />
                         </a>
                       )}
@@ -705,7 +705,7 @@ export default function App() {
 
   if (theme.id === 'gradient') {
     return (
-      <div className={\`min-h-screen \${bgColor} \${fontClass} relative overflow-hidden flex flex-col items-center transition-colors duration-500\`}>
+      <div className={\`min-h-screen \${bgColor} \${fontClass} relative overflow-hidden flex flex-col items-center transition duration-200 ease-out duration-500\`}>
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className={\`absolute top-[-20%] left-[-10%] w-[70%] h-[70%] rounded-full opacity-30 blur-[150px] \${primaryBg} animate-pulse\`}></div>
           <div className="absolute bottom-[-20%] right-[-10%] w-[70%] h-[70%] rounded-full opacity-30 blur-[150px] bg-indigo-600 animate-pulse" style={{ animationDelay: '2s' }}></div>
@@ -727,7 +727,7 @@ export default function App() {
             </p>
             
             <div className="mt-8 md:mt-16 flex flex-wrap justify-center gap-4 md:gap-6 w-full px-4">
-              <a href="#contact" className={\`\${primaryBg} text-white font-black px-6 py-4 md:px-10 md:py-5 rounded-full text-xs uppercase tracking-[0.2em] hover:scale-105 transition-transform shadow-2xl shadow-indigo-500/20 text-center w-full sm:w-auto\`}>
+              <a href="#contact" className={\`\${primaryBg} text-white font-black px-6 py-4 md:px-10 md:py-5 rounded-full text-xs uppercase tracking-[0.2em] hover:scale-105 transition-transform shadow-2xl shadow-black/10 text-center w-full sm:w-auto\`}>
                 Let's Work Together
               </a>
               <a href="#about" className={\`backdrop-blur-md \${pillBg} border \${textHeading} font-black px-6 py-4 md:px-10 md:py-5 rounded-full text-xs uppercase tracking-[0.2em] hover:bg-slate-200 dark:hover:bg-white/10 transition duration-200 ease-out text-center w-full sm:w-auto\`}>
@@ -771,7 +771,7 @@ export default function App() {
                       {exp.period}
                     </div>
                     <div>
-                      <h3 className={\`text-xl md:text-3xl font-black \${textHeading} mb-2 md:mb-3 group-hover:text-indigo-400 transition-colors leading-tight\`}>{exp.position}</h3>
+                      <h3 className={\`text-xl md:text-3xl font-black \${textHeading} mb-2 md:mb-3 group-hover:text-indigo-400 transition duration-200 ease-out leading-tight\`}>{exp.position}</h3>
                       <p className={\`text-sm md:text-lg font-bold \${primaryClass} mb-4 md:mb-8\`}>{exp.company}</p>
                       <div className="space-y-3 md:space-y-6">
                         {exp.description.map((bullet: string, bIdx: number) => (
@@ -840,7 +840,7 @@ export default function App() {
             )}
 
             <section id="contact" className="py-24 scroll-slide">
-              <div className="p-10 rounded-[2.5rem] bg-gradient-to-br from-indigo-600 to-violet-700 text-white relative overflow-hidden shadow-2xl shadow-indigo-500/20">
+              <div className="p-10 rounded-[2.5rem] bg-gradient-to-br from-indigo-600 to-violet-700 text-white relative overflow-hidden shadow-2xl shadow-black/10">
                 <div className="relative z-10 flex flex-col items-center text-center space-y-6">
                   <h3 className="text-4xl font-black tracking-tight leading-none">Let's build something epic.</h3>
                   <p className="text-indigo-100 font-medium max-w-xl">I'm currently available for freelance projects and full-time opportunities.</p>
@@ -870,17 +870,17 @@ export default function App() {
                   
                   <div className="pt-8 flex gap-4">
                     {resumeData.personal.socials.linkedin && (
-                      <a href={resumeData.personal.socials.linkedin} target="_blank" rel="noreferrer" className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
+                      <a href={resumeData.personal.socials.linkedin} target="_blank" rel="noreferrer" className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center hover:bg-white/20 transition duration-200 ease-out">
                         <SocialIcon type="linkedin" />
                       </a>
                     )}
                     {resumeData.personal.socials.twitter && (
-                      <a href={resumeData.personal.socials.twitter} target="_blank" rel="noreferrer" className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
+                      <a href={resumeData.personal.socials.twitter} target="_blank" rel="noreferrer" className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center hover:bg-white/20 transition duration-200 ease-out">
                         <SocialIcon type="twitter" />
                       </a>
                     )}
                     {resumeData.personal.socials.github && (
-                      <a href={resumeData.personal.socials.github} target="_blank" rel="noreferrer" className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
+                      <a href={resumeData.personal.socials.github} target="_blank" rel="noreferrer" className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center hover:bg-white/20 transition duration-200 ease-out">
                         <SocialIcon type="github" />
                       </a>
                     )}
@@ -940,7 +940,7 @@ export default function App() {
               <span className="text-emerald-500">{">"}</span> {resumeData.personal.title}
             </p>
             <div className="flex flex-wrap justify-center gap-4">
-              <a href="#about" className={\`px-8 py-4 \${colors.bg} text-white font-mono font-bold uppercase tracking-widest hover:opacity-80 transition duration-200 ease-out border border-white/20 shadow-2xl shadow-indigo-500/40\`}>
+              <a href="#about" className={\`px-8 py-4 \${colors.bg} text-white font-mono font-bold uppercase tracking-widest hover:opacity-80 transition duration-200 ease-out border border-white/20 shadow-2xl shadow-black/10\`}>
                 Access Data
               </a>
               <a href="#contact" className="px-8 py-4 bg-transparent text-white font-mono font-bold uppercase tracking-widest hover:bg-white/5 transition duration-200 ease-out border border-white/20">
@@ -982,17 +982,17 @@ export default function App() {
               </a>
               <div className="flex items-center gap-4 px-6 border-l border-slate-200 dark:border-slate-800 ml-2">
                 {resumeData.personal.socials.linkedin && (
-                  <a href={resumeData.personal.socials.linkedin} target="_blank" rel="noreferrer" className={\`text-slate-500 hover:\${textHeading} transition-colors\`}>
+                  <a href={resumeData.personal.socials.linkedin} target="_blank" rel="noreferrer" className={\`text-slate-500 hover:\${textHeading} transition duration-200 ease-out\`}>
                     <SocialIcon type="linkedin" />
                   </a>
                 )}
                 {resumeData.personal.socials.twitter && (
-                  <a href={resumeData.personal.socials.twitter} target="_blank" rel="noreferrer" className={\`text-slate-500 hover:\${textHeading} transition-colors\`}>
+                  <a href={resumeData.personal.socials.twitter} target="_blank" rel="noreferrer" className={\`text-slate-500 hover:\${textHeading} transition duration-200 ease-out\`}>
                     <SocialIcon type="twitter" />
                   </a>
                 )}
                 {resumeData.personal.socials.github && (
-                  <a href={resumeData.personal.socials.github} target="_blank" rel="noreferrer" className={\`text-slate-500 hover:\${textHeading} transition-colors\`}>
+                  <a href={resumeData.personal.socials.github} target="_blank" rel="noreferrer" className={\`text-slate-500 hover:\${textHeading} transition duration-200 ease-out\`}>
                     <SocialIcon type="github" />
                   </a>
                 )}
@@ -1001,7 +1001,7 @@ export default function App() {
           </div>
           <div className="lg:col-span-2 relative">
             <div className={\`aspect-square max-w-[280px] mx-auto lg:max-w-none rounded-[2rem] bg-gradient-to-br \${colors.gradient} shadow-2xl relative z-10 overflow-hidden group\`}>
-              <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors"></div>
+              <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition duration-200 ease-out"></div>
               {resumeData.personal.avatar.length > 2 ? (
                 <img src={resumeData.personal.avatar} alt={resumeData.personal.name} className="w-full h-full object-cover grayscale group-hover:grayscale-95 opacity-0 transition duration-700" />
               ) : (
@@ -1018,7 +1018,7 @@ export default function App() {
   };
 
   return (
-    <div className={\`min-h-screen \${bgColor} \${fontClass} transition-colors duration-500 flex flex-col\`}>
+    <div className={\`min-h-screen \${bgColor} \${fontClass} transition duration-200 ease-out duration-500 flex flex-col\`}>
       {!isClassic && (
         <header className={\`sticky top-0 z-50 backdrop-blur-lg \${headerBg} px-6 py-4\`}>
           <div className="max-w-5xl mx-auto flex justify-between items-center">
@@ -1030,12 +1030,12 @@ export default function App() {
             </div>
             
             <nav className="hidden md:flex items-center gap-8 text-[11px] font-black uppercase tracking-widest text-slate-500">
-              <a href="#about" className={\`hover:\${textHeading} transition-colors\`}>About</a>
-              <a href="#experience" className={\`hover:\${textHeading} transition-colors\`}>Experience</a>
-              <a href="#projects" className={\`hover:\${textHeading} transition-colors\`}>Projects</a>
-              <a href="#skills" className={\`hover:\${textHeading} transition-colors\`}>Skills</a>
+              <a href="#about" className={\`hover:\${textHeading} transition duration-200 ease-out\`}>About</a>
+              <a href="#experience" className={\`hover:\${textHeading} transition duration-200 ease-out\`}>Experience</a>
+              <a href="#projects" className={\`hover:\${textHeading} transition duration-200 ease-out\`}>Projects</a>
+              <a href="#skills" className={\`hover:\${textHeading} transition duration-200 ease-out\`}>Skills</a>
               {resumeData.certificates && resumeData.certificates.length > 0 && (
-                <a href="#awards" className={\`hover:\${textHeading} transition-colors\`}>Awards</a>
+                <a href="#awards" className={\`hover:\${textHeading} transition duration-200 ease-out\`}>Awards</a>
               )}
               <a href="#contact" className={\`px-4 py-2 rounded-xl \${colors.bg} text-white hover:opacity-85 hover:scale-[1.03] transition duration-200 ease-out text-[10px]\`}>Hire Me</a>
             </nav>
@@ -1147,7 +1147,7 @@ export default function App() {
           </div>
           <div className="space-y-16">
             {resumeData.experience.map((exp: any, idx: number) => (
-              <div key={idx} className={isClassic ? '' : \`group relative pl-8 border-l border-slate-200 dark:border-white/5 hover:border-indigo-500/30 transition-colors\`}>
+              <div key={idx} className={isClassic ? '' : \`group relative pl-8 border-l border-slate-200 dark:border-white/5 hover:border-indigo-500/30 transition duration-200 ease-out\`}>
                 {!isClassic && <div className={\`absolute left-[-4px] top-0 w-2 h-2 rounded-full \${colors.bg} opacity-0 group-hover:opacity-100 transition-opacity\`}></div>}
                 <div className="flex flex-wrap justify-between items-baseline mb-2 gap-2">
                   <h3 className={\`text-2xl font-bold \${isClassic ? 'text-slate-900' : textHeading}\`}>{exp.position}</h3>
@@ -1177,7 +1177,7 @@ export default function App() {
             {resumeData.projects.map((proj: any, idx: number) => (
               <div key={idx} className={isClassic ? 'border-b border-slate-100 pb-8 last:border-0' : \`p-6 md:p-8 rounded-3xl \${cardBg} border \${cardHoverBg} transition duration-200 ease-out group\`}>
                 <div className="flex justify-between items-start mb-4">
-                  <h3 className={\`text-xl font-bold \${isClassic ? 'text-slate-900' : \`\${textHeading} group-hover:text-indigo-400 transition-colors\`}\`}>{proj.title}</h3>
+                  <h3 className={\`text-xl font-bold \${isClassic ? 'text-slate-900' : \`\${textHeading} group-hover:text-indigo-400 transition duration-200 ease-out\`}\`}>{proj.title}</h3>
                   <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">{proj.category}</span>
                 </div>
                 <p className={\`text-base mb-6 leading-relaxed \${isClassic ? 'text-slate-700' : textBody}\`}>{proj.description}</p>
@@ -1242,7 +1242,7 @@ export default function App() {
                     </div>
                   )}
                   <div>
-                    <h3 className={\`text-xl font-bold \${isClassic ? 'text-slate-900' : \`\${textHeading} group-hover:text-indigo-400 transition-colors\`}\`}>{cert.name}</h3>
+                    <h3 className={\`text-xl font-bold \${isClassic ? 'text-slate-900' : \`\${textHeading} group-hover:text-indigo-400 transition duration-200 ease-out\`}\`}>{cert.name}</h3>
                     <p className={\`text-sm \${isClassic ? 'text-slate-600' : 'text-slate-400'} mt-1\`}>{cert.issuer} {cert.date ? \`• \${cert.date}\` : ''}</p>
                   </div>
                 </div>

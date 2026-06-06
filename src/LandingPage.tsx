@@ -72,7 +72,7 @@ export default function LandingPage() {
             Upload your resume and instantly generate a stunning, ATS-optimized portfolio website. Prepare for your interview with our AI recruiter coach.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <Link to="/app" className="bg-indigo-600 text-white px-8 py-4 rounded-xl text-lg font-bold hover:bg-indigo-700 shadow-xl shadow-indigo-500/25 transition active:scale-[0.97] duration-200 ease-out hover:-translate-y-1">
+            <Link to="/app" className="bg-indigo-600 text-white px-8 py-4 rounded-xl text-lg font-bold hover:bg-indigo-700 shadow-xl shadow-black/10 transition active:scale-[0.97] duration-200 ease-out hover:-translate-y-1">
               Start Building for Free
             </Link>
             <a href="#features" className="bg-white/80 backdrop-blur-sm text-slate-700 px-8 py-4 rounded-xl text-lg font-bold hover:bg-white border border-slate-200 transition active:scale-[0.97] duration-200 ease-out hover:-translate-y-1 shadow-sm">
@@ -91,21 +91,21 @@ export default function LandingPage() {
           </div>
           
           <div className="grid md:grid-cols-3 gap-8">
-            <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 hover:border-indigo-100 hover:shadow-xl hover:shadow-indigo-500/5 transition duration-200 ease-out">
+            <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 hover:border-indigo-100 hover:shadow-xl hover:shadow-black/10 transition duration-200 ease-out">
               <div className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center mb-6">
                 <Briefcase className="w-6 h-6" />
               </div>
               <h3 className="text-xl font-bold mb-3">Instant Portfolio Gen</h3>
               <p className="text-slate-600 leading-relaxed">Turn your boring PDF resume into a fully interactive, mobile-responsive web portfolio in 3 seconds.</p>
             </div>
-            <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 hover:border-indigo-100 hover:shadow-xl hover:shadow-indigo-500/5 transition duration-200 ease-out">
+            <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 hover:border-indigo-100 hover:shadow-xl hover:shadow-black/10 transition duration-200 ease-out">
               <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center mb-6">
                 <ShieldCheck className="w-6 h-6" />
               </div>
               <h3 className="text-xl font-bold mb-3">ATS Resume Scanner</h3>
               <p className="text-slate-600 leading-relaxed">Audit your resume against the target job description to guarantee you pass the automated ATS screening.</p>
             </div>
-            <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 hover:border-indigo-100 hover:shadow-xl hover:shadow-indigo-500/5 transition duration-200 ease-out">
+            <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 hover:border-indigo-100 hover:shadow-xl hover:shadow-black/10 transition duration-200 ease-out">
               <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center mb-6">
                 <Zap className="w-6 h-6" />
               </div>
@@ -143,7 +143,7 @@ export default function LandingPage() {
             </div>
 
             {/* Pro Tier */}
-            <div className="bg-indigo-900 text-white rounded-3xl p-8 border-2 border-indigo-400 shadow-2xl shadow-indigo-500/20 relative overflow-hidden md:scale-105 z-10">
+            <div className="bg-indigo-900 text-white rounded-3xl p-8 border-2 border-indigo-400 shadow-2xl shadow-black/10 relative overflow-hidden md:scale-105 z-10">
               <div className="absolute top-0 right-0 bg-gradient-to-l from-indigo-400 to-violet-500 text-white text-xs font-bold px-4 py-1.5 rounded-bl-xl shadow-lg">MOST POPULAR</div>
               <h3 className="text-2xl font-bold mb-2">Pro</h3>
               <p className="text-indigo-200 mb-6">For serious job seekers who want to stand out.</p>

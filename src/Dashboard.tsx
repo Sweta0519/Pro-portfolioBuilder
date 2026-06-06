@@ -2383,7 +2383,7 @@ export default function Portfolio() {
               <div className="flex items-center gap-2">
                 {/* Sync status indicator */}
                 <span
-                  className={`text-[9px] px-2 py-0.5 rounded-full font-bold border transition-colors ${
+                  className={`text-[9px] px-2 py-0.5 rounded-full font-bold border transition duration-200 ease-out ${
                     syncStatus === 'syncing'
                       ? 'bg-blue-955/20 border-blue-900/50 text-blue-400 animate-pulse'
                       : syncStatus === 'synced'
@@ -2419,7 +2419,7 @@ export default function Portfolio() {
                   <button
                     type="button"
                     onClick={handleSignOut}
-                    className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer border ${
+                    className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition duration-200 ease-out cursor-pointer active:scale-[0.97] border ${
                       appTheme === 'nord-light' 
                         ? 'bg-white text-rose-500 border-rose-200 hover:bg-rose-50' 
                         : 'bg-slate-900 text-rose-400 border-slate-800 hover:bg-rose-950/30'
@@ -2437,7 +2437,7 @@ export default function Portfolio() {
                   setAuthError('');
                   setShowAuthModal(true);
                 }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-slate-700 text-white transition duration-200 ease-out shadow-lg shadow-black/10 active:scale-[0.97] cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-slate-700 text-white transition duration-200 ease-out shadow-lg shadow-black/10 active:scale-[0.97] cursor-pointer active:scale-[0.97]"
               >
                 🔒 Sign In
               </button>
@@ -2448,7 +2448,7 @@ export default function Portfolio() {
           <div className="relative">
             <button
               onClick={() => { setIsThemeMenuOpen(!isThemeMenuOpen); setIsMobileActionsMenuOpen(false); }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition duration-200 ease-out cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition duration-200 ease-out cursor-pointer active:scale-[0.97] ${
                 appTheme === 'nord-light'
                   ? 'bg-slate-100 hover:bg-slate-200 border-slate-250 text-slate-700 hover:text-slate-955'
                   : appTheme === 'indigo-midnight'
@@ -2479,14 +2479,14 @@ export default function Portfolio() {
                   appTheme === 'nord-light'
                     ? 'bg-white border-slate-200 shadow-slate-200/50'
                     : appTheme === 'indigo-midnight'
-                      ? 'bg-[#0e0a26] border-[#2b1f63] shadow-indigo-950/30'
+                      ? 'bg-[#0e0a26] border-[#2b1f63] shadow-black/10'
                       : 'bg-slate-950 border-slate-800 shadow-black/40'
                 }`}
               >
                 <button
                   type="button"
                   onClick={() => { setAppTheme('slate-dark'); setIsThemeMenuOpen(false); }}
-                  className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                  className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold transition duration-200 ease-out cursor-pointer active:scale-[0.97] ${
                     appTheme === 'slate-dark'
                       ? 'bg-indigo-650 text-white'
                       : appTheme === 'nord-light'
@@ -2499,7 +2499,7 @@ export default function Portfolio() {
                 <button
                   type="button"
                   onClick={() => { setAppTheme('indigo-midnight'); setIsThemeMenuOpen(false); }}
-                  className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                  className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold transition duration-200 ease-out cursor-pointer active:scale-[0.97] ${
                     appTheme === 'indigo-midnight'
                       ? 'bg-indigo-650 text-white'
                       : appTheme === 'nord-light'
@@ -2512,7 +2512,7 @@ export default function Portfolio() {
                 <button
                   type="button"
                   onClick={() => { setAppTheme('nord-light'); setIsThemeMenuOpen(false); }}
-                  className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                  className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold transition duration-200 ease-out cursor-pointer active:scale-[0.97] ${
                     appTheme === 'nord-light'
                       ? 'bg-indigo-650 text-white'
                       : 'text-slate-300 hover:bg-slate-900/60 hover:text-white'
@@ -2529,7 +2529,7 @@ export default function Portfolio() {
           <div className="relative lg:hidden">
             <button
               onClick={() => { setIsMobileActionsMenuOpen(!isMobileActionsMenuOpen); setIsThemeMenuOpen(false); }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition duration-200 ease-out cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition duration-200 ease-out cursor-pointer active:scale-[0.97] ${
                 appTheme === 'nord-light'
                   ? 'bg-slate-100 hover:bg-slate-200 border-slate-250 text-slate-700 hover:text-slate-955 shadow-sm'
                   : appTheme === 'indigo-midnight'
@@ -2547,7 +2547,7 @@ export default function Portfolio() {
                   appTheme === 'nord-light'
                     ? 'bg-white border-slate-200 shadow-slate-200/50'
                     : appTheme === 'indigo-midnight'
-                      ? 'bg-[#0e0a26] border-[#2b1f63] shadow-indigo-950/30'
+                      ? 'bg-[#0e0a26] border-[#2b1f63] shadow-black/10'
                       : 'bg-slate-950 border-slate-800 shadow-black/40'
                 }`}
               >
@@ -2558,7 +2558,7 @@ export default function Portfolio() {
                   setVercelError('');
                   setShowVercelModal(true);
                 }}
-                className={`w-full text-left px-2.5 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center gap-2 cursor-pointer ${
+                className={`w-full text-left px-2.5 py-2 rounded-lg text-xs font-semibold transition duration-200 ease-out flex items-center gap-2 cursor-pointer active:scale-[0.97] ${
                   appTheme === 'nord-light'
                     ? 'text-slate-700 hover:bg-slate-100'
                     : appTheme === 'indigo-midnight'
@@ -2579,7 +2579,7 @@ export default function Portfolio() {
                 type="button"
                 onClick={handleZipDownload}
                 disabled={isZipping}
-                className={`w-full text-left px-2.5 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center gap-2 cursor-pointer ${
+                className={`w-full text-left px-2.5 py-2 rounded-lg text-xs font-semibold transition duration-200 ease-out flex items-center gap-2 cursor-pointer active:scale-[0.97] ${
                   appTheme === 'nord-light'
                     ? 'text-slate-700 hover:bg-slate-100'
                     : appTheme === 'indigo-midnight'
@@ -2594,7 +2594,7 @@ export default function Portfolio() {
               <button
                 type="button"
                 onClick={() => handleWordDownload()}
-                className={`w-full text-left px-2.5 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center gap-2 cursor-pointer ${
+                className={`w-full text-left px-2.5 py-2 rounded-lg text-xs font-semibold transition duration-200 ease-out flex items-center gap-2 cursor-pointer active:scale-[0.97] ${
                   appTheme === 'nord-light'
                     ? 'text-slate-700 hover:bg-slate-100'
                     : appTheme === 'indigo-midnight'
@@ -2609,7 +2609,7 @@ export default function Portfolio() {
               <button
                 type="button"
                 onClick={handlePdfPrint}
-                className={`w-full text-left px-2.5 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center gap-2 cursor-pointer ${
+                className={`w-full text-left px-2.5 py-2 rounded-lg text-xs font-semibold transition duration-200 ease-out flex items-center gap-2 cursor-pointer active:scale-[0.97] ${
                   appTheme === 'nord-light'
                     ? 'text-slate-700 hover:bg-slate-100'
                     : appTheme === 'indigo-midnight'
@@ -2624,7 +2624,7 @@ export default function Portfolio() {
               <button
                 type="button"
                 onClick={() => copyToClipboard(getExportCode(), 'code')}
-                className={`w-full text-left px-2.5 py-2 rounded-lg text-xs font-semibold transition-colors flex items-center gap-2 cursor-pointer ${
+                className={`w-full text-left px-2.5 py-2 rounded-lg text-xs font-semibold transition duration-200 ease-out flex items-center gap-2 cursor-pointer active:scale-[0.97] ${
                   appTheme === 'nord-light'
                     ? 'text-slate-700 hover:bg-slate-100'
                     : appTheme === 'indigo-midnight'
@@ -2642,7 +2642,7 @@ export default function Portfolio() {
           {/* Fullscreen Toggle */}
           <button
             onClick={() => setFullscreenPreview(!fullscreenPreview)}
-            className={`hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
+            className={`hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition duration-200 ease-out cursor-pointer active:scale-[0.97] ${
               fullscreenPreview
                 ? 'bg-indigo-600 border-slate-600 text-white shadow-md'
                 : appTheme === 'nord-light'
@@ -2755,7 +2755,7 @@ export default function Portfolio() {
                           setRightTab('sandbox');
                           setMobileActiveView('preview');
                         }}
-                        className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold rounded-lg transition-colors cursor-pointer text-[10px] whitespace-nowrap shadow-sm"
+                        className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold rounded-lg transition duration-200 ease-out cursor-pointer active:scale-[0.97] text-[10px] whitespace-nowrap shadow-sm"
                       >
                         👁️ Preview Live Portfolio
                       </button>
@@ -2806,7 +2806,7 @@ export default function Portfolio() {
                       <div>
                         <label
                           htmlFor="resume-file-upload"
-                          className="text-xs font-bold text-slate-200 hover:text-slate-300 hover:underline cursor-pointer block"
+                          className="text-xs font-bold text-slate-200 hover:text-slate-300 hover:underline cursor-pointer active:scale-[0.97] block"
                         >
                           Upload PDF, Word, or Text Resume
                         </label>
@@ -2873,7 +2873,7 @@ export default function Portfolio() {
                             setRawTextImport('');
                             setUploadedFileName('');
                           }}
-                          className="text-[10px] text-slate-500 hover:text-rose-400 font-bold transition-colors"
+                          className="text-[10px] text-slate-500 hover:text-rose-400 font-bold transition duration-200 ease-out"
                         >
                           Clear Pastebox
                         </button>
@@ -2883,7 +2883,7 @@ export default function Portfolio() {
                       rows={8}
                       value={rawTextImport}
                       onChange={(e) => setRawTextImport(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 focus:outline-none focus:border-slate-600 transition-colors resize-none leading-relaxed"
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 focus:outline-none focus:border-slate-600 transition duration-200 ease-out resize-none leading-relaxed"
                       placeholder="Paste text copied from PDF or Word here... e.g.&#10;&#10;Jane Doe&#10;Senior React Developer&#10;jane.doe@example.com | (555) 123-4567&#10;&#10;Experience:&#10;Enterprise Corp - Senior Developer (2022 - Present)&#10;• Developed and shipped 12 client websites..."
                     ></textarea>
                   </div>
@@ -2891,7 +2891,7 @@ export default function Portfolio() {
                   <button
                     onClick={handleRawTextParse}
                     disabled={isParsing || !rawTextImport.trim()}
-                    className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-800 text-white py-2.5 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                    className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-800 text-white py-2.5 rounded-xl text-xs font-bold transition duration-200 ease-out flex items-center justify-center gap-2 cursor-pointer active:scale-[0.97]"
                   >
                     {isParsing ? (
                       <>
@@ -2928,7 +2928,7 @@ export default function Portfolio() {
                             <div
                               key={item.id}
                               onClick={() => loadResumeFromHistory(item.id)}
-                              className={`p-3 rounded-xl border text-xs flex justify-between items-center gap-3 transition duration-200 cursor-pointer ${
+                              className={`p-3 rounded-xl border text-xs flex justify-between items-center gap-3 transition duration-200 cursor-pointer active:scale-[0.97] ${
                                 isActive
                                   ? 'bg-slate-800/35 border-slate-600/60 text-white shadow'
                                   : 'bg-slate-950/25 border-slate-850 text-slate-300 hover:border-slate-750 hover:bg-slate-950/40'
@@ -2952,7 +2952,7 @@ export default function Portfolio() {
                               <div className="flex items-center gap-2 flex-shrink-0">
                                 <button
                                   onClick={(e) => deleteResumeFromHistory(item.id, e)}
-                                  className="text-slate-500 hover:text-rose-400 p-1.5 rounded hover:bg-slate-900 transition-colors"
+                                  className="text-slate-500 hover:text-rose-400 p-1.5 rounded hover:bg-slate-900 transition duration-200 ease-out"
                                   title="Remove from history"
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
@@ -3004,7 +3004,7 @@ export default function Portfolio() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <label className="bg-indigo-650 hover:bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer block">
+                      <label className="bg-indigo-650 hover:bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition duration-200 ease-out cursor-pointer active:scale-[0.97] block">
                         Upload
                         <input
                           type="file"
@@ -3018,7 +3018,7 @@ export default function Portfolio() {
                         <button
                           type="button"
                           onClick={handleRemoveAvatar}
-                          className="bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-slate-750 text-slate-300 hover:text-slate-350 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer"
+                          className="bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-slate-750 text-slate-300 hover:text-slate-350 px-3 py-1.5 rounded-lg text-xs font-bold transition duration-200 ease-out cursor-pointer active:scale-[0.97]"
                         >
                           Remove
                         </button>
@@ -3173,7 +3173,7 @@ export default function Portfolio() {
                           onClick={() =>
                             setExpandedJobs((prev) => ({ ...prev, [exp.id]: !prev[exp.id] }))
                           }
-                          className="w-full px-4 py-3 bg-slate-950/40 hover:bg-slate-950/60 transition-colors flex items-center justify-between text-left text-xs"
+                          className="w-full px-4 py-3 bg-slate-950/40 hover:bg-slate-950/60 transition duration-200 ease-out flex items-center justify-between text-left text-xs"
                         >
                           <div>
                             <span className="font-bold text-white">{exp.position}</span>
@@ -3281,7 +3281,7 @@ export default function Portfolio() {
                                     />
                                     <button
                                       onClick={() => handleRemoveBullet(exp.id, bulletIdx)}
-                                      className="text-slate-600 hover:text-rose-400 p-1 rounded hover:bg-slate-900 transition-colors flex-shrink-0"
+                                      className="text-slate-600 hover:text-rose-400 p-1 rounded hover:bg-slate-900 transition duration-200 ease-out flex-shrink-0"
                                     >
                                       <Trash2 className="w-3.5 h-3.5" />
                                     </button>
@@ -3317,7 +3317,7 @@ export default function Portfolio() {
                             <div className="pt-2 flex justify-end">
                               <button
                                 onClick={() => handleRemoveJob(exp.id)}
-                                className="text-xs text-rose-500 hover:text-rose-400 font-semibold flex items-center gap-1 hover:bg-rose-950/10 px-2 py-1 rounded-lg transition-colors"
+                                className="text-xs text-rose-500 hover:text-rose-400 font-semibold flex items-center gap-1 hover:bg-rose-950/10 px-2 py-1 rounded-lg transition duration-200 ease-out"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
                                 <span>Delete Role</span>
@@ -3387,7 +3387,7 @@ export default function Portfolio() {
                     <button
                       onClick={handleAddJob}
                       disabled={!newJob.company || !newJob.position}
-                      className="w-full bg-slate-800 hover:bg-slate-750 disabled:bg-slate-900 text-slate-200 disabled:text-slate-600 py-2 rounded-lg text-xs font-bold transition-colors"
+                      className="w-full bg-slate-800 hover:bg-slate-750 disabled:bg-slate-900 text-slate-200 disabled:text-slate-600 py-2 rounded-lg text-xs font-bold transition duration-200 ease-out"
                     >
                       Append Experience to Timeline
                     </button>
@@ -3421,7 +3421,7 @@ export default function Portfolio() {
                                 [proj.id]: !prev[proj.id],
                               }))
                             }
-                            className="w-full px-4 py-3 bg-slate-950/40 hover:bg-slate-950/60 transition-colors flex items-center justify-between text-left text-xs"
+                            className="w-full px-4 py-3 bg-slate-950/40 hover:bg-slate-950/60 transition duration-200 ease-out flex items-center justify-between text-left text-xs"
                           >
                             <div className="flex items-center gap-2">
                               <span className="font-bold text-white">{proj.title}</span>
@@ -3619,7 +3619,7 @@ export default function Portfolio() {
                       <button
                         onClick={handleAddProj}
                         disabled={!newProj.title || !newProj.description}
-                        className="w-full bg-slate-800 hover:bg-slate-750 disabled:bg-slate-900 text-slate-200 disabled:text-slate-600 py-2 rounded-lg text-xs font-bold transition-colors"
+                        className="w-full bg-slate-800 hover:bg-slate-750 disabled:bg-slate-900 text-slate-200 disabled:text-slate-600 py-2 rounded-lg text-xs font-bold transition duration-200 ease-out"
                       >
                         Insert Project Card
                       </button>
@@ -3680,12 +3680,12 @@ export default function Portfolio() {
                           onChange={(e) =>
                             setNewSkill((prev) => ({ ...prev, level: parseInt(e.target.value) }))
                           }
-                          className="w-full accent-indigo-500 cursor-pointer"
+                          className="w-full accent-indigo-500 cursor-pointer active:scale-[0.97]"
                         />
                         <button
                           onClick={handleAddSkill}
                           disabled={!newSkill.name.trim()}
-                          className="w-full bg-indigo-650 hover:bg-indigo-600 disabled:bg-slate-850 disabled:text-slate-600 text-white py-1 rounded-lg text-xs font-bold transition-colors"
+                          className="w-full bg-indigo-650 hover:bg-indigo-600 disabled:bg-slate-850 disabled:text-slate-600 text-white py-1 rounded-lg text-xs font-bold transition duration-200 ease-out"
                         >
                           Add Skill
                         </button>
@@ -3716,7 +3716,7 @@ export default function Portfolio() {
                               onChange={(e) =>
                                 handleSkillLevelChange(skill.name, parseInt(e.target.value))
                               }
-                              className="w-full accent-indigo-500 cursor-pointer"
+                              className="w-full accent-indigo-500 cursor-pointer active:scale-[0.97]"
                             />
                             <span className="w-8 text-right text-slate-300 font-semibold">
                               {skill.level}%
@@ -3755,7 +3755,7 @@ export default function Portfolio() {
                               onClick={() =>
                                 setExpandedEdu((prev) => ({ ...prev, [edu.id]: !prev[edu.id] }))
                               }
-                              className="w-full px-4 py-3 bg-slate-950/40 hover:bg-slate-950/60 transition-colors flex items-center justify-between text-left text-xs"
+                              className="w-full px-4 py-3 bg-slate-950/40 hover:bg-slate-950/60 transition duration-200 ease-out flex items-center justify-between text-left text-xs"
                             >
                               <div className="flex flex-col gap-0.5">
                                 <span className="font-bold text-white">
@@ -3874,7 +3874,7 @@ export default function Portfolio() {
                                 <div className="flex justify-end">
                                   <button
                                     onClick={() => handleRemoveEdu(edu.id)}
-                                    className="flex items-center gap-1 px-3 py-1.5 bg-rose-950/40 hover:bg-rose-900/60 border border-rose-800/50 rounded-lg text-[10px] font-bold text-rose-400 transition-colors"
+                                    className="flex items-center gap-1 px-3 py-1.5 bg-rose-950/40 hover:bg-rose-900/60 border border-rose-800/50 rounded-lg text-[10px] font-bold text-rose-400 transition duration-200 ease-out"
                                   >
                                     <Trash2 className="w-3 h-3" />
                                     <span>Remove School</span>
@@ -3954,7 +3954,7 @@ export default function Portfolio() {
                       <button
                         onClick={handleAddEdu}
                         disabled={!newEducation.institution || !newEducation.degree}
-                        className="w-full bg-slate-800 hover:bg-slate-750 disabled:bg-slate-900 text-slate-200 disabled:text-slate-600 py-2 rounded-lg text-xs font-bold transition-colors"
+                        className="w-full bg-slate-800 hover:bg-slate-750 disabled:bg-slate-900 text-slate-200 disabled:text-slate-600 py-2 rounded-lg text-xs font-bold transition duration-200 ease-out"
                       >
                         Insert Education Entry
                       </button>
@@ -3982,7 +3982,7 @@ export default function Portfolio() {
                               onClick={() =>
                                 setExpandedCert((prev) => ({ ...prev, [cert.id]: !prev[cert.id] }))
                               }
-                              className="w-full px-4 py-3 bg-slate-950/40 hover:bg-slate-950/60 transition-colors flex items-center justify-between text-left text-xs"
+                              className="w-full px-4 py-3 bg-slate-950/40 hover:bg-slate-950/60 transition duration-200 ease-out flex items-center justify-between text-left text-xs"
                             >
                               <div className="flex flex-col gap-0.5">
                                 <span className="font-bold text-white">
@@ -4070,7 +4070,7 @@ export default function Portfolio() {
                                 <div className="flex justify-end">
                                   <button
                                     onClick={() => handleRemoveCert(cert.id)}
-                                    className="flex items-center gap-1 px-3 py-1.5 bg-rose-950/40 hover:bg-rose-900/60 border border-rose-800/50 rounded-lg text-[10px] font-bold text-rose-400 transition-colors"
+                                    className="flex items-center gap-1 px-3 py-1.5 bg-rose-950/40 hover:bg-rose-900/60 border border-rose-800/50 rounded-lg text-[10px] font-bold text-rose-400 transition duration-200 ease-out"
                                   >
                                     <Trash2 className="w-3 h-3" />
                                     <span>Remove Entry</span>
@@ -4130,7 +4130,7 @@ export default function Portfolio() {
                       <button
                         onClick={handleAddCert}
                         disabled={!newCertificate.name || !newCertificate.issuer}
-                        className="w-full bg-slate-800 hover:bg-slate-750 disabled:bg-slate-900 text-slate-200 disabled:text-slate-600 py-2 rounded-lg text-xs font-bold transition-colors"
+                        className="w-full bg-slate-800 hover:bg-slate-750 disabled:bg-slate-900 text-slate-200 disabled:text-slate-600 py-2 rounded-lg text-xs font-bold transition duration-200 ease-out"
                       >
                         Insert Certificate / Award
                       </button>
@@ -4170,7 +4170,7 @@ export default function Portfolio() {
                               id: t.id as ThemeSettings['id'],
                             }))
                           }
-                          className={`p-3 text-left rounded-xl border transition duration-200 ease-out cursor-pointer ${
+                          className={`p-3 text-left rounded-xl border transition duration-200 ease-out cursor-pointer active:scale-[0.97] ${
                             themeSettings.id === t.id
                               ? appTheme === 'nord-light'
                                 ? 'bg-indigo-600 border-slate-600 text-white shadow-sm'
@@ -4209,7 +4209,7 @@ export default function Portfolio() {
                               primaryColor: color.id as ThemeSettings['primaryColor'],
                             }))
                           }
-                          className={`w-7 h-7 rounded-full ${color.color} cursor-pointer relative transition duration-200 hover:scale-110 ${
+                          className={`w-7 h-7 rounded-full ${color.color} cursor-pointer active:scale-[0.97] relative transition duration-200 hover:scale-110 ${
                             themeSettings.primaryColor === color.id
                               ? 'ring-2 ring-white ring-offset-2 ring-offset-slate-900'
                               : ''
@@ -4246,7 +4246,7 @@ export default function Portfolio() {
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <label className="bg-indigo-650 hover:bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer block">
+                      <label className="bg-indigo-650 hover:bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition duration-200 ease-out cursor-pointer active:scale-[0.97] block">
                         Upload
                         <input
                           type="file"
@@ -4260,7 +4260,7 @@ export default function Portfolio() {
                         <button
                           type="button"
                           onClick={handleRemoveAvatar}
-                          className="bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-slate-750 text-slate-300 hover:text-slate-350 px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer"
+                          className="bg-slate-900 hover:bg-slate-850 border border-slate-800 hover:border-slate-750 text-slate-300 hover:text-slate-350 px-3 py-1.5 rounded-lg text-xs font-bold transition duration-200 ease-out cursor-pointer active:scale-[0.97]"
                         >
                           Remove
                         </button>
@@ -4293,7 +4293,7 @@ export default function Portfolio() {
                               fontFamily: font.id as ThemeSettings['fontFamily'],
                             }))
                           }
-                          className={`py-2 px-1.5 rounded-md transition-colors cursor-pointer ${
+                          className={`py-2 px-1.5 rounded-md transition duration-200 ease-out cursor-pointer active:scale-[0.97] ${
                             themeSettings.fontFamily === font.id
                               ? 'bg-indigo-600 text-white shadow-sm'
                               : appTheme === 'nord-light'
@@ -4326,7 +4326,7 @@ export default function Portfolio() {
                       onClick={() =>
                         setThemeSettings((prev) => ({ ...prev, darkMode: !prev.darkMode }))
                       }
-                      className={`w-12 h-6 rounded-full transition-colors relative cursor-pointer ${
+                      className={`w-12 h-6 rounded-full transition duration-200 ease-out relative cursor-pointer active:scale-[0.97] ${
                         themeSettings.darkMode ? 'bg-indigo-650' : 'bg-slate-850'
                       }`}
                     >
@@ -4368,7 +4368,7 @@ export default function Portfolio() {
                           type="button"
                           key={t.id}
                           onClick={() => setAppTheme(t.id as any)}
-                          className={`p-2.5 text-left rounded-xl border transition duration-200 ease-out cursor-pointer ${
+                          className={`p-2.5 text-left rounded-xl border transition duration-200 ease-out cursor-pointer active:scale-[0.97] ${
                             appTheme === t.id
                               ? appTheme === 'nord-light'
                                 ? 'bg-indigo-600 border-slate-600 text-white shadow-sm'
@@ -4427,7 +4427,7 @@ export default function Portfolio() {
                 <button
                   key={tab.id}
                   onClick={() => setRightTab(tab.id as any)}
-                  className={`p-1.5 px-3 rounded-md transition duration-200 ease-out flex items-center gap-1.5 font-bold text-[10px] sm:text-xs cursor-pointer ${
+                  className={`p-1.5 px-3 rounded-md transition duration-200 ease-out flex items-center gap-1.5 font-bold text-[10px] sm:text-xs cursor-pointer active:scale-[0.97] ${
                     rightTab === tab.id
                       ? 'bg-indigo-600 text-white shadow-md'
                       : 'text-slate-500 hover:text-slate-350'
@@ -4460,7 +4460,7 @@ export default function Portfolio() {
                     <button
                       key={device.id}
                       onClick={() => setPreviewDevice(device.id as any)}
-                      className={`p-1 px-2.5 rounded-md transition-colors flex items-center gap-1 cursor-pointer ${
+                      className={`p-1 px-2.5 rounded-md transition duration-200 ease-out flex items-center gap-1 cursor-pointer active:scale-[0.97] ${
                         previewDevice === device.id
                           ? 'bg-slate-850 text-white'
                           : 'text-slate-550 hover:text-slate-350'
@@ -4533,7 +4533,7 @@ export default function Portfolio() {
                     <button
                       key={tab.id}
                       onClick={() => setCoachSubTab(tab.id as any)}
-                      className={`flex-1 px-2 py-2.5 text-center border-b-2 whitespace-nowrap transition-colors cursor-pointer ${
+                      className={`flex-1 px-2 py-2.5 text-center border-b-2 whitespace-nowrap transition duration-200 ease-out cursor-pointer active:scale-[0.97] ${
                         coachSubTab === tab.id
                           ? 'border-slate-600 text-slate-200'
                           : 'border-transparent text-slate-500 hover:text-slate-200'
@@ -4693,7 +4693,7 @@ export default function Portfolio() {
 
                         <button
                           onClick={triggerAIOptimization}
-                          className="bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg transition-colors shadow cursor-pointer"
+                          className="bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg transition duration-200 ease-out shadow cursor-pointer active:scale-[0.97]"
                         >
                           ✨ Auto-Optimize Resume
                         </button>
@@ -4741,7 +4741,7 @@ export default function Portfolio() {
                           <div className="flex gap-2">
                             <button
                               onClick={() => setShowRevisedPreview(true)}
-                              className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold border transition duration-200 ease-out cursor-pointer ${
+                              className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold border transition duration-200 ease-out cursor-pointer active:scale-[0.97] ${
                                 showRevisedPreview
                                   ? 'bg-slate-800/45 border-slate-600 text-slate-300'
                                   : 'border-slate-800 text-slate-300 hover:text-slate-200'
@@ -4751,7 +4751,7 @@ export default function Portfolio() {
                             </button>
                             <button
                               onClick={() => setShowRevisedPreview(false)}
-                              className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold border transition duration-200 ease-out cursor-pointer ${
+                              className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold border transition duration-200 ease-out cursor-pointer active:scale-[0.97] ${
                                 !showRevisedPreview
                                   ? 'bg-slate-800 border-slate-700 text-slate-350'
                                   : 'border-slate-800 text-slate-300 hover:text-slate-200'
@@ -4763,7 +4763,7 @@ export default function Portfolio() {
 
                           <button
                             onClick={() => setShowOptimizerModal(true)}
-                            className="w-full py-2.5 bg-indigo-600/20 hover:bg-indigo-600/40 border border-slate-600/30 text-slate-300 rounded-xl text-[10px] font-black tracking-wider transition duration-200 ease-out cursor-pointer flex items-center justify-center gap-2 shadow-sm"
+                            className="w-full py-2.5 bg-indigo-600/20 hover:bg-indigo-600/40 border border-slate-600/30 text-slate-300 rounded-xl text-[10px] font-black tracking-wider transition duration-200 ease-out cursor-pointer active:scale-[0.97] flex items-center justify-center gap-2 shadow-sm"
                           >
                             <Sparkles className="w-3.5 h-3.5 text-slate-200" />
                             <span>REVIEW AI DRAFT INTERACTIVELY</span>
@@ -4773,7 +4773,7 @@ export default function Portfolio() {
                           <div className="grid grid-cols-2 gap-2">
                             <button
                               onClick={() => handleWordDownload()}
-                              className="bg-slate-950 hover:bg-slate-900 border border-slate-850 text-slate-200 text-[10px] py-2 rounded-lg font-bold transition-colors cursor-pointer flex items-center justify-center gap-1"
+                              className="bg-slate-950 hover:bg-slate-900 border border-slate-850 text-slate-200 text-[10px] py-2 rounded-lg font-bold transition duration-200 ease-out cursor-pointer active:scale-[0.97] flex items-center justify-center gap-1"
                             >
                               <FileText className="w-3 h-3 text-slate-200" />
                               <span>Download Word (.doc)</span>
@@ -4781,7 +4781,7 @@ export default function Portfolio() {
 
                             <button
                               onClick={handlePdfPrint}
-                              className="bg-slate-950 hover:bg-slate-900 border border-slate-850 text-slate-200 text-[10px] py-2 rounded-lg font-bold transition-colors cursor-pointer flex items-center justify-center gap-1"
+                              className="bg-slate-950 hover:bg-slate-900 border border-slate-850 text-slate-200 text-[10px] py-2 rounded-lg font-bold transition duration-200 ease-out cursor-pointer active:scale-[0.97] flex items-center justify-center gap-1"
                             >
                               <Download className="w-3 h-3 text-emerald-400" />
                               <span>Export Document...</span>
@@ -4803,7 +4803,7 @@ export default function Portfolio() {
                           {/* Adopt permanently */}
                           <button
                             onClick={applyRevisedData}
-                            className="w-full bg-emerald-650 hover:bg-emerald-600 text-white py-2 rounded-lg text-xs font-bold transition duration-200 ease-out flex items-center justify-center gap-1.5 cursor-pointer"
+                            className="w-full bg-emerald-650 hover:bg-emerald-600 text-white py-2 rounded-lg text-xs font-bold transition duration-200 ease-out flex items-center justify-center gap-1.5 cursor-pointer active:scale-[0.97]"
                           >
                             <Check className="w-4 h-4" />
                             <span>Save AI Revised Copy Permanently</span>
@@ -5184,7 +5184,7 @@ export default function Portfolio() {
                         navigator.clipboard.writeText(textBlob);
                         setTimeout(() => setCopiedPlaintext(false), 2500);
                       }}
-                      className="w-full bg-slate-800 hover:bg-slate-750 text-white text-xs font-bold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2"
+                      className="w-full bg-slate-800 hover:bg-slate-750 text-white text-xs font-bold py-2.5 rounded-xl transition duration-200 ease-out flex items-center justify-center gap-2"
                     >
                       {copiedPlaintext ? (
                         <>
@@ -5241,7 +5241,7 @@ export default function Portfolio() {
                         <button
                           key={i}
                           onClick={() => setBulletInput(preset.text)}
-                          className="px-2 py-1 rounded bg-slate-850 hover:bg-slate-800 text-slate-300 hover:text-white cursor-pointer"
+                          className="px-2 py-1 rounded bg-slate-850 hover:bg-slate-800 text-slate-300 hover:text-white cursor-pointer active:scale-[0.97]"
                         >
                           {preset.label}
                         </button>
@@ -5272,7 +5272,7 @@ export default function Portfolio() {
                     <button
                       onClick={handleImproveBullet}
                       disabled={!bulletInput.trim()}
-                      className="w-full bg-slate-800 hover:bg-slate-750 disabled:bg-slate-900 text-slate-200 disabled:text-slate-600 py-2 rounded-lg text-xs font-bold transition-colors"
+                      className="w-full bg-slate-800 hover:bg-slate-750 disabled:bg-slate-900 text-slate-200 disabled:text-slate-600 py-2 rounded-lg text-xs font-bold transition duration-200 ease-out"
                     >
                       Generate Optimized Bullet Variations
                     </button>
@@ -5294,7 +5294,7 @@ export default function Portfolio() {
                             <p className="text-slate-200 leading-relaxed pr-4">{bullet}</p>
                             <button
                               onClick={() => copyToClipboard(bullet, 'bullet', idx)}
-                              className="p-1 rounded hover:bg-slate-800 text-slate-500 hover:text-slate-200 flex-shrink-0 transition-colors"
+                              className="p-1 rounded hover:bg-slate-800 text-slate-500 hover:text-slate-200 flex-shrink-0 transition duration-200 ease-out"
                               title="Copy Bullet Point"
                             >
                               {copiedBulletIdx === idx ? (
@@ -5334,7 +5334,7 @@ export default function Portfolio() {
                       <div className="rounded-xl border border-slate-800 bg-slate-950/40 overflow-hidden">
                         <button
                           onClick={() => setShowApiKeyInput(!showApiKeyInput)}
-                          className="w-full flex items-center justify-between px-3 py-2 text-[10px] font-bold text-slate-300 hover:text-slate-200 transition-colors"
+                          className="w-full flex items-center justify-between px-3 py-2 text-[10px] font-bold text-slate-300 hover:text-slate-200 transition duration-200 ease-out"
                         >
                           <span className="flex items-center gap-1.5">
                             {geminiApiKey ? '🟢' : '⚪'}{' '}
@@ -5455,7 +5455,7 @@ export default function Portfolio() {
                                     localStorage.setItem('openrouter_model', e.target.value);
                                     setConnectionTest({ testing: false, result: null });
                                   }}
-                                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-[10px] text-slate-200 focus:outline-none focus:border-purple-500 transition-colors cursor-pointer"
+                                  className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-[10px] text-slate-200 focus:outline-none focus:border-purple-500 transition duration-200 ease-out cursor-pointer active:scale-[0.97]"
                                 >
                                   <optgroup label="🆓 Free — Verified Working (auto-fallback)">
                                     <option value="google/gemma-4-31b-it:free">
@@ -5520,7 +5520,7 @@ export default function Portfolio() {
                                       ? 'Paste your OpenRouter key (sk-or-...)'
                                       : 'Paste your Gemini key (AIza... or AQ....)'
                                 }
-                                className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-[10px] text-slate-200 placeholder-slate-600 focus:outline-none focus:border-violet-500 transition-colors font-mono"
+                                className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-[10px] text-slate-200 placeholder-slate-600 focus:outline-none focus:border-violet-500 transition duration-200 ease-out font-mono"
                               />
                               {geminiApiKey && (
                                 <button
@@ -5591,7 +5591,7 @@ export default function Portfolio() {
                           value={interviewCompanyName}
                           onChange={(e) => setInterviewCompanyName(e.target.value)}
                           placeholder="e.g. Google, Amazon, Stripe, Infosys..."
-                          className="w-full bg-slate-950/50 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-violet-500 transition-colors"
+                          className="w-full bg-slate-950/50 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-violet-500 transition duration-200 ease-out"
                         />
                         <p className="text-[10px] text-slate-300 mt-1">
                           {aiProvider === 'groq'
@@ -5614,7 +5614,7 @@ export default function Portfolio() {
                           value={interviewPositionName}
                           onChange={(e) => setInterviewPositionName(e.target.value)}
                           placeholder="e.g. Senior Software Engineer, Tech Support Specialist, Product Manager..."
-                          className="w-full bg-slate-950/50 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-violet-500 transition-colors"
+                          className="w-full bg-slate-950/50 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-violet-500 transition duration-200 ease-out"
                         />
                         <p className="text-[10px] text-slate-300 mt-1">
                           Used to tailor the question bank specifically for your role — a support
@@ -5631,7 +5631,7 @@ export default function Portfolio() {
                           value={interviewJD}
                           onChange={(e) => setInterviewJD(e.target.value)}
                           placeholder="Paste the full job description here (include company name, role, requirements, and any culture info)..."
-                          className="w-full h-44 bg-slate-950/50 border border-slate-700 rounded-xl p-3 text-xs text-slate-200 placeholder-slate-600 resize-none focus:outline-none focus:border-violet-500 transition-colors"
+                          className="w-full h-44 bg-slate-950/50 border border-slate-700 rounded-xl p-3 text-xs text-slate-200 placeholder-slate-600 resize-none focus:outline-none focus:border-violet-500 transition duration-200 ease-out"
                         />
                       </div>
 
@@ -5779,7 +5779,7 @@ export default function Portfolio() {
                             return (
                               <div
                                 key={session.id}
-                                className="p-3.5 rounded-xl border border-slate-800 bg-slate-950/20 hover:bg-slate-950/45 transition-colors flex flex-col sm:flex-row justify-between gap-3 text-xs"
+                                className="p-3.5 rounded-xl border border-slate-800 bg-slate-950/20 hover:bg-slate-950/45 transition duration-200 ease-out flex flex-col sm:flex-row justify-between gap-3 text-xs"
                               >
                                 <div className="space-y-1 min-w-0">
                                   <div className="flex items-center gap-1.5 flex-wrap">
@@ -5857,7 +5857,7 @@ export default function Portfolio() {
                                         }
                                       }
                                     }}
-                                    className="p-1.5 rounded-lg border border-slate-800 text-slate-500 hover:text-rose-400 hover:border-rose-900/50 transition-colors"
+                                    className="p-1.5 rounded-lg border border-slate-800 text-slate-500 hover:text-rose-400 hover:border-rose-900/50 transition duration-200 ease-out"
                                     title="Delete Session"
                                   >
                                     <Trash2 className="w-3.5 h-3.5" />
@@ -5894,7 +5894,7 @@ export default function Portfolio() {
                           setGeminiData(null);
                           setGeminiError('');
                         }}
-                        className="text-[10px] text-slate-500 hover:text-rose-400 transition-colors border border-slate-700 rounded-lg px-2 py-1"
+                        className="text-[10px] text-slate-500 hover:text-rose-400 transition duration-200 ease-out border border-slate-700 rounded-lg px-2 py-1"
                       >
                         ↩ Reset
                       </button>
@@ -6146,7 +6146,7 @@ export default function Portfolio() {
                         <div className="flex gap-2">
                           <button
                             onClick={() => setInterviewSubTab('questions')}
-                            className="flex-1 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 transition-colors"
+                            className="flex-1 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 transition duration-200 ease-out"
                           >
                             📋 View Questions →
                           </button>
@@ -6156,7 +6156,7 @@ export default function Portfolio() {
                               setMockMode('idle');
                               setMockQuestionIdx(0);
                             }}
-                            className="flex-1 py-2 rounded-xl bg-slate-700 hover:bg-violet-500 text-xs font-bold text-white transition-colors"
+                            className="flex-1 py-2 rounded-xl bg-slate-700 hover:bg-violet-500 text-xs font-bold text-white transition duration-200 ease-out"
                           >
                             🎤 Start Mock →
                           </button>
@@ -6210,7 +6210,7 @@ export default function Portfolio() {
                                             );
                                             setInterviewSubTab('mock');
                                           }}
-                                          className="text-[10px] text-blue-400 hover:text-blue-300 font-bold transition-colors"
+                                          className="text-[10px] text-blue-400 hover:text-blue-300 font-bold transition duration-200 ease-out"
                                         >
                                           🎤 Practice This
                                         </button>
@@ -6218,7 +6218,7 @@ export default function Portfolio() {
                                           onClick={() =>
                                             toggleSpeakQuestion(`reported-${i}`, q.question)
                                           }
-                                          className={`text-[10px] font-bold transition-colors ${
+                                          className={`text-[10px] font-bold transition duration-200 ease-out ${
                                             speakingQId === `reported-${i}`
                                               ? 'text-rose-450 hover:text-rose-400'
                                               : 'text-slate-300 hover:text-blue-400'
@@ -6301,7 +6301,7 @@ export default function Portfolio() {
                                         onClick={() =>
                                           setHintVisible((p) => ({ ...p, [q.id]: !p[q.id] }))
                                         }
-                                        className="text-[10px] text-slate-200 hover:text-slate-300 font-bold transition-colors"
+                                        className="text-[10px] text-slate-200 hover:text-slate-300 font-bold transition duration-200 ease-out"
                                       >
                                         💡 {hintVisible[q.id] ? 'Hide Hint' : 'Show Hint'}
                                       </button>
@@ -6326,13 +6326,13 @@ export default function Portfolio() {
                                         );
                                         setInterviewSubTab('mock');
                                       }}
-                                      className="text-[10px] text-slate-300 hover:text-white font-bold transition-colors"
+                                      className="text-[10px] text-slate-300 hover:text-white font-bold transition duration-200 ease-out"
                                     >
                                       🎤 Practice This
                                     </button>
                                     <button
                                       onClick={() => toggleSpeakQuestion(q.id, q.question)}
-                                      className={`text-[10px] font-bold transition-colors ${
+                                      className={`text-[10px] font-bold transition duration-200 ease-out ${
                                         speakingQId === q.id
                                           ? 'text-rose-450 hover:text-rose-400'
                                           : 'text-slate-300 hover:text-slate-200'
@@ -6398,7 +6398,7 @@ export default function Portfolio() {
                                   href={res.url}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="flex items-center gap-1.5 text-[11px] text-slate-200 hover:text-slate-300 transition-colors"
+                                  className="flex items-center gap-1.5 text-[11px] text-slate-200 hover:text-slate-300 transition duration-200 ease-out"
                                 >
                                   <span>🔗</span>
                                   {res.label}
@@ -6951,7 +6951,7 @@ export default function Portfolio() {
                                                       [q.id]: !p[q.id],
                                                     }))
                                                   }
-                                                  className="flex items-center gap-1.5 text-[9px] font-bold text-slate-200 uppercase tracking-wider hover:text-slate-300 transition-colors"
+                                                  className="flex items-center gap-1.5 text-[9px] font-bold text-slate-200 uppercase tracking-wider hover:text-slate-300 transition duration-200 ease-out"
                                                 >
                                                   <span className="text-xs">
                                                     {reportShowIdealMap[q.id] ? '▾' : '▸'}
@@ -7123,23 +7123,23 @@ export default function Portfolio() {
 
                                           {/* Audio settings */}
                                           <div className="pt-2 flex items-center justify-between border-t border-slate-850">
-                                            <label className="flex items-center gap-1.5 text-[9px] text-slate-300 cursor-pointer">
+                                            <label className="flex items-center gap-1.5 text-[9px] text-slate-300 cursor-pointer active:scale-[0.97]">
                                               <input
                                                 type="checkbox"
                                                 checked={autoPlayVoice}
                                                 onChange={(e) => setAutoPlayVoice(e.target.checked)}
-                                                className="rounded border-slate-700 bg-slate-955 text-violet-650 focus:ring-violet-500 w-3 h-3 cursor-pointer"
+                                                className="rounded border-slate-700 bg-slate-955 text-violet-650 focus:ring-violet-500 w-3 h-3 cursor-pointer active:scale-[0.97]"
                                               />
                                               <span>Speak Questions (TTS)</span>
                                             </label>
-                                            <label className="flex items-center gap-1.5 text-[9px] text-slate-300 cursor-pointer">
+                                            <label className="flex items-center gap-1.5 text-[9px] text-slate-300 cursor-pointer active:scale-[0.97]">
                                               <input
                                                 type="checkbox"
                                                 checked={autoActivateMic}
                                                 onChange={(e) =>
                                                   setAutoActivateMic(e.target.checked)
                                                 }
-                                                className="rounded border-slate-700 bg-slate-955 text-violet-650 focus:ring-violet-500 w-3 h-3 cursor-pointer"
+                                                className="rounded border-slate-700 bg-slate-955 text-violet-650 focus:ring-violet-500 w-3 h-3 cursor-pointer active:scale-[0.97]"
                                               />
                                               <span>Auto-Activate Mic</span>
                                             </label>
@@ -7196,7 +7196,7 @@ export default function Portfolio() {
                                             <div className="flex items-center gap-2">
                                               <span className="text-base">{r.emoji}</span>
                                               <div>
-                                                <p className="text-[11px] font-bold text-slate-200 group-hover:text-slate-300 transition-colors">
+                                                <p className="text-[11px] font-bold text-slate-200 group-hover:text-slate-300 transition duration-200 ease-out">
                                                   {r.label}
                                                 </p>
                                                 <p className="text-[9px] text-slate-500">
@@ -7485,7 +7485,7 @@ export default function Portfolio() {
                                                       setLoadingIdealAnswer(false);
                                                     }
                                                   }}
-                                                  className="px-2.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-[9px] font-bold text-white transition-colors"
+                                                  className="px-2.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-[9px] font-bold text-white transition duration-200 ease-out"
                                                 >
                                                   {loadingIdealAnswer
                                                     ? '⏳ Generating...'
@@ -7767,7 +7767,7 @@ export default function Portfolio() {
                                                         setLoadingIdealAnswer(false);
                                                       }
                                                     }}
-                                                    className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-[9px] font-bold text-white transition-colors"
+                                                    className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-[9px] font-bold text-white transition duration-200 ease-out"
                                                   >
                                                     {loadingIdealAnswer
                                                       ? '⏳ Generating...'
@@ -7880,7 +7880,7 @@ export default function Portfolio() {
                                                             }));
                                                           }
                                                         }}
-                                                        className="text-[9px] text-slate-200 hover:text-slate-300 font-bold transition-colors"
+                                                        className="text-[9px] text-slate-200 hover:text-slate-300 font-bold transition duration-200 ease-out"
                                                       >
                                                         📋 Copy to Draft
                                                       </button>
@@ -7946,7 +7946,7 @@ export default function Portfolio() {
                                                         );
                                                       }}
                                                       placeholder="What was the situation? (e.g., 'Our service latency spiked by 40% during a traffic spike...')"
-                                                      className="w-full h-16 bg-slate-950/40 border border-slate-700 focus:border-violet-500 rounded-xl p-2.5 text-xs text-slate-200 placeholder-slate-650 resize-none focus:outline-none transition-colors"
+                                                      className="w-full h-16 bg-slate-950/40 border border-slate-700 focus:border-violet-500 rounded-xl p-2.5 text-xs text-slate-200 placeholder-slate-650 resize-none focus:outline-none transition duration-200 ease-out"
                                                     />
                                                   </div>
 
@@ -7975,7 +7975,7 @@ export default function Portfolio() {
                                                         );
                                                       }}
                                                       placeholder="What did you need to do? (e.g., 'I was tasked with identifying the bottleneck and reducing latency under 200ms...')"
-                                                      className="w-full h-16 bg-slate-955/40 border border-slate-700 focus:border-violet-500 rounded-xl p-2.5 text-xs text-slate-200 placeholder-slate-650 resize-none focus:outline-none transition-colors"
+                                                      className="w-full h-16 bg-slate-955/40 border border-slate-700 focus:border-violet-500 rounded-xl p-2.5 text-xs text-slate-200 placeholder-slate-650 resize-none focus:outline-none transition duration-200 ease-out"
                                                     />
                                                   </div>
 
@@ -8004,7 +8004,7 @@ export default function Portfolio() {
                                                         );
                                                       }}
                                                       placeholder="What actions did you take? (e.g., 'I profiled the DB queries, added Redis caching, and optimized the indexes...')"
-                                                      className="w-full h-20 bg-slate-955/40 border border-slate-700 focus:border-violet-500 rounded-xl p-2.5 text-xs text-slate-200 placeholder-slate-650 resize-none focus:outline-none transition-colors"
+                                                      className="w-full h-20 bg-slate-955/40 border border-slate-700 focus:border-violet-500 rounded-xl p-2.5 text-xs text-slate-200 placeholder-slate-650 resize-none focus:outline-none transition duration-200 ease-out"
                                                     />
                                                   </div>
 
@@ -8033,7 +8033,7 @@ export default function Portfolio() {
                                                         );
                                                       }}
                                                       placeholder="What was the result? (e.g., 'We reduced p99 latency by 65% and saved $4k in server costs...')"
-                                                      className="w-full h-16 bg-slate-955/40 border border-slate-700 focus:border-violet-500 rounded-xl p-2.5 text-xs text-slate-200 placeholder-slate-650 resize-none focus:outline-none transition-colors"
+                                                      className="w-full h-16 bg-slate-955/40 border border-slate-700 focus:border-violet-500 rounded-xl p-2.5 text-xs text-slate-200 placeholder-slate-650 resize-none focus:outline-none transition duration-200 ease-out"
                                                     />
                                                   </div>
                                                 </div>
@@ -8048,7 +8048,7 @@ export default function Portfolio() {
                                                       }))
                                                     }
                                                     placeholder={getPlaceholderText()}
-                                                    className={`w-full h-36 bg-slate-950/50 border rounded-xl p-3 pr-12 text-xs text-slate-200 placeholder-slate-600 resize-none focus:outline-none transition-colors ${isRecording ? 'border-red-500 bg-red-950/10' : 'border-slate-700 focus:border-violet-500'}`}
+                                                    className={`w-full h-36 bg-slate-950/50 border rounded-xl p-3 pr-12 text-xs text-slate-200 placeholder-slate-600 resize-none focus:outline-none transition duration-200 ease-out ${isRecording ? 'border-red-500 bg-red-950/10' : 'border-slate-700 focus:border-violet-500'}`}
                                                   />
                                                   {/* Microphone button */}
                                                   <button
@@ -8423,7 +8423,7 @@ export default function Portfolio() {
                                                             setLoadingOptimization(false);
                                                           }
                                                         }}
-                                                        className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-[9px] font-bold text-white transition-colors"
+                                                        className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-[9px] font-bold text-white transition duration-200 ease-out"
                                                       >
                                                         {loadingOptimization
                                                           ? '⏳ Polishing...'
@@ -8473,7 +8473,7 @@ export default function Portfolio() {
                                                               '📋 Copied optimized response to clipboard!'
                                                             );
                                                           }}
-                                                          className="text-[9px] text-blue-400 hover:text-blue-355 font-bold transition-colors"
+                                                          className="text-[9px] text-blue-400 hover:text-blue-355 font-bold transition duration-200 ease-out"
                                                         >
                                                           📋 Copy Answer
                                                         </button>
@@ -8599,7 +8599,7 @@ export default function Portfolio() {
                 <button
                   onClick={handleZipDownload}
                   disabled={isZipping}
-                  className="flex items-center gap-1.5 bg-white text-slate-900 hover:bg-slate-200 text-white px-4 py-2 rounded-xl text-sm font-bold transition duration-200 ease-out shadow-lg shadow-black/10 active:scale-[0.97] cursor-pointer disabled:opacity-50"
+                  className="flex items-center gap-1.5 bg-white text-slate-900 hover:bg-slate-200 text-white px-4 py-2 rounded-xl text-sm font-bold transition duration-200 ease-out shadow-lg shadow-black/10 active:scale-[0.97] cursor-pointer active:scale-[0.97] disabled:opacity-50"
                 >
                   {copiedZip ? <Check className="w-4 h-4 text-emerald-300 animate-pulse" /> : <Download className="w-4 h-4" />}
                   <span>{isZipping ? 'Creating ZIP...' : copiedZip ? 'Downloaded ZIP!' : 'Download Project (.zip)'}</span>
@@ -8615,7 +8615,7 @@ export default function Portfolio() {
 
                 <button
                   onClick={() => handleWordDownload()}
-                  className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-4 py-2 rounded-xl text-sm font-semibold transition duration-200 ease-out cursor-pointer"
+                  className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-4 py-2 rounded-xl text-sm font-semibold transition duration-200 ease-out cursor-pointer active:scale-[0.97]"
                 >
                   <FileText className="w-4 h-4 text-slate-200" />
                   <span>Word (.doc)</span>
@@ -8623,7 +8623,7 @@ export default function Portfolio() {
 
                 <button
                   onClick={handlePdfPrint}
-                  className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-4 py-2 rounded-xl text-sm font-semibold transition duration-200 ease-out cursor-pointer"
+                  className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-4 py-2 rounded-xl text-sm font-semibold transition duration-200 ease-out cursor-pointer active:scale-[0.97]"
                 >
                   <Download className="w-4 h-4 text-emerald-400" />
                   <span>PDF Document</span>
@@ -8639,7 +8639,7 @@ export default function Portfolio() {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => setHighlightChanges(!highlightChanges)}
-                        className={`flex items-center gap-1.5 px-2 py-1 rounded transition-colors ${highlightChanges ? 'bg-slate-600 text-indigo-950' : 'bg-indigo-800 text-slate-300'}`}
+                        className={`flex items-center gap-1.5 px-2 py-1 rounded transition duration-200 ease-out ${highlightChanges ? 'bg-slate-600 text-indigo-950' : 'bg-indigo-800 text-slate-300'}`}
                       >
                         {highlightChanges ? (
                           <CheckCircle className="w-3.5 h-3.5" />
@@ -8653,7 +8653,7 @@ export default function Portfolio() {
                   <div className="flex gap-2">
                     <button
                       onClick={applyRevisedData}
-                      className="bg-white text-indigo-950 px-3 py-1.5 rounded-lg font-bold hover:bg-slate-100 transition-colors cursor-pointer shadow-lg"
+                      className="bg-white text-indigo-950 px-3 py-1.5 rounded-lg font-bold hover:bg-slate-100 transition duration-200 ease-out cursor-pointer active:scale-[0.97] shadow-lg"
                     >
                       Apply AI Fixes
                     </button>
@@ -8663,7 +8663,7 @@ export default function Portfolio() {
                         setRevisedResumeData(null);
                         setAppliedFixes([]);
                       }}
-                      className="bg-slate-800/50 text-slate-300 px-3 py-1.5 rounded-lg font-bold hover:bg-slate-800 transition-colors cursor-pointer border border-indigo-700"
+                      className="bg-slate-800/50 text-slate-300 px-3 py-1.5 rounded-lg font-bold hover:bg-slate-800 transition duration-200 ease-out cursor-pointer active:scale-[0.97] border border-indigo-700"
                     >
                       Discard Draft
                     </button>
@@ -8711,7 +8711,7 @@ export default function Portfolio() {
                 </h2>
                 <button
                   onClick={() => setShowPrintModal(false)}
-                  className="text-slate-500 hover:text-white transition-colors"
+                  className="text-slate-500 hover:text-white transition duration-200 ease-out"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -8983,7 +8983,7 @@ export default function Portfolio() {
                       <button
                         type="button"
                         onClick={() => setAutoFitToPage(!autoFitToPage)}
-                        className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-out-out focus:outline-none ${
+                        className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer active:scale-[0.97] rounded-full border-2 border-transparent transition duration-200 ease-out duration-200 ease-out-out focus:outline-none ${
                           autoFitToPage ? 'bg-indigo-600' : 'bg-slate-700'
                         }`}
                       >
@@ -9050,7 +9050,7 @@ export default function Portfolio() {
                 <button
                   onClick={triggerPdfPrint}
                   disabled={isGeneratingPdf}
-                  className="w-full py-4 bg-indigo-600 hover:bg-slate-700 disabled:bg-indigo-850 text-white rounded-2xl font-black text-sm shadow-xl shadow-indigo-900/40 transition duration-200 ease-out flex justify-center items-center gap-3 active:scale-[0.97] disabled:opacity-75 disabled:cursor-not-allowed"
+                  className="w-full py-4 bg-indigo-600 hover:bg-slate-700 disabled:bg-indigo-850 text-white rounded-2xl font-black text-sm shadow-xl shadow-black/10 transition duration-200 ease-out flex justify-center items-center gap-3 active:scale-[0.97] disabled:opacity-75 disabled:cursor-not-allowed"
                 >
                   {isGeneratingPdf ? (
                     <>
@@ -9161,7 +9161,7 @@ export default function Portfolio() {
             {!authLoading && (
               <button
                 onClick={() => setShowAuthModal(false)}
-                className="absolute top-4 right-4 text-slate-300 hover:text-white hover:bg-slate-800/50 p-1.5 rounded-lg transition duration-200 ease-out cursor-pointer"
+                className="absolute top-4 right-4 text-slate-300 hover:text-white hover:bg-slate-800/50 p-1.5 rounded-lg transition duration-200 ease-out cursor-pointer active:scale-[0.97]"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -9206,7 +9206,7 @@ export default function Portfolio() {
                     value={authEmail}
                     onChange={(e) => setAuthEmail(e.target.value)}
                     placeholder="e.g. you@example.com"
-                    className="w-full bg-slate-950 border border-slate-800 focus:border-slate-600 rounded-xl px-3.5 py-2 text-xs text-slate-100 placeholder-slate-650 focus:outline-none transition-colors"
+                    className="w-full bg-slate-950 border border-slate-800 focus:border-slate-600 rounded-xl px-3.5 py-2 text-xs text-slate-100 placeholder-slate-650 focus:outline-none transition duration-200 ease-out"
                   />
                 </div>
 
@@ -9220,14 +9220,14 @@ export default function Portfolio() {
                     value={authPassword}
                     onChange={(e) => setAuthPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full bg-slate-955 border border-slate-800 focus:border-slate-600 rounded-xl px-3.5 py-2 text-xs text-slate-100 placeholder-slate-655 focus:outline-none transition-colors"
+                    className="w-full bg-slate-955 border border-slate-800 focus:border-slate-600 rounded-xl px-3.5 py-2 text-xs text-slate-100 placeholder-slate-655 focus:outline-none transition duration-200 ease-out"
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={authLoading}
-                  className="w-full bg-indigo-650 hover:bg-indigo-550 text-white font-extrabold py-2.5 rounded-xl text-xs transition duration-200 ease-out shadow-md disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
+                  className="w-full bg-indigo-650 hover:bg-indigo-550 text-white font-extrabold py-2.5 rounded-xl text-xs transition duration-200 ease-out shadow-md disabled:opacity-50 cursor-pointer active:scale-[0.97] flex items-center justify-center gap-2"
                 >
                   {authLoading ? (
                     <>
@@ -9252,7 +9252,7 @@ export default function Portfolio() {
                 type="button"
                 onClick={handleGoogleAuth}
                 disabled={authLoading}
-                className="w-full bg-slate-950 border border-slate-800 hover:bg-slate-900 text-slate-200 font-extrabold py-2.5 rounded-xl text-xs transition-colors flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                className="w-full bg-slate-950 border border-slate-800 hover:bg-slate-900 text-slate-200 font-extrabold py-2.5 rounded-xl text-xs transition duration-200 ease-out flex items-center justify-center gap-2 cursor-pointer active:scale-[0.97] disabled:opacity-50"
               >
                 <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
                   <path
@@ -9284,7 +9284,7 @@ export default function Portfolio() {
                     setAuthMode(authMode === 'login' ? 'signup' : 'login');
                     setAuthError('');
                   }}
-                  className="text-slate-200 hover:text-slate-300 font-bold underline transition-colors cursor-pointer"
+                  className="text-slate-200 hover:text-slate-300 font-bold underline transition duration-200 ease-out cursor-pointer active:scale-[0.97]"
                 >
                   {authMode === 'login' ? 'Sign Up Free' : 'Sign In Here'}
                 </button>
@@ -9358,7 +9358,7 @@ export default function Portfolio() {
                           href="https://vercel.com/account/tokens"
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-[10px] text-slate-200 hover:text-slate-300 font-bold underline transition-colors"
+                          className="text-[10px] text-slate-200 hover:text-slate-300 font-bold underline transition duration-200 ease-out"
                         >
                           Generate Token →
                         </a>
@@ -9369,7 +9369,7 @@ export default function Portfolio() {
                           value={vercelToken}
                           onChange={(e) => setVercelToken(e.target.value)}
                           placeholder="paste your vercel token (e.g. v2_...)"
-                          className="w-full bg-slate-950 border border-slate-800 focus:border-slate-600 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-600 focus:outline-none transition-colors"
+                          className="w-full bg-slate-950 border border-slate-800 focus:border-slate-600 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-600 focus:outline-none transition duration-200 ease-out"
                         />
                       </div>
                       <p className="text-[10px] text-slate-500 leading-normal">
@@ -9393,7 +9393,7 @@ export default function Portfolio() {
                             )
                           }
                           placeholder="e.g. my-awesome-portfolio"
-                          className="w-full bg-slate-950 border border-slate-800 focus:border-slate-600 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-600 focus:outline-none transition-colors"
+                          className="w-full bg-slate-950 border border-slate-800 focus:border-slate-600 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-600 focus:outline-none transition duration-200 ease-out"
                         />
                       </div>
                       <div className="flex items-center gap-1.5 text-[10px] text-slate-500 font-semibold">
@@ -9407,7 +9407,7 @@ export default function Portfolio() {
 
                   <button
                     onClick={handleVercelDeploy}
-                    className="w-full bg-white text-slate-900 hover:bg-slate-200 text-white font-extrabold py-3 rounded-xl text-xs transition duration-200 ease-out shadow-lg hover:shadow-black/10 active:scale-[0.97] cursor-pointer flex items-center justify-center gap-2 mt-2"
+                    className="w-full bg-white text-slate-900 hover:bg-slate-200 text-white font-extrabold py-3 rounded-xl text-xs transition duration-200 ease-out shadow-lg hover:shadow-black/10 active:scale-[0.97] cursor-pointer active:scale-[0.97] flex items-center justify-center gap-2 mt-2"
                   >
                     <svg className="w-3.5 h-3.5 fill-current text-white" viewBox="0 0 512 512">
                       <path d="M256,48,496,464H16Z" />
@@ -9555,7 +9555,7 @@ export default function Portfolio() {
                             setCopiedVercelUrl(true);
                             setTimeout(() => setCopiedVercelUrl(false), 2000);
                           }}
-                          className="text-slate-300 hover:text-white p-1 rounded transition-colors shrink-0 cursor-pointer"
+                          className="text-slate-300 hover:text-white p-1 rounded transition duration-200 ease-out shrink-0 cursor-pointer active:scale-[0.97]"
                           title="Copy Link"
                         >
                           {copiedVercelUrl ? (
@@ -9609,13 +9609,13 @@ export default function Portfolio() {
                       href={vercelDeployUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-full bg-white text-slate-900 hover:bg-slate-200 text-white font-extrabold py-3 rounded-xl text-xs transition duration-200 ease-out shadow-lg hover:shadow-black/10 flex items-center justify-center gap-2 cursor-pointer"
+                      className="w-full bg-white text-slate-900 hover:bg-slate-200 text-white font-extrabold py-3 rounded-xl text-xs transition duration-200 ease-out shadow-lg hover:shadow-black/10 flex items-center justify-center gap-2 cursor-pointer active:scale-[0.97]"
                     >
                       <span>Visit Live Website</span>
                     </a>
                     <button
                       onClick={() => setShowVercelModal(false)}
-                      className="w-full bg-slate-850 hover:bg-slate-800 text-slate-200 font-bold py-2.5 rounded-xl text-xs transition-colors cursor-pointer"
+                      className="w-full bg-slate-850 hover:bg-slate-800 text-slate-200 font-bold py-2.5 rounded-xl text-xs transition duration-200 ease-out cursor-pointer active:scale-[0.97]"
                     >
                       Close Deployment
                     </button>
@@ -9788,7 +9788,7 @@ export default function Portfolio() {
         >
           <button
             onClick={() => setMobileActiveView('editor')}
-            className={`flex flex-col items-center justify-center gap-1 py-1 px-4 rounded-xl transition duration-200 ease-out cursor-pointer ${
+            className={`flex flex-col items-center justify-center gap-1 py-1 px-4 rounded-xl transition duration-200 ease-out cursor-pointer active:scale-[0.97] ${
               mobileActiveView === 'editor'
                 ? appTheme === 'nord-light'
                   ? 'text-indigo-650 font-bold font-semibold'
@@ -9801,7 +9801,7 @@ export default function Portfolio() {
           </button>
           <button
             onClick={() => setMobileActiveView('preview')}
-            className={`flex flex-col items-center justify-center gap-1 py-1 px-4 rounded-xl transition duration-200 ease-out cursor-pointer ${
+            className={`flex flex-col items-center justify-center gap-1 py-1 px-4 rounded-xl transition duration-200 ease-out cursor-pointer active:scale-[0.97] ${
               mobileActiveView === 'preview'
                 ? appTheme === 'nord-light'
                   ? 'text-indigo-650 font-bold font-semibold'

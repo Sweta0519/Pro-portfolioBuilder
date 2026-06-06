@@ -311,7 +311,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
   if (settings.id === 'creative') {
     return (
       <div
-        className={`min-h-screen ${bgColor} ${fontClass} relative overflow-hidden transition-colors duration-500`}
+        className={`min-h-screen ${bgColor} ${fontClass} relative overflow-hidden transition duration-200 ease-out duration-500`}
       >
         {/* Animated Fluid Blobs */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -362,7 +362,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
               <div className="mt-6 md:mt-8 space-y-3 w-full text-left">
                 {data.personal.email && (
                   <div
-                    className={`flex items-center gap-3 ${textBody} text-xs ${cardBg} p-2.5 md:p-3 rounded-xl border ${cardHoverBg} transition-colors`}
+                    className={`flex items-center gap-3 ${textBody} text-xs ${cardBg} p-2.5 md:p-3 rounded-xl border ${cardHoverBg} transition duration-200 ease-out`}
                   >
                     <Mail className={`w-3.5 h-3.5 md:w-4 md:h-4 ${primaryClass} flex-shrink-0`} />
                     <span className="truncate">{data.personal.email}</span>
@@ -572,7 +572,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
                   >
                     <div className="flex justify-between items-center mb-3 md:mb-4">
                       <div
-                        className={`text-xs md:text-sm font-bold ${textHeading} group-hover:text-indigo-400 transition-colors`}
+                        className={`text-xs md:text-sm font-bold ${textHeading} group-hover:text-indigo-400 transition duration-200 ease-out`}
                       >
                         {skill.name}
                       </div>
@@ -619,7 +619,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
             )}
 
             <section id="contact" className="py-24 scroll-slide">
-              <div className="p-10 rounded-[2.5rem] bg-gradient-to-br from-indigo-600 to-violet-700 text-white relative overflow-hidden shadow-2xl shadow-indigo-500/20">
+              <div className="p-10 rounded-[2.5rem] bg-gradient-to-br from-indigo-600 to-violet-700 text-white relative overflow-hidden shadow-2xl shadow-black/10">
                 <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-12">
                   <div className="space-y-6">
                     <h3 className="text-4xl font-black tracking-tight leading-none">
@@ -634,7 +634,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
                           href={data.personal.socials.linkedin}
                           target="_blank"
                           rel="noreferrer"
-                          className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
+                          className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center hover:bg-white/20 transition duration-200 ease-out"
                         >
                           <SocialIcon type="linkedin" />
                         </a>
@@ -644,7 +644,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
                           href={data.personal.socials.twitter}
                           target="_blank"
                           rel="noreferrer"
-                          className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
+                          className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center hover:bg-white/20 transition duration-200 ease-out"
                         >
                           <SocialIcon type="twitter" />
                         </a>
@@ -654,7 +654,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
                           href={data.personal.socials.github}
                           target="_blank"
                           rel="noreferrer"
-                          className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
+                          className="w-12 h-12 rounded-2xl bg-white/10 flex items-center justify-center hover:bg-white/20 transition duration-200 ease-out"
                         >
                           <SocialIcon type="github" />
                         </a>
@@ -699,7 +699,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
   if (settings.id === 'gradient') {
     return (
       <div
-        className={`min-h-screen ${bgColor} ${fontClass} relative overflow-hidden flex flex-col items-center transition-colors duration-500`}
+        className={`min-h-screen ${bgColor} ${fontClass} relative overflow-hidden flex flex-col items-center transition duration-200 ease-out duration-500`}
       >
         {/* Animated Background Mesh */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -755,7 +755,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
               <a
                 href="#contact"
                 className={rc(
-                  `${primaryBg} text-white font-black px-6 py-4 md:px-10 md:py-5 rounded-full text-xs uppercase tracking-[0.2em] hover:scale-105 transition-transform shadow-2xl shadow-indigo-500/20 text-center w-full sm:w-auto`
+                  `${primaryBg} text-white font-black px-6 py-4 md:px-10 md:py-5 rounded-full text-xs uppercase tracking-[0.2em] hover:scale-105 transition-transform shadow-2xl shadow-black/10 text-center w-full sm:w-auto`
                 )}
               >
                 Let's Work Together
@@ -837,7 +837,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
                     <div>
                       <h3
                         className={rc(
-                          `text-xl md:text-3xl font-black ${textHeading} mb-2 md:mb-3 group-hover:text-indigo-400 transition-colors leading-tight`
+                          `text-xl md:text-3xl font-black ${textHeading} mb-2 md:mb-3 group-hover:text-indigo-400 transition duration-200 ease-out leading-tight`
                         )}
                       >
                         {exp.position}
@@ -993,7 +993,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
       accentBg: 'bg-indigo-50/50 dark:bg-indigo-900/20',
       gradient: 'from-indigo-600 to-violet-600',
       badge: 'bg-indigo-50 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300',
-      glow: 'shadow-indigo-500/20 shadow-lg',
+      glow: 'shadow-black/10 shadow-lg',
     },
     emerald: {
       bg: 'bg-emerald-600',
@@ -1110,7 +1110,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
             <div className="flex flex-wrap justify-center gap-4">
               <a
                 href="#about"
-                className={`px-8 py-4 ${colors.bg} text-white font-mono font-bold uppercase tracking-widest hover:opacity-80 transition duration-200 ease-out border border-white/20 shadow-2xl shadow-indigo-500/40`}
+                className={`px-8 py-4 ${colors.bg} text-white font-mono font-bold uppercase tracking-widest hover:opacity-80 transition duration-200 ease-out border border-white/20 shadow-2xl shadow-black/10`}
               >
                 Access Data
               </a>
@@ -1183,7 +1183,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
                     href={data.personal.socials.linkedin}
                     target="_blank"
                     rel="noreferrer"
-                    className={`text-slate-500 hover:${textHeading} transition-colors`}
+                    className={`text-slate-500 hover:${textHeading} transition duration-200 ease-out`}
                   >
                     <SocialIcon type="linkedin" />
                   </a>
@@ -1193,7 +1193,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
                     href={data.personal.socials.twitter}
                     target="_blank"
                     rel="noreferrer"
-                    className={`text-slate-500 hover:${textHeading} transition-colors`}
+                    className={`text-slate-500 hover:${textHeading} transition duration-200 ease-out`}
                   >
                     <SocialIcon type="twitter" />
                   </a>
@@ -1203,7 +1203,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
                     href={data.personal.socials.github}
                     target="_blank"
                     rel="noreferrer"
-                    className={`text-slate-500 hover:${textHeading} transition-colors`}
+                    className={`text-slate-500 hover:${textHeading} transition duration-200 ease-out`}
                   >
                     <SocialIcon type="github" />
                   </a>
@@ -1217,7 +1217,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
                 `aspect-square max-w-[280px] mx-auto lg:max-w-none rounded-[2rem] bg-gradient-to-br ${colors.gradient} shadow-2xl relative z-10 overflow-hidden group`
               )}
             >
-              <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors"></div>
+              <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition duration-200 ease-out"></div>
               {data.personal.avatar.length > 2 ? (
                 <img
                   src={data.personal.avatar}
@@ -1243,7 +1243,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
 
   return (
     <div
-      className={`min-h-screen ${bgColor} ${fontClass} transition-colors duration-500 flex flex-col`}
+      className={`min-h-screen ${bgColor} ${fontClass} transition duration-200 ease-out duration-500 flex flex-col`}
     >
       {/* Dynamic Header */}
       {!isClassic && (
@@ -1266,20 +1266,20 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
                 'hidden md:flex items-center gap-8 text-[11px] font-black uppercase tracking-widest text-slate-500'
               )}
             >
-              <a href="#about" className={`hover:${textHeading} transition-colors`}>
+              <a href="#about" className={`hover:${textHeading} transition duration-200 ease-out`}>
                 About
               </a>
-              <a href="#experience" className={`hover:${textHeading} transition-colors`}>
+              <a href="#experience" className={`hover:${textHeading} transition duration-200 ease-out`}>
                 Experience
               </a>
-              <a href="#projects" className={`hover:${textHeading} transition-colors`}>
+              <a href="#projects" className={`hover:${textHeading} transition duration-200 ease-out`}>
                 Projects
               </a>
-              <a href="#skills" className={`hover:${textHeading} transition-colors`}>
+              <a href="#skills" className={`hover:${textHeading} transition duration-200 ease-out`}>
                 Skills
               </a>
               {data.certificates && data.certificates.length > 0 && (
-                <a href="#awards" className={`hover:${textHeading} transition-colors`}>
+                <a href="#awards" className={`hover:${textHeading} transition duration-200 ease-out`}>
                   Awards
                 </a>
               )}
@@ -1440,7 +1440,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
                 className={
                   isClassic
                     ? ''
-                    : `group relative pl-8 border-l border-slate-200 dark:border-white/5 hover:border-indigo-500/30 transition-colors`
+                    : `group relative pl-8 border-l border-slate-200 dark:border-white/5 hover:border-indigo-500/30 transition duration-200 ease-out`
                 }
               >
                 {!isClassic && (
@@ -1499,7 +1499,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
               >
                 <div className="flex justify-between items-start mb-4">
                   <h3
-                    className={`text-xl font-bold ${isClassic ? 'text-slate-900' : `${textHeading} group-hover:text-indigo-400 transition-colors`}`}
+                    className={`text-xl font-bold ${isClassic ? 'text-slate-900' : `${textHeading} group-hover:text-indigo-400 transition duration-200 ease-out`}`}
                   >
                     {proj.title}
                   </h3>
@@ -1609,7 +1609,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
                   )}
                   <div>
                     <h3
-                      className={`text-xl font-bold ${isClassic ? 'text-slate-900' : `${textHeading} group-hover:text-indigo-400 transition-colors`}`}
+                      className={`text-xl font-bold ${isClassic ? 'text-slate-900' : `${textHeading} group-hover:text-indigo-400 transition duration-200 ease-out`}`}
                     >
                       {cert.name}
                     </h3>
