@@ -1,9 +1,10 @@
 import * as pdfjsLib from 'pdfjs-dist';
 import * as mammoth from 'mammoth';
 
-// Use jsDelivr CDN for the worker — cdnjs doesn't host specific sub-versions or formats (returning 404).
-// jsDelivr NPM integration works perfectly and reliably handles standard .min.mjs files.
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+// Use jsDelivr CDN for the classic .js worker instead of modern ESM .mjs.
+// Downgraded to pdfjs-dist@3.11.174 which uses classic worker JS. Classic workers are 
+// fully supported across older mobile Safari and in-app webviews (avoiding cross-origin module worker bugs).
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js`;
 
 /**
  * Helper to convert a file to ArrayBuffer, falling back to FileReader

@@ -498,7 +498,8 @@ export function parseRawResumeText(rawText: string): Partial<ResumeData> {
           let issuer = 'Verification Body';
 
           const separators = ['–', '-', '|'];
-          for (const sep of separators) {
+          for (let k = 0; k < separators.length; k++) {
+            const sep = separators[k];
             if (textWithoutDate.includes(sep)) {
               const subparts = textWithoutDate.split(sep).map((p) => p.trim());
               if (subparts[0].length >= 3 && subparts[1].length >= 2) {
@@ -870,7 +871,8 @@ export function parseRawResumeText(rawText: string): Partial<ResumeData> {
         const separators = [',', '–', '-', '|'];
         let splitDone = false;
 
-        for (const sep of separators) {
+        for (let k = 0; k < separators.length; k++) {
+          const sep = separators[k];
           if (textWithoutDate.includes(sep)) {
             const parts = textWithoutDate.split(sep).map((p) => p.trim());
             if (parts[0].length >= 3 && parts[1].length >= 2) {

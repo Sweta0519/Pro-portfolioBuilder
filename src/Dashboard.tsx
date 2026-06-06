@@ -307,7 +307,8 @@ export default function Dashboard() {
         // Merge local resumes
         const localResumesToUpload = [];
         const localResList = Array.isArray(savedResumes) ? savedResumes : [];
-        for (const localRes of localResList) {
+        for (let k = 0; k < localResList.length; k++) {
+          const localRes = localResList[k];
           const isUuid = localRes.id.includes('-') && localRes.id.length === 36;
           let matchedDbResume = null;
 
@@ -420,7 +421,8 @@ export default function Dashboard() {
 
         const localSessionsToUpload = [];
         const localSessList = Array.isArray(savedSessions) ? savedSessions : [];
-        for (const localSess of localSessList) {
+        for (let k = 0; k < localSessList.length; k++) {
+          const localSess = localSessList[k];
           const matchedDbSess = mergedSessionsMap.get(localSess.id);
 
           if (matchedDbSess) {
@@ -507,7 +509,8 @@ export default function Dashboard() {
       setSyncStatus('syncing');
       try {
         const resList = Array.isArray(savedResumes) ? savedResumes : [];
-        for (const res of resList) {
+        for (let k = 0; k < resList.length; k++) {
+          const res = resList[k];
           const isUuid = res.id.includes('-') && res.id.length === 36;
           await supabase.from('resumes').upsert({
             id: isUuid ? res.id : undefined,
@@ -536,7 +539,8 @@ export default function Dashboard() {
       setSyncStatus('syncing');
       try {
         const sessList = Array.isArray(savedSessions) ? savedSessions : [];
-        for (const s of sessList) {
+        for (let k = 0; k < sessList.length; k++) {
+          const s = sessList[k];
           await supabase.from('interview_sessions').upsert({
             id: s.id,
             user_id: user.id,
