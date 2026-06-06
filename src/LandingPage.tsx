@@ -59,24 +59,59 @@ export default function LandingPage() {
         )}
       </nav>
 
-      {/* Hero Section — pt-24 (max per Taste), no AI-purple glow, subtext ≤20 words */}
-      <section className="pt-24 pb-20 px-4 relative overflow-hidden">
-        <div className="max-w-3xl mx-auto relative z-10">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-slate-900 tracking-tight leading-tight mb-6">
-            Your resume, turned into a{' '}
-            <span className="text-emerald-600">portfolio website</span>
-          </h1>
-          <p className="text-lg text-slate-600 mb-8 max-w-[55ch] leading-relaxed">
-            Upload your PDF. Get a live, ATS-optimized portfolio and AI interview prep in seconds.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4">
-            <Link to="/app" className="bg-slate-900 text-white px-8 py-4 rounded-xl text-lg font-bold hover:bg-slate-800 shadow-xl shadow-black/10 transition active:scale-[0.97] duration-200 ease-out hover:-translate-y-0.5 inline-flex items-center gap-2">
-              Start Building Free
-              <ArrowRight className="w-5 h-5" />
-            </Link>
-            <a href="#features" className="bg-white text-slate-700 px-8 py-4 rounded-xl text-lg font-bold hover:bg-slate-100 border border-slate-200 transition active:scale-[0.97] duration-200 ease-out hover:-translate-y-0.5 shadow-sm text-center">
-              See How It Works
-            </a>
+      {/* Hero Section — pt-24 (max per Taste), real product preview via iframe */}
+      <section className="pt-24 pb-12 px-4 relative overflow-hidden">
+        <div className="max-w-7xl mx-auto relative z-10 grid lg:grid-cols-2 gap-12 items-center">
+          {/* Left: Copy */}
+          <div>
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-slate-900 tracking-tight leading-tight mb-6">
+              Your resume, turned into a{' '}
+              <span className="text-emerald-600">portfolio website</span>
+            </h1>
+            <p className="text-lg text-slate-600 mb-8 max-w-[55ch] leading-relaxed">
+              Upload your PDF. Get a live, ATS-optimized portfolio and AI interview prep in seconds.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Link to="/app" className="bg-slate-900 text-white px-8 py-4 rounded-xl text-lg font-bold hover:bg-slate-800 shadow-xl shadow-black/10 transition active:scale-[0.97] duration-200 ease-out hover:-translate-y-0.5 inline-flex items-center gap-2">
+                Start Building Free
+                <ArrowRight className="w-5 h-5" />
+              </Link>
+              <a href="#features" className="bg-white text-slate-700 px-8 py-4 rounded-xl text-lg font-bold hover:bg-slate-100 border border-slate-200 transition active:scale-[0.97] duration-200 ease-out hover:-translate-y-0.5 shadow-sm text-center">
+                See How It Works
+              </a>
+            </div>
+          </div>
+
+          {/* Right: Live dashboard preview — real product, not a fake mockup */}
+          <div className="hidden lg:block relative">
+            <div className="rounded-2xl overflow-hidden border border-slate-200 shadow-2xl shadow-black/10 bg-slate-900">
+              {/* Browser chrome bar */}
+              <div className="bg-slate-800 px-4 py-2.5 flex items-center gap-2 border-b border-slate-700">
+                <div className="flex gap-1.5">
+                  <div className="w-3 h-3 rounded-full bg-red-400"></div>
+                  <div className="w-3 h-3 rounded-full bg-amber-400"></div>
+                  <div className="w-3 h-3 rounded-full bg-emerald-400"></div>
+                </div>
+                <div className="flex-1 text-center text-xs text-slate-400 font-mono">pro-portfolio-builder.vercel.app/app</div>
+              </div>
+              {/* Live iframe preview — pointer-events disabled so users can't interact */}
+              <div className="relative w-full overflow-hidden" style={{ height: '380px' }}>
+                <iframe
+                  src="/app"
+                  title="ProPortfolio Dashboard Preview"
+                  className="absolute top-0 left-0 border-0"
+                  style={{
+                    width: '1920px',
+                    height: '1080px',
+                    transform: 'scale(0.35)',
+                    transformOrigin: 'top left',
+                    pointerEvents: 'none',
+                  }}
+                  tabIndex={-1}
+                  loading="lazy"
+                />
+              </div>
+            </div>
           </div>
         </div>
       </section>
