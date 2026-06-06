@@ -1423,7 +1423,7 @@ async function fetchWithOpenRouter(apiKey: string, prompt: string): Promise<Gemi
         { role: 'user', content: prompt },
       ],
       temperature: 0.3,
-      max_tokens: 4096,
+      max_tokens: 3500,
     }),
   });
 
