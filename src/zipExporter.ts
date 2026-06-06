@@ -493,7 +493,7 @@ export default function App() {
                 {resumeData.personal.avatar.length <= 2 ? (
                   resumeData.personal.avatar
                 ) : (
-                  <img src={resumeData.personal.avatar} alt={resumeData.personal.name} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" />
+                  <img src={resumeData.personal.avatar} alt={resumeData.personal.name} className="w-full h-full object-cover grayscale group-hover:grayscale-95 opacity-0 transition duration-700" />
                 )}
               </div>
               <h1 className={\`text-2xl md:text-3xl font-black \${textHeading} tracking-tight mb-2 leading-tight break-words w-full\`}>{resumeData.personal.name}</h1>
@@ -517,7 +517,7 @@ export default function App() {
 
             <nav className="mt-6 md:mt-12 flex flex-row md:flex-col gap-2 md:space-y-1 overflow-x-auto pb-2 md:pb-0 scrollbar-none justify-start w-full">
               {['About', 'Experience', 'Projects', 'Skills', ...(resumeData.certificates && resumeData.certificates.length > 0 ? ['Awards'] : []), 'Contact'].map(item => (
-                <a key={item} href={\`#\${item.toLowerCase()}\`} className={\`whitespace-nowrap py-1.5 px-3 md:py-2.5 md:px-4 rounded-xl text-slate-500 dark:text-slate-400 hover:\${textHeading} hover:bg-slate-200/50 dark:hover:bg-white/5 transition-all text-xs md:text-sm font-bold tracking-wide\`}>
+                <a key={item} href={\`#\${item.toLowerCase()}\`} className={\`whitespace-nowrap py-1.5 px-3 md:py-2.5 md:px-4 rounded-xl text-slate-500 dark:text-slate-400 hover:\${textHeading} hover:bg-slate-200/50 dark:hover:bg-white/5 transition duration-200 ease-out text-xs md:text-sm font-bold tracking-wide\`}>
                   {item}
                 </a>
               ))}
@@ -562,7 +562,7 @@ export default function App() {
               <div className="space-y-10 md:space-y-12">
                 {resumeData.experience.map((exp: any, idx: number) => (
                   <div key={idx} className="group relative pl-6 md:pl-8 border-l border-slate-200 dark:border-white/10">
-                    <div className={\`absolute left-[-5.5px] top-0 w-2.5 h-2.5 rounded-full \${primaryBg} ring-4 ring-slate-100 dark:ring-white/5 transition-all group-hover:scale-150\`}></div>
+                    <div className={\`absolute left-[-5.5px] top-0 w-2.5 h-2.5 rounded-full \${primaryBg} ring-4 ring-slate-100 dark:ring-white/5 transition duration-200 ease-out group-hover:scale-150\`}></div>
                     <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                       <h3 className={\`text-xl md:text-2xl font-bold \${textHeading} tracking-tight\`}>{exp.position}</h3>
                       <span className={\`text-xs font-bold \${pillBg} px-3 py-1 rounded-full border\`}>{exp.period}</span>
@@ -584,7 +584,7 @@ export default function App() {
             <ThemeSection title="Projects" id="projects" textHeading={textHeading}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
                 {resumeData.projects.map((proj: any, idx: number) => (
-                  <div key={idx} className={\`backdrop-blur-md \${cardBg} border rounded-2xl md:rounded-3xl p-6 md:p-8 \${cardHoverBg} transition-all group relative overflow-hidden flex flex-col\`}>
+                  <div key={idx} className={\`backdrop-blur-md \${cardBg} border rounded-2xl md:rounded-3xl p-6 md:p-8 \${cardHoverBg} transition duration-200 ease-out group relative overflow-hidden flex flex-col\`}>
                     <div className={\`absolute -right-4 -top-4 w-24 h-24 \${primaryBg} opacity-5 blur-2xl group-hover:opacity-20 transition-opacity\`}></div>
                     <div className={\`w-12 h-12 md:w-14 md:h-14 rounded-2xl mb-4 md:mb-6 \${primaryBg}/20 flex items-center justify-center \${primaryClass} border border-slate-200 dark:border-white/5\`}>
                       <Code className="w-6 h-6 md:w-7 md:h-7" />
@@ -606,14 +606,14 @@ export default function App() {
             <ThemeSection title="Skills" id="skills" textHeading={textHeading}>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
                 {resumeData.skills.map((skill: any) => (
-                  <div key={skill.name} className={\`\${cardBg} border rounded-2xl p-5 md:p-6 \${cardHoverBg} transition-all group\`}>
+                  <div key={skill.name} className={\`\${cardBg} border rounded-2xl p-5 md:p-6 \${cardHoverBg} transition duration-200 ease-out group\`}>
                     <div className="flex justify-between items-center mb-3 md:mb-4">
                       <div className={\`text-xs md:text-sm font-bold \${textHeading} group-hover:text-indigo-400 transition-colors\`}>{skill.name}</div>
                       <span className="text-[10px] text-slate-500 font-black">{skill.level}%</span>
                     </div>
                     <div className="h-1.5 w-full bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden">
                       <div 
-                        className={\`h-full \${primaryBg} transition-all duration-1000\`} 
+                        className={\`h-full \${primaryBg} transition duration-1000\`} 
                         style={{ width: \`\${skill.level}%\` }}
                       ></div>
                     </div>
@@ -626,7 +626,7 @@ export default function App() {
               <ThemeSection title="Awards & Recognitions" id="awards" textHeading={textHeading}>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
                   {resumeData.certificates.map((cert: any) => (
-                    <div key={cert.id} className={\`\${cardBg} border rounded-2xl p-5 md:p-6 \${cardHoverBg} transition-all group relative overflow-hidden flex items-start gap-4\`}>
+                    <div key={cert.id} className={\`\${cardBg} border rounded-2xl p-5 md:p-6 \${cardHoverBg} transition duration-200 ease-out group relative overflow-hidden flex items-start gap-4\`}>
                       <div className="w-12 h-12 rounded-xl bg-amber-500/10 dark:bg-amber-400/10 flex items-center justify-center border border-amber-500/20 dark:border-amber-400/20 shrink-0">
                         <Trophy className="w-5 h-5 text-amber-500 dark:text-amber-400 fill-amber-500/20 animate-pulse-subtle" />
                       </div>
@@ -672,19 +672,19 @@ export default function App() {
                         <input 
                           type="text" required value={contactName} onChange={e => setContactName(e.target.value)}
                           placeholder="Your Name" 
-                          className="w-full bg-white/10 border border-white/10 rounded-2xl p-4 text-sm focus:bg-white/20 outline-none transition-all placeholder:text-white/40" 
+                          className="w-full bg-white/10 border border-white/10 rounded-2xl p-4 text-sm focus:bg-white/20 outline-none transition duration-200 ease-out placeholder:text-white/40" 
                         />
                         <input 
                           type="email" required value={contactEmail} onChange={e => setContactEmail(e.target.value)}
                           placeholder="Your Email" 
-                          className="w-full bg-white/10 border border-white/10 rounded-2xl p-4 text-sm focus:bg-white/20 outline-none transition-all placeholder:text-white/40" 
+                          className="w-full bg-white/10 border border-white/10 rounded-2xl p-4 text-sm focus:bg-white/20 outline-none transition duration-200 ease-out placeholder:text-white/40" 
                         />
                         <textarea 
                           required value={contactMessage} onChange={e => setContactMessage(e.target.value)}
                           placeholder="Your Project Idea" rows={4} 
-                          className="w-full bg-white/10 border border-white/10 rounded-2xl p-4 text-sm focus:bg-white/20 outline-none transition-all placeholder:text-white/40" 
+                          className="w-full bg-white/10 border border-white/10 rounded-2xl p-4 text-sm focus:bg-white/20 outline-none transition duration-200 ease-out placeholder:text-white/40" 
                         />
-                        <button type="submit" className="w-full py-4 bg-white text-indigo-600 rounded-2xl font-black uppercase tracking-widest text-sm hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl">Send Message</button>
+                        <button type="submit" className="w-full py-4 bg-white text-indigo-600 rounded-2xl font-black uppercase tracking-widest text-sm hover:scale-[1.02] active:scale-[0.97] transition duration-200 ease-out shadow-xl">Send Message</button>
                       </form>
                     )}
                   </div>
@@ -730,7 +730,7 @@ export default function App() {
               <a href="#contact" className={\`\${primaryBg} text-white font-black px-6 py-4 md:px-10 md:py-5 rounded-full text-xs uppercase tracking-[0.2em] hover:scale-105 transition-transform shadow-2xl shadow-indigo-500/20 text-center w-full sm:w-auto\`}>
                 Let's Work Together
               </a>
-              <a href="#about" className={\`backdrop-blur-md \${pillBg} border \${textHeading} font-black px-6 py-4 md:px-10 md:py-5 rounded-full text-xs uppercase tracking-[0.2em] hover:bg-slate-200 dark:hover:bg-white/10 transition-all text-center w-full sm:w-auto\`}>
+              <a href="#about" className={\`backdrop-blur-md \${pillBg} border \${textHeading} font-black px-6 py-4 md:px-10 md:py-5 rounded-full text-xs uppercase tracking-[0.2em] hover:bg-slate-200 dark:hover:bg-white/10 transition duration-200 ease-out text-center w-full sm:w-auto\`}>
                 About Me
               </a>
             </div>
@@ -738,7 +738,7 @@ export default function App() {
 
           <div className="w-full space-y-20 md:space-y-40">
             <ThemeSection title="About Me" id="about" textHeading={textHeading}>
-              <div className={\`relative rounded-[2rem] md:rounded-[3rem] overflow-hidden \${cardBg} border transition-all p-6 md:p-16 flex flex-col md:flex-row gap-6 md:gap-12 items-center\`}>
+              <div className={\`relative rounded-[2rem] md:rounded-[3rem] overflow-hidden \${cardBg} border transition duration-200 ease-out p-6 md:p-16 flex flex-col md:flex-row gap-6 md:gap-12 items-center\`}>
                 <div className="flex-1 space-y-4">
                   <h3 className={\`text-2xl md:text-3xl font-black \${textHeading} leading-tight\`}>
                     Behind the <span className={\`bg-gradient-to-r \${primaryClass.replace('text-', 'from-')} to-indigo-400 bg-clip-text text-transparent\`}>craft</span>.
@@ -752,7 +752,7 @@ export default function App() {
                   <div className="w-36 h-36 md:w-48 md:h-48 rounded-[2rem] overflow-hidden border border-slate-200 dark:border-white/10 shadow-2xl relative group shrink-0">
                     <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-transparent opacity-50 group-hover:opacity-0 transition-opacity"></div>
                     {resumeData.personal.avatar.length > 2 ? (
-                      <img src={resumeData.personal.avatar} alt={resumeData.personal.name} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" />
+                      <img src={resumeData.personal.avatar} alt={resumeData.personal.name} className="w-full h-full object-cover grayscale group-hover:grayscale-95 opacity-0 transition duration-700" />
                     ) : (
                       <div className={\`w-full h-full flex items-center justify-center \${textHeading} text-5xl md:text-7xl font-black bg-slate-100 dark:bg-white/5\`}>
                         {resumeData.personal.avatar}
@@ -787,7 +787,7 @@ export default function App() {
             <ThemeSection title="Selected Projects" id="projects" textHeading={textHeading}>
               <div className="space-y-10 md:space-y-20">
                 {resumeData.projects.map((proj: any, idx: number) => (
-                  <div key={idx} className={\`group relative rounded-[2rem] md:rounded-[3rem] overflow-hidden \${cardBg} border transition-all p-6 md:p-16\`}>
+                  <div key={idx} className={\`group relative rounded-[2rem] md:rounded-[3rem] overflow-hidden \${cardBg} border transition duration-200 ease-out p-6 md:p-16\`}>
                     <div className={\`absolute -right-20 -top-20 w-80 h-80 \${primaryBg} opacity-5 blur-[100px] group-hover:opacity-10 transition-opacity\`}></div>
                     <div className={\`text-[10px] md:text-xs font-black uppercase tracking-[0.3em] \${primaryClass} mb-4 md:mb-6\`}>{proj.category || "Project"}</div>
                     <h3 className={\`text-2xl md:text-5xl font-black \${textHeading} mb-4 md:mb-8 group-hover:translate-x-3 transition-transform leading-none\`}>{proj.title}</h3>
@@ -824,7 +824,7 @@ export default function App() {
               <ThemeSection title="Awards & Recognitions" id="awards" textHeading={textHeading}>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
                   {resumeData.certificates.map((cert: any) => (
-                    <div key={cert.id} className={\`group relative rounded-[2rem] overflow-hidden \${cardBg} border transition-all p-6 md:p-10 flex gap-6 items-start\`}>
+                    <div key={cert.id} className={\`group relative rounded-[2rem] overflow-hidden \${cardBg} border transition duration-200 ease-out p-6 md:p-10 flex gap-6 items-start\`}>
                       <div className={\`absolute -right-10 -top-10 w-24 h-24 \${primaryBg} opacity-5 blur-2xl group-hover:opacity-10 transition-opacity\`}></div>
                       <div className="w-12 h-12 md:w-16 md:h-16 rounded-2xl bg-amber-500/10 dark:bg-amber-400/10 flex items-center justify-center border border-amber-500/20 dark:border-amber-400/20 shrink-0">
                         <Trophy className="w-6 h-6 md:w-8 md:h-8 text-amber-500 dark:text-amber-400 fill-amber-500/20 animate-pulse-subtle" />
@@ -852,19 +852,19 @@ export default function App() {
                       <input 
                         type="text" required value={contactName} onChange={e => setContactName(e.target.value)}
                         placeholder="Your Name" 
-                        className="w-full bg-white/10 border border-white/10 rounded-2xl p-4 text-sm focus:bg-white/20 outline-none transition-all placeholder:text-white/40 text-left" 
+                        className="w-full bg-white/10 border border-white/10 rounded-2xl p-4 text-sm focus:bg-white/20 outline-none transition duration-200 ease-out placeholder:text-white/40 text-left" 
                       />
                       <input 
                         type="email" required value={contactEmail} onChange={e => setContactEmail(e.target.value)}
                         placeholder="Your Email" 
-                        className="w-full bg-white/10 border border-white/10 rounded-2xl p-4 text-sm focus:bg-white/20 outline-none transition-all placeholder:text-white/40 text-left" 
+                        className="w-full bg-white/10 border border-white/10 rounded-2xl p-4 text-sm focus:bg-white/20 outline-none transition duration-200 ease-out placeholder:text-white/40 text-left" 
                       />
                       <textarea 
                         required value={contactMessage} onChange={e => setContactMessage(e.target.value)}
                         placeholder="Your Project Idea" rows={4} 
-                        className="w-full bg-white/10 border border-white/10 rounded-2xl p-4 text-sm focus:bg-white/20 outline-none transition-all placeholder:text-white/40 text-left" 
+                        className="w-full bg-white/10 border border-white/10 rounded-2xl p-4 text-sm focus:bg-white/20 outline-none transition duration-200 ease-out placeholder:text-white/40 text-left" 
                       />
-                      <button type="submit" className="w-full py-4 bg-white text-indigo-600 rounded-2xl font-black uppercase tracking-widest text-sm hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl">Send Message</button>
+                      <button type="submit" className="w-full py-4 bg-white text-indigo-600 rounded-2xl font-black uppercase tracking-widest text-sm hover:scale-[1.02] active:scale-[0.97] transition duration-200 ease-out shadow-xl">Send Message</button>
                     </form>
                   )}
                   
@@ -940,10 +940,10 @@ export default function App() {
               <span className="text-emerald-500">{">"}</span> {resumeData.personal.title}
             </p>
             <div className="flex flex-wrap justify-center gap-4">
-              <a href="#about" className={\`px-8 py-4 \${colors.bg} text-white font-mono font-bold uppercase tracking-widest hover:opacity-80 transition-all border border-white/20 shadow-2xl shadow-indigo-500/40\`}>
+              <a href="#about" className={\`px-8 py-4 \${colors.bg} text-white font-mono font-bold uppercase tracking-widest hover:opacity-80 transition duration-200 ease-out border border-white/20 shadow-2xl shadow-indigo-500/40\`}>
                 Access Data
               </a>
-              <a href="#contact" className="px-8 py-4 bg-transparent text-white font-mono font-bold uppercase tracking-widest hover:bg-white/5 transition-all border border-white/20">
+              <a href="#contact" className="px-8 py-4 bg-transparent text-white font-mono font-bold uppercase tracking-widest hover:bg-white/5 transition duration-200 ease-out border border-white/20">
                 Contact.exe
               </a>
             </div>
@@ -977,7 +977,7 @@ export default function App() {
               </p>
             </div>
             <div className="flex flex-wrap gap-4 pt-4">
-              <a href="#contact" className={\`px-6 py-3.5 md:px-8 md:py-4 rounded-2xl text-white font-bold transition-all hover:scale-105 \${colors.bg} \${colors.glow}\`}>
+              <a href="#contact" className={\`px-6 py-3.5 md:px-8 md:py-4 rounded-2xl text-white font-bold transition duration-200 ease-out hover:scale-105 \${colors.bg} \${colors.glow}\`}>
                 Get in Touch
               </a>
               <div className="flex items-center gap-4 px-6 border-l border-slate-200 dark:border-slate-800 ml-2">
@@ -1003,7 +1003,7 @@ export default function App() {
             <div className={\`aspect-square max-w-[280px] mx-auto lg:max-w-none rounded-[2rem] bg-gradient-to-br \${colors.gradient} shadow-2xl relative z-10 overflow-hidden group\`}>
               <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors"></div>
               {resumeData.personal.avatar.length > 2 ? (
-                <img src={resumeData.personal.avatar} alt={resumeData.personal.name} className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" />
+                <img src={resumeData.personal.avatar} alt={resumeData.personal.name} className="w-full h-full object-cover grayscale group-hover:grayscale-95 opacity-0 transition duration-700" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-white text-6xl md:text-8xl font-black">
                   {resumeData.personal.avatar}
@@ -1037,12 +1037,12 @@ export default function App() {
               {resumeData.certificates && resumeData.certificates.length > 0 && (
                 <a href="#awards" className={\`hover:\${textHeading} transition-colors\`}>Awards</a>
               )}
-              <a href="#contact" className={\`px-4 py-2 rounded-xl \${colors.bg} text-white hover:opacity-85 hover:scale-[1.03] transition-all text-[10px]\`}>Hire Me</a>
+              <a href="#contact" className={\`px-4 py-2 rounded-xl \${colors.bg} text-white hover:opacity-85 hover:scale-[1.03] transition duration-200 ease-out text-[10px]\`}>Hire Me</a>
             </nav>
 
             <button 
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className={\`md:hidden p-2 rounded-xl text-slate-500 hover:\${textHeading} hover:bg-slate-200/50 dark:hover:bg-white/5 transition-all\`}
+              className={\`md:hidden p-2 rounded-xl text-slate-500 hover:\${textHeading} hover:bg-slate-200/50 dark:hover:bg-white/5 transition duration-200 ease-out\`}
               aria-label="Toggle menu"
             >
               {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
@@ -1068,7 +1068,7 @@ export default function App() {
                     </div>
                     <button 
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className="p-2 rounded-xl text-slate-500 hover:bg-slate-150 dark:hover:bg-white/5 transition-all"
+                      className="p-2 rounded-xl text-slate-500 hover:bg-slate-150 dark:hover:bg-white/5 transition duration-200 ease-out"
                     >
                       <X className="w-5 h-5" />
                     </button>
@@ -1080,7 +1080,7 @@ export default function App() {
                         key={item} 
                         href={\`#\${item.toLowerCase()}\`}
                         onClick={() => setIsMobileMenuOpen(false)}
-                        className={\`text-sm font-bold uppercase tracking-widest \${isDark ? 'text-slate-300 hover:text-white border-white/5' : 'text-slate-600 hover:text-slate-900 border-slate-100'} hover:translate-x-1.5 transition-all py-3.5 border-b last:border-0 flex items-center justify-between group\`}
+                        className={\`text-sm font-bold uppercase tracking-widest \${isDark ? 'text-slate-300 hover:text-white border-white/5' : 'text-slate-600 hover:text-slate-900 border-slate-100'} hover:translate-x-1.5 transition duration-200 ease-out py-3.5 border-b last:border-0 flex items-center justify-between group\`}
                       >
                         <span>{item}</span>
                         <span className={\`opacity-0 group-hover:opacity-100 transition-opacity text-xs \${colors.text}\`}>→</span>
@@ -1093,7 +1093,7 @@ export default function App() {
                   <a 
                     href="#contact"
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className={\`w-full py-4 rounded-2xl \${colors.bg} \${colors.glow} text-white font-black uppercase tracking-widest text-[10px] text-center block transition-all hover:opacity-90 active:scale-[0.98] shadow-lg\`}
+                    className={\`w-full py-4 rounded-2xl \${colors.bg} \${colors.glow} text-white font-black uppercase tracking-widest text-[10px] text-center block transition duration-200 ease-out hover:opacity-90 active:scale-[0.97] shadow-lg\`}
                   >
                     Hire Me
                   </a>
@@ -1175,7 +1175,7 @@ export default function App() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
             {resumeData.projects.map((proj: any, idx: number) => (
-              <div key={idx} className={isClassic ? 'border-b border-slate-100 pb-8 last:border-0' : \`p-6 md:p-8 rounded-3xl \${cardBg} border \${cardHoverBg} transition-all group\`}>
+              <div key={idx} className={isClassic ? 'border-b border-slate-100 pb-8 last:border-0' : \`p-6 md:p-8 rounded-3xl \${cardBg} border \${cardHoverBg} transition duration-200 ease-out group\`}>
                 <div className="flex justify-between items-start mb-4">
                   <h3 className={\`text-xl font-bold \${isClassic ? 'text-slate-900' : \`\${textHeading} group-hover:text-indigo-400 transition-colors\`}\`}>{proj.title}</h3>
                   <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">{proj.category}</span>
@@ -1215,7 +1215,7 @@ export default function App() {
                   <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 mb-4">{cat}</h4>
                   <div className="flex flex-wrap gap-2">
                     {skills.map((s: any) => (
-                      <span key={s.name} className={\`text-xs font-bold px-4 py-2 rounded-xl \${isClassic ? 'bg-slate-100 text-slate-800' : \`\${pillBg} border hover:bg-slate-200/80 dark:hover:bg-white/10 transition-all\`}\`}>
+                      <span key={s.name} className={\`text-xs font-bold px-4 py-2 rounded-xl \${isClassic ? 'bg-slate-100 text-slate-800' : \`\${pillBg} border hover:bg-slate-200/80 dark:hover:bg-white/10 transition duration-200 ease-out\`}\`}>
                         {s.name}
                       </span>
                     ))}
@@ -1235,7 +1235,7 @@ export default function App() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
               {resumeData.certificates.map((cert: any) => (
-                <div key={cert.id} className={isClassic ? 'border-b border-slate-100 pb-6 last:border-0' : \`p-6 md:p-8 rounded-3xl \${cardBg} border \${cardHoverBg} transition-all group flex items-start gap-4\`}>
+                <div key={cert.id} className={isClassic ? 'border-b border-slate-100 pb-6 last:border-0' : \`p-6 md:p-8 rounded-3xl \${cardBg} border \${cardHoverBg} transition duration-200 ease-out group flex items-start gap-4\`}>
                   {!isClassic && (
                     <div className="w-12 h-12 rounded-2xl bg-amber-500/10 dark:bg-amber-400/10 flex items-center justify-center border border-amber-500/20 dark:border-amber-400/20 shrink-0">
                       <Trophy className="w-5 h-5 text-amber-500 dark:text-amber-400 fill-amber-500/20 animate-pulse-subtle" />
@@ -1265,19 +1265,19 @@ export default function App() {
                     <input 
                       type="text" required value={contactName} onChange={e => setContactName(e.target.value)}
                       placeholder="Your Name" 
-                      className="w-full bg-slate-800 border border-slate-700 rounded-2xl p-4 text-sm focus:bg-slate-700 outline-none transition-all placeholder:text-white/40 text-left" 
+                      className="w-full bg-slate-800 border border-slate-700 rounded-2xl p-4 text-sm focus:bg-slate-700 outline-none transition duration-200 ease-out placeholder:text-white/40 text-left" 
                     />
                     <input 
                       type="email" required value={contactEmail} onChange={e => setContactEmail(e.target.value)}
                       placeholder="Your Email" 
-                      className="w-full bg-slate-800 border border-slate-700 rounded-2xl p-4 text-sm focus:bg-slate-700 outline-none transition-all placeholder:text-white/40 text-left" 
+                      className="w-full bg-slate-800 border border-slate-700 rounded-2xl p-4 text-sm focus:bg-slate-700 outline-none transition duration-200 ease-out placeholder:text-white/40 text-left" 
                     />
                     <textarea 
                       required value={contactMessage} onChange={e => setContactMessage(e.target.value)}
                       placeholder="Your Project Idea" rows={4} 
-                      className="w-full bg-slate-800 border border-slate-700 rounded-2xl p-4 text-sm focus:bg-slate-700 outline-none transition-all placeholder:text-white/40 text-left" 
+                      className="w-full bg-slate-800 border border-slate-700 rounded-2xl p-4 text-sm focus:bg-slate-700 outline-none transition duration-200 ease-out placeholder:text-white/40 text-left" 
                     />
-                    <button type="submit" className="w-full py-4 bg-white text-indigo-600 rounded-2xl font-black uppercase tracking-widest text-sm hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl">Send Message</button>
+                    <button type="submit" className="w-full py-4 bg-white text-indigo-600 rounded-2xl font-black uppercase tracking-widest text-sm hover:scale-[1.02] active:scale-[0.97] transition duration-200 ease-out shadow-xl">Send Message</button>
                   </form>
                 )}
 

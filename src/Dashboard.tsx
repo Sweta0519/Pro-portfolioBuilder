@@ -2405,7 +2405,7 @@ export default function Portfolio() {
                 {/* User Info & Sign Out */}
                 <div className="flex items-center gap-2">
                   <div
-                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-all ${
+                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition duration-200 ease-out ${
                       appTheme === 'nord-light'
                         ? 'bg-slate-100 border-slate-250 text-slate-705'
                         : 'bg-slate-900 border-slate-800 text-slate-300'
@@ -2437,7 +2437,7 @@ export default function Portfolio() {
                   setAuthError('');
                   setShowAuthModal(true);
                 }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white transition-all shadow-lg shadow-indigo-500/25 active:scale-95 cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white transition duration-200 ease-out shadow-lg shadow-indigo-500/25 active:scale-[0.97] cursor-pointer"
               >
                 🔒 Sign In
               </button>
@@ -2448,7 +2448,7 @@ export default function Portfolio() {
           <div className="relative">
             <button
               onClick={() => { setIsThemeMenuOpen(!isThemeMenuOpen); setIsMobileActionsMenuOpen(false); }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition duration-200 ease-out cursor-pointer ${
                 appTheme === 'nord-light'
                   ? 'bg-slate-100 hover:bg-slate-200 border-slate-250 text-slate-700 hover:text-slate-955'
                   : appTheme === 'indigo-midnight'
@@ -2475,7 +2475,7 @@ export default function Portfolio() {
             </button>
             {isThemeMenuOpen && (
               <div
-                className={`absolute right-0 mt-1 w-40 rounded-xl border p-1 shadow-xl transition-all duration-200 z-50 animate-fadeIn ${
+                className={`absolute right-0 mt-1 w-40 rounded-xl border p-1 shadow-xl transition duration-200 z-50 animate-fadeIn ${
                   appTheme === 'nord-light'
                     ? 'bg-white border-slate-200 shadow-slate-200/50'
                     : appTheme === 'indigo-midnight'
@@ -2529,7 +2529,7 @@ export default function Portfolio() {
           <div className="relative lg:hidden">
             <button
               onClick={() => { setIsMobileActionsMenuOpen(!isMobileActionsMenuOpen); setIsThemeMenuOpen(false); }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition duration-200 ease-out cursor-pointer ${
                 appTheme === 'nord-light'
                   ? 'bg-slate-100 hover:bg-slate-200 border-slate-250 text-slate-700 hover:text-slate-955 shadow-sm'
                   : appTheme === 'indigo-midnight'
@@ -2543,7 +2543,7 @@ export default function Portfolio() {
             </button>
             {isMobileActionsMenuOpen && (
               <div
-                className={`absolute right-0 mt-1 w-56 rounded-xl border p-1.5 shadow-xl transition-all duration-200 z-50 flex flex-col gap-1 animate-fadeIn ${
+                className={`absolute right-0 mt-1 w-56 rounded-xl border p-1.5 shadow-xl transition duration-200 z-50 flex flex-col gap-1 animate-fadeIn ${
                   appTheme === 'nord-light'
                     ? 'bg-white border-slate-200 shadow-slate-200/50'
                     : appTheme === 'indigo-midnight'
@@ -2673,7 +2673,7 @@ export default function Portfolio() {
             <div className="flex flex-nowrap lg:flex-wrap border-b border-slate-800 overflow-x-auto lg:overflow-x-visible scrollbar-none bg-slate-955/30 text-[10px] sm:text-xs font-semibold">
               <button
                 onClick={() => setLeftTab('import')}
-                className={`flex-grow shrink-0 px-2 py-3.5 text-center border-b-2 transition-all whitespace-nowrap flex items-center justify-center gap-1 ${
+                className={`flex-grow shrink-0 px-2 py-3.5 text-center border-b-2 transition duration-200 ease-out whitespace-nowrap flex items-center justify-center gap-1 ${
                   leftTab === 'import'
                     ? 'border-indigo-500 text-indigo-400'
                     : 'border-transparent text-slate-500 hover:text-slate-300'
@@ -2684,7 +2684,7 @@ export default function Portfolio() {
               </button>
               <button
                 onClick={() => setLeftTab('profile')}
-                className={`flex-grow shrink-0 px-2 py-3.5 text-center border-b-2 transition-all whitespace-nowrap flex items-center justify-center gap-1 ${
+                className={`flex-grow shrink-0 px-2 py-3.5 text-center border-b-2 transition duration-200 ease-out whitespace-nowrap flex items-center justify-center gap-1 ${
                   leftTab === 'profile'
                     ? 'border-indigo-500 text-indigo-400'
                     : 'border-transparent text-slate-500 hover:text-slate-300'
@@ -2695,7 +2695,7 @@ export default function Portfolio() {
               </button>
               <button
                 onClick={() => setLeftTab('experience')}
-                className={`flex-grow shrink-0 px-2 py-3.5 text-center border-b-2 transition-all whitespace-nowrap flex items-center justify-center gap-1 ${
+                className={`flex-grow shrink-0 px-2 py-3.5 text-center border-b-2 transition duration-200 ease-out whitespace-nowrap flex items-center justify-center gap-1 ${
                   leftTab === 'experience'
                     ? 'border-indigo-500 text-indigo-400'
                     : 'border-transparent text-slate-500 hover:text-slate-300'
@@ -2706,7 +2706,7 @@ export default function Portfolio() {
               </button>
               <button
                 onClick={() => setLeftTab('projects')}
-                className={`flex-grow shrink-0 px-2 py-3.5 text-center border-b-2 transition-all whitespace-nowrap flex items-center justify-center gap-1 ${
+                className={`flex-grow shrink-0 px-2 py-3.5 text-center border-b-2 transition duration-200 ease-out whitespace-nowrap flex items-center justify-center gap-1 ${
                   leftTab === 'projects'
                     ? 'border-indigo-500 text-indigo-400'
                     : 'border-transparent text-slate-500 hover:text-slate-300'
@@ -2717,7 +2717,7 @@ export default function Portfolio() {
               </button>
               <button
                 onClick={() => setLeftTab('design')}
-                className={`flex-grow shrink-0 px-2 py-3.5 text-center border-b-2 transition-all whitespace-nowrap flex items-center justify-center gap-1 ${
+                className={`flex-grow shrink-0 px-2 py-3.5 text-center border-b-2 transition duration-200 ease-out whitespace-nowrap flex items-center justify-center gap-1 ${
                   leftTab === 'design'
                     ? 'border-indigo-500 text-indigo-400'
                     : 'border-transparent text-slate-500 hover:text-slate-300'
@@ -2795,7 +2795,7 @@ export default function Portfolio() {
                   </div>
 
                   {/* Premium Drag & Drop File Upload Zone */}
-                  <div className="border-2 border-dashed border-slate-800 hover:border-indigo-500/60 rounded-xl p-5 bg-slate-950/30 text-center transition-all">
+                  <div className="border-2 border-dashed border-slate-800 hover:border-indigo-500/60 rounded-xl p-5 bg-slate-950/30 text-center transition duration-200 ease-out">
                     <div className="space-y-2.5">
                       <div className="w-10 h-10 rounded-full bg-indigo-950/80 text-indigo-400 mx-auto flex items-center justify-center">
                         <Download
@@ -2928,7 +2928,7 @@ export default function Portfolio() {
                             <div
                               key={item.id}
                               onClick={() => loadResumeFromHistory(item.id)}
-                              className={`p-3 rounded-xl border text-xs flex justify-between items-center gap-3 transition-all duration-200 cursor-pointer ${
+                              className={`p-3 rounded-xl border text-xs flex justify-between items-center gap-3 transition duration-200 cursor-pointer ${
                                 isActive
                                   ? 'bg-indigo-950/35 border-indigo-500/60 text-white shadow'
                                   : 'bg-slate-950/25 border-slate-850 text-slate-400 hover:border-slate-750 hover:bg-slate-950/40'
@@ -4170,7 +4170,7 @@ export default function Portfolio() {
                               id: t.id as ThemeSettings['id'],
                             }))
                           }
-                          className={`p-3 text-left rounded-xl border transition-all cursor-pointer ${
+                          className={`p-3 text-left rounded-xl border transition duration-200 ease-out cursor-pointer ${
                             themeSettings.id === t.id
                               ? appTheme === 'nord-light'
                                 ? 'bg-indigo-600 border-indigo-500 text-white shadow-sm'
@@ -4209,7 +4209,7 @@ export default function Portfolio() {
                               primaryColor: color.id as ThemeSettings['primaryColor'],
                             }))
                           }
-                          className={`w-7 h-7 rounded-full ${color.color} cursor-pointer relative transition-all duration-200 hover:scale-110 ${
+                          className={`w-7 h-7 rounded-full ${color.color} cursor-pointer relative transition duration-200 hover:scale-110 ${
                             themeSettings.primaryColor === color.id
                               ? 'ring-2 ring-white ring-offset-2 ring-offset-slate-900'
                               : ''
@@ -4331,7 +4331,7 @@ export default function Portfolio() {
                       }`}
                     >
                       <div
-                        className={`w-4.5 h-4.5 rounded-full bg-white absolute top-[3px] transition-all flex items-center justify-center text-[8px] ${
+                        className={`w-4.5 h-4.5 rounded-full bg-white absolute top-[3px] transition duration-200 ease-out flex items-center justify-center text-[8px] ${
                           themeSettings.darkMode
                             ? 'left-[25px] text-indigo-600'
                             : 'left-[4px] text-slate-500'
@@ -4368,7 +4368,7 @@ export default function Portfolio() {
                           type="button"
                           key={t.id}
                           onClick={() => setAppTheme(t.id as any)}
-                          className={`p-2.5 text-left rounded-xl border transition-all cursor-pointer ${
+                          className={`p-2.5 text-left rounded-xl border transition duration-200 ease-out cursor-pointer ${
                             appTheme === t.id
                               ? appTheme === 'nord-light'
                                 ? 'bg-indigo-600 border-indigo-500 text-white shadow-sm'
@@ -4427,7 +4427,7 @@ export default function Portfolio() {
                 <button
                   key={tab.id}
                   onClick={() => setRightTab(tab.id as any)}
-                  className={`p-1.5 px-3 rounded-md transition-all flex items-center gap-1.5 font-bold text-[10px] sm:text-xs cursor-pointer ${
+                  className={`p-1.5 px-3 rounded-md transition duration-200 ease-out flex items-center gap-1.5 font-bold text-[10px] sm:text-xs cursor-pointer ${
                     rightTab === tab.id
                       ? 'bg-indigo-600 text-white shadow-md'
                       : 'text-slate-500 hover:text-slate-350'
@@ -4571,7 +4571,7 @@ export default function Portfolio() {
                         {/* Progress bar */}
                         <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
                           <div
-                            className={`h-full rounded-full bg-indigo-500 transition-all duration-500`}
+                            className={`h-full rounded-full bg-indigo-500 transition duration-500`}
                             style={{ width: `${activeAnalysis.score}%` }}
                           ></div>
                         </div>
@@ -4741,7 +4741,7 @@ export default function Portfolio() {
                           <div className="flex gap-2">
                             <button
                               onClick={() => setShowRevisedPreview(true)}
-                              className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold border transition-all cursor-pointer ${
+                              className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold border transition duration-200 ease-out cursor-pointer ${
                                 showRevisedPreview
                                   ? 'bg-indigo-900/45 border-indigo-500 text-indigo-300'
                                   : 'border-slate-800 text-slate-400 hover:text-slate-300'
@@ -4751,7 +4751,7 @@ export default function Portfolio() {
                             </button>
                             <button
                               onClick={() => setShowRevisedPreview(false)}
-                              className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold border transition-all cursor-pointer ${
+                              className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold border transition duration-200 ease-out cursor-pointer ${
                                 !showRevisedPreview
                                   ? 'bg-slate-800 border-slate-700 text-slate-350'
                                   : 'border-slate-800 text-slate-400 hover:text-slate-300'
@@ -4763,7 +4763,7 @@ export default function Portfolio() {
 
                           <button
                             onClick={() => setShowOptimizerModal(true)}
-                            className="w-full py-2.5 bg-indigo-600/20 hover:bg-indigo-600/40 border border-indigo-500/30 text-indigo-300 rounded-xl text-[10px] font-black tracking-wider transition-all cursor-pointer flex items-center justify-center gap-2 shadow-sm"
+                            className="w-full py-2.5 bg-indigo-600/20 hover:bg-indigo-600/40 border border-indigo-500/30 text-indigo-300 rounded-xl text-[10px] font-black tracking-wider transition duration-200 ease-out cursor-pointer flex items-center justify-center gap-2 shadow-sm"
                           >
                             <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
                             <span>REVIEW AI DRAFT INTERACTIVELY</span>
@@ -4803,7 +4803,7 @@ export default function Portfolio() {
                           {/* Adopt permanently */}
                           <button
                             onClick={applyRevisedData}
-                            className="w-full bg-emerald-650 hover:bg-emerald-600 text-white py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                            className="w-full bg-emerald-650 hover:bg-emerald-600 text-white py-2 rounded-lg text-xs font-bold transition duration-200 ease-out flex items-center justify-center gap-1.5 cursor-pointer"
                           >
                             <Check className="w-4 h-4" />
                             <span>Save AI Revised Copy Permanently</span>
@@ -5258,7 +5258,7 @@ export default function Portfolio() {
                         <button
                           key={style.id}
                           onClick={() => setBulletStyle(style.id as any)}
-                          className={`py-1.5 rounded-md border transition-all ${
+                          className={`py-1.5 rounded-md border transition duration-200 ease-out ${
                             bulletStyle === style.id
                               ? 'bg-indigo-650 border-indigo-500 text-white'
                               : 'border-slate-800 text-slate-500 hover:text-slate-300'
@@ -5362,7 +5362,7 @@ export default function Portfolio() {
                                   localStorage.removeItem('gemini-api-key');
                                   setConnectionTest({ testing: false, result: null });
                                 }}
-                                className={`px-3 py-1 rounded-md text-[10px] font-bold transition-all ${aiProvider === 'groq' ? 'bg-green-600 text-white' : 'text-slate-500 hover:text-slate-300'}`}
+                                className={`px-3 py-1 rounded-md text-[10px] font-bold transition duration-200 ease-out ${aiProvider === 'groq' ? 'bg-green-600 text-white' : 'text-slate-500 hover:text-slate-300'}`}
                               >
                                 🟢 Groq
                               </button>
@@ -5374,7 +5374,7 @@ export default function Portfolio() {
                                   localStorage.removeItem('gemini-api-key');
                                   setConnectionTest({ testing: false, result: null });
                                 }}
-                                className={`px-3 py-1 rounded-md text-[10px] font-bold transition-all ${aiProvider === 'openrouter' ? 'bg-purple-600 text-white' : 'text-slate-500 hover:text-slate-300'}`}
+                                className={`px-3 py-1 rounded-md text-[10px] font-bold transition duration-200 ease-out ${aiProvider === 'openrouter' ? 'bg-purple-600 text-white' : 'text-slate-500 hover:text-slate-300'}`}
                               >
                                 🟣 OpenRouter
                               </button>
@@ -5386,7 +5386,7 @@ export default function Portfolio() {
                                   localStorage.removeItem('gemini-api-key');
                                   setConnectionTest({ testing: false, result: null });
                                 }}
-                                className={`px-3 py-1 rounded-md text-[10px] font-bold transition-all ${aiProvider === 'gemini' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:text-slate-300'}`}
+                                className={`px-3 py-1 rounded-md text-[10px] font-bold transition duration-200 ease-out ${aiProvider === 'gemini' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:text-slate-300'}`}
                               >
                                 🔵 Gemini
                               </button>
@@ -5550,7 +5550,7 @@ export default function Portfolio() {
                                       setConnectionTest({ testing: false, result });
                                     }}
                                     disabled={connectionTest.testing}
-                                    className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-[10px] font-bold text-slate-300 transition-all flex items-center gap-1.5"
+                                    className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-[10px] font-bold text-slate-300 transition duration-200 ease-out flex items-center gap-1.5"
                                   >
                                     {connectionTest.testing ? (
                                       <>
@@ -5740,7 +5740,7 @@ export default function Portfolio() {
                         disabled={
                           isGeneratingPlan || (!interviewPositionName.trim() && !interviewJD.trim())
                         }
-                        className="w-full py-3 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-40 text-white text-xs font-bold transition-all flex items-center justify-center gap-2"
+                        className="w-full py-3 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-40 text-white text-xs font-bold transition duration-200 ease-out flex items-center justify-center gap-2"
                       >
                         {isGeneratingPlan ? (
                           <>
@@ -5837,7 +5837,7 @@ export default function Portfolio() {
                                       );
                                       setIsSessionCompleted(session.isCompleted || false);
                                     }}
-                                    className="px-3 py-1.5 rounded-lg bg-violet-600/80 hover:bg-violet-600 text-white font-bold transition-all text-[11px]"
+                                    className="px-3 py-1.5 rounded-lg bg-violet-600/80 hover:bg-violet-600 text-white font-bold transition duration-200 ease-out text-[11px]"
                                   >
                                     {session.isCompleted ? 'View Report' : 'Resume'}
                                   </button>
@@ -5906,7 +5906,7 @@ export default function Portfolio() {
                         <button
                           key={tab}
                           onClick={() => setInterviewSubTab(tab)}
-                          className={`flex-1 py-1.5 px-2 rounded-lg whitespace-nowrap transition-all ${
+                          className={`flex-1 py-1.5 px-2 rounded-lg whitespace-nowrap transition duration-200 ease-out ${
                             interviewSubTab === tab
                               ? 'bg-violet-600 text-white'
                               : 'text-slate-500 hover:text-slate-300'
@@ -6245,7 +6245,7 @@ export default function Portfolio() {
                             <button
                               key={r.round}
                               onClick={() => setActiveRound(r.round)}
-                              className={`px-3 py-1.5 rounded-full text-[10px] font-bold transition-all border ${
+                              className={`px-3 py-1.5 rounded-full text-[10px] font-bold transition duration-200 ease-out border ${
                                 activeRound === r.round
                                   ? 'bg-violet-600 text-white border-violet-600'
                                   : 'bg-slate-900 text-slate-400 border-slate-700 hover:border-violet-500 hover:text-slate-200'
@@ -6757,7 +6757,7 @@ export default function Portfolio() {
                                       setMockMode('idle');
                                       setMockQuestionIdx(0);
                                     }}
-                                    className="px-3 py-1 rounded-lg border border-slate-800 text-slate-400 hover:text-white text-[10px] font-bold transition-all"
+                                    className="px-3 py-1 rounded-lg border border-slate-800 text-slate-400 hover:text-white text-[10px] font-bold transition duration-200 ease-out"
                                   >
                                     ← Back to Rounds
                                   </button>
@@ -7025,7 +7025,7 @@ export default function Portfolio() {
                                                         }));
                                                       }
                                                     }}
-                                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold bg-violet-955/20 border border-violet-900/50 text-violet-400 hover:bg-violet-955/40 hover:text-violet-300 transition-all"
+                                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold bg-violet-955/20 border border-violet-900/50 text-violet-400 hover:bg-violet-955/40 hover:text-violet-300 transition duration-200 ease-out"
                                                   >
                                                     ✨ Generate Suggested Answer
                                                   </button>
@@ -7058,7 +7058,7 @@ export default function Portfolio() {
                                       <button
                                         type="button"
                                         onClick={() => setMockInterfaceMode('standard')}
-                                        className={`flex-1 py-1.5 text-center rounded-lg text-[11px] font-bold transition-all ${mockInterfaceMode === 'standard' ? 'bg-violet-650 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
+                                        className={`flex-1 py-1.5 text-center rounded-lg text-[11px] font-bold transition duration-200 ease-out ${mockInterfaceMode === 'standard' ? 'bg-violet-650 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
                                       >
                                         👤 Standard Mock (Self-paced)
                                       </button>
@@ -7072,7 +7072,7 @@ export default function Portfolio() {
                                           );
                                           setSelectedRecruiter(recruiter);
                                         }}
-                                        className={`flex-1 py-1.5 text-center rounded-lg text-[11px] font-bold transition-all ${mockInterfaceMode === 'interactive' ? 'bg-violet-650 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
+                                        className={`flex-1 py-1.5 text-center rounded-lg text-[11px] font-bold transition duration-200 ease-out ${mockInterfaceMode === 'interactive' ? 'bg-violet-650 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
                                       >
                                         🎙️ Interactive Voice Recruiter
                                       </button>
@@ -7090,7 +7090,7 @@ export default function Portfolio() {
                                                 key={p.id}
                                                 type="button"
                                                 onClick={() => setSelectedRecruiter(p)}
-                                                className={`p-2 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all ${selectedRecruiter.id === p.id ? 'bg-violet-955/20 border-violet-500 text-violet-300 shadow-sm' : 'bg-slate-900/50 border-slate-800 text-slate-500 hover:border-slate-700 hover:text-slate-350'}`}
+                                                className={`p-2 rounded-xl border flex flex-col items-center justify-center gap-1 transition duration-200 ease-out ${selectedRecruiter.id === p.id ? 'bg-violet-955/20 border-violet-500 text-violet-300 shadow-sm' : 'bg-slate-900/50 border-slate-800 text-slate-500 hover:border-slate-700 hover:text-slate-350'}`}
                                                 title={`${p.name} - ${p.title} (${p.company})`}
                                               >
                                                 <span className="text-base">{p.avatar}</span>
@@ -7190,7 +7190,7 @@ export default function Portfolio() {
                                             startQuestion(r.round, 0);
                                           }}
                                           disabled={isLoadingRecruiterQuestions}
-                                          className={`w-full p-3 rounded-xl border border-slate-800 bg-slate-900/35 hover:border-violet-500 hover:bg-violet-650/5 transition-all text-left group ${isLoadingRecruiterQuestions ? 'opacity-60 cursor-wait' : ''}`}
+                                          className={`w-full p-3 rounded-xl border border-slate-800 bg-slate-900/35 hover:border-violet-500 hover:bg-violet-650/5 transition duration-200 ease-out text-left group ${isLoadingRecruiterQuestions ? 'opacity-60 cursor-wait' : ''}`}
                                         >
                                           <div className="flex items-center justify-between">
                                             <div className="flex items-center gap-2">
@@ -7214,7 +7214,7 @@ export default function Portfolio() {
                                                 </p>
                                               </div>
                                             </div>
-                                            <span className="text-[9px] text-violet-400 font-bold opacity-0 group-hover:opacity-100 transition-all transform translate-x-1 group-hover:translate-x-0">
+                                            <span className="text-[9px] text-violet-400 font-bold opacity-0 group-hover:opacity-100 transition duration-200 ease-out transform translate-x-1 group-hover:translate-x-0">
                                               {isLoadingRecruiterQuestions
                                                 ? '⏳ Loading…'
                                                 : 'Start Screen →'}
@@ -7264,7 +7264,7 @@ export default function Portfolio() {
                                           type="button"
                                           onClick={() => navigateToQuestion(mockQuestionIdx - 1)}
                                           disabled={mockQuestionIdx <= 0}
-                                          className="w-7 h-7 rounded-lg border border-slate-700 flex items-center justify-center text-[11px] text-slate-400 hover:text-white hover:border-violet-500 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                                          className="w-7 h-7 rounded-lg border border-slate-700 flex items-center justify-center text-[11px] text-slate-400 hover:text-white hover:border-violet-500 disabled:opacity-30 disabled:cursor-not-allowed transition duration-200 ease-out"
                                           title="Previous question"
                                         >
                                           ←
@@ -7275,7 +7275,7 @@ export default function Portfolio() {
                                               key={q.id}
                                               type="button"
                                               onClick={() => navigateToQuestion(i)}
-                                              className={`w-2.5 h-2.5 rounded-full transition-all ${
+                                              className={`w-2.5 h-2.5 rounded-full transition duration-200 ease-out ${
                                                 i === mockQuestionIdx
                                                   ? 'bg-violet-500 ring-2 ring-violet-400/30 scale-125'
                                                   : mockScores[q.id]
@@ -7292,7 +7292,7 @@ export default function Portfolio() {
                                           type="button"
                                           onClick={() => navigateToQuestion(mockQuestionIdx + 1)}
                                           disabled={mockQuestionIdx >= totalQ - 1}
-                                          className="w-7 h-7 rounded-lg border border-slate-700 flex items-center justify-center text-[11px] text-slate-400 hover:text-white hover:border-violet-500 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                                          className="w-7 h-7 rounded-lg border border-slate-700 flex items-center justify-center text-[11px] text-slate-400 hover:text-white hover:border-violet-500 disabled:opacity-30 disabled:cursor-not-allowed transition duration-200 ease-out"
                                           title="Next question"
                                         >
                                           →
@@ -7302,7 +7302,7 @@ export default function Portfolio() {
                                       {/* Progress bar */}
                                       <div className="w-full h-1 bg-slate-800 rounded-full">
                                         <div
-                                          className="h-1 bg-violet-500 rounded-full transition-all"
+                                          className="h-1 bg-violet-500 rounded-full transition duration-200 ease-out"
                                           style={{
                                             width: `${((mockQuestionIdx + 1) / totalQ) * 100}%`,
                                           }}
@@ -7547,7 +7547,7 @@ export default function Portfolio() {
                                                       ? '🎙️ Recruiter voice ended, microphone activated... Speak your answer now!'
                                                       : 'Start speaking your answer, or type it directly here...'
                                                   }
-                                                  className={`w-full h-32 bg-slate-950/50 border rounded-xl p-3 pr-12 text-xs text-slate-300 placeholder-slate-600 resize-none focus:outline-none transition-all ${isRecording ? 'border-red-500/80 bg-red-950/10' : 'border-slate-700 focus:border-violet-500'}`}
+                                                  className={`w-full h-32 bg-slate-950/50 border rounded-xl p-3 pr-12 text-xs text-slate-300 placeholder-slate-600 resize-none focus:outline-none transition duration-200 ease-out ${isRecording ? 'border-red-500/80 bg-red-950/10' : 'border-slate-700 focus:border-violet-500'}`}
                                                 />
 
                                                 {/* Microphone Trigger */}
@@ -7560,7 +7560,7 @@ export default function Portfolio() {
                                                       startListening(currentQ.id);
                                                     }
                                                   }}
-                                                  className={`absolute right-3 top-3 w-8 h-8 rounded-full flex items-center justify-center transition-all ${
+                                                  className={`absolute right-3 top-3 w-8 h-8 rounded-full flex items-center justify-center transition duration-200 ease-out ${
                                                     isRecording
                                                       ? 'bg-red-650 text-white animate-pulse shadow-md shadow-red-555/40'
                                                       : 'bg-slate-800 text-slate-400 hover:bg-violet-655 hover:text-white'
@@ -7608,7 +7608,7 @@ export default function Portfolio() {
                                                     stopListening();
                                                     setMockMode('idle');
                                                   }}
-                                                  className="flex-1 py-2 rounded-xl border border-slate-800 text-xs font-bold text-slate-500 hover:text-slate-300 hover:border-slate-650 transition-all"
+                                                  className="flex-1 py-2 rounded-xl border border-slate-800 text-xs font-bold text-slate-500 hover:text-slate-300 hover:border-slate-650 transition duration-200 ease-out"
                                                 >
                                                   ✕ Cancel
                                                 </button>
@@ -7619,7 +7619,7 @@ export default function Portfolio() {
                                                     submitAnswer();
                                                   }}
                                                   disabled={!currentAnswer.trim()}
-                                                  className="flex-1 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-40 text-white text-xs font-bold transition-all"
+                                                  className="flex-1 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-40 text-white text-xs font-bold transition duration-200 ease-out"
                                                 >
                                                   ✓ Submit Response
                                                 </button>
@@ -7638,7 +7638,7 @@ export default function Portfolio() {
                                                       1000
                                                     );
                                                   }}
-                                                  className="flex-1 py-2 rounded-xl border border-slate-800 text-xs font-bold text-slate-500 hover:text-slate-300 hover:border-slate-750 transition-all"
+                                                  className="flex-1 py-2 rounded-xl border border-slate-800 text-xs font-bold text-slate-500 hover:text-slate-300 hover:border-slate-750 transition duration-200 ease-out"
                                                 >
                                                   🔄 Redo Answer
                                                 </button>
@@ -7647,7 +7647,7 @@ export default function Portfolio() {
                                                   <button
                                                     type="button"
                                                     onClick={nextQuestion}
-                                                    className="flex-grow-[2] py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-xs font-bold text-white transition-all"
+                                                    className="flex-grow-[2] py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-xs font-bold text-white transition duration-200 ease-out"
                                                   >
                                                     Next Question →
                                                   </button>
@@ -7657,7 +7657,7 @@ export default function Portfolio() {
                                                     onClick={() =>
                                                       finishInteractiveSession(questions)
                                                     }
-                                                    className="flex-grow-[2] py-2 rounded-xl bg-emerald-650 hover:bg-emerald-600 text-xs font-bold text-white transition-all shadow-md shadow-emerald-950/20"
+                                                    className="flex-grow-[2] py-2 rounded-xl bg-emerald-650 hover:bg-emerald-600 text-xs font-bold text-white transition duration-200 ease-out shadow-md shadow-emerald-950/20"
                                                   >
                                                     ✓ Complete Screen & Report
                                                   </button>
@@ -7684,7 +7684,7 @@ export default function Portfolio() {
                                               onClick={() =>
                                                 toggleSpeakQuestion(currentQ.id, currentQ.question)
                                               }
-                                              className={`p-2 rounded-xl border flex items-center justify-center transition-all ${
+                                              className={`p-2 rounded-xl border flex items-center justify-center transition duration-200 ease-out ${
                                                 speakingQId === currentQ.id
                                                   ? 'bg-rose-955/40 border-rose-900/50 text-rose-455 animate-pulse shadow-md shadow-rose-950/40'
                                                   : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-violet-450 hover:border-violet-500/50 hover:bg-violet-955/10'
@@ -7901,7 +7901,7 @@ export default function Portfolio() {
                                                     <button
                                                       type="button"
                                                       onClick={() => setStarMode(false)}
-                                                      className={`px-2.5 py-1 rounded-md text-[9px] font-bold transition-all ${!starMode ? 'bg-violet-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}
+                                                      className={`px-2.5 py-1 rounded-md text-[9px] font-bold transition duration-200 ease-out ${!starMode ? 'bg-violet-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}
                                                     >
                                                       ✍️ Freeform
                                                     </button>
@@ -7909,7 +7909,7 @@ export default function Portfolio() {
                                                       type="button"
                                                       onClick={enableStarMode}
                                                       disabled={isStarSplitting}
-                                                      className={`px-2.5 py-1 rounded-md text-[9px] font-bold transition-all ${starMode ? 'bg-violet-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-355'} ${isStarSplitting ? 'opacity-70 cursor-wait' : ''}`}
+                                                      className={`px-2.5 py-1 rounded-md text-[9px] font-bold transition duration-200 ease-out ${starMode ? 'bg-violet-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-355'} ${isStarSplitting ? 'opacity-70 cursor-wait' : ''}`}
                                                     >
                                                       {isStarSplitting
                                                         ? '⏳ Analyzing...'
@@ -8132,7 +8132,7 @@ export default function Portfolio() {
                                                         setAudioUrl(null);
                                                       }
                                                     }}
-                                                    className={`absolute right-2 top-2 w-8 h-8 rounded-full flex items-center justify-center transition-all ${
+                                                    className={`absolute right-2 top-2 w-8 h-8 rounded-full flex items-center justify-center transition duration-200 ease-out ${
                                                       isRecording
                                                         ? 'bg-red-500 text-white animate-pulse shadow-lg shadow-red-500/40'
                                                         : 'bg-slate-800 text-slate-400 hover:bg-violet-600 hover:text-white'
@@ -8184,7 +8184,7 @@ export default function Portfolio() {
                                                     }
                                                     setMockMode('idle');
                                                   }}
-                                                  className="flex-1 py-2 rounded-xl border border-slate-700 text-xs font-bold text-slate-400 hover:text-slate-200 hover:border-slate-500 transition-all"
+                                                  className="flex-1 py-2 rounded-xl border border-slate-700 text-xs font-bold text-slate-400 hover:text-slate-200 hover:border-slate-500 transition duration-200 ease-out"
                                                 >
                                                   ✕ Skip
                                                 </button>
@@ -8198,7 +8198,7 @@ export default function Portfolio() {
                                                     submitAnswer();
                                                   }}
                                                   disabled={!currentAnswer.trim()}
-                                                  className="flex-1 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-40 text-white text-xs font-bold transition-all"
+                                                  className="flex-1 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-40 text-white text-xs font-bold transition duration-200 ease-out"
                                                 >
                                                   ✓ Submit Answer
                                                 </button>
@@ -8374,7 +8374,7 @@ export default function Portfolio() {
                                                         [currentQ.id]: !p[currentQ.id],
                                                       }))
                                                     }
-                                                    className="w-full py-2 border border-slate-700 rounded-xl text-xs font-bold text-slate-400 hover:text-violet-300 hover:border-violet-500 transition-all"
+                                                    className="w-full py-2 border border-slate-700 rounded-xl text-xs font-bold text-slate-400 hover:text-violet-300 hover:border-violet-500 transition duration-200 ease-out"
                                                   >
                                                     📝{' '}
                                                     {sampleVisible[currentQ.id] ? 'Hide' : 'View'}{' '}
@@ -8503,7 +8503,7 @@ export default function Portfolio() {
                                               {/* Next button */}
                                               <button
                                                 onClick={nextQuestion}
-                                                className="w-full py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-xs font-bold text-white transition-all"
+                                                className="w-full py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-xs font-bold text-white transition duration-200 ease-out"
                                               >
                                                 {mockQuestionIdx + 1 < totalQ
                                                   ? 'Next Question →'
@@ -8588,7 +8588,7 @@ export default function Portfolio() {
                     setVercelError('');
                     setShowVercelModal(true);
                   }}
-                  className="flex items-center gap-1.5 bg-black hover:bg-slate-955 border border-slate-800 text-white px-4 py-2 rounded-xl text-sm font-black transition-all cursor-pointer shadow-lg shadow-white/5 active:scale-95 hover:border-slate-700"
+                  className="flex items-center gap-1.5 bg-black hover:bg-slate-955 border border-slate-800 text-white px-4 py-2 rounded-xl text-sm font-black transition duration-200 ease-out cursor-pointer shadow-lg shadow-white/5 active:scale-[0.97] hover:border-slate-700"
                 >
                   <svg className="w-4 h-4 fill-current text-white" viewBox="0 0 512 512">
                     <path d="M256,48,496,464H16Z" />
@@ -8599,7 +8599,7 @@ export default function Portfolio() {
                 <button
                   onClick={handleZipDownload}
                   disabled={isZipping}
-                  className="flex items-center gap-1.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-lg shadow-indigo-500/25 active:scale-95 cursor-pointer disabled:opacity-50"
+                  className="flex items-center gap-1.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition duration-200 ease-out shadow-lg shadow-indigo-500/25 active:scale-[0.97] cursor-pointer disabled:opacity-50"
                 >
                   {copiedZip ? <Check className="w-4 h-4 text-emerald-300 animate-pulse" /> : <Download className="w-4 h-4" />}
                   <span>{isZipping ? 'Creating ZIP...' : copiedZip ? 'Downloaded ZIP!' : 'Download Project (.zip)'}</span>
@@ -8607,7 +8607,7 @@ export default function Portfolio() {
 
                 <button
                   onClick={() => copyToClipboard(getExportCode(), 'code')}
-                  className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-4 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer active:scale-95 hover:shadow-md hover:shadow-slate-900/50"
+                  className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-4 py-2 rounded-xl text-sm font-semibold transition duration-200 ease-out cursor-pointer active:scale-[0.97] hover:shadow-md hover:shadow-slate-900/50"
                 >
                   {copiedCode ? <Check className="w-4 h-4 text-emerald-400" /> : <FileCode className="w-4 h-4" />}
                   <span>{copiedCode ? 'Copied!' : 'React Code'}</span>
@@ -8615,7 +8615,7 @@ export default function Portfolio() {
 
                 <button
                   onClick={() => handleWordDownload()}
-                  className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-4 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer"
+                  className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-4 py-2 rounded-xl text-sm font-semibold transition duration-200 ease-out cursor-pointer"
                 >
                   <FileText className="w-4 h-4 text-indigo-400" />
                   <span>Word (.doc)</span>
@@ -8623,7 +8623,7 @@ export default function Portfolio() {
 
                 <button
                   onClick={handlePdfPrint}
-                  className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-4 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer"
+                  className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-4 py-2 rounded-xl text-sm font-semibold transition duration-200 ease-out cursor-pointer"
                 >
                   <Download className="w-4 h-4 text-emerald-400" />
                   <span>PDF Document</span>
@@ -8672,7 +8672,7 @@ export default function Portfolio() {
               )}
 
               <div
-                className={`transition-all duration-500 h-full w-full overflow-y-auto border border-slate-850 rounded-2xl shadow-2xl scrollbar-thin ${
+                className={`transition duration-500 h-full w-full overflow-y-auto border border-slate-850 rounded-2xl shadow-2xl scrollbar-thin ${
                   themeSettings.darkMode || themeSettings.id === 'cyberpunk' ? 'dark' : ''
                 } ${
                   previewDevice === 'desktop'
@@ -8896,7 +8896,7 @@ export default function Portfolio() {
                       <button
                         key={t.id}
                         onClick={() => setPrintTemplate(t.id)}
-                        className={`group relative p-3 rounded-2xl border text-left transition-all duration-300 ${
+                        className={`group relative p-3 rounded-2xl border text-left transition duration-300 ${
                           printTemplate === t.id
                             ? 'bg-indigo-900/40 border-indigo-500 ring-4 ring-indigo-500/20'
                             : 'bg-slate-900/50 border-slate-800 hover:border-slate-600 hover:bg-slate-800'
@@ -8927,7 +8927,7 @@ export default function Portfolio() {
                               </span>
                             </div>
                           </div>
-                          <span className="text-sm grayscale group-hover:grayscale-0 transition-all">
+                          <span className="text-sm grayscale group-hover:grayscale-95 opacity-0 transition duration-200 ease-out">
                             {t.icon}
                           </span>
                         </div>
@@ -8949,7 +8949,7 @@ export default function Portfolio() {
                   <div className="flex gap-2">
                     <button
                       onClick={() => setPaperSize('letter')}
-                      className={`flex-1 py-2 rounded-lg border text-xs font-bold transition-all ${
+                      className={`flex-1 py-2 rounded-lg border text-xs font-bold transition duration-200 ease-out ${
                         paperSize === 'letter'
                           ? 'bg-indigo-900/40 border-indigo-500 text-white'
                           : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-600'
@@ -8959,7 +8959,7 @@ export default function Portfolio() {
                     </button>
                     <button
                       onClick={() => setPaperSize('a4')}
-                      className={`flex-1 py-2 rounded-lg border text-xs font-bold transition-all ${
+                      className={`flex-1 py-2 rounded-lg border text-xs font-bold transition duration-200 ease-out ${
                         paperSize === 'a4'
                           ? 'bg-indigo-900/40 border-indigo-500 text-white'
                           : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-600'
@@ -8983,12 +8983,12 @@ export default function Portfolio() {
                       <button
                         type="button"
                         onClick={() => setAutoFitToPage(!autoFitToPage)}
-                        className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                        className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-out-out focus:outline-none ${
                           autoFitToPage ? 'bg-indigo-600' : 'bg-slate-700'
                         }`}
                       >
                         <span
-                          className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                          className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-out-out ${
                             autoFitToPage ? 'translate-x-4' : 'translate-x-0'
                           }`}
                         />
@@ -9016,7 +9016,7 @@ export default function Portfolio() {
                       <button
                         key={opt.id}
                         onClick={() => setSpacingDensity(opt.id as any)}
-                        className={`w-full p-2.5 rounded-lg border text-left transition-all flex items-center justify-between ${
+                        className={`w-full p-2.5 rounded-lg border text-left transition duration-200 ease-out flex items-center justify-between ${
                           spacingDensity === opt.id
                             ? 'bg-indigo-900/40 border-indigo-500 text-white'
                             : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-slate-600'
@@ -9050,7 +9050,7 @@ export default function Portfolio() {
                 <button
                   onClick={triggerPdfPrint}
                   disabled={isGeneratingPdf}
-                  className="w-full py-4 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-850 text-white rounded-2xl font-black text-sm shadow-xl shadow-indigo-900/40 transition-all flex justify-center items-center gap-3 active:scale-[0.98] disabled:opacity-75 disabled:cursor-not-allowed"
+                  className="w-full py-4 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-850 text-white rounded-2xl font-black text-sm shadow-xl shadow-indigo-900/40 transition duration-200 ease-out flex justify-center items-center gap-3 active:scale-[0.97] disabled:opacity-75 disabled:cursor-not-allowed"
                 >
                   {isGeneratingPdf ? (
                     <>
@@ -9067,7 +9067,7 @@ export default function Portfolio() {
                 <button
                   onClick={() => handleWordDownload(printTemplate)}
                   disabled={isGeneratingPdf}
-                  className="w-full py-3 bg-slate-800 hover:bg-slate-700 disabled:bg-slate-900 text-slate-300 rounded-2xl text-xs font-bold transition-all flex justify-center items-center gap-2 disabled:opacity-50"
+                  className="w-full py-3 bg-slate-800 hover:bg-slate-700 disabled:bg-slate-900 text-slate-300 rounded-2xl text-xs font-bold transition duration-200 ease-out flex justify-center items-center gap-2 disabled:opacity-50"
                 >
                   <FileText className="w-4 h-4 text-slate-500" />
                   <span>Export to Word / OpenOffice (.docx)</span>
@@ -9078,7 +9078,7 @@ export default function Portfolio() {
                 <button
                   onClick={() => window.print()}
                   disabled={isGeneratingPdf}
-                  className="w-full py-2.5 bg-slate-950 hover:bg-slate-900 text-slate-400 border border-slate-800 hover:text-slate-200 rounded-2xl text-xs font-bold transition-all flex justify-center items-center gap-2 disabled:opacity-50"
+                  className="w-full py-2.5 bg-slate-950 hover:bg-slate-900 text-slate-400 border border-slate-800 hover:text-slate-200 rounded-2xl text-xs font-bold transition duration-200 ease-out flex justify-center items-center gap-2 disabled:opacity-50"
                 >
                   <Sparkles className="w-3.5 h-3.5 text-slate-500" />
                   <span>Open Browser System Printer...</span>
@@ -9099,7 +9099,7 @@ export default function Portfolio() {
                         setShowPrintModal(false);
                         setTimeout(() => triggerAIOptimization(), 100);
                       }}
-                      className="w-full py-2.5 bg-white text-indigo-950 rounded-xl font-black text-[10px] uppercase tracking-wider hover:bg-indigo-50 transition-all active:scale-95 shadow-lg"
+                      className="w-full py-2.5 bg-white text-indigo-950 rounded-xl font-black text-[10px] uppercase tracking-wider hover:bg-indigo-50 transition duration-200 ease-out active:scale-[0.97] shadow-lg"
                     >
                       Optimize for ATS Matches
                     </button>
@@ -9128,7 +9128,7 @@ export default function Portfolio() {
               <div className="min-h-full flex justify-center p-2 md:p-4">
                 <div
                   ref={previewContainerRef}
-                  className={`print-resume-container shadow-2xl transition-all duration-300 pointer-events-none density-${spacingDensity} ${
+                  className={`print-resume-container shadow-2xl transition duration-300 pointer-events-none density-${spacingDensity} ${
                     printTemplate === 'classic' ? 'font-serif' : 'font-sans'
                   }`}
                   style={{
@@ -9161,7 +9161,7 @@ export default function Portfolio() {
             {!authLoading && (
               <button
                 onClick={() => setShowAuthModal(false)}
-                className="absolute top-4 right-4 text-slate-400 hover:text-white hover:bg-slate-800/50 p-1.5 rounded-lg transition-all cursor-pointer"
+                className="absolute top-4 right-4 text-slate-400 hover:text-white hover:bg-slate-800/50 p-1.5 rounded-lg transition duration-200 ease-out cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -9227,7 +9227,7 @@ export default function Portfolio() {
                 <button
                   type="submit"
                   disabled={authLoading}
-                  className="w-full bg-indigo-650 hover:bg-indigo-550 text-white font-extrabold py-2.5 rounded-xl text-xs transition-all shadow-md disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
+                  className="w-full bg-indigo-650 hover:bg-indigo-550 text-white font-extrabold py-2.5 rounded-xl text-xs transition duration-200 ease-out shadow-md disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
                 >
                   {authLoading ? (
                     <>
@@ -9304,7 +9304,7 @@ export default function Portfolio() {
               vercelDeployState === 'error') && (
               <button
                 onClick={() => setShowVercelModal(false)}
-                className="absolute top-4 right-4 text-slate-400 hover:text-white hover:bg-slate-800/50 p-1.5 rounded-lg transition-all"
+                className="absolute top-4 right-4 text-slate-400 hover:text-white hover:bg-slate-800/50 p-1.5 rounded-lg transition duration-200 ease-out"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -9407,7 +9407,7 @@ export default function Portfolio() {
 
                   <button
                     onClick={handleVercelDeploy}
-                    className="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-extrabold py-3 rounded-xl text-xs transition-all shadow-lg hover:shadow-indigo-500/20 active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2 mt-2"
+                    className="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-extrabold py-3 rounded-xl text-xs transition duration-200 ease-out shadow-lg hover:shadow-indigo-500/20 active:scale-[0.97] cursor-pointer flex items-center justify-center gap-2 mt-2"
                   >
                     <svg className="w-3.5 h-3.5 fill-current text-white" viewBox="0 0 512 512">
                       <path d="M256,48,496,464H16Z" />
@@ -9609,7 +9609,7 @@ export default function Portfolio() {
                       href={vercelDeployUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-extrabold py-3 rounded-xl text-xs transition-all shadow-lg hover:shadow-indigo-500/25 flex items-center justify-center gap-2 cursor-pointer"
+                      className="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-extrabold py-3 rounded-xl text-xs transition duration-200 ease-out shadow-lg hover:shadow-indigo-500/25 flex items-center justify-center gap-2 cursor-pointer"
                     >
                       <span>Visit Live Website</span>
                     </a>
@@ -9633,7 +9633,7 @@ export default function Portfolio() {
           <div className="w-full max-w-6xl h-full max-h-[90vh] flex flex-col relative">
             <button
               onClick={closeOptimizerModal}
-              className="absolute -top-4 -right-4 bg-slate-800 hover:bg-slate-700 text-white p-2 rounded-full shadow-xl transition-all z-[110]"
+              className="absolute -top-4 -right-4 bg-slate-800 hover:bg-slate-700 text-white p-2 rounded-full shadow-xl transition duration-200 ease-out z-[110]"
             >
               <X className="w-5 h-5" />
             </button>
@@ -9788,7 +9788,7 @@ export default function Portfolio() {
         >
           <button
             onClick={() => setMobileActiveView('editor')}
-            className={`flex flex-col items-center justify-center gap-1 py-1 px-4 rounded-xl transition-all cursor-pointer ${
+            className={`flex flex-col items-center justify-center gap-1 py-1 px-4 rounded-xl transition duration-200 ease-out cursor-pointer ${
               mobileActiveView === 'editor'
                 ? appTheme === 'nord-light'
                   ? 'text-indigo-650 font-bold font-semibold'
@@ -9801,7 +9801,7 @@ export default function Portfolio() {
           </button>
           <button
             onClick={() => setMobileActiveView('preview')}
-            className={`flex flex-col items-center justify-center gap-1 py-1 px-4 rounded-xl transition-all cursor-pointer ${
+            className={`flex flex-col items-center justify-center gap-1 py-1 px-4 rounded-xl transition duration-200 ease-out cursor-pointer ${
               mobileActiveView === 'preview'
                 ? appTheme === 'nord-light'
                   ? 'text-indigo-650 font-bold font-semibold'

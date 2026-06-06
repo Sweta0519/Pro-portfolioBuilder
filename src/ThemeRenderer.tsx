@@ -191,7 +191,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
       return getScrollParent(node.parentElement);
     };
 
-    // Smooth scroll with custom cubic ease-in-out easing
+    // Smooth scroll with custom cubic ease-out-out easing
     const smoothScrollTo = (targetElement: HTMLElement, duration: number = 850) => {
       const scrollParent = getScrollParent(targetElement) || document.documentElement;
       const startPosition = scrollParent.scrollTop;
@@ -342,7 +342,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
                   <img
                     src={data.personal.avatar}
                     alt={data.personal.name}
-                    className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
+                    className="w-full h-full object-cover grayscale group-hover:grayscale-95 opacity-0 transition duration-700"
                   />
                 )}
               </div>
@@ -395,7 +395,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
                 <a
                   key={item}
                   href={`#${item.toLowerCase()}`}
-                  className={`whitespace-nowrap py-1.5 px-3 md:py-2.5 md:px-4 rounded-xl text-slate-500 dark:text-slate-400 hover:${textHeading} hover:bg-slate-200/50 dark:hover:bg-white/5 transition-all text-xs md:text-sm font-bold tracking-wide`}
+                  className={`whitespace-nowrap py-1.5 px-3 md:py-2.5 md:px-4 rounded-xl text-slate-500 dark:text-slate-400 hover:${textHeading} hover:bg-slate-200/50 dark:hover:bg-white/5 transition duration-200 ease-out text-xs md:text-sm font-bold tracking-wide`}
                 >
                   {item}
                 </a>
@@ -482,7 +482,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
                     className="group relative pl-6 md:pl-8 border-l border-slate-200 dark:border-white/10"
                   >
                     <div
-                      className={`absolute left-[-5.5px] top-0 w-2.5 h-2.5 rounded-full ${primaryBg} ring-4 ring-slate-100 dark:ring-white/5 transition-all group-hover:scale-150`}
+                      className={`absolute left-[-5.5px] top-0 w-2.5 h-2.5 rounded-full ${primaryBg} ring-4 ring-slate-100 dark:ring-white/5 transition duration-200 ease-out group-hover:scale-150`}
                     ></div>
                     <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                       <h3
@@ -523,7 +523,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
                   <div
                     key={idx}
                     className={rc(
-                      `backdrop-blur-md ${cardBg} border rounded-2xl md:rounded-3xl p-6 md:p-8 ${cardHoverBg} transition-all group relative overflow-hidden flex flex-col`
+                      `backdrop-blur-md ${cardBg} border rounded-2xl md:rounded-3xl p-6 md:p-8 ${cardHoverBg} transition duration-200 ease-out group relative overflow-hidden flex flex-col`
                     )}
                   >
                     <div
@@ -568,7 +568,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
                 {data.skills.map((skill) => (
                   <div
                     key={skill.name}
-                    className={`${cardBg} border rounded-2xl p-5 md:p-6 ${cardHoverBg} transition-all group`}
+                    className={`${cardBg} border rounded-2xl p-5 md:p-6 ${cardHoverBg} transition duration-200 ease-out group`}
                   >
                     <div className="flex justify-between items-center mb-3 md:mb-4">
                       <div
@@ -580,7 +580,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
                     </div>
                     <div className="h-1.5 w-full bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden">
                       <div
-                        className={`h-full ${primaryBg} transition-all duration-1000`}
+                        className={`h-full ${primaryBg} transition duration-1000`}
                         style={{ width: `${skill.level}%` }}
                       ></div>
                     </div>
@@ -595,7 +595,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
                   {data.certificates.map((cert) => (
                     <div
                       key={cert.id}
-                      className={`${cardBg} border rounded-2xl p-5 md:p-6 ${cardHoverBg} transition-all group relative overflow-hidden flex items-start gap-4`}
+                      className={`${cardBg} border rounded-2xl p-5 md:p-6 ${cardHoverBg} transition duration-200 ease-out group relative overflow-hidden flex items-start gap-4`}
                     >
                       <div className="w-12 h-12 rounded-xl bg-amber-500/10 dark:bg-amber-400/10 flex items-center justify-center border border-amber-500/20 dark:border-amber-400/20 shrink-0">
                         <Trophy className="w-5 h-5 text-amber-500 dark:text-amber-400 fill-amber-500/20 animate-pulse-subtle" />
@@ -665,16 +665,16 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
                     <input
                       type="text"
                       placeholder="Your Name"
-                      className="w-full bg-white/10 border-white/10 rounded-2xl p-4 text-sm focus:bg-white/20 outline-none transition-all placeholder:text-white/40"
+                      className="w-full bg-white/10 border-white/10 rounded-2xl p-4 text-sm focus:bg-white/20 outline-none transition duration-200 ease-out placeholder:text-white/40"
                     />
                     <textarea
                       placeholder="Your Project Idea"
                       rows={4}
-                      className="w-full bg-white/10 border-white/10 rounded-2xl p-4 text-sm focus:bg-white/20 outline-none transition-all placeholder:text-white/40"
+                      className="w-full bg-white/10 border-white/10 rounded-2xl p-4 text-sm focus:bg-white/20 outline-none transition duration-200 ease-out placeholder:text-white/40"
                     />
                     <button
                       type="submit"
-                      className="w-full py-4 bg-white text-indigo-600 rounded-2xl font-black uppercase tracking-widest text-sm hover:scale-[1.02] active:scale-[0.98] transition-all shadow-xl"
+                      className="w-full py-4 bg-white text-indigo-600 rounded-2xl font-black uppercase tracking-widest text-sm hover:scale-[1.02] active:scale-[0.97] transition duration-200 ease-out shadow-xl"
                     >
                       Send Message
                     </button>
@@ -763,7 +763,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
               <a
                 href="#about"
                 className={rc(
-                  `backdrop-blur-md ${pillBg} border ${textHeading} font-black px-6 py-4 md:px-10 md:py-5 rounded-full text-xs uppercase tracking-[0.2em] hover:bg-slate-200 dark:hover:bg-white/10 transition-all text-center w-full sm:w-auto`
+                  `backdrop-blur-md ${pillBg} border ${textHeading} font-black px-6 py-4 md:px-10 md:py-5 rounded-full text-xs uppercase tracking-[0.2em] hover:bg-slate-200 dark:hover:bg-white/10 transition duration-200 ease-out text-center w-full sm:w-auto`
                 )}
               >
                 About Me
@@ -775,7 +775,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
             <ThemeSection title="About Me" id="about">
               <div
                 className={rc(
-                  `relative rounded-[2rem] md:rounded-[3rem] overflow-hidden ${cardBg} border transition-all p-6 md:p-16 flex flex-col md:flex-row gap-6 md:gap-12 items-center`
+                  `relative rounded-[2rem] md:rounded-[3rem] overflow-hidden ${cardBg} border transition duration-200 ease-out p-6 md:p-16 flex flex-col md:flex-row gap-6 md:gap-12 items-center`
                 )}
               >
                 <div className="flex-1 space-y-4">
@@ -808,7 +808,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
                       <img
                         src={data.personal.avatar}
                         alt={data.personal.name}
-                        className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
+                        className="w-full h-full object-cover grayscale group-hover:grayscale-95 opacity-0 transition duration-700"
                       />
                     ) : (
                       <div
@@ -871,7 +871,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
                   <div
                     key={idx}
                     className={rc(
-                      `group relative rounded-[2rem] md:rounded-[3rem] overflow-hidden ${cardBg} border transition-all p-6 md:p-16`
+                      `group relative rounded-[2rem] md:rounded-[3rem] overflow-hidden ${cardBg} border transition duration-200 ease-out p-6 md:p-16`
                     )}
                   >
                     <div
@@ -945,7 +945,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
                     <div
                       key={cert.id}
                       className={rc(
-                        `group relative rounded-[2rem] overflow-hidden ${cardBg} border transition-all p-6 md:p-10 flex gap-6 items-start`
+                        `group relative rounded-[2rem] overflow-hidden ${cardBg} border transition duration-200 ease-out p-6 md:p-10 flex gap-6 items-start`
                       )}
                     >
                       <div
@@ -1110,13 +1110,13 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
             <div className="flex flex-wrap justify-center gap-4">
               <a
                 href="#about"
-                className={`px-8 py-4 ${colors.bg} text-white font-mono font-bold uppercase tracking-widest hover:opacity-80 transition-all border border-white/20 shadow-2xl shadow-indigo-500/40`}
+                className={`px-8 py-4 ${colors.bg} text-white font-mono font-bold uppercase tracking-widest hover:opacity-80 transition duration-200 ease-out border border-white/20 shadow-2xl shadow-indigo-500/40`}
               >
                 Access Data
               </a>
               <a
                 href="#contact"
-                className="px-8 py-4 bg-transparent text-white font-mono font-bold uppercase tracking-widest hover:bg-white/5 transition-all border border-white/20"
+                className="px-8 py-4 bg-transparent text-white font-mono font-bold uppercase tracking-widest hover:bg-white/5 transition duration-200 ease-out border border-white/20"
               >
                 Contact.exe
               </a>
@@ -1173,7 +1173,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
             <div className="flex flex-wrap gap-4 pt-4">
               <a
                 href="#contact"
-                className={`px-6 py-3.5 md:px-8 md:py-4 rounded-2xl text-white font-bold transition-all hover:scale-105 ${colors.bg} ${colors.glow}`}
+                className={`px-6 py-3.5 md:px-8 md:py-4 rounded-2xl text-white font-bold transition duration-200 ease-out hover:scale-105 ${colors.bg} ${colors.glow}`}
               >
                 Get in Touch
               </a>
@@ -1222,7 +1222,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
                 <img
                   src={data.personal.avatar}
                   alt={data.personal.name}
-                  className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
+                  className="w-full h-full object-cover grayscale group-hover:grayscale-95 opacity-0 transition duration-700"
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-white text-6xl md:text-8xl font-black">
@@ -1285,7 +1285,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
               )}
               <a
                 href="#contact"
-                className={`px-4 py-2 rounded-xl ${colors.bg} text-white hover:opacity-85 hover:scale-[1.03] transition-all text-[10px]`}
+                className={`px-4 py-2 rounded-xl ${colors.bg} text-white hover:opacity-85 hover:scale-[1.03] transition duration-200 ease-out text-[10px]`}
               >
                 Hire Me
               </a>
@@ -1295,7 +1295,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className={rc(
-                `md:hidden p-2 rounded-xl text-slate-500 hover:${textHeading} hover:bg-slate-200/50 dark:hover:bg-white/5 transition-all`
+                `md:hidden p-2 rounded-xl text-slate-500 hover:${textHeading} hover:bg-slate-200/50 dark:hover:bg-white/5 transition duration-200 ease-out`
               )}
               aria-label="Toggle menu"
             >
@@ -1334,7 +1334,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
                     </div>
                     <button
                       onClick={() => setIsMobileMenuOpen(false)}
-                      className="p-2 rounded-xl text-slate-500 hover:bg-slate-150 dark:hover:bg-white/5 transition-all"
+                      className="p-2 rounded-xl text-slate-500 hover:bg-slate-150 dark:hover:bg-white/5 transition duration-200 ease-out"
                     >
                       <X className="w-5 h-5" />
                     </button>
@@ -1353,7 +1353,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
                         key={item}
                         href={`#${item.toLowerCase()}`}
                         onClick={() => setIsMobileMenuOpen(false)}
-                        className={`text-sm font-bold uppercase tracking-widest ${isDark ? 'text-slate-300 hover:text-white border-white/5' : 'text-slate-600 hover:text-slate-900 border-slate-100'} hover:translate-x-1.5 transition-all py-3.5 border-b last:border-0 flex items-center justify-between group`}
+                        className={`text-sm font-bold uppercase tracking-widest ${isDark ? 'text-slate-300 hover:text-white border-white/5' : 'text-slate-600 hover:text-slate-900 border-slate-100'} hover:translate-x-1.5 transition duration-200 ease-out py-3.5 border-b last:border-0 flex items-center justify-between group`}
                       >
                         <span>{item}</span>
                         <span
@@ -1371,7 +1371,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
                   <a
                     href="#contact"
                     onClick={() => setIsMobileMenuOpen(false)}
-                    className={`w-full py-4 rounded-2xl ${colors.bg} ${colors.glow} text-white font-black uppercase tracking-widest text-[10px] text-center block transition-all hover:opacity-90 active:scale-[0.98] shadow-lg`}
+                    className={`w-full py-4 rounded-2xl ${colors.bg} ${colors.glow} text-white font-black uppercase tracking-widest text-[10px] text-center block transition duration-200 ease-out hover:opacity-90 active:scale-[0.97] shadow-lg`}
                   >
                     Hire Me
                   </a>
@@ -1494,7 +1494,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
                 className={
                   isClassic
                     ? 'border-b border-slate-100 pb-8 last:border-0'
-                    : `p-6 md:p-8 rounded-3xl ${cardBg} border ${cardHoverBg} transition-all group`
+                    : `p-6 md:p-8 rounded-3xl ${cardBg} border ${cardHoverBg} transition duration-200 ease-out group`
                 }
               >
                 <div className="flex justify-between items-start mb-4">
@@ -1571,7 +1571,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
                     {skills.map((s) => (
                       <span
                         key={s.name}
-                        className={`text-xs font-bold px-4 py-2 rounded-xl ${isClassic ? 'bg-slate-100 text-slate-800' : `${pillBg} border hover:bg-slate-200/80 dark:hover:bg-white/10 transition-all`}`}
+                        className={`text-xs font-bold px-4 py-2 rounded-xl ${isClassic ? 'bg-slate-100 text-slate-800' : `${pillBg} border hover:bg-slate-200/80 dark:hover:bg-white/10 transition duration-200 ease-out`}`}
                       >
                         {s.name}
                       </span>
@@ -1599,7 +1599,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
                   className={
                     isClassic
                       ? 'border-b border-slate-100 pb-6 last:border-0'
-                      : `p-6 md:p-8 rounded-3xl ${cardBg} border ${cardHoverBg} transition-all group flex items-start gap-4`
+                      : `p-6 md:p-8 rounded-3xl ${cardBg} border ${cardHoverBg} transition duration-200 ease-out group flex items-start gap-4`
                   }
                 >
                   {!isClassic && (

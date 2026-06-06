@@ -16,12 +16,12 @@ export default function LandingPage() {
           <div className="flex items-center gap-4">
             <a href="#features" className="text-sm font-medium text-slate-600 hover:text-indigo-600 hidden sm:block">Features</a>
             <a href="#pricing" className="text-sm font-medium text-slate-600 hover:text-indigo-600 hidden sm:block">Pricing</a>
-            <Link to="/app" className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors hidden sm:block">
+            <Link to="/app" className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition active:scale-[0.97] duration-200 ease-out hidden sm:block">
               Go to Dashboard
             </Link>
             {/* Mobile Menu Toggle */}
             <button 
-              className="sm:hidden p-2 text-slate-600 hover:text-indigo-600 active:scale-95 transition-transform"
+              className="sm:hidden p-2 text-slate-600 hover:text-indigo-600 active:scale-[0.97] transition duration-200 ease-out"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
               {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -34,14 +34,14 @@ export default function LandingPage() {
           <div className="sm:hidden bg-white border-b border-slate-200 absolute w-full px-4 pt-2 pb-6 flex flex-col gap-2 shadow-2xl animate-fadeIn">
             <a 
               href="#features" 
-              className="block px-4 py-3 text-base font-bold text-slate-700 hover:text-indigo-600 hover:bg-slate-50 rounded-xl transition-colors"
+              className="block px-4 py-3 text-base font-bold text-slate-700 hover:text-indigo-600 hover:bg-slate-50 rounded-xl transition duration-200 ease-out"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Features
             </a>
             <a 
               href="#pricing" 
-              className="block px-4 py-3 text-base font-bold text-slate-700 hover:text-indigo-600 hover:bg-slate-50 rounded-xl transition-colors"
+              className="block px-4 py-3 text-base font-bold text-slate-700 hover:text-indigo-600 hover:bg-slate-50 rounded-xl transition duration-200 ease-out"
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Pricing
@@ -49,7 +49,7 @@ export default function LandingPage() {
             <div className="pt-2">
               <Link 
                 to="/app" 
-                className="block w-full text-center bg-indigo-600 text-white px-4 py-3 rounded-xl text-base font-bold hover:bg-indigo-700 transition-all shadow-md active:scale-95"
+                className="block w-full text-center bg-indigo-600 text-white px-4 py-3 rounded-xl text-base font-bold hover:bg-indigo-700 transition shadow-md active:scale-[0.97] duration-200 ease-out"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 Go to Dashboard
@@ -72,10 +72,10 @@ export default function LandingPage() {
             Upload your resume and instantly generate a stunning, ATS-optimized portfolio website. Prepare for your interview with our AI recruiter coach.
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
-            <Link to="/app" className="bg-indigo-600 text-white px-8 py-4 rounded-xl text-lg font-bold hover:bg-indigo-700 shadow-xl shadow-indigo-500/25 transition-all active:scale-95 hover:-translate-y-1">
+            <Link to="/app" className="bg-indigo-600 text-white px-8 py-4 rounded-xl text-lg font-bold hover:bg-indigo-700 shadow-xl shadow-indigo-500/25 transition active:scale-[0.97] duration-200 ease-out hover:-translate-y-1">
               Start Building for Free
             </Link>
-            <a href="#features" className="bg-white/80 backdrop-blur-sm text-slate-700 px-8 py-4 rounded-xl text-lg font-bold hover:bg-white border border-slate-200 transition-all active:scale-95 hover:-translate-y-1 shadow-sm">
+            <a href="#features" className="bg-white/80 backdrop-blur-sm text-slate-700 px-8 py-4 rounded-xl text-lg font-bold hover:bg-white border border-slate-200 transition active:scale-[0.97] duration-200 ease-out hover:-translate-y-1 shadow-sm">
               See How It Works
             </a>
           </div>
@@ -91,21 +91,21 @@ export default function LandingPage() {
           </div>
           
           <div className="grid md:grid-cols-3 gap-8">
-            <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 hover:border-indigo-100 hover:shadow-xl hover:shadow-indigo-500/5 transition-all">
+            <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 hover:border-indigo-100 hover:shadow-xl hover:shadow-indigo-500/5 transition duration-200 ease-out">
               <div className="w-12 h-12 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center mb-6">
                 <Briefcase className="w-6 h-6" />
               </div>
               <h3 className="text-xl font-bold mb-3">Instant Portfolio Gen</h3>
               <p className="text-slate-600 leading-relaxed">Turn your boring PDF resume into a fully interactive, mobile-responsive web portfolio in 3 seconds.</p>
             </div>
-            <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 hover:border-indigo-100 hover:shadow-xl hover:shadow-indigo-500/5 transition-all">
+            <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 hover:border-indigo-100 hover:shadow-xl hover:shadow-indigo-500/5 transition duration-200 ease-out">
               <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center mb-6">
                 <ShieldCheck className="w-6 h-6" />
               </div>
               <h3 className="text-xl font-bold mb-3">ATS Resume Scanner</h3>
               <p className="text-slate-600 leading-relaxed">Audit your resume against the target job description to guarantee you pass the automated ATS screening.</p>
             </div>
-            <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 hover:border-indigo-100 hover:shadow-xl hover:shadow-indigo-500/5 transition-all">
+            <div className="p-6 bg-slate-50 rounded-2xl border border-slate-100 hover:border-indigo-100 hover:shadow-xl hover:shadow-indigo-500/5 transition duration-200 ease-out">
               <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center mb-6">
                 <Zap className="w-6 h-6" />
               </div>
@@ -126,7 +126,7 @@ export default function LandingPage() {
 
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto items-center">
             {/* Free Tier */}
-            <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm transition-all hover:shadow-md">
+            <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm transition hover:shadow-md duration-200 ease-out">
               <h3 className="text-2xl font-bold mb-2">Free</h3>
               <p className="text-slate-600 mb-6">Perfect for standard applications.</p>
               <div className="text-4xl font-extrabold mb-8">$0</div>
@@ -137,7 +137,7 @@ export default function LandingPage() {
                 <li className="flex items-center gap-3"><CheckCircle className="w-5 h-5 text-emerald-500" /> <span className="text-slate-700">1 Standard Theme</span></li>
                 <li className="flex items-center gap-3"><CheckCircle className="w-5 h-5 text-emerald-500" /> <span className="text-slate-700">HTML Single File Export</span></li>
               </ul>
-              <Link to="/app" className="block w-full py-3 px-4 bg-slate-100 text-slate-900 font-bold text-center rounded-xl hover:bg-slate-200 transition-colors active:scale-95">
+              <Link to="/app" className="block w-full py-3 px-4 bg-slate-100 text-slate-900 font-bold text-center rounded-xl hover:bg-slate-200 transition active:scale-[0.97] duration-200 ease-out">
                 Get Started Free
               </Link>
             </div>
@@ -155,7 +155,7 @@ export default function LandingPage() {
                 <li className="flex items-center gap-3"><CheckCircle className="w-5 h-5 text-indigo-400" /> <span>Unlimited AI Mock Interviews</span></li>
                 <li className="flex items-center gap-3"><CheckCircle className="w-5 h-5 text-indigo-400" /> <span>React Source Code Export</span></li>
               </ul>
-              <Link to="/app" className="block w-full py-3 px-4 bg-white text-indigo-900 font-bold text-center rounded-xl hover:bg-indigo-50 transition-all active:scale-95 shadow-lg shadow-white/10">
+              <Link to="/app" className="block w-full py-3 px-4 bg-white text-indigo-900 font-bold text-center rounded-xl hover:bg-indigo-50 transition active:scale-[0.97] duration-200 ease-out shadow-lg shadow-white/10">
                 Upgrade to Pro
               </Link>
             </div>

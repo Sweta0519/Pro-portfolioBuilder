@@ -37,7 +37,7 @@ export const ResumeInteractivePreview: React.FC<ResumePreviewProps> = ({
         <div className="flex gap-3">
           <button
             onClick={onApply}
-            className="bg-emerald-500 text-white px-6 py-2 rounded-xl font-bold text-xs hover:bg-emerald-600 transition-all hover:scale-105 active:scale-95 flex items-center gap-2 shadow-lg border-none"
+            className="bg-emerald-500 text-white px-6 py-2 rounded-xl font-bold text-xs hover:bg-emerald-600 transition duration-200 ease-out hover:scale-105 active:scale-[0.97] flex items-center gap-2 shadow-lg border-none"
           >
             <Check className="w-4 h-4" />
             Accept & Apply Fixes
@@ -102,7 +102,7 @@ export const ResumeInteractivePreview: React.FC<ResumePreviewProps> = ({
               Professional Profile
             </h2>
             <div
-              className={`text-[13px] leading-relaxed text-justify p-2 rounded transition-all duration-300 ${originalData.personal.bio !== revisedData.personal.bio ? 'bg-amber-50/50 border border-amber-200/50 shadow-inner' : ''}`}
+              className={`text-[13px] leading-relaxed text-justify p-2 rounded transition duration-300 ${originalData.personal.bio !== revisedData.personal.bio ? 'bg-amber-50/50 border border-amber-200/50 shadow-inner' : ''}`}
             >
               {revisedData.personal.bio}
               {originalData.personal.bio !== revisedData.personal.bio && (
@@ -151,7 +151,7 @@ export const ResumeInteractivePreview: React.FC<ResumePreviewProps> = ({
                         return (
                           <li
                             key={bIdx}
-                            className={`text-[13px] leading-relaxed group relative p-1.5 rounded transition-all duration-300 text-justify ${isModified ? 'bg-indigo-50/50 border border-indigo-200 border-dashed cursor-help' : ''}`}
+                            className={`text-[13px] leading-relaxed group relative p-1.5 rounded transition duration-300 text-justify ${isModified ? 'bg-indigo-50/50 border border-indigo-200 border-dashed cursor-help' : ''}`}
                           >
                             {bullet}
                             {isModified && (
