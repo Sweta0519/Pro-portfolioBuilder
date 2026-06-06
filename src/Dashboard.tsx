@@ -169,6 +169,8 @@ export default function Dashboard() {
   const [appTheme, setAppTheme] = useState<'slate-dark' | 'indigo-midnight' | 'nord-light'>(
     () => (localStorage.getItem('app_theme') as any) || 'slate-dark'
   );
+  const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false);
+  const [isMobileActionsMenuOpen, setIsMobileActionsMenuOpen] = useState(false);
   const [leftTab, setLeftTab] = useState<string>('import');
   const [rightTab, setRightTab] = useState<'coach' | 'interview' | 'inbox' | 'sandbox'>('coach');
   const [previewDevice, setPreviewDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
@@ -2442,8 +2444,10 @@ export default function Portfolio() {
             )}
           </div>
           {/* App Theme Selector Dropdown */}
-          <div className="relative group">
+          {/* App Theme Selector Dropdown */}
+          <div className="relative">
             <button
+              onClick={() => { setIsThemeMenuOpen(!isThemeMenuOpen); setIsMobileActionsMenuOpen(false); }}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
                 appTheme === 'nord-light'
                   ? 'bg-slate-100 hover:bg-slate-200 border-slate-250 text-slate-700 hover:text-slate-955'
@@ -2467,60 +2471,64 @@ export default function Portfolio() {
                     ? 'Indigo'
                     : 'Nord'}
               </span>
-              <ChevronDown className="w-3 h-3 text-slate-500 group-hover:text-slate-355" />
+              <ChevronDown className="w-3 h-3 text-slate-500" />
             </button>
-            <div
-              className={`absolute right-0 mt-1 w-40 rounded-xl border p-1 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 ${
-                appTheme === 'nord-light'
-                  ? 'bg-white border-slate-200 shadow-slate-200/50'
-                  : appTheme === 'indigo-midnight'
-                    ? 'bg-[#0e0a26] border-[#2b1f63] shadow-indigo-950/30'
-                    : 'bg-slate-950 border-slate-800 shadow-black/40'
-              }`}
-            >
-              <button
-                type="button"
-                onClick={() => setAppTheme('slate-dark')}
-                className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
-                  appTheme === 'slate-dark'
-                    ? 'bg-indigo-650 text-white'
-                    : appTheme === 'nord-light'
-                      ? 'text-slate-650 hover:bg-slate-100 hover:text-slate-900'
-                      : 'text-slate-400 hover:bg-slate-900 hover:text-white'
-                }`}
-              >
-                Slate Dark
-              </button>
-              <button
-                type="button"
-                onClick={() => setAppTheme('indigo-midnight')}
-                className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
-                  appTheme === 'indigo-midnight'
-                    ? 'bg-indigo-650 text-white'
-                    : appTheme === 'nord-light'
-                      ? 'text-slate-650 hover:bg-slate-100 hover:text-slate-900'
-                      : 'text-slate-400 hover:bg-slate-900/60 hover:text-white'
-                }`}
-              >
-                Indigo Midnight
-              </button>
-              <button
-                type="button"
-                onClick={() => setAppTheme('nord-light')}
-                className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+            {isThemeMenuOpen && (
+              <div
+                className={`absolute right-0 mt-1 w-40 rounded-xl border p-1 shadow-xl transition-all duration-200 z-50 animate-fadeIn ${
                   appTheme === 'nord-light'
-                    ? 'bg-indigo-650 text-white'
-                    : 'text-slate-400 hover:bg-slate-900/60 hover:text-white'
+                    ? 'bg-white border-slate-200 shadow-slate-200/50'
+                    : appTheme === 'indigo-midnight'
+                      ? 'bg-[#0e0a26] border-[#2b1f63] shadow-indigo-950/30'
+                      : 'bg-slate-950 border-slate-800 shadow-black/40'
                 }`}
               >
-                Nord Light
-              </button>
-            </div>
+                <button
+                  type="button"
+                  onClick={() => { setAppTheme('slate-dark'); setIsThemeMenuOpen(false); }}
+                  className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                    appTheme === 'slate-dark'
+                      ? 'bg-indigo-650 text-white'
+                      : appTheme === 'nord-light'
+                        ? 'text-slate-650 hover:bg-slate-100 hover:text-slate-900'
+                        : 'text-slate-400 hover:bg-slate-900 hover:text-white'
+                  }`}
+                >
+                  Slate Dark
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setAppTheme('indigo-midnight'); setIsThemeMenuOpen(false); }}
+                  className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                    appTheme === 'indigo-midnight'
+                      ? 'bg-indigo-650 text-white'
+                      : appTheme === 'nord-light'
+                        ? 'text-slate-650 hover:bg-slate-100 hover:text-slate-900'
+                        : 'text-slate-400 hover:bg-slate-900/60 hover:text-white'
+                  }`}
+                >
+                  Indigo Midnight
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setAppTheme('nord-light'); setIsThemeMenuOpen(false); }}
+                  className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                    appTheme === 'nord-light'
+                      ? 'bg-indigo-650 text-white'
+                      : 'text-slate-400 hover:bg-slate-900/60 hover:text-white'
+                  }`}
+                >
+                  Nord Light
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Mobile Actions Dropdown */}
-          <div className="relative group lg:hidden">
+          {/* Mobile Actions Dropdown */}
+          <div className="relative lg:hidden">
             <button
+              onClick={() => { setIsMobileActionsMenuOpen(!isMobileActionsMenuOpen); setIsThemeMenuOpen(false); }}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
                 appTheme === 'nord-light'
                   ? 'bg-slate-100 hover:bg-slate-200 border-slate-250 text-slate-700 hover:text-slate-955 shadow-sm'
@@ -2533,15 +2541,16 @@ export default function Portfolio() {
               <span>Actions</span>
               <ChevronDown className="w-3 h-3 text-slate-500" />
             </button>
-            <div
-              className={`absolute right-0 mt-1 w-56 rounded-xl border p-1.5 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 flex flex-col gap-1 ${
-                appTheme === 'nord-light'
-                  ? 'bg-white border-slate-200 shadow-slate-200/50'
-                  : appTheme === 'indigo-midnight'
-                    ? 'bg-[#0e0a26] border-[#2b1f63] shadow-indigo-950/30'
-                    : 'bg-slate-950 border-slate-800 shadow-black/40'
-              }`}
-            >
+            {isMobileActionsMenuOpen && (
+              <div
+                className={`absolute right-0 mt-1 w-56 rounded-xl border p-1.5 shadow-xl transition-all duration-200 z-50 flex flex-col gap-1 animate-fadeIn ${
+                  appTheme === 'nord-light'
+                    ? 'bg-white border-slate-200 shadow-slate-200/50'
+                    : appTheme === 'indigo-midnight'
+                      ? 'bg-[#0e0a26] border-[#2b1f63] shadow-indigo-950/30'
+                      : 'bg-slate-950 border-slate-800 shadow-black/40'
+                }`}
+              >
               <button
                 type="button"
                 onClick={() => {

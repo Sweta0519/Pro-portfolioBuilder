@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Sparkles, CheckCircle, Briefcase, Zap, ShieldCheck } from 'lucide-react';
+import { Sparkles, CheckCircle, Briefcase, Zap, ShieldCheck, Menu, X } from 'lucide-react';
 
 export default function LandingPage() {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
       {/* Navigation */}
@@ -14,11 +16,47 @@ export default function LandingPage() {
           <div className="flex items-center gap-4">
             <a href="#features" className="text-sm font-medium text-slate-600 hover:text-indigo-600 hidden sm:block">Features</a>
             <a href="#pricing" className="text-sm font-medium text-slate-600 hover:text-indigo-600 hidden sm:block">Pricing</a>
-            <Link to="/app" className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors">
+            <Link to="/app" className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors hidden sm:block">
               Go to Dashboard
             </Link>
+            {/* Mobile Menu Toggle */}
+            <button 
+              className="sm:hidden p-2 text-slate-600 hover:text-indigo-600 active:scale-95 transition-transform"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
           </div>
         </div>
+
+        {/* Mobile Menu Dropdown */}
+        {isMobileMenuOpen && (
+          <div className="sm:hidden bg-white border-b border-slate-200 absolute w-full px-4 pt-2 pb-6 flex flex-col gap-2 shadow-2xl animate-fadeIn">
+            <a 
+              href="#features" 
+              className="block px-4 py-3 text-base font-bold text-slate-700 hover:text-indigo-600 hover:bg-slate-50 rounded-xl transition-colors"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Features
+            </a>
+            <a 
+              href="#pricing" 
+              className="block px-4 py-3 text-base font-bold text-slate-700 hover:text-indigo-600 hover:bg-slate-50 rounded-xl transition-colors"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Pricing
+            </a>
+            <div className="pt-2">
+              <Link 
+                to="/app" 
+                className="block w-full text-center bg-indigo-600 text-white px-4 py-3 rounded-xl text-base font-bold hover:bg-indigo-700 transition-all shadow-md active:scale-95"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                Go to Dashboard
+              </Link>
+            </div>
+          </div>
+        )}
       </nav>
 
       {/* Hero Section */}
