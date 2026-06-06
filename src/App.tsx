@@ -627,24 +627,21 @@ export default function App() {
   const [aiProvider, setAiProvider] = useState<AiProvider>(() => (localStorage.getItem('ai_provider') as AiProvider) || 'groq');
   const [openRouterModel, setOpenRouterModel] = useState<string>(() => {
     const stored = localStorage.getItem('openrouter_model');
-    const validModels = [
-      'meta-llama/llama-3.3-70b-instruct:free',
+    const VALID = [
       'google/gemma-4-31b-it:free',
-      'qwen/qwen3-coder:free',
+      'moonshotai/kimi-k2.6:free',
+      'google/gemma-4-26b-a4b-it:free',
+      'meta-llama/llama-3.3-70b-instruct:free',
       'qwen/qwen3-next-80b-a3b-instruct:free',
+      'qwen/qwen3-coder:free',
       'meta-llama/llama-3.2-3b-instruct:free',
       'nousresearch/hermes-3-llama-3.1-405b:free',
       'anthropic/claude-sonnet-4.6',
       'openai/gpt-4o',
       'google/gemini-2.5-flash',
-      'meta-llama/llama-3.3-70b-instruct'
+      'meta-llama/llama-3.3-70b-instruct',
     ];
-    if (stored && validModels.includes(stored)) {
-      return stored;
-    }
-    // Update legacy/empty stored value to default
-    localStorage.setItem('openrouter_model', 'meta-llama/llama-3.3-70b-instruct:free');
-    return 'meta-llama/llama-3.3-70b-instruct:free';
+    return stored && VALID.includes(stored) ? stored : 'google/gemma-4-31b-it:free';
   });
   const [connectionTest, setConnectionTest] = useState<{ testing: boolean; result: { ok: boolean; message: string } | null }>({ testing: false, result: null });
 
@@ -4715,13 +4712,15 @@ export default function Portfolio() {
                                   }}
                                   className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-[10px] text-slate-300 focus:outline-none focus:border-purple-500 transition-colors cursor-pointer"
                                 >
-                                  <optgroup label="🆓 Free — Verified Active">
-                                    <option value="meta-llama/llama-3.3-70b-instruct:free">Llama 3.3 70B (free) — Best all-round ✅</option>
-                                    <option value="google/gemma-4-31b-it:free">Gemma 4 31B (free) — Latest Google model ✅</option>
-                                    <option value="qwen/qwen3-coder:free">Qwen 3 Coder (free) — Strong programming ✅</option>
-                                    <option value="qwen/qwen3-next-80b-a3b-instruct:free">Qwen 3 Next 80B (free) — Multilingual ✅</option>
-                                    <option value="meta-llama/llama-3.2-3b-instruct:free">Llama 3.2 3B (free) — Fast & light ✅</option>
-                                    <option value="nousresearch/hermes-3-llama-3.1-405b:free">Hermes 3 405B (free) — Large reasoning ✅</option>
+                                  <optgroup label="🆓 Free — Verified Working (auto-fallback)">
+                                    <option value="google/gemma-4-31b-it:free">Gemma 4 31B (free) — Best reliability ✅</option>
+                                    <option value="moonshotai/kimi-k2.6:free">Kimi K2.6 (free) — Moonshot AI ✅</option>
+                                    <option value="google/gemma-4-26b-a4b-it:free">Gemma 4 26B (free) — Google fast ✅</option>
+                                    <option value="meta-llama/llama-3.3-70b-instruct:free">Llama 3.3 70B (free) — Meta flagship</option>
+                                    <option value="qwen/qwen3-next-80b-a3b-instruct:free">Qwen 3 Next 80B (free) — Multilingual</option>
+                                    <option value="qwen/qwen3-coder:free">Qwen 3 Coder (free) — Programming focus</option>
+                                    <option value="meta-llama/llama-3.2-3b-instruct:free">Llama 3.2 3B (free) — Fast & light</option>
+                                    <option value="nousresearch/hermes-3-llama-3.1-405b:free">Hermes 3 405B (free) — Large reasoning</option>
                                   </optgroup>
                                   <optgroup label="💎 Paid (credits required)">
                                     <option value="anthropic/claude-sonnet-4.6">Claude 3.5 Sonnet — Premium quality</option>
@@ -4730,7 +4729,7 @@ export default function Portfolio() {
                                     <option value="meta-llama/llama-3.3-70b-instruct">Llama 3.3 70B (paid) — Faster, no limits</option>
                                   </optgroup>
                                 </select>
-                                <p className="text-[9px] text-slate-600">If a model returns a 404 error, it may be temporarily unavailable — try Llama 3.3 70B which is the most stable.</p>
+                                <p className="text-[9px] text-slate-600">If a free model is rate-limited, the app automatically retries the next one. Top 3 (✅) had the highest success rate in live testing.</p>
                               </div>
                             )}
                             <div className="flex gap-2">

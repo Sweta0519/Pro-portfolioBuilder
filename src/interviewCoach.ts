@@ -1385,11 +1385,14 @@ async function fetchWithGroq(apiKey: string, prompt: string): Promise<GeminiEnha
   return parseInsightsResponse(textContent);
 }
 
+// Models confirmed working (free tier) — ordered by reliability
 const VALID_OPENROUTER_MODELS = [
-  'meta-llama/llama-3.3-70b-instruct:free',
   'google/gemma-4-31b-it:free',
-  'qwen/qwen3-coder:free',
+  'moonshotai/kimi-k2.6:free',
+  'google/gemma-4-26b-a4b-it:free',
+  'meta-llama/llama-3.3-70b-instruct:free',
   'qwen/qwen3-next-80b-a3b-instruct:free',
+  'qwen/qwen3-coder:free',
   'meta-llama/llama-3.2-3b-instruct:free',
   'nousresearch/hermes-3-llama-3.1-405b:free',
   'anthropic/claude-sonnet-4.6',
@@ -1398,17 +1401,30 @@ const VALID_OPENROUTER_MODELS = [
   'meta-llama/llama-3.3-70b-instruct'
 ];
 
+// Free models to try as fallback if primary is rate-limited
+const FREE_MODEL_FALLBACK_CHAIN = [
+  'google/gemma-4-31b-it:free',
+  'moonshotai/kimi-k2.6:free',
+  'google/gemma-4-26b-a4b-it:free',
+  'meta-llama/llama-3.3-70b-instruct:free',
+  'qwen/qwen3-next-80b-a3b-instruct:free',
+];
+
 function getValidOpenRouterModel(): string {
   const model = localStorage.getItem('openrouter_model');
   if (!model || !VALID_OPENROUTER_MODELS.includes(model)) {
-    return 'meta-llama/llama-3.3-70b-instruct:free';
+    return 'google/gemma-4-31b-it:free';
   }
   return model;
 }
 
-async function fetchWithOpenRouter(apiKey: string, prompt: string): Promise<GeminiEnhancedData | null> {
-  const model = getValidOpenRouterModel();
-  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+async function callOpenRouterModel(
+  apiKey: string,
+  model: string,
+  messages: { role: string; content: string }[],
+  maxTokens = 2000
+): Promise<Response> {
+  return fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -1418,26 +1434,73 @@ async function fetchWithOpenRouter(apiKey: string, prompt: string): Promise<Gemi
     },
     body: JSON.stringify({
       model,
-      messages: [
-        { role: 'system', content: 'You are a career research assistant. Always respond with valid JSON only.' },
-        { role: 'user', content: prompt },
-      ],
+      messages,
       temperature: 0.3,
-      max_tokens: 3500,
+      max_tokens: maxTokens,
     }),
   });
+}
 
-  if (!response.ok) {
-    let errorMsg = '';
-    try { const errJson = await response.json(); errorMsg = errJson?.error?.message || ''; } catch {}
-    if (response.status === 429) throw new Error('⏳ OpenRouter rate limit — wait a moment and try again.');
-    if (response.status === 401) throw new Error('🔑 Invalid OpenRouter API key. Get one free at openrouter.ai/keys');
-    throw new Error(`OpenRouter API error ${response.status}${errorMsg ? `: ${errorMsg}` : ''}`);
+async function fetchWithOpenRouter(apiKey: string, prompt: string): Promise<GeminiEnhancedData | null> {
+  const primaryModel = getValidOpenRouterModel();
+  const messages = [
+    { role: 'system', content: 'You are a career research assistant. Always respond with valid JSON only.' },
+    { role: 'user', content: prompt },
+  ];
+
+  // Build ordered list of models to try: primary model first, then fallback chain
+  const isPaidModel = !primaryModel.includes(':free');
+  const modelsToTry: string[] = isPaidModel
+    ? [primaryModel]  // Paid models — no fallback needed
+    : [
+        primaryModel,
+        ...FREE_MODEL_FALLBACK_CHAIN.filter(m => m !== primaryModel),
+      ];
+
+  let lastError: Error | null = null;
+
+  for (const model of modelsToTry) {
+    try {
+      const response = await callOpenRouterModel(apiKey, model, messages);
+
+      if (response.ok) {
+        const data = await response.json();
+        const textContent = data.choices?.[0]?.message?.content || '';
+        return parseInsightsResponse(textContent);
+      }
+
+      // Parse error
+      let errorMsg = '';
+      let errorCode = response.status;
+      try {
+        const errJson = await response.json();
+        errorMsg = errJson?.error?.message || '';
+        errorCode = errJson?.error?.code || response.status;
+      } catch {}
+
+      if (response.status === 401) {
+        throw new Error('🔑 Invalid OpenRouter API key. Get one free at openrouter.ai/keys');
+      }
+
+      if (response.status === 429 || errorCode === 429) {
+        // Rate limited on this model — try next in fallback chain
+        console.warn(`[OpenRouter] Model ${model} rate-limited (429), trying next fallback...`);
+        lastError = new Error(`Model ${model} rate-limited`);
+        continue;
+      }
+
+      // Other non-retriable error
+      throw new Error(`OpenRouter API error ${response.status}${errorMsg ? `: ${errorMsg}` : ''}`);
+    } catch (err) {
+      if ((err as Error).message?.includes('Invalid OpenRouter')) throw err;
+      lastError = err as Error;
+      // If it's not a 429/rate-limit we should stop
+      if (!(err as Error).message?.includes('rate-limited')) throw err;
+    }
   }
 
-  const data = await response.json();
-  const textContent = data.choices?.[0]?.message?.content || '';
-  return parseInsightsResponse(textContent);
+  // All models exhausted
+  throw new Error('⏳ All free OpenRouter models are currently rate-limited. Wait a moment and try again, or select a paid model.');
 }
 
 export async function fetchGeminiInsights(
@@ -1471,34 +1534,54 @@ async function callAiChat(
   userPrompt: string
 ): Promise<string> {
   if (provider === 'groq' || provider === 'openrouter') {
-    const url = provider === 'groq'
-      ? 'https://api.groq.com/openai/v1/chat/completions'
-      : 'https://openrouter.ai/api/v1/chat/completions';
-    const model = provider === 'groq'
-      ? 'llama-3.3-70b-versatile'
-      : getValidOpenRouterModel();
-    const extraHeaders = provider === 'openrouter'
-      ? { 'HTTP-Referer': 'https://pro-portfolio-builder.vercel.app', 'X-Title': 'Pro Portfolio Builder' }
-      : {};
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}`, ...extraHeaders },
-      body: JSON.stringify({
-        model,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt },
-        ],
-        temperature: 0.5,
-        max_tokens: 2048,
-      }),
-    });
-    if (!response.ok) {
-      const errText = await response.text();
-      throw new Error(`${provider === 'groq' ? 'Groq' : 'OpenRouter'} API error ${response.status}: ${errText}`);
+    if (provider === 'groq') {
+      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+        body: JSON.stringify({
+          model: 'llama-3.3-70b-versatile',
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: userPrompt },
+          ],
+          temperature: 0.5,
+          max_tokens: 2048,
+        }),
+      });
+      if (!response.ok) {
+        const errText = await response.text();
+        throw new Error(`Groq API error ${response.status}: ${errText}`);
+      }
+      const data = await response.json();
+      return data.choices?.[0]?.message?.content || '';
     }
-    const data = await response.json();
-    return data.choices?.[0]?.message?.content || '';
+
+    // OpenRouter with automatic fallback on 429
+    const primaryModel = getValidOpenRouterModel();
+    const isPaidModel = !primaryModel.includes(':free');
+    const modelsToTry = isPaidModel
+      ? [primaryModel]
+      : [primaryModel, ...FREE_MODEL_FALLBACK_CHAIN.filter(m => m !== primaryModel)];
+    const messages = [
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userPrompt },
+    ];
+
+    for (const model of modelsToTry) {
+      const response = await callOpenRouterModel(apiKey, model, messages, 2048);
+      if (response.ok) {
+        const data = await response.json();
+        return data.choices?.[0]?.message?.content || '';
+      }
+      let errCode = response.status;
+      try { const j = await response.json(); errCode = j?.error?.code || response.status; } catch {}
+      if (response.status === 429 || errCode === 429) {
+        console.warn(`[OpenRouter chat] Model ${model} rate-limited, trying fallback...`);
+        continue;
+      }
+      throw new Error(`OpenRouter API error ${response.status}`);
+    }
+    throw new Error('⏳ All free OpenRouter models are rate-limited. Wait a moment and try again.');
   } else {
     // Gemini 2.0 Flash
     const body = {
