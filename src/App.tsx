@@ -629,15 +629,14 @@ export default function App() {
     const stored = localStorage.getItem('openrouter_model');
     const validModels = [
       'meta-llama/llama-3.3-70b-instruct:free',
-      'deepseek/deepseek-r1:free',
-      'deepseek/deepseek-r1-distill-llama-70b:free',
-      'google/gemma-3-27b-it:free',
-      'mistralai/mistral-7b-instruct:free',
-      'qwen/qwen-2.5-72b-instruct:free',
-      'microsoft/phi-3-mini-128k-instruct:free',
-      'anthropic/claude-3.5-sonnet',
+      'google/gemma-4-31b-it:free',
+      'qwen/qwen3-coder:free',
+      'qwen/qwen3-next-80b-a3b-instruct:free',
+      'meta-llama/llama-3.2-3b-instruct:free',
+      'nousresearch/hermes-3-llama-3.1-405b:free',
+      'anthropic/claude-sonnet-4.6',
       'openai/gpt-4o',
-      'google/gemini-2.0-flash-001',
+      'google/gemini-2.5-flash',
       'meta-llama/llama-3.3-70b-instruct'
     ];
     if (stored && validModels.includes(stored)) {
@@ -4716,19 +4715,18 @@ export default function Portfolio() {
                                   }}
                                   className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-[10px] text-slate-300 focus:outline-none focus:border-purple-500 transition-colors cursor-pointer"
                                 >
-                                  <optgroup label="🆓 Free — Verified Working">
+                                  <optgroup label="🆓 Free — Verified Active">
                                     <option value="meta-llama/llama-3.3-70b-instruct:free">Llama 3.3 70B (free) — Best all-round ✅</option>
-                                    <option value="deepseek/deepseek-r1:free">DeepSeek R1 (free) — Best reasoning ✅</option>
-                                    <option value="deepseek/deepseek-r1-distill-llama-70b:free">DeepSeek R1 Distill 70B (free) — Fast reasoning ✅</option>
-                                    <option value="google/gemma-3-27b-it:free">Gemma 3 27B (free) — Google open model ✅</option>
-                                    <option value="mistralai/mistral-7b-instruct:free">Mistral 7B (free) — Lightweight & fast ✅</option>
-                                    <option value="qwen/qwen-2.5-72b-instruct:free">Qwen 2.5 72B (free) — Strong multilingual ✅</option>
-                                    <option value="microsoft/phi-3-mini-128k-instruct:free">Phi-3 Mini 128K (free) — Long context ✅</option>
+                                    <option value="google/gemma-4-31b-it:free">Gemma 4 31B (free) — Latest Google model ✅</option>
+                                    <option value="qwen/qwen3-coder:free">Qwen 3 Coder (free) — Strong programming ✅</option>
+                                    <option value="qwen/qwen3-next-80b-a3b-instruct:free">Qwen 3 Next 80B (free) — Multilingual ✅</option>
+                                    <option value="meta-llama/llama-3.2-3b-instruct:free">Llama 3.2 3B (free) — Fast & light ✅</option>
+                                    <option value="nousresearch/hermes-3-llama-3.1-405b:free">Hermes 3 405B (free) — Large reasoning ✅</option>
                                   </optgroup>
                                   <optgroup label="💎 Paid (credits required)">
-                                    <option value="anthropic/claude-3.5-sonnet">Claude 3.5 Sonnet — Premium quality</option>
+                                    <option value="anthropic/claude-sonnet-4.6">Claude 3.5 Sonnet — Premium quality</option>
                                     <option value="openai/gpt-4o">GPT-4o — OpenAI flagship</option>
-                                    <option value="google/gemini-2.0-flash-001">Gemini 2.0 Flash — Google paid tier</option>
+                                    <option value="google/gemini-2.5-flash">Gemini 2.5 Flash — Google fast model</option>
                                     <option value="meta-llama/llama-3.3-70b-instruct">Llama 3.3 70B (paid) — Faster, no limits</option>
                                   </optgroup>
                                 </select>
