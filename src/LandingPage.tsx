@@ -22,19 +22,22 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="pt-32 pb-20 px-4 text-center">
-        <div className="max-w-4xl mx-auto">
-          <h1 className="text-5xl sm:text-6xl font-extrabold text-slate-900 tracking-tight leading-tight mb-6">
-            Land your dream job with a <span className="text-indigo-600">standout portfolio</span>
+      <section className="pt-32 pb-20 px-4 text-center relative overflow-hidden">
+        {/* Glow Effect */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[600px] bg-gradient-to-r from-indigo-500/20 to-violet-500/20 blur-[120px] rounded-full -z-10 pointer-events-none"></div>
+        
+        <div className="max-w-4xl mx-auto relative z-10">
+          <h1 className="text-5xl sm:text-6xl md:text-7xl font-extrabold text-slate-900 tracking-tight leading-tight mb-6">
+            Land your dream job with a <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-violet-600">standout portfolio</span>
           </h1>
-          <p className="text-xl text-slate-600 mb-10 max-w-2xl mx-auto">
+          <p className="text-xl text-slate-600 mb-10 max-w-2xl mx-auto leading-relaxed">
             Upload your resume and instantly generate a stunning, ATS-optimized portfolio website. Prepare for your interview with our AI recruiter coach.
           </p>
-          <div className="flex justify-center gap-4">
-            <Link to="/app" className="bg-indigo-600 text-white px-8 py-4 rounded-xl text-lg font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-600/20 transition-all hover:-translate-y-1">
+          <div className="flex flex-col sm:flex-row justify-center gap-4">
+            <Link to="/app" className="bg-indigo-600 text-white px-8 py-4 rounded-xl text-lg font-bold hover:bg-indigo-700 shadow-xl shadow-indigo-500/25 transition-all active:scale-95 hover:-translate-y-1">
               Start Building for Free
             </Link>
-            <a href="#features" className="bg-white text-slate-700 px-8 py-4 rounded-xl text-lg font-bold hover:bg-slate-50 border border-slate-200 transition-all hover:-translate-y-1">
+            <a href="#features" className="bg-white/80 backdrop-blur-sm text-slate-700 px-8 py-4 rounded-xl text-lg font-bold hover:bg-white border border-slate-200 transition-all active:scale-95 hover:-translate-y-1 shadow-sm">
               See How It Works
             </a>
           </div>
@@ -83,29 +86,29 @@ export default function LandingPage() {
             <p className="text-lg text-slate-600">Start for free, upgrade when you need to stand out.</p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto items-center">
             {/* Free Tier */}
-            <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm">
+            <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-sm transition-all hover:shadow-md">
               <h3 className="text-2xl font-bold mb-2">Free</h3>
-              <p className="text-slate-500 mb-6">Perfect for standard applications.</p>
+              <p className="text-slate-600 mb-6">Perfect for standard applications.</p>
               <div className="text-4xl font-extrabold mb-8">$0</div>
               
               <ul className="space-y-4 mb-8">
-                <li className="flex items-center gap-3"><CheckCircle className="w-5 h-5 text-emerald-500" /> <span>Resume PDF Parsing</span></li>
-                <li className="flex items-center gap-3"><CheckCircle className="w-5 h-5 text-emerald-500" /> <span>ATS Resume Scoring</span></li>
-                <li className="flex items-center gap-3"><CheckCircle className="w-5 h-5 text-emerald-500" /> <span>1 Standard Theme</span></li>
-                <li className="flex items-center gap-3"><CheckCircle className="w-5 h-5 text-emerald-500" /> <span>HTML Single File Export</span></li>
+                <li className="flex items-center gap-3"><CheckCircle className="w-5 h-5 text-emerald-500" /> <span className="text-slate-700">Resume PDF Parsing</span></li>
+                <li className="flex items-center gap-3"><CheckCircle className="w-5 h-5 text-emerald-500" /> <span className="text-slate-700">ATS Resume Scoring</span></li>
+                <li className="flex items-center gap-3"><CheckCircle className="w-5 h-5 text-emerald-500" /> <span className="text-slate-700">1 Standard Theme</span></li>
+                <li className="flex items-center gap-3"><CheckCircle className="w-5 h-5 text-emerald-500" /> <span className="text-slate-700">HTML Single File Export</span></li>
               </ul>
-              <Link to="/app" className="block w-full py-3 px-4 bg-slate-100 text-slate-900 font-bold text-center rounded-xl hover:bg-slate-200 transition-colors">
+              <Link to="/app" className="block w-full py-3 px-4 bg-slate-100 text-slate-900 font-bold text-center rounded-xl hover:bg-slate-200 transition-colors active:scale-95">
                 Get Started Free
               </Link>
             </div>
 
             {/* Pro Tier */}
-            <div className="bg-indigo-900 text-white rounded-3xl p-8 border border-indigo-800 shadow-2xl shadow-indigo-900/20 relative overflow-hidden">
-              <div className="absolute top-0 right-0 bg-indigo-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">POPULAR</div>
+            <div className="bg-indigo-900 text-white rounded-3xl p-8 border-2 border-indigo-400 shadow-2xl shadow-indigo-500/20 relative overflow-hidden md:scale-105 z-10">
+              <div className="absolute top-0 right-0 bg-gradient-to-l from-indigo-400 to-violet-500 text-white text-xs font-bold px-4 py-1.5 rounded-bl-xl shadow-lg">MOST POPULAR</div>
               <h3 className="text-2xl font-bold mb-2">Pro</h3>
-              <p className="text-indigo-200 mb-6">For serious job seekers.</p>
+              <p className="text-indigo-200 mb-6">For serious job seekers who want to stand out.</p>
               <div className="text-4xl font-extrabold mb-8">$19 <span className="text-xl text-indigo-300 font-medium">lifetime</span></div>
               
               <ul className="space-y-4 mb-8">
@@ -114,10 +117,17 @@ export default function LandingPage() {
                 <li className="flex items-center gap-3"><CheckCircle className="w-5 h-5 text-indigo-400" /> <span>Unlimited AI Mock Interviews</span></li>
                 <li className="flex items-center gap-3"><CheckCircle className="w-5 h-5 text-indigo-400" /> <span>React Source Code Export</span></li>
               </ul>
-              <Link to="/app" className="block w-full py-3 px-4 bg-white text-indigo-900 font-bold text-center rounded-xl hover:bg-indigo-50 transition-colors">
+              <Link to="/app" className="block w-full py-3 px-4 bg-white text-indigo-900 font-bold text-center rounded-xl hover:bg-indigo-50 transition-all active:scale-95 shadow-lg shadow-white/10">
                 Upgrade to Pro
               </Link>
             </div>
+          </div>
+          
+          <div className="mt-16 text-center">
+             <div className="inline-flex items-center gap-2 bg-slate-200/50 px-4 py-2 rounded-full text-sm font-medium text-slate-700">
+               <ShieldCheck className="w-4 h-4 text-emerald-600" />
+               Secure payment via Stripe. 14-day money-back guarantee.
+             </div>
           </div>
         </div>
       </section>

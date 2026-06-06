@@ -2357,7 +2357,7 @@ export default function Portfolio() {
       className={`flex flex-col h-screen bg-slate-900 text-slate-100 select-none font-sans antialiased overflow-hidden theme-${appTheme}`}
     >
       {/* TOP HEADER */}
-      <header className="flex flex-shrink-0 items-center justify-between px-4 sm:px-6 h-16 bg-slate-950 border-b border-slate-800 relative z-40">
+      <header className="flex flex-shrink-0 items-center justify-between px-4 sm:px-6 h-16 bg-slate-950/80 backdrop-blur-md border-b border-slate-800 relative z-40">
         <div className="flex items-center gap-3">
           <img
             src="/logo.png"
@@ -2435,7 +2435,7 @@ export default function Portfolio() {
                   setAuthError('');
                   setShowAuthModal(true);
                 }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-550 text-white transition-all shadow-md cursor-pointer"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white transition-all shadow-lg shadow-indigo-500/25 active:scale-95 cursor-pointer"
               >
                 🔒 Sign In
               </button>
@@ -8578,7 +8578,7 @@ export default function Portfolio() {
                     setVercelError('');
                     setShowVercelModal(true);
                   }}
-                  className="flex items-center gap-1.5 bg-black hover:bg-slate-955 border border-slate-800 text-white px-4 py-2 rounded-xl text-sm font-black transition-all cursor-pointer shadow-lg hover:border-slate-700"
+                  className="flex items-center gap-1.5 bg-black hover:bg-slate-955 border border-slate-800 text-white px-4 py-2 rounded-xl text-sm font-black transition-all cursor-pointer shadow-lg shadow-white/5 active:scale-95 hover:border-slate-700"
                 >
                   <svg className="w-4 h-4 fill-current text-white" viewBox="0 0 512 512">
                     <path d="M256,48,496,464H16Z" />
@@ -8589,7 +8589,7 @@ export default function Portfolio() {
                 <button
                   onClick={handleZipDownload}
                   disabled={isZipping}
-                  className="flex items-center gap-1.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-md cursor-pointer disabled:opacity-50"
+                  className="flex items-center gap-1.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition-all shadow-lg shadow-indigo-500/25 active:scale-95 cursor-pointer disabled:opacity-50"
                 >
                   {copiedZip ? <Check className="w-4 h-4 text-emerald-300 animate-pulse" /> : <Download className="w-4 h-4" />}
                   <span>{isZipping ? 'Creating ZIP...' : copiedZip ? 'Downloaded ZIP!' : 'Download Project (.zip)'}</span>
@@ -8597,7 +8597,7 @@ export default function Portfolio() {
 
                 <button
                   onClick={() => copyToClipboard(getExportCode(), 'code')}
-                  className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-4 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer"
+                  className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-4 py-2 rounded-xl text-sm font-semibold transition-all cursor-pointer active:scale-95 hover:shadow-md hover:shadow-slate-900/50"
                 >
                   {copiedCode ? <Check className="w-4 h-4 text-emerald-400" /> : <FileCode className="w-4 h-4" />}
                   <span>{copiedCode ? 'Copied!' : 'React Code'}</span>
