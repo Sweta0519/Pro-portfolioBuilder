@@ -82,7 +82,7 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Right: Live dashboard preview — real product, not a fake mockup */}
+          {/* Right: Real video preview of the dashboard in action */}
           <div className="hidden lg:block relative">
             <div className="rounded-2xl overflow-hidden border border-slate-200 shadow-2xl shadow-black/10 bg-slate-900">
               {/* Browser chrome bar */}
@@ -94,23 +94,18 @@ export default function LandingPage() {
                 </div>
                 <div className="flex-1 text-center text-xs text-slate-400 font-mono">pro-portfolio-builder.vercel.app/app</div>
               </div>
-              {/* Live iframe preview — pointer-events disabled so users can't interact */}
-              <div className="relative w-full overflow-hidden" style={{ height: '380px' }}>
-                <iframe
-                  src="/app"
-                  title="ProPortfolio Dashboard Preview"
-                  className="absolute top-0 left-0 border-0"
-                  style={{
-                    width: '1920px',
-                    height: '1080px',
-                    transform: 'scale(0.35)',
-                    transformOrigin: 'top left',
-                    pointerEvents: 'none',
-                  }}
-                  tabIndex={-1}
-                  loading="lazy"
-                />
-              </div>
+              {/* Autoplay looping video of the real dashboard */}
+              <video
+                autoPlay
+                loop
+                muted
+                playsInline
+                className="w-full h-auto"
+                poster=""
+              >
+                <source src="/dashboard-demo.webp" type="video/webp" />
+                Your browser does not support the video tag.
+              </video>
             </div>
           </div>
         </div>
