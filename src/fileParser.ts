@@ -1,16 +1,36 @@
 import * as pdfjsLib from 'pdfjs-dist';
 import * as mammoth from 'mammoth';
 
-// Use CDN for the worker — vite-plugin-singlefile inlines everything,
-// so the local worker .mjs file doesn't exist as a separate asset.
-// This CDN approach works reliably on both desktop and mobile browsers.
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+// Use jsDelivr CDN for the worker — cdnjs doesn't host specific sub-versions or formats (returning 404).
+// jsDelivr NPM integration works perfectly and reliably handles standard .min.mjs files.
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+
+/**
+ * Helper to wrap a promise in a timeout
+ */
+function withTimeout<T>(promise: Promise<T>, ms: number, errorMessage: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error(errorMessage));
+    }, ms);
+
+    promise
+      .then((res) => {
+        clearTimeout(timer);
+        resolve(res);
+      })
+      .catch((err) => {
+        clearTimeout(timer);
+        reject(err);
+      });
+  });
+}
 
 /**
  * Extracts raw text from a PDF file
  */
 export async function extractTextFromPDF(file: File): Promise<string> {
-  try {
+  const parsePromise = (async () => {
     const arrayBuffer = await file.arrayBuffer();
     const loadingTask = pdfjsLib.getDocument({ data: arrayBuffer });
     const pdf = await loadingTask.promise;
@@ -54,9 +74,18 @@ export async function extractTextFromPDF(file: File): Promise<string> {
     }
 
     return fullText;
-  } catch (error) {
+  })();
+
+  try {
+    // 10 second timeout for the entire PDF parsing process
+    return await withTimeout(
+      parsePromise,
+      10000,
+      'PDF parsing timed out. The file might be too large or the library worker failed to load. Please try copy-pasting the text instead.'
+    );
+  } catch (error: any) {
     console.error('PDF extraction error:', error);
-    throw new Error('Failed to extract text from PDF. Please try copy-pasting instead.');
+    throw new Error(error.message || 'Failed to extract text from PDF. Please try copy-pasting instead.');
   }
 }
 
