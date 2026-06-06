@@ -6070,7 +6070,6 @@ export default function Portfolio() {
                                             </div>
                                           </div>
                                         )}
-
                                         {/* Recruiter Reply Card */}
                                         {mockMode === 'reviewed' && !isRecruiterTyping && recruiterReplies[currentQ.id] && (
                                           <div className="p-3.5 rounded-xl bg-violet-955/15 border border-violet-900/30 flex gap-3 items-start animate-fadeIn">
@@ -6086,6 +6085,54 @@ export default function Portfolio() {
 
                                         {/* Candidate Answer Section */}
                                         <div className="space-y-3 pt-1">
+                                          {mockMode === 'answering' && geminiApiKey.trim() && (
+                                            <div className="flex justify-between items-center bg-slate-900/50 p-2 rounded-xl border border-slate-850">
+                                              <div className="text-[10px] text-slate-400 pl-2">
+                                                <span className="font-bold text-violet-400">🧠 AI Answer Assistant</span>: Need help? Reveal custom ideal answer.
+                                              </div>
+                                              <button
+                                                type="button"
+                                                onClick={async () => {
+                                                  if (loadingIdealAnswer) return;
+                                                  const cached = idealAnswers[currentQ.id];
+                                                  if (cached) {
+                                                    setShowIdealAnswer(p => ({ ...p, [currentQ.id]: !p[currentQ.id] }));
+                                                    return;
+                                                  }
+                                                  setLoadingIdealAnswer(true);
+                                                  try {
+                                                    const ans = await generateIdealAnswer(
+                                                      geminiApiKey,
+                                                      aiProvider,
+                                                      currentQ.question,
+                                                      interviewPositionName || interviewPlan.context.role,
+                                                      resumeData,
+                                                      false,
+                                                      questions
+                                                        .filter(prevQ => prevQ.id !== currentQ.id && mockAnswers[prevQ.id])
+                                                        .map(prevQ => ({ question: prevQ.question, answer: mockAnswers[prevQ.id] }))
+                                                    );
+                                                    setIdealAnswers(p => ({ ...p, [currentQ.id]: ans }));
+                                                    setShowIdealAnswer(p => ({ ...p, [currentQ.id]: true }));
+                                                  } catch (err: any) {
+                                                    alert(`AI Error: ${err?.message || 'Failed to generate answer'}`);
+                                                  } finally {
+                                                    setLoadingIdealAnswer(false);
+                                                  }
+                                                }}
+                                                className="px-2.5 py-0.5 rounded bg-violet-650 hover:bg-violet-600 text-[9px] font-bold text-white transition-colors"
+                                              >
+                                                {loadingIdealAnswer ? '⏳ Generating...' : showIdealAnswer[currentQ.id] ? 'Hide Ideal' : 'Reveal Ideal'}
+                                              </button>
+                                            </div>
+                                          )}
+
+                                          {mockMode === 'answering' && showIdealAnswer[currentQ.id] && idealAnswers[currentQ.id] && (
+                                            <div className="p-3 rounded-xl bg-violet-500/5 border border-violet-500/20 text-[11px] text-violet-200 leading-relaxed animate-fadeIn">
+                                              {idealAnswers[currentQ.id]}
+                                            </div>
+                                          )}
+
                                           <div className="flex items-center justify-between">
                                             <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Candidate Draft Answer</span>
                                             
