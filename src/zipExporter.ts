@@ -10,55 +10,55 @@ export interface VercelFile {
 export function getPortfolioFiles(resumeData: ResumeData, theme: ThemeSettings): VercelFile[] {
   // 1. Define the package.json configurations for a standard React + Vite + Tailwind CSS template
   const packageJson = {
-    name: "react-vite-tailwind-portfolio",
+    name: 'react-vite-tailwind-portfolio',
     private: true,
-    version: "1.0.0",
-    type: "module",
+    version: '1.0.0',
+    type: 'module',
     scripts: {
-      "dev": "vite",
-      "build": "vite build",
-      "preview": "vite preview"
+      dev: 'vite',
+      build: 'vite build',
+      preview: 'vite preview',
     },
     dependencies: {
-      "react": "^19.0.0",
-      "react-dom": "^19.0.0",
-      "lucide-react": "^0.469.0"
+      react: '^19.0.0',
+      'react-dom': '^19.0.0',
+      'lucide-react': '^0.469.0',
     },
     devDependencies: {
-      "@types/react": "^19.0.0",
-      "@types/react-dom": "^19.0.0",
-      "@vitejs/plugin-react": "^4.3.4",
-      "typescript": "^5.6.2",
-      "vite": "^6.0.5",
-      "tailwindcss": "^4.0.0",
-      "@tailwindcss/vite": "^4.0.0"
-    }
+      '@types/react': '^19.0.0',
+      '@types/react-dom': '^19.0.0',
+      '@vitejs/plugin-react': '^4.3.4',
+      typescript: '^5.6.2',
+      vite: '^6.0.5',
+      tailwindcss: '^4.0.0',
+      '@tailwindcss/vite': '^4.0.0',
+    },
   };
 
   // 2. Define the tsconfig.json
   const tsconfigJson = {
     compilerOptions: {
-      target: "ES2020",
+      target: 'ES2020',
       useDefineForClassFields: true,
-      lib: ["DOM", "DOM.Iterable", "ES2020"],
-      module: "ESNext",
+      lib: ['DOM', 'DOM.Iterable', 'ES2020'],
+      module: 'ESNext',
       skipLibCheck: true,
 
       /* Bundler mode */
-      moduleResolution: "bundler",
+      moduleResolution: 'bundler',
       allowImportingTsExtensions: true,
       resolveJsonModule: true,
       isolatedModules: true,
       noEmit: true,
-      jsx: "react-jsx",
+      jsx: 'react-jsx',
 
       /* Linting */
       strict: true,
       noUnusedLocals: false,
       noUnusedParameters: false,
-      noFallthroughCasesInSwitch: true
+      noFallthroughCasesInSwitch: true,
     },
-    include: ["src"]
+    include: ['src'],
   };
 
   // 3. Define the vite.config.ts
@@ -1312,30 +1312,35 @@ export default function App() {
 `;
 
   return [
-    { file: "package.json", data: JSON.stringify(packageJson, null, 2) },
-    { file: "tsconfig.json", data: JSON.stringify(tsconfigJson, null, 2) },
-    { file: "vite.config.ts", data: viteConfig },
-    { file: "index.html", data: indexHtml },
-    { file: "src/main.tsx", data: mainTsx },
-    { file: "src/index.css", data: indexCss },
-    { file: "src/App.tsx", data: appTsx },
+    { file: 'package.json', data: JSON.stringify(packageJson, null, 2) },
+    { file: 'tsconfig.json', data: JSON.stringify(tsconfigJson, null, 2) },
+    { file: 'vite.config.ts', data: viteConfig },
+    { file: 'index.html', data: indexHtml },
+    { file: 'src/main.tsx', data: mainTsx },
+    { file: 'src/index.css', data: indexCss },
+    { file: 'src/App.tsx', data: appTsx },
     {
-      file: "vercel.json",
-      data: JSON.stringify({
-        framework: "vite",
-        rewrites: [
-          { source: "/(.*)", destination: "/index.html" }
-        ]
-      }, null, 2)
-    }
+      file: 'vercel.json',
+      data: JSON.stringify(
+        {
+          framework: 'vite',
+          rewrites: [{ source: '/(.*)', destination: '/index.html' }],
+        },
+        null,
+        2
+      ),
+    },
   ];
 }
 
-export async function generatePortfolioZip(resumeData: ResumeData, theme: ThemeSettings): Promise<Blob> {
+export async function generatePortfolioZip(
+  resumeData: ResumeData,
+  theme: ThemeSettings
+): Promise<Blob> {
   const zip = new JSZip();
   const files = getPortfolioFiles(resumeData, theme);
   for (const item of files) {
     zip.file(item.file, item.data);
   }
-  return await zip.generateAsync({ type: "blob" });
+  return await zip.generateAsync({ type: 'blob' });
 }

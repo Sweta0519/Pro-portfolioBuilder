@@ -1,9 +1,31 @@
-import { Document, Packer, Paragraph, TextRun, AlignmentType, Table, TableRow, TableCell, BorderStyle, WidthType } from 'docx';
+import {
+  Document,
+  Packer,
+  Paragraph,
+  TextRun,
+  AlignmentType,
+  Table,
+  TableRow,
+  TableCell,
+  BorderStyle,
+  WidthType,
+} from 'docx';
 import { ResumeData } from './types';
 
-export async function generateWordDocument(data: ResumeData, templateId: string = 'classic'): Promise<Blob> {
+export async function generateWordDocument(
+  data: ResumeData,
+  templateId: string = 'classic'
+): Promise<Blob> {
   // Safe fallbacks for all data fields to prevent silent crashes
-  const personal = data?.personal || { name: 'Resume', title: '', location: '', phone: '', email: '', bio: '', socials: {} };
+  const personal = data?.personal || {
+    name: 'Resume',
+    title: '',
+    location: '',
+    phone: '',
+    email: '',
+    bio: '',
+    socials: {},
+  };
   const socials = personal.socials || {};
   const experience = data?.experience || [];
   const skills = data?.skills || [];
@@ -90,14 +112,16 @@ export async function generateWordDocument(data: ResumeData, templateId: string 
             font: bodyFont,
             color: '475569',
           }),
-          ...(socials.linkedin ? [
-            new TextRun({
-              text: `   |   LinkedIn: ${socials.linkedin.replace('https://', '')}`,
-              size: 18,
-              font: bodyFont,
-              color: '475569',
-            })
-          ] : [])
+          ...(socials.linkedin
+            ? [
+                new TextRun({
+                  text: `   |   LinkedIn: ${socials.linkedin.replace('https://', '')}`,
+                  size: 18,
+                  font: bodyFont,
+                  color: '475569',
+                }),
+              ]
+            : []),
         ],
       })
     );
@@ -150,7 +174,7 @@ export async function generateWordDocument(data: ResumeData, templateId: string 
     if (experience.length > 0) {
       documentChildren.push(addClassicHeading('Professional Experience'));
 
-      experience.forEach(exp => {
+      experience.forEach((exp) => {
         documentChildren.push(
           new Paragraph({
             spacing: { before: 80, after: 40 },
@@ -185,20 +209,21 @@ export async function generateWordDocument(data: ResumeData, templateId: string 
             ],
           }),
           // Bullet descriptions
-          ...exp.description.map(bullet =>
-            new Paragraph({
-              bullet: { level: 0 },
-              spacing: { after: 60 },
-              alignment: AlignmentType.JUSTIFIED,
-              children: [
-                new TextRun({
-                  text: bullet,
-                  size: 20,
-                  font: bodyFont,
-                  color: '334155',
-                }),
-              ],
-            })
+          ...exp.description.map(
+            (bullet) =>
+              new Paragraph({
+                bullet: { level: 0 },
+                spacing: { after: 60 },
+                alignment: AlignmentType.JUSTIFIED,
+                children: [
+                  new TextRun({
+                    text: bullet,
+                    size: 20,
+                    font: bodyFont,
+                    color: '334155',
+                  }),
+                ],
+              })
           ),
           new Paragraph({ spacing: { after: 120 } })
         );
@@ -211,17 +236,29 @@ export async function generateWordDocument(data: ResumeData, templateId: string 
         spacing: { before: 120, after: 120 },
         border: { bottom: { color: '0F172A', space: 4, style: BorderStyle.SINGLE, size: 12 } },
         children: [
-          new TextRun({ text: 'EDUCATION', bold: true, size: 21, font: headingFont, color: primaryColor }),
+          new TextRun({
+            text: 'EDUCATION',
+            bold: true,
+            size: 21,
+            font: headingFont,
+            color: primaryColor,
+          }),
         ],
-      })
+      }),
     ];
 
-    education.forEach(edu => {
+    education.forEach((edu) => {
       educationChildren.push(
         new Paragraph({
           spacing: { before: 60, after: 40 },
           children: [
-            new TextRun({ text: edu.degree, bold: true, size: 20, font: headingFont, color: '1E293B' }),
+            new TextRun({
+              text: edu.degree,
+              bold: true,
+              size: 20,
+              font: headingFont,
+              color: '1E293B',
+            }),
           ],
         }),
         new Paragraph({
@@ -233,7 +270,13 @@ export async function generateWordDocument(data: ResumeData, templateId: string 
         new Paragraph({
           spacing: { after: 120 },
           children: [
-            new TextRun({ text: `${edu.institution} | ${edu.period}`, italics: true, size: 18, font: bodyFont, color: '64748B' }),
+            new TextRun({
+              text: `${edu.institution} | ${edu.period}`,
+              italics: true,
+              size: 18,
+              font: bodyFont,
+              color: '64748B',
+            }),
           ],
         })
       );
@@ -244,25 +287,40 @@ export async function generateWordDocument(data: ResumeData, templateId: string 
         spacing: { before: 120, after: 120 },
         border: { bottom: { color: '0F172A', space: 4, style: BorderStyle.SINGLE, size: 12 } },
         children: [
-          new TextRun({ text: 'SKILLS & EXPERTISE', bold: true, size: 21, font: headingFont, color: primaryColor }),
+          new TextRun({
+            text: 'SKILLS & EXPERTISE',
+            bold: true,
+            size: 21,
+            font: headingFont,
+            color: primaryColor,
+          }),
         ],
-      })
+      }),
     ];
 
-    const groupedSkills = skills.reduce((acc, s) => {
-      if (!s) return acc;
-      const cat = s.category || 'Other';
-      if (!acc[cat]) acc[cat] = [];
-      acc[cat].push(s.name);
-      return acc;
-    }, {} as Record<string, string[]>);
+    const groupedSkills = skills.reduce(
+      (acc, s) => {
+        if (!s) return acc;
+        const cat = s.category || 'Other';
+        if (!acc[cat]) acc[cat] = [];
+        acc[cat].push(s.name);
+        return acc;
+      },
+      {} as Record<string, string[]>
+    );
 
     Object.entries(groupedSkills).forEach(([cat, names]) => {
       skillsChildren.push(
         new Paragraph({
           spacing: { after: 80 },
           children: [
-            new TextRun({ text: `${cat}: `, bold: true, size: 19, font: headingFont, color: primaryColor }),
+            new TextRun({
+              text: `${cat}: `,
+              bold: true,
+              size: 19,
+              font: headingFont,
+              color: primaryColor,
+            }),
             new TextRun({ text: names.join(', '), size: 19, font: bodyFont, color: '334155' }),
           ],
         })
@@ -359,20 +417,35 @@ export async function generateWordDocument(data: ResumeData, templateId: string 
                     alignment: AlignmentType.RIGHT,
                     spacing: { after: 40 },
                     children: [
-                      new TextRun({ text: personal.email, size: 18, font: bodyFont, color: '64748B' }),
+                      new TextRun({
+                        text: personal.email,
+                        size: 18,
+                        font: bodyFont,
+                        color: '64748B',
+                      }),
                     ],
                   }),
                   new Paragraph({
                     alignment: AlignmentType.RIGHT,
                     spacing: { after: 40 },
                     children: [
-                      new TextRun({ text: personal.phone, size: 18, font: bodyFont, color: '64748B' }),
+                      new TextRun({
+                        text: personal.phone,
+                        size: 18,
+                        font: bodyFont,
+                        color: '64748B',
+                      }),
                     ],
                   }),
                   new Paragraph({
                     alignment: AlignmentType.RIGHT,
                     children: [
-                      new TextRun({ text: personal.location, size: 18, font: bodyFont, color: '64748B' }),
+                      new TextRun({
+                        text: personal.location,
+                        size: 18,
+                        font: bodyFont,
+                        color: '64748B',
+                      }),
                     ],
                   }),
                 ],
@@ -457,7 +530,7 @@ export async function generateWordDocument(data: ResumeData, templateId: string 
       })
     );
 
-    experience.forEach(exp => {
+    experience.forEach((exp) => {
       leftColChildren.push(
         new Paragraph({
           spacing: { before: 80, after: 40 },
@@ -491,25 +564,26 @@ export async function generateWordDocument(data: ResumeData, templateId: string 
           ],
         }),
         // Arrow bullets
-        ...exp.description.map(bullet =>
-          new Paragraph({
-            spacing: { after: 60 },
-            alignment: AlignmentType.JUSTIFIED,
-            children: [
-              new TextRun({
-                text: '→   ',
-                bold: true,
-                color: primaryColor,
-                font: bodyFont,
-              }),
-              new TextRun({
-                text: bullet,
-                size: 19,
-                font: bodyFont,
-                color: '334155',
-              }),
-            ],
-          })
+        ...exp.description.map(
+          (bullet) =>
+            new Paragraph({
+              spacing: { after: 60 },
+              alignment: AlignmentType.JUSTIFIED,
+              children: [
+                new TextRun({
+                  text: '→   ',
+                  bold: true,
+                  color: primaryColor,
+                  font: bodyFont,
+                }),
+                new TextRun({
+                  text: bullet,
+                  size: 19,
+                  font: bodyFont,
+                  color: '334155',
+                }),
+              ],
+            })
         ),
         new Paragraph({ spacing: { after: 160 } })
       );
@@ -521,7 +595,13 @@ export async function generateWordDocument(data: ResumeData, templateId: string 
         spacing: { before: 120, after: 120 },
         border: { bottom: { color: darkSlate, space: 4, style: BorderStyle.SINGLE, size: 12 } },
         children: [
-          new TextRun({ text: 'CORE SKILLS', bold: true, size: 20, font: headingFont, color: darkSlate }),
+          new TextRun({
+            text: 'CORE SKILLS',
+            bold: true,
+            size: 20,
+            font: headingFont,
+            color: darkSlate,
+          }),
         ],
       })
     );
@@ -529,7 +609,7 @@ export async function generateWordDocument(data: ResumeData, templateId: string 
     // Render skill items as simulated tags with shading
     const skillParagraphs: Paragraph[] = [];
     let currentRuns: any[] = [];
-    
+
     skills.forEach((s, idx) => {
       currentRuns.push(
         new TextRun({
@@ -541,7 +621,7 @@ export async function generateWordDocument(data: ResumeData, templateId: string 
           shading: { fill: 'F1F5F9' },
         })
       );
-      
+
       // Every 2 items or at the end, insert paragraph
       if (currentRuns.length === 2 || idx === skills.length - 1) {
         skillParagraphs.push(
@@ -564,17 +644,29 @@ export async function generateWordDocument(data: ResumeData, templateId: string 
         spacing: { before: 120, after: 120 },
         border: { bottom: { color: darkSlate, space: 4, style: BorderStyle.SINGLE, size: 12 } },
         children: [
-          new TextRun({ text: 'EDUCATION', bold: true, size: 20, font: headingFont, color: darkSlate }),
+          new TextRun({
+            text: 'EDUCATION',
+            bold: true,
+            size: 20,
+            font: headingFont,
+            color: darkSlate,
+          }),
         ],
       })
     );
 
-    education.forEach(edu => {
+    education.forEach((edu) => {
       rightColChildren.push(
         new Paragraph({
           spacing: { before: 60, after: 40 },
           children: [
-            new TextRun({ text: edu.degree, bold: true, size: 19, font: headingFont, color: darkSlate }),
+            new TextRun({
+              text: edu.degree,
+              bold: true,
+              size: 19,
+              font: headingFont,
+              color: darkSlate,
+            }),
           ],
         }),
         new Paragraph({
@@ -586,13 +678,25 @@ export async function generateWordDocument(data: ResumeData, templateId: string 
         new Paragraph({
           spacing: { after: 40 },
           children: [
-            new TextRun({ text: edu.institution, italics: true, size: 18, font: bodyFont, color: '64748B' }),
+            new TextRun({
+              text: edu.institution,
+              italics: true,
+              size: 18,
+              font: bodyFont,
+              color: '64748B',
+            }),
           ],
         }),
         new Paragraph({
           spacing: { after: 120 },
           children: [
-            new TextRun({ text: edu.period, bold: true, size: 17, font: bodyFont, color: primaryColor }),
+            new TextRun({
+              text: edu.period,
+              bold: true,
+              size: 17,
+              font: bodyFont,
+              color: primaryColor,
+            }),
           ],
         })
       );
@@ -694,12 +798,18 @@ export async function generateWordDocument(data: ResumeData, templateId: string 
         spacing: { before: 180, after: 80 },
         border: { bottom: { color: 'CBD5E1', space: 2, style: BorderStyle.SINGLE, size: 6 } },
         children: [
-          new TextRun({ text: 'SKILLS', bold: true, size: 17, font: headingFont, color: primaryColor }),
+          new TextRun({
+            text: 'SKILLS',
+            bold: true,
+            size: 17,
+            font: headingFont,
+            color: primaryColor,
+          }),
         ],
       })
     );
 
-    skills.forEach(s => {
+    skills.forEach((s) => {
       sidebarChildren.push(
         new Paragraph({
           spacing: { after: 40 },
@@ -722,17 +832,29 @@ export async function generateWordDocument(data: ResumeData, templateId: string 
         spacing: { before: 180, after: 80 },
         border: { bottom: { color: 'CBD5E1', space: 2, style: BorderStyle.SINGLE, size: 6 } },
         children: [
-          new TextRun({ text: 'EDUCATION', bold: true, size: 17, font: headingFont, color: primaryColor }),
+          new TextRun({
+            text: 'EDUCATION',
+            bold: true,
+            size: 17,
+            font: headingFont,
+            color: primaryColor,
+          }),
         ],
       })
     );
 
-    education.forEach(edu => {
+    education.forEach((edu) => {
       sidebarChildren.push(
         new Paragraph({
           spacing: { before: 40, after: 20 },
           children: [
-            new TextRun({ text: edu.degree, bold: true, size: 17, font: headingFont, color: '0F172A' }),
+            new TextRun({
+              text: edu.degree,
+              bold: true,
+              size: 17,
+              font: headingFont,
+              color: '0F172A',
+            }),
           ],
         }),
         new Paragraph({
@@ -744,14 +866,18 @@ export async function generateWordDocument(data: ResumeData, templateId: string 
         new Paragraph({
           spacing: { after: 20 },
           children: [
-            new TextRun({ text: edu.institution, bold: true, size: 16, font: bodyFont, color: '94A3B8' }),
+            new TextRun({
+              text: edu.institution,
+              bold: true,
+              size: 16,
+              font: bodyFont,
+              color: '94A3B8',
+            }),
           ],
         }),
         new Paragraph({
           spacing: { after: 80 },
-          children: [
-            new TextRun({ text: edu.period, size: 15, font: bodyFont, color: '94A3B8' }),
-          ],
+          children: [new TextRun({ text: edu.period, size: 15, font: bodyFont, color: '94A3B8' })],
         })
       );
     });
@@ -763,7 +889,13 @@ export async function generateWordDocument(data: ResumeData, templateId: string 
           spacing: { before: 80, after: 80 },
           border: { bottom: { color: '0F172A', space: 4, style: BorderStyle.SINGLE, size: 12 } },
           children: [
-            new TextRun({ text: 'PROFESSIONAL SUMMARY', bold: true, size: 18, font: headingFont, color: primaryColor }),
+            new TextRun({
+              text: 'PROFESSIONAL SUMMARY',
+              bold: true,
+              size: 18,
+              font: headingFont,
+              color: primaryColor,
+            }),
           ],
         }),
         new Paragraph({
@@ -787,12 +919,18 @@ export async function generateWordDocument(data: ResumeData, templateId: string 
           spacing: { before: 120, after: 80 },
           border: { bottom: { color: '0F172A', space: 4, style: BorderStyle.SINGLE, size: 12 } },
           children: [
-            new TextRun({ text: 'EXPERIENCE', bold: true, size: 18, font: headingFont, color: primaryColor }),
+            new TextRun({
+              text: 'EXPERIENCE',
+              bold: true,
+              size: 18,
+              font: headingFont,
+              color: primaryColor,
+            }),
           ],
         })
       );
 
-      experience.forEach(exp => {
+      experience.forEach((exp) => {
         mainChildren.push(
           new Paragraph({
             spacing: { before: 60, after: 40 },
@@ -825,20 +963,21 @@ export async function generateWordDocument(data: ResumeData, templateId: string 
               }),
             ],
           }),
-          ...exp.description.map(bullet =>
-            new Paragraph({
-              bullet: { level: 0 },
-              spacing: { after: 40 },
-              alignment: AlignmentType.JUSTIFIED,
-              children: [
-                new TextRun({
-                  text: bullet,
-                  size: 18,
-                  font: bodyFont,
-                  color: '334155',
-                }),
-              ],
-            })
+          ...exp.description.map(
+            (bullet) =>
+              new Paragraph({
+                bullet: { level: 0 },
+                spacing: { after: 40 },
+                alignment: AlignmentType.JUSTIFIED,
+                children: [
+                  new TextRun({
+                    text: bullet,
+                    size: 18,
+                    font: bodyFont,
+                    color: '334155',
+                  }),
+                ],
+              })
           ),
           new Paragraph({ spacing: { after: 120 } })
         );
@@ -996,7 +1135,7 @@ export async function generateWordDocument(data: ResumeData, templateId: string 
     if (experience.length > 0) {
       documentChildren.push(addExecutiveHeading('Leadership Experience'));
 
-      experience.forEach(exp => {
+      experience.forEach((exp) => {
         documentChildren.push(
           new Paragraph({
             spacing: { before: 80, after: 40 },
@@ -1029,20 +1168,21 @@ export async function generateWordDocument(data: ResumeData, templateId: string 
               }),
             ],
           }),
-          ...exp.description.map(bullet =>
-            new Paragraph({
-              bullet: { level: 0 },
-              spacing: { after: 60 },
-              alignment: AlignmentType.JUSTIFIED,
-              children: [
-                new TextRun({
-                  text: bullet,
-                  size: 20,
-                  font: bodyFont,
-                  color: '334155',
-                }),
-              ],
-            })
+          ...exp.description.map(
+            (bullet) =>
+              new Paragraph({
+                bullet: { level: 0 },
+                spacing: { after: 60 },
+                alignment: AlignmentType.JUSTIFIED,
+                children: [
+                  new TextRun({
+                    text: bullet,
+                    size: 20,
+                    font: bodyFont,
+                    color: '334155',
+                  }),
+                ],
+              })
           ),
           new Paragraph({ spacing: { after: 140 } })
         );
@@ -1055,17 +1195,29 @@ export async function generateWordDocument(data: ResumeData, templateId: string 
         spacing: { before: 100, after: 100 },
         border: { bottom: { color: '1E293B', space: 4, style: BorderStyle.SINGLE, size: 12 } },
         children: [
-          new TextRun({ text: 'ACADEMIC BACKGROUND', bold: true, size: 18, font: headingFont, color: primaryColor }),
+          new TextRun({
+            text: 'ACADEMIC BACKGROUND',
+            bold: true,
+            size: 18,
+            font: headingFont,
+            color: primaryColor,
+          }),
         ],
-      })
+      }),
     ];
 
-    education.forEach(edu => {
+    education.forEach((edu) => {
       eduChildren.push(
         new Paragraph({
           spacing: { before: 40, after: 20 },
           children: [
-            new TextRun({ text: edu.degree, bold: true, size: 20, font: headingFont, color: '1E293B' }),
+            new TextRun({
+              text: edu.degree,
+              bold: true,
+              size: 20,
+              font: headingFont,
+              color: '1E293B',
+            }),
           ],
         }),
         new Paragraph({
@@ -1077,7 +1229,13 @@ export async function generateWordDocument(data: ResumeData, templateId: string 
         new Paragraph({
           spacing: { after: 100 },
           children: [
-            new TextRun({ text: `${edu.institution} | ${edu.period}`, italics: true, size: 18, font: bodyFont, color: '64748B' }),
+            new TextRun({
+              text: `${edu.institution} | ${edu.period}`,
+              italics: true,
+              size: 18,
+              font: bodyFont,
+              color: '64748B',
+            }),
           ],
         })
       );
@@ -1088,15 +1246,21 @@ export async function generateWordDocument(data: ResumeData, templateId: string 
         spacing: { before: 100, after: 100 },
         border: { bottom: { color: '1E293B', space: 4, style: BorderStyle.SINGLE, size: 12 } },
         children: [
-          new TextRun({ text: 'CORE COMPETENCIES', bold: true, size: 18, font: headingFont, color: primaryColor }),
+          new TextRun({
+            text: 'CORE COMPETENCIES',
+            bold: true,
+            size: 18,
+            font: headingFont,
+            color: primaryColor,
+          }),
         ],
-      })
+      }),
     ];
 
     // Render competencies in nice bordered tags
     const competencyParagraphs: Paragraph[] = [];
     let currentCompRuns: any[] = [];
-    
+
     skills.forEach((s, idx) => {
       currentCompRuns.push(
         new TextRun({
@@ -1108,7 +1272,7 @@ export async function generateWordDocument(data: ResumeData, templateId: string 
           shading: { fill: 'F1F5F9' },
         })
       );
-      
+
       if (currentCompRuns.length === 2 || idx === skills.length - 1) {
         competencyParagraphs.push(
           new Paragraph({
@@ -1207,13 +1371,25 @@ export async function generateWordDocument(data: ResumeData, templateId: string 
       new Paragraph({
         spacing: { after: 40 },
         children: [
-          new TextRun({ text: personal.name.toUpperCase(), bold: true, size: 28, font: headingFont, color: '0F172A' }),
+          new TextRun({
+            text: personal.name.toUpperCase(),
+            bold: true,
+            size: 28,
+            font: headingFont,
+            color: '0F172A',
+          }),
         ],
       }),
       new Paragraph({
         spacing: { after: 200 },
         children: [
-          new TextRun({ text: personal.title.toUpperCase(), bold: true, size: 16, font: headingFont, color: '047857' }),
+          new TextRun({
+            text: personal.title.toUpperCase(),
+            bold: true,
+            size: 16,
+            font: headingFont,
+            color: '047857',
+          }),
         ],
       })
     );
@@ -1224,7 +1400,13 @@ export async function generateWordDocument(data: ResumeData, templateId: string 
         spacing: { before: 120, after: 100 },
         border: { bottom: { color: 'CBD5E1', space: 2, style: BorderStyle.SINGLE, size: 6 } },
         children: [
-          new TextRun({ text: 'CONNECT', bold: true, size: 17, font: headingFont, color: '475569' }),
+          new TextRun({
+            text: 'CONNECT',
+            bold: true,
+            size: 17,
+            font: headingFont,
+            color: '475569',
+          }),
         ],
       }),
       new Paragraph({
@@ -1262,7 +1444,7 @@ export async function generateWordDocument(data: ResumeData, templateId: string 
     );
 
     // Limit to 8 skills to prevent sidebar overflow
-    skills.slice(0, 8).forEach(s => {
+    skills.slice(0, 8).forEach((s) => {
       const level = s.level || 80;
       const filledCount = Math.min(10, Math.max(0, Math.round(level / 10)));
       const emptyCount = 10 - filledCount;
@@ -1302,17 +1484,29 @@ export async function generateWordDocument(data: ResumeData, templateId: string 
         spacing: { before: 120, after: 120 },
         border: { bottom: { color: 'CBD5E1', space: 2, style: BorderStyle.SINGLE, size: 6 } },
         children: [
-          new TextRun({ text: 'EDUCATION', bold: true, size: 17, font: headingFont, color: '475569' }),
+          new TextRun({
+            text: 'EDUCATION',
+            bold: true,
+            size: 17,
+            font: headingFont,
+            color: '475569',
+          }),
         ],
       })
     );
 
-    education.forEach(edu => {
+    education.forEach((edu) => {
       sideChildren.push(
         new Paragraph({
           spacing: { before: 60, after: 20 },
           children: [
-            new TextRun({ text: edu.degree, bold: true, size: 17, font: headingFont, color: '0F172A' }),
+            new TextRun({
+              text: edu.degree,
+              bold: true,
+              size: 17,
+              font: headingFont,
+              color: '0F172A',
+            }),
           ],
         }),
         new Paragraph({
@@ -1324,13 +1518,25 @@ export async function generateWordDocument(data: ResumeData, templateId: string 
         new Paragraph({
           spacing: { after: 20 },
           children: [
-            new TextRun({ text: edu.institution, bold: true, size: 16, font: bodyFont, color: '475569' }),
+            new TextRun({
+              text: edu.institution,
+              bold: true,
+              size: 16,
+              font: bodyFont,
+              color: '475569',
+            }),
           ],
         }),
         new Paragraph({
           spacing: { after: 80 },
           children: [
-            new TextRun({ text: edu.period, bold: true, size: 15, font: bodyFont, color: '047857' }),
+            new TextRun({
+              text: edu.period,
+              bold: true,
+              size: 15,
+              font: bodyFont,
+              color: '047857',
+            }),
           ],
         })
       );
@@ -1380,7 +1586,7 @@ export async function generateWordDocument(data: ResumeData, templateId: string 
     if (experience.length > 0) {
       mainChildren.push(addCreativeHeading('Experience'));
 
-      experience.forEach(exp => {
+      experience.forEach((exp) => {
         mainChildren.push(
           new Paragraph({
             spacing: { before: 80, after: 40 },
@@ -1413,25 +1619,26 @@ export async function generateWordDocument(data: ResumeData, templateId: string 
               }),
             ],
           }),
-          ...exp.description.map(bullet =>
-            new Paragraph({
-              spacing: { after: 60 },
-              alignment: AlignmentType.JUSTIFIED,
-              children: [
-                new TextRun({
-                  text: '▪   ', // Emerald styled block prefix
-                  bold: true,
-                  color: emeraldAccent,
-                  font: bodyFont,
-                }),
-                new TextRun({
-                  text: bullet,
-                  size: 20,
-                  font: bodyFont,
-                  color: '334155',
-                }),
-              ],
-            })
+          ...exp.description.map(
+            (bullet) =>
+              new Paragraph({
+                spacing: { after: 60 },
+                alignment: AlignmentType.JUSTIFIED,
+                children: [
+                  new TextRun({
+                    text: '▪   ', // Emerald styled block prefix
+                    bold: true,
+                    color: emeraldAccent,
+                    font: bodyFont,
+                  }),
+                  new TextRun({
+                    text: bullet,
+                    size: 20,
+                    font: bodyFont,
+                    color: '334155',
+                  }),
+                ],
+              })
           ),
           new Paragraph({ spacing: { after: 140 } })
         );
@@ -1561,7 +1768,7 @@ export async function generateWordDocument(data: ResumeData, templateId: string 
     if (experience.length > 0) {
       documentChildren.push(addMinimalHeading('Experience'));
 
-      experience.forEach(exp => {
+      experience.forEach((exp) => {
         documentChildren.push(
           new Paragraph({
             spacing: { before: 80, after: 40 },
@@ -1594,24 +1801,25 @@ export async function generateWordDocument(data: ResumeData, templateId: string 
               }),
             ],
           }),
-          ...exp.description.map(bullet =>
-            new Paragraph({
-              spacing: { after: 60 },
-              alignment: AlignmentType.JUSTIFIED,
-              children: [
-                new TextRun({
-                  text: '──   ', // Thin clean line prefix
-                  color: 'CBD5E1',
-                  font: bodyFont,
-                }),
-                new TextRun({
-                  text: bullet,
-                  size: 20,
-                  font: bodyFont,
-                  color: '475569',
-                }),
-              ],
-            })
+          ...exp.description.map(
+            (bullet) =>
+              new Paragraph({
+                spacing: { after: 60 },
+                alignment: AlignmentType.JUSTIFIED,
+                children: [
+                  new TextRun({
+                    text: '──   ', // Thin clean line prefix
+                    color: 'CBD5E1',
+                    font: bodyFont,
+                  }),
+                  new TextRun({
+                    text: bullet,
+                    size: 20,
+                    font: bodyFont,
+                    color: '475569',
+                  }),
+                ],
+              })
           ),
           new Paragraph({ spacing: { after: 180 } })
         );
@@ -1623,17 +1831,29 @@ export async function generateWordDocument(data: ResumeData, templateId: string 
       new Paragraph({
         spacing: { before: 120, after: 120 },
         children: [
-          new TextRun({ text: 'EDUCATION', bold: true, size: 18, font: headingFont, color: lightSlate }),
+          new TextRun({
+            text: 'EDUCATION',
+            bold: true,
+            size: 18,
+            font: headingFont,
+            color: lightSlate,
+          }),
         ],
-      })
+      }),
     ];
 
-    education.forEach(edu => {
+    education.forEach((edu) => {
       minEdu.push(
         new Paragraph({
           spacing: { before: 40, after: 20 },
           children: [
-            new TextRun({ text: edu.degree, bold: true, size: 19, font: headingFont, color: '0F172A' }),
+            new TextRun({
+              text: edu.degree,
+              bold: true,
+              size: 19,
+              font: headingFont,
+              color: '0F172A',
+            }),
           ],
         }),
         new Paragraph({
@@ -1645,7 +1865,13 @@ export async function generateWordDocument(data: ResumeData, templateId: string 
         new Paragraph({
           spacing: { after: 120 },
           children: [
-            new TextRun({ text: `${edu.institution}  |  ${edu.period}`, bold: true, size: 16, font: bodyFont, color: lightSlate }),
+            new TextRun({
+              text: `${edu.institution}  |  ${edu.period}`,
+              bold: true,
+              size: 16,
+              font: bodyFont,
+              color: lightSlate,
+            }),
           ],
         })
       );
@@ -1655,12 +1881,18 @@ export async function generateWordDocument(data: ResumeData, templateId: string 
       new Paragraph({
         spacing: { before: 120, after: 120 },
         children: [
-          new TextRun({ text: 'EXPERTISE', bold: true, size: 18, font: headingFont, color: lightSlate }),
+          new TextRun({
+            text: 'EXPERTISE',
+            bold: true,
+            size: 18,
+            font: headingFont,
+            color: lightSlate,
+          }),
         ],
-      })
+      }),
     ];
 
-    const skillList = skills.map(s => s.name).join('   •   ');
+    const skillList = skills.map((s) => s.name).join('   •   ');
     minSkills.push(
       new Paragraph({
         alignment: AlignmentType.JUSTIFIED,
@@ -1795,7 +2027,13 @@ export async function generateWordDocument(data: ResumeData, templateId: string 
         spacing: { before: 180, after: 140 },
         children: [
           new TextRun({ text: '[ ', bold: true, size: 20, font: headingFont, color: '475569' }),
-          new TextRun({ text: title.toUpperCase(), bold: true, size: 21, font: headingFont, color: '047857' }),
+          new TextRun({
+            text: title.toUpperCase(),
+            bold: true,
+            size: 21,
+            font: headingFont,
+            color: '047857',
+          }),
           new TextRun({ text: ' ]', bold: true, size: 20, font: headingFont, color: '475569' }),
         ],
       });
@@ -1805,7 +2043,7 @@ export async function generateWordDocument(data: ResumeData, templateId: string 
     if (experience.length > 0) {
       innerDocument.push(addStellarHeading('Experience'));
 
-      experience.forEach(exp => {
+      experience.forEach((exp) => {
         innerDocument.push(
           new Paragraph({
             spacing: { before: 80, after: 40 },
@@ -1839,25 +2077,26 @@ export async function generateWordDocument(data: ResumeData, templateId: string 
             ],
           }),
           // Lightning Bolt Bullet points
-          ...exp.description.map(bullet =>
-            new Paragraph({
-              spacing: { after: 60 },
-              alignment: AlignmentType.JUSTIFIED,
-              children: [
-                new TextRun({
-                  text: '⚡  ',
-                  bold: true,
-                  color: terminalGreen,
-                  font: bodyFont,
-                }),
-                new TextRun({
-                  text: bullet,
-                  size: 18,
-                  font: bodyFont,
-                  color: '334155',
-                }),
-              ],
-            })
+          ...exp.description.map(
+            (bullet) =>
+              new Paragraph({
+                spacing: { after: 60 },
+                alignment: AlignmentType.JUSTIFIED,
+                children: [
+                  new TextRun({
+                    text: '⚡  ',
+                    bold: true,
+                    color: terminalGreen,
+                    font: bodyFont,
+                  }),
+                  new TextRun({
+                    text: bullet,
+                    size: 18,
+                    font: bodyFont,
+                    color: '334155',
+                  }),
+                ],
+              })
           ),
           new Paragraph({ spacing: { after: 120 } })
         );
@@ -1866,8 +2105,8 @@ export async function generateWordDocument(data: ResumeData, templateId: string 
 
     // Tech Stack & Education 2 columns
     const stellTech: any[] = [addStellarHeading('Tech_Stack')];
-    
-    skills.forEach(s => {
+
+    skills.forEach((s) => {
       stellTech.push(
         new Paragraph({
           spacing: { after: 60 },
@@ -1881,7 +2120,7 @@ export async function generateWordDocument(data: ResumeData, templateId: string 
 
     const stellEdu: any[] = [addStellarHeading('Education')];
 
-    education.forEach(edu => {
+    education.forEach((edu) => {
       stellEdu.push(
         new Table({
           width: { size: 5220, type: WidthType.DXA },
@@ -1901,23 +2140,45 @@ export async function generateWordDocument(data: ResumeData, templateId: string 
                   children: [
                     new Paragraph({
                       children: [
-                        new TextRun({ text: edu.degree, bold: true, size: 18, font: headingFont, color: '0F172A' }),
+                        new TextRun({
+                          text: edu.degree,
+                          bold: true,
+                          size: 18,
+                          font: headingFont,
+                          color: '0F172A',
+                        }),
                       ],
                     }),
                     new Paragraph({
                       children: [
-                        new TextRun({ text: edu.fieldOfStudy, size: 16, font: bodyFont, color: '334155' }),
+                        new TextRun({
+                          text: edu.fieldOfStudy,
+                          size: 16,
+                          font: bodyFont,
+                          color: '334155',
+                        }),
                       ],
                     }),
                     new Paragraph({
                       spacing: { before: 20 },
                       children: [
-                        new TextRun({ text: edu.institution, bold: true, size: 16, font: bodyFont, color: neonIndigo }),
+                        new TextRun({
+                          text: edu.institution,
+                          bold: true,
+                          size: 16,
+                          font: bodyFont,
+                          color: neonIndigo,
+                        }),
                       ],
                     }),
                     new Paragraph({
                       children: [
-                        new TextRun({ text: edu.period, size: 15, font: bodyFont, color: '475569' }),
+                        new TextRun({
+                          text: edu.period,
+                          size: 15,
+                          font: bodyFont,
+                          color: '475569',
+                        }),
                       ],
                     }),
                   ],
@@ -2064,7 +2325,7 @@ export async function generateWordDocument(data: ResumeData, templateId: string 
     if (experience.length > 0) {
       documentChildren.push(addOriginalHeading('Experience'));
 
-      experience.forEach(exp => {
+      experience.forEach((exp) => {
         documentChildren.push(
           new Table({
             width: { size: 10800, type: WidthType.DXA },
@@ -2154,20 +2415,21 @@ export async function generateWordDocument(data: ResumeData, templateId: string 
             ],
           }),
           new Paragraph({ spacing: { after: 40 } }),
-          ...exp.description.map(bullet =>
-            new Paragraph({
-              bullet: { level: 0 },
-              spacing: { after: 40 },
-              alignment: AlignmentType.JUSTIFIED,
-              children: [
-                new TextRun({
-                  text: bullet,
-                  size: 20,
-                  font: bodyFont,
-                  color: primaryColor,
-                }),
-              ],
-            })
+          ...exp.description.map(
+            (bullet) =>
+              new Paragraph({
+                bullet: { level: 0 },
+                spacing: { after: 40 },
+                alignment: AlignmentType.JUSTIFIED,
+                children: [
+                  new TextRun({
+                    text: bullet,
+                    size: 20,
+                    font: bodyFont,
+                    color: primaryColor,
+                  }),
+                ],
+              })
           ),
           new Paragraph({ spacing: { after: 120 } })
         );
@@ -2178,7 +2440,7 @@ export async function generateWordDocument(data: ResumeData, templateId: string 
     if (education.length > 0) {
       documentChildren.push(addOriginalHeading('Education'));
 
-      education.forEach(edu => {
+      education.forEach((edu) => {
         documentChildren.push(
           new Table({
             width: { size: 10800, type: WidthType.DXA },
@@ -2248,7 +2510,7 @@ export async function generateWordDocument(data: ResumeData, templateId: string 
     // Skills
     if (skills.length > 0) {
       documentChildren.push(addOriginalHeading('Skills'));
-      const originalSkills = skills.map(s => s.name).join(', ');
+      const originalSkills = skills.map((s) => s.name).join(', ');
       documentChildren.push(
         new Paragraph({
           spacing: { before: 40, after: 100 },

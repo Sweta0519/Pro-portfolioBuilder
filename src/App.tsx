@@ -3,28 +3,25 @@ import { jsPDF } from 'jspdf';
 import html2canvas from 'html2canvas';
 import { supabase } from './supabaseClient';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
-import { 
-  defaultResumeData, 
-  defaultThemeSettings 
-} from './sampleData';
-import { 
-  ResumeData, 
-  ThemeSettings, 
-  ContactMessage, 
-  WorkExperience, 
-  Project, 
+import { defaultResumeData, defaultThemeSettings } from './sampleData';
+import {
+  ResumeData,
+  ThemeSettings,
+  ContactMessage,
+  WorkExperience,
+  Project,
   Skill,
   Education,
-  Certificate
+  Certificate,
 } from './types';
 import { parseRawResumeText } from './parser';
 import { analyzeResume, actionVerbDictionary } from './coach';
-import { 
-  generateInterviewPlan, 
-  scoreAnswer, 
-  fetchGeminiInsights, 
-  testApiConnection, 
-  generateIdealAnswer, 
+import {
+  generateInterviewPlan,
+  scoreAnswer,
+  fetchGeminiInsights,
+  testApiConnection,
+  generateIdealAnswer,
   optimizeUserAnswer,
   splitIntoStarSections,
   RECRUITER_PERSONAS,
@@ -32,41 +29,75 @@ import {
   generateRecruiterResponse,
   generateSessionFeedbackSummary,
   generateRecruiterRoundQuestions,
-  isNonStarQuestion
+  isNonStarQuestion,
 } from './interviewCoach';
 import type { AiProvider, RecruiterQuestion } from './interviewCoach';
-import { InterviewPlan, InterviewRound, AnswerScore, GeminiEnhancedData, InterviewSession, RecruiterPersona } from './types';
-import { analyzeATSCompliance, analyzeCoverLetter, autoTuneDesign, autoOptimizeResume } from './ats';
+import {
+  InterviewPlan,
+  InterviewRound,
+  AnswerScore,
+  GeminiEnhancedData,
+  InterviewSession,
+  RecruiterPersona,
+} from './types';
+import {
+  analyzeATSCompliance,
+  analyzeCoverLetter,
+  autoTuneDesign,
+  autoOptimizeResume,
+} from './ats';
 import { ThemeRenderer } from './ThemeRenderer';
 import { ResumeDocumentTemplate } from './ResumeDocumentTemplate';
 import { generatePortfolioZip, getPortfolioFiles } from './zipExporter';
 import { generateWordDocument } from './wordExporter';
 import { ResumeInteractivePreview } from './ResumeInteractivePreview';
 import { extractTextFromFile } from './fileParser';
-import { 
-  Sparkles, User, Briefcase, Layers, Sliders, MessageSquare, Target, 
-  FileCode, Smartphone, Tablet, Laptop, Trash2, Plus, 
-  ChevronDown, ChevronUp, Download, 
-  FileText, AlertCircle, CheckCircle, Copy, Check, Moon, Sun, X
+import {
+  Sparkles,
+  User,
+  Briefcase,
+  Layers,
+  Sliders,
+  MessageSquare,
+  Target,
+  FileCode,
+  Smartphone,
+  Tablet,
+  Laptop,
+  Trash2,
+  Plus,
+  ChevronDown,
+  ChevronUp,
+  Download,
+  FileText,
+  AlertCircle,
+  CheckCircle,
+  Copy,
+  Check,
+  Moon,
+  Sun,
+  X,
 } from 'lucide-react';
 
 export default function App() {
   // Saved Uploaded Resumes History (Jobscan Pro features clone)
-  const [savedResumes, setSavedResumes] = useState<Array<{
-    id: string;
-    name: string;
-    title: string;
-    date: string;
-    data: ResumeData;
-    theme: ThemeSettings;
-  }>>(() => {
+  const [savedResumes, setSavedResumes] = useState<
+    Array<{
+      id: string;
+      name: string;
+      title: string;
+      date: string;
+      data: ResumeData;
+      theme: ThemeSettings;
+    }>
+  >(() => {
     try {
       const local = localStorage.getItem('pro_portfolio_saved_resumes');
       if (local) {
         return JSON.parse(local);
       }
     } catch (e) {
-      console.error("Failed to read saved resumes:", e);
+      console.error('Failed to read saved resumes:', e);
     }
     return [
       {
@@ -75,8 +106,8 @@ export default function App() {
         title: defaultResumeData.personal.title,
         date: new Date().toLocaleDateString(),
         data: defaultResumeData,
-        theme: defaultThemeSettings
-      }
+        theme: defaultThemeSettings,
+      },
     ];
   });
 
@@ -85,7 +116,7 @@ export default function App() {
     try {
       localStorage.setItem('pro_portfolio_saved_resumes', JSON.stringify(savedResumes));
     } catch (e) {
-      console.error("Failed to save resumes:", e);
+      console.error('Failed to save resumes:', e);
     }
   }, [savedResumes]);
 
@@ -97,7 +128,7 @@ export default function App() {
         return JSON.parse(local);
       }
     } catch (e) {
-      console.error("Failed to read saved interview sessions:", e);
+      console.error('Failed to read saved interview sessions:', e);
     }
     return [];
   });
@@ -107,7 +138,7 @@ export default function App() {
     try {
       localStorage.setItem('pro_portfolio_interview_sessions', JSON.stringify(savedSessions));
     } catch (e) {
-      console.error("Failed to save interview sessions:", e);
+      console.error('Failed to save interview sessions:', e);
     }
   }, [savedSessions]);
 
@@ -119,11 +150,11 @@ export default function App() {
         const sessionsStr = localStorage.getItem('pro_portfolio_interview_sessions');
         if (sessionsStr) {
           const sessions: InterviewSession[] = JSON.parse(sessionsStr);
-          return sessions.find(s => s.id === activeId) || null;
+          return sessions.find((s) => s.id === activeId) || null;
         }
       }
     } catch (e) {
-      console.error("Failed to load active session:", e);
+      console.error('Failed to load active session:', e);
     }
     return null;
   })();
@@ -165,7 +196,9 @@ export default function App() {
       setUser(session?.user ?? null);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
     });
 
@@ -186,13 +219,13 @@ export default function App() {
       if (authMode === 'login') {
         const { error } = await supabase.auth.signInWithPassword({
           email: authEmail.trim(),
-          password: authPassword.trim()
+          password: authPassword.trim(),
         });
         if (error) throw error;
       } else {
         const { error } = await supabase.auth.signUp({
           email: authEmail.trim(),
-          password: authPassword.trim()
+          password: authPassword.trim(),
         });
         if (error) throw error;
         alert('Verification email sent! Check your inbox to complete sign up.');
@@ -214,8 +247,8 @@ export default function App() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin
-        }
+          redirectTo: window.location.origin,
+        },
       });
       if (error) throw error;
     } catch (err: any) {
@@ -225,7 +258,11 @@ export default function App() {
   };
 
   const handleSignOut = async () => {
-    if (confirm('Are you sure you want to sign out? Your current session remains in your browser storage.')) {
+    if (
+      confirm(
+        'Are you sure you want to sign out? Your current session remains in your browser storage.'
+      )
+    ) {
       await supabase.auth.signOut();
       setUser(null);
     }
@@ -239,26 +276,27 @@ export default function App() {
       setSyncStatus('syncing');
       try {
         // 1. Sync Resumes (Bidirectional Merge)
-        const { data: dbResumes, error: resError } = await supabase
-          .from('resumes')
-          .select('*');
+        const { data: dbResumes, error: resError } = await supabase.from('resumes').select('*');
 
         if (resError) throw resError;
 
-        const parsedDbResumes = (dbResumes || []).map(r => ({
+        const parsedDbResumes = (dbResumes || []).map((r) => ({
           id: r.id,
           name: r.name,
           title: r.resume_json.personal?.title || '',
-          date: new Date(r.updated_at).toLocaleDateString() + ' ' + new Date(r.updated_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+          date:
+            new Date(r.updated_at).toLocaleDateString() +
+            ' ' +
+            new Date(r.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           data: r.resume_json,
           theme: r.theme_settings,
-          updatedAt: r.updated_at
+          updatedAt: r.updated_at,
         }));
 
         const mergedResumesMap = new Map<string, any>();
 
         // Seed with DB resumes
-        parsedDbResumes.forEach(r => {
+        parsedDbResumes.forEach((r) => {
           mergedResumesMap.set(r.id, r);
         });
 
@@ -269,24 +307,33 @@ export default function App() {
           let matchedDbResume = null;
 
           if (isUuid) {
-            matchedDbResume = parsedDbResumes.find(r => r.id === localRes.id);
+            matchedDbResume = parsedDbResumes.find((r) => r.id === localRes.id);
           } else {
-            matchedDbResume = parsedDbResumes.find(r => r.name === localRes.name && r.title === (localRes.data?.personal?.title || ''));
+            matchedDbResume = parsedDbResumes.find(
+              (r) => r.name === localRes.name && r.title === (localRes.data?.personal?.title || '')
+            );
           }
 
           if (matchedDbResume) {
             const localTime = localRes.date ? new Date(localRes.date).getTime() : 0;
-            const dbTime = matchedDbResume.updatedAt ? new Date(matchedDbResume.updatedAt).getTime() : 0;
+            const dbTime = matchedDbResume.updatedAt
+              ? new Date(matchedDbResume.updatedAt).getTime()
+              : 0;
 
             if (localTime > dbTime) {
-              const updatedRes = { ...matchedDbResume, data: localRes.data, theme: localRes.theme, name: localRes.name };
+              const updatedRes = {
+                ...matchedDbResume,
+                data: localRes.data,
+                theme: localRes.theme,
+                name: localRes.name,
+              };
               mergedResumesMap.set(matchedDbResume.id, updatedRes);
               localResumesToUpload.push({
                 id: matchedDbResume.id,
                 user_id: user.id,
                 name: localRes.name,
                 resume_json: localRes.data,
-                theme_settings: localRes.theme
+                theme_settings: localRes.theme,
               });
             }
           } else {
@@ -298,7 +345,7 @@ export default function App() {
                 user_id: user.id,
                 name: localRes.name,
                 resume_json: localRes.data,
-                theme_settings: localRes.theme
+                theme_settings: localRes.theme,
               })
               .select();
 
@@ -308,9 +355,15 @@ export default function App() {
                 id: uploaded.id,
                 name: uploaded.name,
                 title: uploaded.resume_json.personal?.title || '',
-                date: new Date(uploaded.updated_at).toLocaleDateString() + ' ' + new Date(uploaded.updated_at).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+                date:
+                  new Date(uploaded.updated_at).toLocaleDateString() +
+                  ' ' +
+                  new Date(uploaded.updated_at).toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  }),
                 data: uploaded.resume_json,
-                theme: uploaded.theme_settings
+                theme: uploaded.theme_settings,
               });
             }
           }
@@ -331,7 +384,7 @@ export default function App() {
 
         if (sessError) throw sessError;
 
-        const parsedDbSessions: InterviewSession[] = (dbSessions || []).map(s => ({
+        const parsedDbSessions: InterviewSession[] = (dbSessions || []).map((s) => ({
           id: s.id,
           companyName: s.company_name,
           positionName: s.position_name,
@@ -350,13 +403,13 @@ export default function App() {
           isCompleted: s.is_completed,
           mockRound: s.mock_round,
           mockQuestionIdx: s.mock_question_idx,
-          mockMode: s.mock_mode
+          mockMode: s.mock_mode,
         }));
 
         const mergedSessionsMap = new Map<string, InterviewSession>();
 
         // Seed with DB sessions
-        parsedDbSessions.forEach(s => {
+        parsedDbSessions.forEach((s) => {
           mergedSessionsMap.set(s.id, s);
         });
 
@@ -368,7 +421,10 @@ export default function App() {
             const localAnswersCount = Object.keys(localSess.mockAnswers || {}).length;
             const dbAnswersCount = Object.keys(matchedDbSess.mockAnswers || {}).length;
 
-            if (localAnswersCount > dbAnswersCount || (localSess.isCompleted && !matchedDbSess.isCompleted)) {
+            if (
+              localAnswersCount > dbAnswersCount ||
+              (localSess.isCompleted && !matchedDbSess.isCompleted)
+            ) {
               mergedSessionsMap.set(localSess.id, localSess);
               localSessionsToUpload.push({
                 id: localSess.id,
@@ -390,7 +446,7 @@ export default function App() {
                 is_completed: localSess.isCompleted || false,
                 mock_round: localSess.mockRound,
                 mock_question_idx: localSess.mockQuestionIdx,
-                mock_mode: localSess.mockMode
+                mock_mode: localSess.mockMode,
               });
             }
           } else {
@@ -415,7 +471,7 @@ export default function App() {
               is_completed: localSess.isCompleted || false,
               mock_round: localSess.mockRound,
               mock_question_idx: localSess.mockQuestionIdx,
-              mock_mode: localSess.mockMode
+              mock_mode: localSess.mockMode,
             });
           }
         }
@@ -451,12 +507,12 @@ export default function App() {
             user_id: user.id,
             name: res.name,
             resume_json: res.data,
-            theme_settings: res.theme
+            theme_settings: res.theme,
           });
         }
         setSyncStatus('synced');
       } catch (e) {
-        console.error("Failed to sync resumes to Supabase:", e);
+        console.error('Failed to sync resumes to Supabase:', e);
         setSyncStatus('error');
       }
     };
@@ -493,12 +549,12 @@ export default function App() {
             is_completed: s.isCompleted || false,
             mock_round: s.mockRound,
             mock_question_idx: s.mockQuestionIdx,
-            mock_mode: s.mockMode
+            mock_mode: s.mockMode,
           });
         }
         setSyncStatus('synced');
       } catch (e) {
-        console.error("Failed to sync sessions to Supabase:", e);
+        console.error('Failed to sync sessions to Supabase:', e);
         setSyncStatus('error');
       }
     };
@@ -506,7 +562,7 @@ export default function App() {
     const timer = setTimeout(syncSessions, 1500);
     return () => clearTimeout(timer);
   }, [savedSessions, user]);
-  
+
   // Form & helper states
   const [rawTextImport, setRawTextImport] = useState<string>('');
   const [isParsing, setIsParsing] = useState<boolean>(false);
@@ -519,9 +575,13 @@ export default function App() {
 
   // Vercel Deployment states
   const [showVercelModal, setShowVercelModal] = useState<boolean>(false);
-  const [vercelToken, setVercelToken] = useState<string>(() => localStorage.getItem('vercel_deploy_token') || '');
+  const [vercelToken, setVercelToken] = useState<string>(
+    () => localStorage.getItem('vercel_deploy_token') || ''
+  );
   const [vercelProjectName, setVercelProjectName] = useState<string>('');
-  const [vercelDeployState, setVercelDeployState] = useState<'idle' | 'preparing' | 'deploying' | 'polling' | 'success' | 'error'>('idle');
+  const [vercelDeployState, setVercelDeployState] = useState<
+    'idle' | 'preparing' | 'deploying' | 'polling' | 'success' | 'error'
+  >('idle');
   const [vercelDeployUrl, setVercelDeployUrl] = useState<string>('');
   const [vercelError, setVercelError] = useState<string>('');
   const [vercelDeployProgress, setVercelDeployProgress] = useState<string>('');
@@ -534,15 +594,18 @@ export default function App() {
       name: 'Sarah Jenkins',
       email: 's.jenkins@talentagency.com',
       subject: 'Lead Frontend Opportunity - Linear Tech partner',
-      message: 'Hi Alex, absolutely loved reading through your portfolio! The Zenith Task Orchestrator case study is spectacular. Let\'s connect for an introductory call next Tuesday at 10 AM PST. - Sarah',
+      message:
+        "Hi Alex, absolutely loved reading through your portfolio! The Zenith Task Orchestrator case study is spectacular. Let's connect for an introductory call next Tuesday at 10 AM PST. - Sarah",
       date: new Date().toLocaleDateString(),
-      unread: true
-    }
+      unread: true,
+    },
   ]);
 
   // Accordion expanded items tracker
   const [expandedJobs, setExpandedJobs] = useState<{ [key: string]: boolean }>({ 'exp-1': true });
-  const [expandedProjects, setExpandedProjects] = useState<{ [key: string]: boolean }>({ 'proj-1': true });
+  const [expandedProjects, setExpandedProjects] = useState<{ [key: string]: boolean }>({
+    'proj-1': true,
+  });
   const [expandedEdu, setExpandedEdu] = useState<{ [key: string]: boolean }>({});
   const [expandedCert, setExpandedCert] = useState<{ [key: string]: boolean }>({});
 
@@ -551,8 +614,6 @@ export default function App() {
   const [bulletStyle, setBulletStyle] = useState<'impact' | 'verbs' | 'technical'>('impact');
   const [improvedBullets, setImprovedBullets] = useState<string[]>([]);
   const [copiedBulletIdx, setCopiedBulletIdx] = useState<number | null>(null);
-
-
 
   // ─── Interview Prep Coach states ─────────────────────────────────────────
   const [interviewPlan, setInterviewPlan] = useState<InterviewPlan | null>(
@@ -567,9 +628,9 @@ export default function App() {
   const [interviewCompanyName, setInterviewCompanyName] = useState<string>(
     initialActiveSession ? initialActiveSession.companyName : ''
   );
-  const [interviewSubTab, setInterviewSubTab] = useState<'overview' | 'questions' | 'study-plan' | 'mock'>(
-    initialActiveSession ? (initialActiveSession.isCompleted ? 'mock' : 'overview') : 'overview'
-  );
+  const [interviewSubTab, setInterviewSubTab] = useState<
+    'overview' | 'questions' | 'study-plan' | 'mock'
+  >(initialActiveSession ? (initialActiveSession.isCompleted ? 'mock' : 'overview') : 'overview');
   const [activeRound, setActiveRound] = useState<InterviewRound>('hr');
   const [isGeneratingPlan, setIsGeneratingPlan] = useState<boolean>(false);
   const [mockAnswers, setMockAnswers] = useState<Record<string, string>>(
@@ -594,38 +655,43 @@ export default function App() {
 
   // ─── Interactive Voice Recruiter States ──────────────────────────────────
   const [mockInterfaceMode, setMockInterfaceMode] = useState<'standard' | 'interactive'>(
-    initialActiveSession ? (initialActiveSession.interfaceMode || 'standard') : 'standard'
+    initialActiveSession ? initialActiveSession.interfaceMode || 'standard' : 'standard'
   );
   const [selectedRecruiter, setSelectedRecruiter] = useState<RecruiterPersona>(
     initialActiveSession && initialActiveSession.recruiterPersonaId
-      ? (RECRUITER_PERSONAS.find(p => p.id === initialActiveSession.recruiterPersonaId) || RECRUITER_PERSONAS[4])
+      ? RECRUITER_PERSONAS.find((p) => p.id === initialActiveSession.recruiterPersonaId) ||
+          RECRUITER_PERSONAS[4]
       : RECRUITER_PERSONAS[4]
   );
   const [recruiterReplies, setRecruiterReplies] = useState<Record<string, string>>(
-    initialActiveSession ? (initialActiveSession.recruiterReplies || {}) : {}
+    initialActiveSession ? initialActiveSession.recruiterReplies || {} : {}
   );
   const [isRecruiterSpeaking, setIsRecruiterSpeaking] = useState<boolean>(false);
   const [isRecruiterTyping, setIsRecruiterTyping] = useState<boolean>(false);
   const [isSessionCompleted, setIsSessionCompleted] = useState<boolean>(
-    initialActiveSession ? (initialActiveSession.isCompleted || false) : false
+    initialActiveSession ? initialActiveSession.isCompleted || false : false
   );
   const [autoPlayVoice, setAutoPlayVoice] = useState<boolean>(true);
   const [autoActivateMic, setAutoActivateMic] = useState<boolean>(true);
   const [sessionSummaryFeedback, setSessionSummaryFeedback] = useState<string>(
-    initialActiveSession ? (initialActiveSession.sessionSummaryFeedback || '') : ''
+    initialActiveSession ? initialActiveSession.sessionSummaryFeedback || '' : ''
   );
   const [isLoadingSummary, setIsLoadingSummary] = useState<boolean>(false);
 
   // ─── Gemini Google Search Enhancement ────────────────────────────────────
-  const [geminiApiKey, setGeminiApiKey] = useState<string>(() => localStorage.getItem('gemini-api-key') || '');
+  const [geminiApiKey, setGeminiApiKey] = useState<string>(
+    () => localStorage.getItem('gemini-api-key') || ''
+  );
   const [geminiData, setGeminiData] = useState<GeminiEnhancedData | null>(
-    initialActiveSession ? (initialActiveSession.geminiData || null) : null
+    initialActiveSession ? initialActiveSession.geminiData || null : null
   );
   const [isFetchingGemini, setIsFetchingGemini] = useState<boolean>(false);
   const [aiProgress, setAiProgress] = useState<string>('');
   const [geminiError, setGeminiError] = useState<string>('');
   const [showApiKeyInput, setShowApiKeyInput] = useState<boolean>(false);
-  const [aiProvider, setAiProvider] = useState<AiProvider>(() => (localStorage.getItem('ai_provider') as AiProvider) || 'groq');
+  const [aiProvider, setAiProvider] = useState<AiProvider>(
+    () => (localStorage.getItem('ai_provider') as AiProvider) || 'groq'
+  );
   const [openRouterModel, setOpenRouterModel] = useState<string>(() => {
     const stored = localStorage.getItem('openrouter_model');
     const VALID = [
@@ -644,7 +710,10 @@ export default function App() {
     ];
     return stored && VALID.includes(stored) ? stored : 'google/gemma-4-31b-it:free';
   });
-  const [connectionTest, setConnectionTest] = useState<{ testing: boolean; result: { ok: boolean; message: string } | null }>({ testing: false, result: null });
+  const [connectionTest, setConnectionTest] = useState<{
+    testing: boolean;
+    result: { ok: boolean; message: string } | null;
+  }>({ testing: false, result: null });
 
   // ─── Voice Recording for Mock Interview ─────────────────────────────────────
   const [isRecording, setIsRecording] = useState<boolean>(false);
@@ -664,61 +733,75 @@ export default function App() {
   // AI Mock Coaching States
   const [loadingIdealAnswer, setLoadingIdealAnswer] = useState<boolean>(false);
   const [idealAnswers, setIdealAnswers] = useState<Record<string, string>>(
-    initialActiveSession ? (initialActiveSession.idealAnswers || {}) : {}
+    initialActiveSession ? initialActiveSession.idealAnswers || {} : {}
   );
   const [loadingOptimization, setLoadingOptimization] = useState<boolean>(false);
-  const [optimizedResults, setOptimizedResults] = useState<Record<string, { optimizedAnswer: string; feedback: string }>>(
-    initialActiveSession ? (initialActiveSession.optimizedResults || {}) : {}
-  );
+  const [optimizedResults, setOptimizedResults] = useState<
+    Record<string, { optimizedAnswer: string; feedback: string }>
+  >(initialActiveSession ? initialActiveSession.optimizedResults || {} : {});
   const [showIdealAnswer, setShowIdealAnswer] = useState<Record<string, boolean>>({});
   const [reportIdealLoadingMap, setReportIdealLoadingMap] = useState<Record<string, boolean>>({});
   const [reportShowIdealMap, setReportShowIdealMap] = useState<Record<string, boolean>>({});
   // Company-specific recruiter round questions
   const [recruiterQuestions, setRecruiterQuestions] = useState<RecruiterQuestion[] | null>(
-    initialActiveSession ? (initialActiveSession.recruiterQuestions || null) : null
+    initialActiveSession ? initialActiveSession.recruiterQuestions || null : null
   );
   const [isLoadingRecruiterQuestions, setIsLoadingRecruiterQuestions] = useState<boolean>(false);
 
   // ATS Scanner states
   const [jobDescription, setJobDescription] = useState<string>('');
-  const [coachSubTab, setCoachSubTab] = useState<'checklist' | 'ats' | 'cover-letter' | 'linkedin' | 'plaintext'>('checklist');
+  const [coachSubTab, setCoachSubTab] = useState<
+    'checklist' | 'ats' | 'cover-letter' | 'linkedin' | 'plaintext'
+  >('checklist');
   const [coverLetter, setCoverLetter] = useState<string>('');
   const [copiedPlaintext, setCopiedPlaintext] = useState<boolean>(false);
-  
+
   // Revised Optimizer states (Premium Jobscan clone features)
   const [revisedResumeData, setRevisedResumeData] = useState<ResumeData | null>(null);
   const [showRevisedPreview, setShowRevisedPreview] = useState<boolean>(false);
   const [highlightChanges, setHighlightChanges] = useState<boolean>(true);
   const [appliedFixes, setAppliedFixes] = useState<string[]>([]);
 
-
-
-
-
   // Sync current active session state changes back to savedSessions list
   useEffect(() => {
     if (!currentSessionId) return;
-    setSavedSessions(prev => prev.map(s => {
-      if (s.id === currentSessionId) {
-        return {
-          ...s,
-          mockAnswers,
-          mockScores,
-          idealAnswers,
-          optimizedResults,
-          plan: interviewPlan!,
-          geminiData,
-          recruiterPersonaId: selectedRecruiter.id,
-          recruiterReplies: recruiterReplies,
-          sessionSummaryFeedback: sessionSummaryFeedback || s.sessionSummaryFeedback,
-          recruiterQuestions: recruiterQuestions ?? s.recruiterQuestions,
-          interfaceMode: mockInterfaceMode,
-          isCompleted: isSessionCompleted
-        };
-      }
-      return s;
-    }));
-  }, [currentSessionId, mockAnswers, mockScores, idealAnswers, optimizedResults, interviewPlan, geminiData, selectedRecruiter, recruiterReplies, sessionSummaryFeedback, recruiterQuestions, mockInterfaceMode, isSessionCompleted]);
+    setSavedSessions((prev) =>
+      prev.map((s) => {
+        if (s.id === currentSessionId) {
+          return {
+            ...s,
+            mockAnswers,
+            mockScores,
+            idealAnswers,
+            optimizedResults,
+            plan: interviewPlan!,
+            geminiData,
+            recruiterPersonaId: selectedRecruiter.id,
+            recruiterReplies: recruiterReplies,
+            sessionSummaryFeedback: sessionSummaryFeedback || s.sessionSummaryFeedback,
+            recruiterQuestions: recruiterQuestions ?? s.recruiterQuestions,
+            interfaceMode: mockInterfaceMode,
+            isCompleted: isSessionCompleted,
+          };
+        }
+        return s;
+      })
+    );
+  }, [
+    currentSessionId,
+    mockAnswers,
+    mockScores,
+    idealAnswers,
+    optimizedResults,
+    interviewPlan,
+    geminiData,
+    selectedRecruiter,
+    recruiterReplies,
+    sessionSummaryFeedback,
+    recruiterQuestions,
+    mockInterfaceMode,
+    isSessionCompleted,
+  ]);
 
   // Sync current active session ID to localStorage
   useEffect(() => {
@@ -729,7 +812,7 @@ export default function App() {
         localStorage.removeItem('pro_portfolio_active_session_id');
       }
     } catch (e) {
-      console.error("Failed to save active session ID:", e);
+      console.error('Failed to save active session ID:', e);
     }
   }, [currentSessionId]);
 
@@ -737,7 +820,7 @@ export default function App() {
   useEffect(() => {
     if (mockMode === 'answering' && currentSessionId) {
       if (mockTimerRef.current) clearInterval(mockTimerRef.current);
-      mockTimerRef.current = setInterval(() => setMockTimerSec(s => s + 1), 1000);
+      mockTimerRef.current = setInterval(() => setMockTimerSec((s) => s + 1), 1000);
     }
     return () => {
       if (mockTimerRef.current) clearInterval(mockTimerRef.current);
@@ -747,28 +830,40 @@ export default function App() {
   // Auto-restore STAR inputs on mount if draft answer has STAR tags
   useEffect(() => {
     if (!interviewPlan) return;
-    
+
     // Find active round questions
     let questions: any[] = [];
     if (mockInterfaceMode === 'interactive' && mockRound === 'hr' && recruiterQuestions) {
       questions = recruiterQuestions;
     } else {
-      const activeRoundPlan = interviewPlan.rounds.find(r => r.round === mockRound);
+      const activeRoundPlan = interviewPlan.rounds.find((r) => r.round === mockRound);
       if (activeRoundPlan) {
         questions = activeRoundPlan.questions;
       }
     }
-    
+
     const currentQ = questions[mockQuestionIdx];
     if (mockMode === 'answering' && currentQ) {
       const draftAns = mockAnswers[currentQ.id] || '';
       const text = draftAns.trim();
-      const hasTags = text.includes('[Situation]') || text.includes('[Task]') || text.includes('[Action]') || text.includes('[Result]');
+      const hasTags =
+        text.includes('[Situation]') ||
+        text.includes('[Task]') ||
+        text.includes('[Action]') ||
+        text.includes('[Result]');
       if (hasTags) {
-        const sitMatch = text.match(/\[Situation\]\s*([\s\S]*?)(?=\[Task\]|\[Action\]|\[Result\]|$)/i);
-        const tskMatch = text.match(/\[Task\]\s*([\s\S]*?)(?=\[Situation\]|\[Action\]|\[Result\]|$)/i);
-        const actMatch = text.match(/\[Action\]\s*([\s\S]*?)(?=\[Situation\]|\[Task\]|\[Result\]|$)/i);
-        const resMatch = text.match(/\[Result\]\s*([\s\S]*?)(?=\[Situation\]|\[Task\]|\[Action\]|$)/i);
+        const sitMatch = text.match(
+          /\[Situation\]\s*([\s\S]*?)(?=\[Task\]|\[Action\]|\[Result\]|$)/i
+        );
+        const tskMatch = text.match(
+          /\[Task\]\s*([\s\S]*?)(?=\[Situation\]|\[Action\]|\[Result\]|$)/i
+        );
+        const actMatch = text.match(
+          /\[Action\]\s*([\s\S]*?)(?=\[Situation\]|\[Task\]|\[Result\]|$)/i
+        );
+        const resMatch = text.match(
+          /\[Result\]\s*([\s\S]*?)(?=\[Situation\]|\[Task\]|\[Action\]|$)/i
+        );
         setStarSituation(sitMatch ? sitMatch[1].trim() : '');
         setStarTask(tskMatch ? tskMatch[1].trim() : '');
         setStarAction(actMatch ? actMatch[1].trim() : '');
@@ -797,15 +892,16 @@ export default function App() {
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.onend = () => setSpeakingQId(null);
       utterance.onerror = () => setSpeakingQId(null);
-      
+
       const voices = window.speechSynthesis.getVoices();
-      const voice = voices.find(v => v.lang.startsWith('en') && v.name.includes('Google')) ||
-                    voices.find(v => v.lang.startsWith('en')) || 
-                    voices[0];
+      const voice =
+        voices.find((v) => v.lang.startsWith('en') && v.name.includes('Google')) ||
+        voices.find((v) => v.lang.startsWith('en')) ||
+        voices[0];
       if (voice) {
         utterance.voice = voice;
       }
-      
+
       setSpeakingQId(qId);
       window.speechSynthesis.speak(utterance);
     }
@@ -827,45 +923,61 @@ export default function App() {
       setIsRecruiterSpeaking(false);
       if (onEndCallback) onEndCallback();
     };
-    
+
     const voices = window.speechSynthesis.getVoices();
     let voice = null;
     if (selectedRecruiter.voiceGender === 'female') {
-      voice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Zira') || v.name.includes('Google US English') || v.name.includes('Samantha') || v.name.includes('Hazel') || v.name.includes('female')));
+      voice = voices.find(
+        (v) =>
+          v.lang.startsWith('en') &&
+          (v.name.includes('Zira') ||
+            v.name.includes('Google US English') ||
+            v.name.includes('Samantha') ||
+            v.name.includes('Hazel') ||
+            v.name.includes('female'))
+      );
     } else {
-      voice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('David') || v.name.includes('Google UK English Male') || v.name.includes('Microsoft George') || v.name.includes('male')));
+      voice = voices.find(
+        (v) =>
+          v.lang.startsWith('en') &&
+          (v.name.includes('David') ||
+            v.name.includes('Google UK English Male') ||
+            v.name.includes('Microsoft George') ||
+            v.name.includes('male'))
+      );
     }
-    if (!voice) voice = voices.find(v => v.lang.startsWith('en')) || voices[0];
+    if (!voice) voice = voices.find((v) => v.lang.startsWith('en')) || voices[0];
     if (voice) utterance.voice = voice;
-    
+
     if (selectedRecruiter.id === 'sophia-google') {
-      utterance.rate = 0.95; 
+      utterance.rate = 0.95;
     } else if (selectedRecruiter.id === 'marcus-netflix') {
-      utterance.rate = 1.05; 
+      utterance.rate = 1.05;
     } else {
       utterance.rate = 1.0;
     }
-    
+
     window.speechSynthesis.speak(utterance);
   };
 
   const startListening = (qId: string) => {
     if (isRecording) return;
-    
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+    const SpeechRecognition =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
       alert('Speech recognition is not supported in this browser. Please use Chrome or Edge.');
       return;
     }
-    
+
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = 'en-US';
-    
+
     let initialText = mockAnswers[qId] || '';
     let finalTranscript = initialText;
-    
+
     recognition.onresult = (event: any) => {
       let interim = '';
       for (let i = event.resultIndex; i < event.results.length; i++) {
@@ -875,29 +987,32 @@ export default function App() {
           interim += event.results[i][0].transcript;
         }
       }
-      setMockAnswers(p => ({ ...p, [qId]: finalTranscript + (interim ? ' ' + interim : '') }));
+      setMockAnswers((p) => ({ ...p, [qId]: finalTranscript + (interim ? ' ' + interim : '') }));
     };
-    
+
     recognition.onerror = () => setIsRecording(false);
     recognition.onend = () => setIsRecording(false);
     recognition.start();
     recognitionRef.current = recognition;
 
     // Start audio recorder for local playback
-    navigator.mediaDevices.getUserMedia({ audio: true })
-      .then(stream => {
+    navigator.mediaDevices
+      .getUserMedia({ audio: true })
+      .then((stream) => {
         const recorder = new MediaRecorder(stream);
         audioChunksRef.current = [];
         recorder.ondataavailable = (e) => audioChunksRef.current.push(e.data);
         recorder.onstop = () => {
           const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
           setAudioUrl(URL.createObjectURL(blob));
-          stream.getTracks().forEach(t => t.stop());
+          stream.getTracks().forEach((t) => t.stop());
         };
         recorder.start();
         mediaRecorderRef.current = recorder;
       })
-      .catch(() => { /* optional */ });
+      .catch(() => {
+        /* optional */
+      });
 
     setIsRecording(true);
     setAudioUrl(null);
@@ -921,19 +1036,19 @@ export default function App() {
 
   const submitAnswerInteractive = async (qId: string, question: string, answer: string) => {
     if (mockTimerRef.current) clearInterval(mockTimerRef.current);
-    
+
     if (isRecording) {
       recognitionRef.current?.stop();
       mediaRecorderRef.current?.stop();
       setIsRecording(false);
     }
-    
+
     const scored = scoreAnswer(question, answer, mockRound);
-    setMockScores(p => ({ ...p, [qId]: scored }));
-    
+    setMockScores((p) => ({ ...p, [qId]: scored }));
+
     setIsRecruiterTyping(true);
     setMockMode('reviewed');
-    
+
     try {
       const reply = await generateRecruiterResponse(
         geminiApiKey,
@@ -943,29 +1058,31 @@ export default function App() {
         question,
         answer
       );
-      setRecruiterReplies(p => ({ ...p, [qId]: reply }));
+      setRecruiterReplies((p) => ({ ...p, [qId]: reply }));
       setIsRecruiterTyping(false);
       speakRecruiterText(reply);
     } catch (err) {
       console.error(err);
       setIsRecruiterTyping(false);
-      const fallbackReply = "Thank you for sharing that experience. That makes a lot of sense.";
-      setRecruiterReplies(p => ({ ...p, [qId]: fallbackReply }));
+      const fallbackReply = 'Thank you for sharing that experience. That makes a lot of sense.';
+      setRecruiterReplies((p) => ({ ...p, [qId]: fallbackReply }));
       speakRecruiterText(fallbackReply);
     }
   };
 
-  const finishInteractiveSession = async (sessionQuestions: Array<{ id: string; question: string; difficulty: string; source: string }>) => {
+  const finishInteractiveSession = async (
+    sessionQuestions: Array<{ id: string; question: string; difficulty: string; source: string }>
+  ) => {
     setIsSessionCompleted(true);
     setIsLoadingSummary(true);
     setSessionSummaryFeedback('');
-    
-    const qaPairs = sessionQuestions.map(q => ({
+
+    const qaPairs = sessionQuestions.map((q) => ({
       question: q.question,
       answer: mockAnswers[q.id] || '',
-      score: mockScores[q.id]?.score || 0
+      score: mockScores[q.id]?.score || 0,
     }));
-    
+
     try {
       const summary = await generateSessionFeedbackSummary(
         geminiApiKey,
@@ -977,7 +1094,7 @@ export default function App() {
       setSessionSummaryFeedback(summary);
     } catch (err) {
       console.error(err);
-      setSessionSummaryFeedback("Failed to generate AI executive summary.");
+      setSessionSummaryFeedback('Failed to generate AI executive summary.');
     } finally {
       setIsLoadingSummary(false);
     }
@@ -986,32 +1103,58 @@ export default function App() {
   // Speak recruiter text automatically when moving to a new question in interactive mode
   useEffect(() => {
     if (!interviewPlan) return;
-    if (interviewSubTab === 'mock' && mockMode === 'answering' && mockInterfaceMode === 'interactive') {
+    if (
+      interviewSubTab === 'mock' &&
+      mockMode === 'answering' &&
+      mockInterfaceMode === 'interactive'
+    ) {
       // Use company-specific recruiter questions when available, else fall back to hr round
       const allRounds = [...interviewPlan.rounds];
-      let currentRoundData = allRounds.find(r => r.round === mockRound) || allRounds[0];
+      let currentRoundData = allRounds.find((r) => r.round === mockRound) || allRounds[0];
       if (recruiterQuestions && recruiterQuestions.length > 0) {
-        currentRoundData = { ...currentRoundData, questions: recruiterQuestions as unknown as typeof currentRoundData.questions };
+        currentRoundData = {
+          ...currentRoundData,
+          questions: recruiterQuestions as unknown as typeof currentRoundData.questions,
+        };
       }
       const currentQ = currentRoundData?.questions[mockQuestionIdx];
       if (currentQ) {
-        const textToSpeak = mockQuestionIdx === 0
-          ? `Hi there! I'm ${selectedRecruiter.name}, the ${selectedRecruiter.title} at ${selectedRecruiter.company}. I will be conducting your recruiter screen today. Let's start with our first question: ${currentQ.question}`
-          : `Next question: ${currentQ.question}`;
-        
+        const textToSpeak =
+          mockQuestionIdx === 0
+            ? `Hi there! I'm ${selectedRecruiter.name}, the ${selectedRecruiter.title} at ${selectedRecruiter.company}. I will be conducting your recruiter screen today. Let's start with our first question: ${currentQ.question}`
+            : `Next question: ${currentQ.question}`;
+
         speakRecruiterText(textToSpeak);
       }
     }
-  }, [interviewSubTab, mockMode, mockQuestionIdx, mockRound, mockInterfaceMode, selectedRecruiter, interviewPlan, recruiterQuestions]);
+  }, [
+    interviewSubTab,
+    mockMode,
+    mockQuestionIdx,
+    mockRound,
+    mockInterfaceMode,
+    selectedRecruiter,
+    interviewPlan,
+    recruiterQuestions,
+  ]);
 
   // Auto-activate microphone when recruiter stops speaking
   useEffect(() => {
     if (!interviewPlan) return;
-    if (interviewSubTab === 'mock' && mockMode === 'answering' && mockInterfaceMode === 'interactive' && !isRecruiterSpeaking && !isRecruiterTyping) {
+    if (
+      interviewSubTab === 'mock' &&
+      mockMode === 'answering' &&
+      mockInterfaceMode === 'interactive' &&
+      !isRecruiterSpeaking &&
+      !isRecruiterTyping
+    ) {
       const allRounds = [...interviewPlan.rounds];
-      let currentRoundData = allRounds.find(r => r.round === mockRound) || allRounds[0];
+      let currentRoundData = allRounds.find((r) => r.round === mockRound) || allRounds[0];
       if (recruiterQuestions && recruiterQuestions.length > 0) {
-        currentRoundData = { ...currentRoundData, questions: recruiterQuestions as unknown as typeof currentRoundData.questions };
+        currentRoundData = {
+          ...currentRoundData,
+          questions: recruiterQuestions as unknown as typeof currentRoundData.questions,
+        };
       }
       const currentQ = currentRoundData?.questions[mockQuestionIdx];
       if (currentQ && autoActivateMic && !isRecording) {
@@ -1021,8 +1164,17 @@ export default function App() {
         return () => clearTimeout(t);
       }
     }
-  }, [interviewSubTab, mockMode, isRecruiterSpeaking, isRecruiterTyping, mockQuestionIdx, mockRound, autoActivateMic, interviewPlan, recruiterQuestions]);
-
+  }, [
+    interviewSubTab,
+    mockMode,
+    isRecruiterSpeaking,
+    isRecruiterTyping,
+    mockQuestionIdx,
+    mockRound,
+    autoActivateMic,
+    interviewPlan,
+    recruiterQuestions,
+  ]);
 
   // Forms helper states for adding items
   const [newJob, setNewJob] = useState<Partial<WorkExperience>>({
@@ -1032,7 +1184,7 @@ export default function App() {
     period: '',
     current: false,
     description: [''],
-    technologies: []
+    technologies: [],
   });
   const [newJobTechInput, setNewJobTechInput] = useState<string>('');
 
@@ -1044,14 +1196,18 @@ export default function App() {
     link: '',
     github: '',
     category: 'Fullstack',
-    featured: true
+    featured: true,
   });
   const [newProjTechInput, setNewProjTechInput] = useState<string>('');
 
-  const [newSkill, setNewSkill] = useState<{ name: string; level: number; category: Skill['category'] }>({
+  const [newSkill, setNewSkill] = useState<{
+    name: string;
+    level: number;
+    category: Skill['category'];
+  }>({
     name: '',
     level: 80,
-    category: 'Frontend'
+    category: 'Frontend',
   });
 
   const [newEducation, setNewEducation] = useState<Partial<Education>>({
@@ -1060,25 +1216,28 @@ export default function App() {
     fieldOfStudy: '',
     location: '',
     period: '',
-    grade: ''
+    grade: '',
   });
 
   const [newCertificate, setNewCertificate] = useState<Partial<Certificate>>({
     name: '',
     issuer: '',
     date: '',
-    link: ''
+    link: '',
   });
 
   // Coach analyzer calculation
   const analysis = useMemo(() => analyzeResume(resumeData), [resumeData]);
-  
+
   // ATS Scanner calculation
-  const atsAnalysis = useMemo(() => analyzeATSCompliance(resumeData, jobDescription), [resumeData, jobDescription]);
+  const atsAnalysis = useMemo(
+    () => analyzeATSCompliance(resumeData, jobDescription),
+    [resumeData, jobDescription]
+  );
 
   // Unified data selector for original vs AI-revised preview modes
   const activeData = useMemo(() => {
-    return (showRevisedPreview && revisedResumeData) ? revisedResumeData : resumeData;
+    return showRevisedPreview && revisedResumeData ? revisedResumeData : resumeData;
   }, [showRevisedPreview, revisedResumeData, resumeData]);
 
   // Revised ATS Score calculation
@@ -1110,11 +1269,14 @@ export default function App() {
   }, [showRevisedPreview, revisedAnalysis, analysis]);
 
   // Cover Letter analysis calculation
-  const coverLetterAnalysis = useMemo(() => analyzeCoverLetter(coverLetter, jobDescription), [coverLetter, jobDescription]);
+  const coverLetterAnalysis = useMemo(
+    () => analyzeCoverLetter(coverLetter, jobDescription),
+    [coverLetter, jobDescription]
+  );
   // Automatically mark message as read when viewing inbox
   useEffect(() => {
     if (rightTab === 'inbox') {
-      setContactMessages(prev => prev.map(m => ({ ...m, unread: false })));
+      setContactMessages((prev) => prev.map((m) => ({ ...m, unread: false })));
     }
   }, [rightTab]);
 
@@ -1123,13 +1285,13 @@ export default function App() {
   // Handle file uploads (.json, .pdf, .docx, .txt)
   const handleFileUpload = async (file: File) => {
     if (!file) return;
-    
+
     setUploadedFileName(file.name);
     setFileErrorMessage('');
     setIsParsing(true);
 
     // Create a local URL for the PDF preview
-    if (file.type === "application/pdf" || file.name.endsWith('.pdf')) {
+    if (file.type === 'application/pdf' || file.name.endsWith('.pdf')) {
       const url = URL.createObjectURL(file);
       setUploadedResumeUrl(url);
     }
@@ -1160,9 +1322,11 @@ export default function App() {
 
       // Extract text using our new utility (supports PDF and Word)
       const content = await extractTextFromFile(file);
-      
+
       if (!content || content.trim().length < 50) {
-        setFileErrorMessage('The document appears empty or unreadable. Try copy-pasting the text instead.');
+        setFileErrorMessage(
+          'The document appears empty or unreadable. Try copy-pasting the text instead.'
+        );
         setIsParsing(false);
         return;
       }
@@ -1170,7 +1334,7 @@ export default function App() {
       setRawTextImport(content);
       console.log('Extracted Resume Content:', content);
       const parsedData = parseRawResumeText(content);
-      
+
       const finalData: ResumeData = {
         personal: {
           name: parsedData.personal?.name || '',
@@ -1186,15 +1350,15 @@ export default function App() {
             linkedin: parsedData.personal?.socials?.linkedin,
             twitter: parsedData.personal?.socials?.twitter,
             email: parsedData.personal?.email ? `mailto:${parsedData.personal.email}` : undefined,
-            portfolio: undefined
-          }
+            portfolio: undefined,
+          },
         },
         experience: parsedData.experience || [],
         skills: parsedData.skills || [],
         education: parsedData.education || [],
         projects: parsedData.projects || [],
         certificates: parsedData.certificates || [],
-        testimonials: parsedData.testimonials || []
+        testimonials: parsedData.testimonials || [],
       };
 
       setResumeData(finalData);
@@ -1203,7 +1367,9 @@ export default function App() {
       saveResumeToHistory(finalData, tunedTheme);
       setIsParsing(false);
       setImportSuccess(true);
-      setFileErrorMessage(`Imported ${finalData.experience.length} roles, ${finalData.skills.length} skills, and ${finalData.projects.length} projects successfully.`);
+      setFileErrorMessage(
+        `Imported ${finalData.experience.length} roles, ${finalData.skills.length} skills, and ${finalData.projects.length} projects successfully.`
+      );
       setLeftTab('profile');
       setTimeout(() => setFileErrorMessage(''), 6000);
     } catch (err: any) {
@@ -1219,7 +1385,7 @@ export default function App() {
     setIsParsing(true);
     setTimeout(() => {
       const parsedData = parseRawResumeText(rawTextImport);
-      
+
       const finalData: ResumeData = {
         personal: {
           name: parsedData.personal?.name || '',
@@ -1235,15 +1401,15 @@ export default function App() {
             linkedin: parsedData.personal?.socials?.linkedin,
             twitter: parsedData.personal?.socials?.twitter,
             email: parsedData.personal?.email ? `mailto:${parsedData.personal.email}` : undefined,
-            portfolio: undefined
-          }
+            portfolio: undefined,
+          },
         },
         experience: parsedData.experience || [],
         skills: parsedData.skills || [],
         education: parsedData.education || [],
         projects: parsedData.projects || [],
         certificates: parsedData.certificates || [],
-        testimonials: parsedData.testimonials || []
+        testimonials: parsedData.testimonials || [],
       };
 
       setResumeData(finalData);
@@ -1257,7 +1423,9 @@ export default function App() {
 
       setIsParsing(false);
       setImportSuccess(true);
-      setFileErrorMessage(`Imported ${finalData.experience.length} roles, ${finalData.skills.length} skills, and ${finalData.projects.length} projects successfully.`);
+      setFileErrorMessage(
+        `Imported ${finalData.experience.length} roles, ${finalData.skills.length} skills, and ${finalData.projects.length} projects successfully.`
+      );
 
       setLeftTab('profile');
       setTimeout(() => {
@@ -1273,21 +1441,26 @@ export default function App() {
       id: `res-${Date.now()}`,
       name: data.personal.name || 'Professional Candidate',
       title: data.personal.title || 'Senior Software Engineer',
-      date: new Date().toLocaleDateString() + ' ' + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+      date:
+        new Date().toLocaleDateString() +
+        ' ' +
+        new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       data,
-      theme
+      theme,
     };
 
-    setSavedResumes(prev => {
+    setSavedResumes((prev) => {
       // Check if a copy with the exact same name/title already exists to avoid duplication
-      const filtered = prev.filter(item => !(item.name === data.personal.name && item.title === data.personal.title));
+      const filtered = prev.filter(
+        (item) => !(item.name === data.personal.name && item.title === data.personal.title)
+      );
       return [newHistoryItem, ...filtered];
     });
   };
 
   // Load selected resume profile from history
   const loadResumeFromHistory = (id: string) => {
-    const selected = savedResumes.find(item => item.id === id);
+    const selected = savedResumes.find((item) => item.id === id);
     if (selected) {
       setResumeData(selected.data);
       setThemeSettings(selected.theme);
@@ -1297,7 +1470,7 @@ export default function App() {
   // Delete resume entry from history
   const deleteResumeFromHistory = (id: string, e: React.MouseEvent) => {
     e.stopPropagation(); // prevent loading the resume when clicking delete button
-    setSavedResumes(prev => prev.filter(item => item.id !== id));
+    setSavedResumes((prev) => prev.filter((item) => item.id !== id));
   };
 
   // Download MS Word document (.docx format) of the active resume (original or revised)
@@ -1307,9 +1480,11 @@ export default function App() {
       const dataToExport = showRevisedPreview && revisedResumeData ? revisedResumeData : resumeData;
       console.log('handleWordDownload: data to export:', dataToExport);
       if (!dataToExport) {
-        throw new Error('No resume data is available to export. Please import or type resume details first.');
+        throw new Error(
+          'No resume data is available to export. Please import or type resume details first.'
+        );
       }
-      
+
       // Determine target Word template: direct override, or intelligently map themeSettings.id
       let targetTemplate = 'classic';
       if (templateOverride && typeof templateOverride === 'string') {
@@ -1322,15 +1497,15 @@ export default function App() {
         else if (themeId === 'cyberpunk') targetTemplate = 'stellar';
         else if (themeId === 'gradient') targetTemplate = 'modern';
       }
-      
+
       console.log('handleWordDownload: Using template layout:', targetTemplate);
       const wordBlob = await generateWordDocument(dataToExport, targetTemplate);
       console.log('handleWordDownload: word blob successfully generated:', wordBlob);
-      
+
       const url = URL.createObjectURL(wordBlob);
       const a = document.createElement('a');
       a.href = url;
-      
+
       const nameSegment = dataToExport.personal?.name || 'resume';
       a.download = `${nameSegment.toLowerCase().replace(/\s+/g, '-')}-optimized.docx`;
       document.body.appendChild(a);
@@ -1340,7 +1515,9 @@ export default function App() {
       console.log('handleWordDownload: Word export download triggered successfully!');
     } catch (err) {
       console.error('Failed to export DOCX:', err);
-      alert(`Failed to export MS Word (.docx) document. Please check your data.\nError: ${err instanceof Error ? err.message : String(err)}`);
+      alert(
+        `Failed to export MS Word (.docx) document. Please check your data.\nError: ${err instanceof Error ? err.message : String(err)}`
+      );
     }
   };
 
@@ -1348,7 +1525,7 @@ export default function App() {
   const handlePdfPrint = () => {
     setShowPrintModal(true);
   };
-  
+
   const [printTemplate, setPrintTemplate] = useState<string>('classic');
   const [paperSize, setPaperSize] = useState<'letter' | 'a4'>('letter');
   const [spacingDensity, setSpacingDensity] = useState<'normal' | 'compact' | 'tight'>('normal');
@@ -1396,10 +1573,10 @@ export default function App() {
     // Measure boundaries against net available height to prevent bottom padding clipping
     // Letter: 1056px, A4: 1123px. Classic layouts have 0.5in top + 0.5in bottom padding (1in = 96px total)
     const targetHeight = paperSize === 'letter' ? 1056 : 1123;
-    const paddingInches = (printTemplate === 'creative' || printTemplate === 'stellar') ? 0 : 1.0;
+    const paddingInches = printTemplate === 'creative' || printTemplate === 'stellar' ? 0 : 1.0;
     const paddingPx = paddingInches * 96;
     const availableHeight = targetHeight - paddingPx;
-    
+
     if (naturalHeight > availableHeight) {
       const ratio = (availableHeight / naturalHeight) * 0.98;
       const safeRatio = Math.max(0.5, ratio);
@@ -1418,22 +1595,22 @@ export default function App() {
       }
 
       // Allow DOM scheduler buffer to stabilize
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 200));
 
       const canvas = await html2canvas(element, {
         scale: 2.5, // Ultra-sharp 2.5x retina-density resolution
         useCORS: true,
         allowTaint: true,
         logging: false,
-        backgroundColor: printTemplate === 'stellar' ? '#020617' : '#ffffff'
+        backgroundColor: printTemplate === 'stellar' ? '#020617' : '#ffffff',
       });
 
       const imgData = canvas.toDataURL('image/jpeg', 0.98);
-      
+
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'in',
-        format: paperSize === 'letter' ? 'letter' : 'a4'
+        format: paperSize === 'letter' ? 'letter' : 'a4',
       });
 
       const pdfWidth = paperSize === 'letter' ? 8.5 : 8.27; // 210mm = ~8.27in
@@ -1442,7 +1619,10 @@ export default function App() {
       pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
       pdf.save(`${resumeData.personal.name.toLowerCase().replace(/\s+/g, '-')}-resume.pdf`);
     } catch (err) {
-      console.error('Direct high-fidelity PDF capture failed, falling back to native browser engine:', err);
+      console.error(
+        'Direct high-fidelity PDF capture failed, falling back to native browser engine:',
+        err
+      );
       window.print();
     } finally {
       setIsGeneratingPdf(false);
@@ -1463,12 +1643,16 @@ export default function App() {
 
   const triggerAIOptimization = () => {
     if (!jobDescription.trim()) {
-      alert("⚠️ Please paste a target Job Description in the input box first, so we can analyze and optimize your resume keywords to match it.");
+      alert(
+        '⚠️ Please paste a target Job Description in the input box first, so we can analyze and optimize your resume keywords to match it.'
+      );
       return;
     }
     const { revisedData, fixes } = autoOptimizeResume(resumeData, jobDescription);
     if (fixes.length === 0) {
-      alert("ℹ️ Your resume is already fully optimized for this Job Description! No missing keywords or weak action verbs were detected.");
+      alert(
+        'ℹ️ Your resume is already fully optimized for this Job Description! No missing keywords or weak action verbs were detected.'
+      );
       return;
     }
     setRevisedResumeData(revisedData);
@@ -1485,7 +1669,7 @@ export default function App() {
       setShowRevisedPreview(false);
       setAppliedFixes([]);
       setShowOptimizerModal(false);
-      
+
       // Preserve user theme settings, only update content
     }
   };
@@ -1506,7 +1690,7 @@ export default function App() {
     try {
       setIsZipping(true);
       const zipBlob = await generatePortfolioZip(resumeData, themeSettings);
-      
+
       const url = URL.createObjectURL(zipBlob);
       const a = document.createElement('a');
       a.href = url;
@@ -1519,7 +1703,7 @@ export default function App() {
       setCopiedZip(true);
       setTimeout(() => setCopiedZip(false), 2500);
     } catch (error) {
-      console.error("ZIP packaging failed:", error);
+      console.error('ZIP packaging failed:', error);
     } finally {
       setIsZipping(false);
     }
@@ -1560,10 +1744,10 @@ export default function App() {
     try {
       // 1. Structural collection of all portfolio project files
       const portfolioFiles = getPortfolioFiles(resumeData, themeSettings);
-      const vercelFiles = portfolioFiles.map(f => ({
+      const vercelFiles = portfolioFiles.map((f) => ({
         file: f.file,
         data: f.data,
-        encoding: 'utf-8'
+        encoding: 'utf-8',
       }));
 
       setVercelDeployState('deploying');
@@ -1573,21 +1757,23 @@ export default function App() {
       const response = await fetch('https://api.vercel.com/v13/deployments', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${vercelToken.trim()}`,
-          'Content-Type': 'application/json'
+          Authorization: `Bearer ${vercelToken.trim()}`,
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           name: vercelProjectName.trim(),
           projectSettings: {
-            framework: 'vite'
+            framework: 'vite',
           },
-          files: vercelFiles
-        })
+          files: vercelFiles,
+        }),
       });
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData?.error?.message || `Vercel API returned status code ${response.status}`);
+        throw new Error(
+          errorData?.error?.message || `Vercel API returned status code ${response.status}`
+        );
       }
 
       const deployData = await response.json();
@@ -1600,11 +1786,14 @@ export default function App() {
       // 3. Status Polling Loop every 3 seconds
       const pollInterval = setInterval(async () => {
         try {
-          const pollResponse = await fetch(`https://api.vercel.com/v13/deployments/${deploymentId}`, {
-            headers: {
-              'Authorization': `Bearer ${vercelToken.trim()}`
+          const pollResponse = await fetch(
+            `https://api.vercel.com/v13/deployments/${deploymentId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${vercelToken.trim()}`,
+              },
             }
-          });
+          );
 
           if (!pollResponse.ok) return;
 
@@ -1620,34 +1809,42 @@ export default function App() {
             setVercelError(`Vercel build pipeline failed with status: ${currentStatus}`);
             setVercelDeployState('error');
           } else {
-            setVercelDeployProgress(`Vercel build pipeline status: ${currentStatus.toLowerCase()}...`);
+            setVercelDeployProgress(
+              `Vercel build pipeline status: ${currentStatus.toLowerCase()}...`
+            );
           }
         } catch (pollErr) {
-          console.error("Error polling deployment status:", pollErr);
+          console.error('Error polling deployment status:', pollErr);
         }
       }, 3000);
 
       // Timeout safety net: 4 minutes max build polling time
       setTimeout(() => {
         clearInterval(pollInterval);
-        setVercelDeployState(prev => {
+        setVercelDeployState((prev) => {
           if (prev === 'polling') {
-            setVercelError('Deployment polling timeout. Please check your Vercel Dashboard directly.');
+            setVercelError(
+              'Deployment polling timeout. Please check your Vercel Dashboard directly.'
+            );
             return 'error';
           }
           return prev;
         });
       }, 240000);
-
     } catch (err: any) {
-      console.error("Vercel deployment failed:", err);
+      console.error('Vercel deployment failed:', err);
       setVercelError(err.message || 'An unexpected error occurred during Vercel deployment.');
       setVercelDeployState('error');
     }
   };
 
   // Live Contact Form Submission in Preview
-  const handleMockContactSubmit = (name: string, email: string, subject: string, message: string): boolean => {
+  const handleMockContactSubmit = (
+    name: string,
+    email: string,
+    subject: string,
+    message: string
+  ): boolean => {
     const newMsg: ContactMessage = {
       id: `msg-${Date.now()}`,
       name,
@@ -1655,20 +1852,21 @@ export default function App() {
       subject,
       message,
       date: new Date().toLocaleDateString(),
-      unread: true
+      unread: true,
     };
-    setContactMessages(prev => [newMsg, ...prev]);
+    setContactMessages((prev) => [newMsg, ...prev]);
     return true;
   };
 
   // AI Bullet Improver Action
   const handleImproveBullet = () => {
     if (!bulletInput.trim()) return;
-    
+
     // Find a standard preset match or generate dynamic variants
-    const preset = actionVerbDictionary.find(item => 
-      bulletInput.toLowerCase().includes(item.original.toLowerCase()) || 
-      item.original.toLowerCase().includes(bulletInput.toLowerCase())
+    const preset = actionVerbDictionary.find(
+      (item) =>
+        bulletInput.toLowerCase().includes(item.original.toLowerCase()) ||
+        item.original.toLowerCase().includes(bulletInput.toLowerCase())
     );
 
     if (preset) {
@@ -1679,18 +1877,18 @@ export default function App() {
         impact: [
           `Spearheaded workflow optimization initiatives, boosting operational velocity by 35% and saving 8 resource hours weekly.`,
           `Designed and automated transactional pipelines, reducing visual execution latencies by 40% on peak loads.`,
-          `Transformed key system sub-routines to support high concurrency, cleanly handling 15,000+ concurrent requests.`
+          `Transformed key system sub-routines to support high concurrency, cleanly handling 15,000+ concurrent requests.`,
         ],
         verbs: [
           `Optimized core data structures and indexing paths, slashing dashboard response speeds from 3s down to 400ms.`,
           `Architected modular React widgets utilizing Tailwind and accessible primitives, improving code reusability by 50%.`,
-          `Coordinated cross-functional squads to ship robust backend APIs, accelerating engineering delivery by 3 weeks.`
+          `Coordinated cross-functional squads to ship robust backend APIs, accelerating engineering delivery by 3 weeks.`,
         ],
         technical: [
           `Engineered robust TypeScript models and automated Jest testing pipelines, expanding codebase test coverage to 95%.`,
           `Deployed serverless caching engines utilizing Redis pub/sub, reducing SQL database call bottlenecks by 60%.`,
-          `Integrated automated GitHub Actions CI/CD processes, cutting QA environment deployment cycles from 2 hours to 5 minutes.`
-        ]
+          `Integrated automated GitHub Actions CI/CD processes, cutting QA environment deployment cycles from 2 hours to 5 minutes.`,
+        ],
       };
 
       setImprovedBullets(verbs[bulletStyle]);
@@ -1735,7 +1933,7 @@ export default function App() {
 export default function Portfolio() {
   const [projectCategory, setProjectCategory] = useState('All');
   const [selectedProject, setSelectedProject] = useState(null);
-  const [activeExperience, setActiveExperience] = useState('${resumeData.experience[0]?.id || ""}');
+  const [activeExperience, setActiveExperience] = useState('${resumeData.experience[0]?.id || ''}');
   const [contactName, setContactName] = useState('');
   const [contactEmail, setContactEmail] = useState('');
   const [contactMessage, setContactMessage] = useState('');
@@ -1837,25 +2035,25 @@ export default function Portfolio() {
 
   // Form state updates helpers
   const handlePersonalChange = (field: string, value: string) => {
-    setResumeData(prev => ({
+    setResumeData((prev) => ({
       ...prev,
       personal: {
         ...prev.personal,
-        [field]: value
-      }
+        [field]: value,
+      },
     }));
   };
 
   const handleSocialChange = (field: string, value: string) => {
-    setResumeData(prev => ({
+    setResumeData((prev) => ({
       ...prev,
       personal: {
         ...prev.personal,
         socials: {
           ...prev.personal.socials,
-          [field]: value
-        }
-      }
+          [field]: value,
+        },
+      },
     }));
   };
 
@@ -1864,7 +2062,7 @@ export default function Portfolio() {
     if (!file) return;
 
     if (file.size > 2 * 1024 * 1024) {
-      alert("Image size should be less than 2MB.");
+      alert('Image size should be less than 2MB.');
       return;
     }
 
@@ -1880,64 +2078,67 @@ export default function Portfolio() {
 
   const handleRemoveAvatar = () => {
     const initials = resumeData.personal.name
-      ? resumeData.personal.name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)
+      ? resumeData.personal.name
+          .split(' ')
+          .map((n) => n[0])
+          .join('')
+          .toUpperCase()
+          .substring(0, 2)
       : 'AR';
     handlePersonalChange('avatar', initials || 'AR');
   };
 
   // Experience mutators
   const handleJobChange = (id: string, field: keyof WorkExperience, value: any) => {
-    setResumeData(prev => ({
+    setResumeData((prev) => ({
       ...prev,
-      experience: prev.experience.map(exp => 
-        exp.id === id ? { ...exp, [field]: value } : exp
-      )
+      experience: prev.experience.map((exp) => (exp.id === id ? { ...exp, [field]: value } : exp)),
     }));
   };
 
   const handleBulletChange = (jobId: string, bulletIdx: number, text: string) => {
-    setResumeData(prev => ({
+    setResumeData((prev) => ({
       ...prev,
-      experience: prev.experience.map(exp => {
+      experience: prev.experience.map((exp) => {
         if (exp.id !== jobId) return exp;
         const newDesc = [...exp.description];
         newDesc[bulletIdx] = text;
         return { ...exp, description: newDesc };
-      })
+      }),
     }));
   };
 
   const handleAddBullet = (jobId: string) => {
-    setResumeData(prev => ({
+    setResumeData((prev) => ({
       ...prev,
-      experience: prev.experience.map(exp => {
+      experience: prev.experience.map((exp) => {
         if (exp.id !== jobId) return exp;
         return { ...exp, description: [...exp.description, ''] };
-      })
+      }),
     }));
   };
 
   const handleRemoveBullet = (jobId: string, bulletIdx: number) => {
-    setResumeData(prev => ({
+    setResumeData((prev) => ({
       ...prev,
-      experience: prev.experience.map(exp => {
+      experience: prev.experience.map((exp) => {
         if (exp.id !== jobId) return exp;
         const newDesc = exp.description.filter((_, idx) => idx !== bulletIdx);
         return { ...exp, description: newDesc };
-      })
+      }),
     }));
   };
 
   const handleRemoveJob = (jobId: string) => {
-    setResumeData(prev => ({
+    setResumeData((prev) => ({
       ...prev,
-      experience: prev.experience.filter(exp => exp.id !== jobId)
+      experience: prev.experience.filter((exp) => exp.id !== jobId),
     }));
   };
 
   const handleAddJob = () => {
     if (!newJob.company || !newJob.position) return;
-    
+
     const item: WorkExperience = {
       id: `exp-${Date.now()}`,
       company: newJob.company,
@@ -1946,12 +2147,17 @@ export default function Portfolio() {
       period: newJob.period || '2024 - Present',
       current: newJob.current || false,
       description: newJob.description?.filter(Boolean) || ['Coordinated development activities'],
-      technologies: newJobTechInput ? newJobTechInput.split(',').map(t => t.trim()).filter(Boolean) : []
+      technologies: newJobTechInput
+        ? newJobTechInput
+            .split(',')
+            .map((t) => t.trim())
+            .filter(Boolean)
+        : [],
     };
 
-    setResumeData(prev => ({
+    setResumeData((prev) => ({
       ...prev,
-      experience: [...prev.experience, item]
+      experience: [...prev.experience, item],
     }));
 
     // Reset
@@ -1962,23 +2168,24 @@ export default function Portfolio() {
       period: '',
       current: false,
       description: [''],
-      technologies: []
+      technologies: [],
     });
     setNewJobTechInput('');
   };
 
   // Projects mutators
   const handleProjChange = (id: string, field: keyof Project, value: any) => {
-    setResumeData(prev => ({
+    setResumeData((prev) => ({
       ...prev,
-      projects: prev.projects.map(p => 
-        p.id === id ? { ...p, [field]: value } : p
-      )
+      projects: prev.projects.map((p) => (p.id === id ? { ...p, [field]: value } : p)),
     }));
   };
 
   const handleProjTechChange = (id: string, techString: string) => {
-    const tags = techString.split(',').map(t => t.trim()).filter(Boolean);
+    const tags = techString
+      .split(',')
+      .map((t) => t.trim())
+      .filter(Boolean);
     handleProjChange(id, 'techStack', tags);
   };
 
@@ -1990,16 +2197,21 @@ export default function Portfolio() {
       title: newProj.title,
       description: newProj.description,
       longDescription: newProj.longDescription || newProj.description,
-      techStack: newProjTechInput ? newProjTechInput.split(',').map(t => t.trim()).filter(Boolean) : [],
+      techStack: newProjTechInput
+        ? newProjTechInput
+            .split(',')
+            .map((t) => t.trim())
+            .filter(Boolean)
+        : [],
       link: newProj.link,
       github: newProj.github,
       category: newProj.category || 'Fullstack',
-      featured: newProj.featured || true
+      featured: newProj.featured || true,
     };
 
-    setResumeData(prev => ({
+    setResumeData((prev) => ({
       ...prev,
-      projects: [...prev.projects, item]
+      projects: [...prev.projects, item],
     }));
 
     // Reset
@@ -2011,45 +2223,45 @@ export default function Portfolio() {
       link: '',
       github: '',
       category: 'Fullstack',
-      featured: true
+      featured: true,
     });
     setNewProjTechInput('');
   };
 
   const handleRemoveProj = (projId: string) => {
-    setResumeData(prev => ({
+    setResumeData((prev) => ({
       ...prev,
-      projects: prev.projects.filter(p => p.id !== projId)
+      projects: prev.projects.filter((p) => p.id !== projId),
     }));
   };
 
   // Skills mutators
   const handleSkillLevelChange = (skillName: string, level: number) => {
-    setResumeData(prev => ({
+    setResumeData((prev) => ({
       ...prev,
-      skills: prev.skills.map(s => s.name === skillName ? { ...s, level } : s)
+      skills: prev.skills.map((s) => (s.name === skillName ? { ...s, level } : s)),
     }));
   };
 
   const handleRemoveSkill = (skillName: string) => {
-    setResumeData(prev => ({
+    setResumeData((prev) => ({
       ...prev,
-      skills: prev.skills.filter(s => s.name !== skillName)
+      skills: prev.skills.filter((s) => s.name !== skillName),
     }));
   };
 
   const handleAddSkill = () => {
     if (!newSkill.name.trim()) return;
-    
+
     const skillItem: Skill = {
       name: newSkill.name.trim(),
       level: newSkill.level,
-      category: newSkill.category
+      category: newSkill.category,
     };
 
-    setResumeData(prev => ({
+    setResumeData((prev) => ({
       ...prev,
-      skills: [...prev.skills, skillItem]
+      skills: [...prev.skills, skillItem],
     }));
 
     setNewSkill({ name: '', level: 80, category: 'Frontend' });
@@ -2057,24 +2269,22 @@ export default function Portfolio() {
 
   // Education mutators
   const handleEduChange = (id: string, field: keyof Education, value: any) => {
-    setResumeData(prev => ({
+    setResumeData((prev) => ({
       ...prev,
-      education: prev.education.map(edu => 
-        edu.id === id ? { ...edu, [field]: value } : edu
-      )
+      education: prev.education.map((edu) => (edu.id === id ? { ...edu, [field]: value } : edu)),
     }));
   };
 
   const handleRemoveEdu = (id: string) => {
-    setResumeData(prev => ({
+    setResumeData((prev) => ({
       ...prev,
-      education: prev.education.filter(edu => edu.id !== id)
+      education: prev.education.filter((edu) => edu.id !== id),
     }));
   };
 
   const handleAddEdu = () => {
     if (!newEducation.institution || !newEducation.degree) return;
-    
+
     const item: Education = {
       id: `edu-${Date.now()}`,
       institution: newEducation.institution,
@@ -2082,12 +2292,12 @@ export default function Portfolio() {
       fieldOfStudy: newEducation.fieldOfStudy || '',
       location: newEducation.location || '',
       period: newEducation.period || '',
-      grade: newEducation.grade || ''
+      grade: newEducation.grade || '',
     };
 
-    setResumeData(prev => ({
+    setResumeData((prev) => ({
       ...prev,
-      education: [...prev.education, item]
+      education: [...prev.education, item],
     }));
 
     setNewEducation({
@@ -2096,61 +2306,71 @@ export default function Portfolio() {
       fieldOfStudy: '',
       location: '',
       period: '',
-      grade: ''
+      grade: '',
     });
   };
 
   // Certificates mutators
   const handleCertChange = (id: string, field: keyof Certificate, value: any) => {
-    setResumeData(prev => ({
+    setResumeData((prev) => ({
       ...prev,
-      certificates: prev.certificates.map(cert => 
+      certificates: prev.certificates.map((cert) =>
         cert.id === id ? { ...cert, [field]: value } : cert
-      )
+      ),
     }));
   };
 
   const handleRemoveCert = (id: string) => {
-    setResumeData(prev => ({
+    setResumeData((prev) => ({
       ...prev,
-      certificates: prev.certificates.filter(cert => cert.id !== id)
+      certificates: prev.certificates.filter((cert) => cert.id !== id),
     }));
   };
 
   const handleAddCert = () => {
     if (!newCertificate.name || !newCertificate.issuer) return;
-    
+
     const item: Certificate = {
       id: `cert-${Date.now()}`,
       name: newCertificate.name,
       issuer: newCertificate.issuer,
       date: newCertificate.date || '',
-      link: newCertificate.link || ''
+      link: newCertificate.link || '',
     };
 
-    setResumeData(prev => ({
+    setResumeData((prev) => ({
       ...prev,
-      certificates: [...prev.certificates, item]
+      certificates: [...prev.certificates, item],
     }));
 
     setNewCertificate({
       name: '',
       issuer: '',
       date: '',
-      link: ''
+      link: '',
     });
   };
 
   return (
-    <div id="app-root-container" className={`flex flex-col h-screen bg-slate-900 text-slate-100 select-none font-sans antialiased overflow-hidden theme-${appTheme}`}>
-      
+    <div
+      id="app-root-container"
+      className={`flex flex-col h-screen bg-slate-900 text-slate-100 select-none font-sans antialiased overflow-hidden theme-${appTheme}`}
+    >
       {/* TOP HEADER */}
       <header className="flex flex-shrink-0 items-center justify-between px-4 sm:px-6 h-16 bg-slate-950 border-b border-slate-800 relative z-40">
         <div className="flex items-center gap-3">
-          <img src="/logo.png" alt="ProPortfolio Logo" className="h-9 w-9 rounded-xl shadow border border-slate-850 object-cover shrink-0" />
+          <img
+            src="/logo.png"
+            alt="ProPortfolio Logo"
+            className="h-9 w-9 rounded-xl shadow border border-slate-850 object-cover shrink-0"
+          />
           <div>
-            <h1 className="text-xs sm:text-sm font-bold tracking-tight text-white">ProPortfolio Builder</h1>
-            <p className="text-[10px] text-slate-500 font-medium hidden md:block">Dynamic Interactive Resume & Optimizer</p>
+            <h1 className="text-xs sm:text-sm font-bold tracking-tight text-white">
+              ProPortfolio Builder
+            </h1>
+            <p className="text-[10px] text-slate-500 font-medium hidden md:block">
+              Dynamic Interactive Resume & Optimizer
+            </p>
           </div>
         </div>
 
@@ -2160,16 +2380,24 @@ export default function Portfolio() {
             {user ? (
               <div className="flex items-center gap-2">
                 {/* Sync status indicator */}
-                <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold border transition-colors ${
-                  syncStatus === 'syncing'
-                    ? 'bg-blue-955/20 border-blue-900/50 text-blue-400 animate-pulse'
+                <span
+                  className={`text-[9px] px-2 py-0.5 rounded-full font-bold border transition-colors ${
+                    syncStatus === 'syncing'
+                      ? 'bg-blue-955/20 border-blue-900/50 text-blue-400 animate-pulse'
+                      : syncStatus === 'synced'
+                        ? 'bg-emerald-955/25 border-emerald-900/30 text-emerald-400'
+                        : syncStatus === 'error'
+                          ? 'bg-rose-955/20 border-rose-900/50 text-rose-400'
+                          : 'bg-slate-900 border-slate-800 text-slate-500'
+                  }`}
+                >
+                  {syncStatus === 'syncing'
+                    ? '⏳ Syncing'
                     : syncStatus === 'synced'
-                      ? 'bg-emerald-955/25 border-emerald-900/30 text-emerald-400'
+                      ? '☁ Saved'
                       : syncStatus === 'error'
-                        ? 'bg-rose-955/20 border-rose-900/50 text-rose-400'
-                        : 'bg-slate-900 border-slate-800 text-slate-500'
-                }`}>
-                  {syncStatus === 'syncing' ? '⏳ Syncing' : syncStatus === 'synced' ? '☁ Saved' : syncStatus === 'error' ? '⚠ Sync Error' : '☁ Local'}
+                        ? '⚠ Sync Error'
+                        : '☁ Local'}
                 </span>
 
                 {/* User Info & Sign Out */}
@@ -2237,7 +2465,11 @@ export default function Portfolio() {
               )}
               <span>
                 <span className="hidden sm:inline">Theme: </span>
-                {appTheme === 'slate-dark' ? 'Slate' : appTheme === 'indigo-midnight' ? 'Indigo' : 'Nord'}
+                {appTheme === 'slate-dark'
+                  ? 'Slate'
+                  : appTheme === 'indigo-midnight'
+                    ? 'Indigo'
+                    : 'Nord'}
               </span>
               <ChevronDown className="w-3 h-3 text-slate-500 group-hover:text-slate-355" />
             </button>
@@ -2329,12 +2561,15 @@ export default function Portfolio() {
                       : 'text-slate-300 hover:bg-slate-900'
                 }`}
               >
-                <svg className="w-3.5 h-3.5 fill-current text-white bg-black rounded p-0.5" viewBox="0 0 512 512">
-                  <path d="M256,48,496,464H16Z"/>
+                <svg
+                  className="w-3.5 h-3.5 fill-current text-white bg-black rounded p-0.5"
+                  viewBox="0 0 512 512"
+                >
+                  <path d="M256,48,496,464H16Z" />
                 </svg>
                 <span>One-Click Deploy</span>
               </button>
-              
+
               <button
                 type="button"
                 onClick={handleZipDownload}
@@ -2426,7 +2661,7 @@ export default function Portfolio() {
             title="Deploy your interactive portfolio directly to Vercel in one click!"
           >
             <svg className="w-3.5 h-3.5 fill-current text-white" viewBox="0 0 512 512">
-              <path d="M256,48,496,464H16Z"/>
+              <path d="M256,48,496,464H16Z" />
             </svg>
             <span>One-Click Deploy</span>
           </button>
@@ -2438,8 +2673,18 @@ export default function Portfolio() {
             className="hidden lg:flex items-center gap-1.5 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-750 hover:to-violet-750 text-white px-3.5 py-1.5 rounded-lg text-xs font-extrabold transition-colors shadow-md cursor-pointer disabled:opacity-50"
             title="Downloads a complete ready-to-run React + Vite + Tailwind project as a zip archive"
           >
-            {copiedZip ? <Check className="w-3.5 h-3.5 text-emerald-300 animate-pulse" /> : <Download className="w-3.5 h-3.5" />}
-            <span>{isZipping ? 'Creating ZIP...' : (copiedZip ? 'Downloaded ZIP!' : 'Download Project (.zip)')}</span>
+            {copiedZip ? (
+              <Check className="w-3.5 h-3.5 text-emerald-300 animate-pulse" />
+            ) : (
+              <Download className="w-3.5 h-3.5" />
+            )}
+            <span>
+              {isZipping
+                ? 'Creating ZIP...'
+                : copiedZip
+                  ? 'Downloaded ZIP!'
+                  : 'Download Project (.zip)'}
+            </span>
           </button>
 
           <button
@@ -2453,7 +2698,9 @@ export default function Portfolio() {
             }`}
             title="Downloads resume document formatted for Microsoft Word (.doc)"
           >
-            <FileText className={`w-3.5 h-3.5 ${appTheme === 'nord-light' ? 'text-indigo-600' : 'text-indigo-400'}`} />
+            <FileText
+              className={`w-3.5 h-3.5 ${appTheme === 'nord-light' ? 'text-indigo-600' : 'text-indigo-400'}`}
+            />
             <span>Download Word (.doc)</span>
           </button>
 
@@ -2468,7 +2715,9 @@ export default function Portfolio() {
             }`}
             title="Open Document Export Preview"
           >
-            <Download className={`w-3.5 h-3.5 ${appTheme === 'nord-light' ? 'text-emerald-600' : 'text-emerald-400'}`} />
+            <Download
+              className={`w-3.5 h-3.5 ${appTheme === 'nord-light' ? 'text-emerald-600' : 'text-emerald-400'}`}
+            />
             <span>Export Document...</span>
           </button>
 
@@ -2483,7 +2732,11 @@ export default function Portfolio() {
             }`}
             title="Downloads standalone React source code locally as Portfolio.tsx"
           >
-            {copiedCode ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <FileCode className="w-3.5 h-3.5" />}
+            {copiedCode ? (
+              <Check className="w-3.5 h-3.5 text-emerald-400" />
+            ) : (
+              <FileCode className="w-3.5 h-3.5" />
+            )}
             <span>{copiedCode ? 'Copied!' : 'React Code'}</span>
           </button>
         </div>
@@ -2491,63 +2744,64 @@ export default function Portfolio() {
 
       {/* WORKSPACE */}
       <div className="flex flex-grow overflow-hidden">
-        
         {/* LEFT PANEL: BUILDER CONTROLS */}
         {!fullscreenPreview && (
-          <div className={`w-[520px] flex-shrink-0 bg-slate-900/80 border-r border-slate-800 flex flex-col overflow-hidden ${
-            mobileActiveView === 'editor' ? 'flex' : 'hidden lg:flex'
-          }`}>
+          <div
+            className={`w-[520px] flex-shrink-0 bg-slate-900/80 border-r border-slate-800 flex flex-col overflow-hidden ${
+              mobileActiveView === 'editor' ? 'flex' : 'hidden lg:flex'
+            }`}
+          >
             {/* TAB SELECTOR NAVBAR */}
             <div className="flex flex-nowrap lg:flex-wrap border-b border-slate-800 overflow-x-auto lg:overflow-x-visible scrollbar-none bg-slate-955/30 text-[10px] sm:text-xs font-semibold">
-              <button 
-                onClick={() => setLeftTab('import')} 
+              <button
+                onClick={() => setLeftTab('import')}
                 className={`flex-grow shrink-0 px-2 py-3.5 text-center border-b-2 transition-all whitespace-nowrap flex items-center justify-center gap-1 ${
-                  leftTab === 'import' 
-                    ? 'border-indigo-500 text-indigo-400' 
+                  leftTab === 'import'
+                    ? 'border-indigo-500 text-indigo-400'
                     : 'border-transparent text-slate-500 hover:text-slate-300'
                 }`}
               >
                 <FileText className="w-3 h-3" />
                 <span>Import</span>
               </button>
-              <button 
-                onClick={() => setLeftTab('profile')} 
+              <button
+                onClick={() => setLeftTab('profile')}
                 className={`flex-grow shrink-0 px-2 py-3.5 text-center border-b-2 transition-all whitespace-nowrap flex items-center justify-center gap-1 ${
-                  leftTab === 'profile' 
-                    ? 'border-indigo-500 text-indigo-400' 
+                  leftTab === 'profile'
+                    ? 'border-indigo-500 text-indigo-400'
                     : 'border-transparent text-slate-500 hover:text-slate-300'
                 }`}
               >
                 <User className="w-3 h-3" />
                 <span>Profile</span>
               </button>
-              <button 
-                onClick={() => setLeftTab('experience')} 
+              <button
+                onClick={() => setLeftTab('experience')}
                 className={`flex-grow shrink-0 px-2 py-3.5 text-center border-b-2 transition-all whitespace-nowrap flex items-center justify-center gap-1 ${
-                  leftTab === 'experience' 
-                    ? 'border-indigo-500 text-indigo-400' 
+                  leftTab === 'experience'
+                    ? 'border-indigo-500 text-indigo-400'
                     : 'border-transparent text-slate-500 hover:text-slate-300'
                 }`}
               >
                 <Briefcase className="w-3 h-3" />
                 <span>Jobs</span>
               </button>
-              <button 
-                onClick={() => setLeftTab('projects')} 
+              <button
+                onClick={() => setLeftTab('projects')}
                 className={`flex-grow shrink-0 px-2 py-3.5 text-center border-b-2 transition-all whitespace-nowrap flex items-center justify-center gap-1 ${
-                  leftTab === 'projects' 
-                    ? 'border-indigo-500 text-indigo-400' 
+                  leftTab === 'projects'
+                    ? 'border-indigo-500 text-indigo-400'
                     : 'border-transparent text-slate-500 hover:text-slate-300'
                 }`}
               >
                 <Layers className="w-3 h-3" />
                 <span>Work</span>
               </button>
-              <button 
-                onClick={() => setLeftTab('design')} 
+              <button
+                onClick={() => setLeftTab('design')}
                 className={`flex-grow shrink-0 px-2 py-3.5 text-center border-b-2 transition-all whitespace-nowrap flex items-center justify-center gap-1 ${
-                  leftTab === 'design' 
-                    ? 'border-indigo-500 text-indigo-400' 
+                  leftTab === 'design'
+                    ? 'border-indigo-500 text-indigo-400'
                     : 'border-transparent text-slate-500 hover:text-slate-300'
                 }`}
               >
@@ -2558,14 +2812,14 @@ export default function Portfolio() {
 
             {/* TAB CONTENT PANEL CONTAINER */}
             <div className="flex-grow overflow-y-auto p-6 space-y-6 scrollbar-thin">
-              
               {/* TAB 1: QUICK IMPORT */}
               {leftTab === 'import' && (
                 <div className="space-y-5 animate-fadeIn">
                   <div>
                     <h2 className="text-base font-bold text-white">Upload & Auto-Build Magic</h2>
                     <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                      Upload your resume document or paste standard plain text. Jobscan Pro parsing algorithms will extract details to generate your layout instantly.
+                      Upload your resume document or paste standard plain text. Jobscan Pro parsing
+                      algorithms will extract details to generate your layout instantly.
                     </p>
                   </div>
 
@@ -2573,7 +2827,9 @@ export default function Portfolio() {
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-emerald-900/30 border border-emerald-800 rounded-xl p-3.5 text-xs text-emerald-400 animate-fadeIn">
                       <div className="flex items-center gap-2">
                         <CheckCircle className="w-4 h-4 flex-shrink-0" />
-                        <span>File parsed successfully! Your portfolio template is updated and live.</span>
+                        <span>
+                          File parsed successfully! Your portfolio template is updated and live.
+                        </span>
                       </div>
                       <button
                         type="button"
@@ -2602,12 +2858,21 @@ export default function Portfolio() {
                       <span>💡 High-Fidelity Document Parsing Enabled</span>
                     </h4>
                     <p className="text-[11px] text-slate-350 leading-relaxed">
-                      We've integrated <b>PDF.js</b> and <b>Mammoth</b> to extract clean text directly from your documents. You can now:
+                      We've integrated <b>PDF.js</b> and <b>Mammoth</b> to extract clean text
+                      directly from your documents. You can now:
                     </p>
                     <ol className="list-decimal pl-5 text-[11px] text-slate-400 space-y-1.5 leading-relaxed">
-                      <li>Upload your <b>PDF</b> or <b>Word (.docx)</b> resume directly.</li>
-                      <li>Our internal engine will extract your experience, skills, and education automatically.</li>
-                      <li>If a document has a complex layout, the <b>Paste plain text</b> box below remains the perfect fail-safe.</li>
+                      <li>
+                        Upload your <b>PDF</b> or <b>Word (.docx)</b> resume directly.
+                      </li>
+                      <li>
+                        Our internal engine will extract your experience, skills, and education
+                        automatically.
+                      </li>
+                      <li>
+                        If a document has a complex layout, the <b>Paste plain text</b> box below
+                        remains the perfect fail-safe.
+                      </li>
                     </ol>
                   </div>
 
@@ -2615,15 +2880,23 @@ export default function Portfolio() {
                   <div className="border-2 border-dashed border-slate-800 hover:border-indigo-500/60 rounded-xl p-5 bg-slate-950/30 text-center transition-all">
                     <div className="space-y-2.5">
                       <div className="w-10 h-10 rounded-full bg-indigo-950/80 text-indigo-400 mx-auto flex items-center justify-center">
-                        <Download className="w-5 h-5 animate-bounce" style={{ animationDuration: '2.5s' }} />
+                        <Download
+                          className="w-5 h-5 animate-bounce"
+                          style={{ animationDuration: '2.5s' }}
+                        />
                       </div>
                       <div>
-                        <label htmlFor="resume-file-upload" className="text-xs font-bold text-indigo-400 hover:text-indigo-300 hover:underline cursor-pointer block">
+                        <label
+                          htmlFor="resume-file-upload"
+                          className="text-xs font-bold text-indigo-400 hover:text-indigo-300 hover:underline cursor-pointer block"
+                        >
                           Upload PDF, Word, or Text Resume
                         </label>
-                        <p className="text-[9px] text-slate-500 mt-0.5">Supports PDF and Word documents for visual preview.</p>
+                        <p className="text-[9px] text-slate-500 mt-0.5">
+                          Supports PDF and Word documents for visual preview.
+                        </p>
                       </div>
-                      
+
                       <input
                         id="resume-file-upload"
                         type="file"
@@ -2638,7 +2911,9 @@ export default function Portfolio() {
                       {uploadedFileName && (
                         <div className="inline-flex items-center gap-1.5 bg-indigo-950/40 border border-indigo-900/45 px-3 py-1 rounded-full text-[10px] text-slate-300">
                           <Check className="w-3 h-3 text-emerald-400 animate-pulse" />
-                          <span className="font-semibold truncate max-w-[160px]">{uploadedFileName}</span>
+                          <span className="font-semibold truncate max-w-[160px]">
+                            {uploadedFileName}
+                          </span>
                         </div>
                       )}
                     </div>
@@ -2648,15 +2923,20 @@ export default function Portfolio() {
                   {uploadedResumeUrl && (
                     <div className="space-y-2 border border-slate-800 rounded-xl p-3 bg-slate-950/50">
                       <div className="flex justify-between items-center px-1">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase">Original Document Preview</span>
-                        <button onClick={() => setUploadedResumeUrl(null)} className="text-slate-500 hover:text-white">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase">
+                          Original Document Preview
+                        </span>
+                        <button
+                          onClick={() => setUploadedResumeUrl(null)}
+                          className="text-slate-500 hover:text-white"
+                        >
                           <X className="w-3 h-3" />
                         </button>
                       </div>
                       <div className="rounded-lg overflow-hidden border border-slate-800 h-96 bg-slate-900">
-                        <iframe 
-                          src={uploadedResumeUrl} 
-                          className="w-full h-full" 
+                        <iframe
+                          src={uploadedResumeUrl}
+                          className="w-full h-full"
                           title="Resume Preview"
                         />
                       </div>
@@ -2666,7 +2946,9 @@ export default function Portfolio() {
                   {/* Standard Plaintext paste fallback */}
                   <div className="space-y-2">
                     <div className="flex justify-between items-center">
-                      <label className="text-xs font-medium text-slate-300">Paste plain text here:</label>
+                      <label className="text-xs font-medium text-slate-300">
+                        Paste plain text here:
+                      </label>
                       {rawTextImport.trim().length > 0 && (
                         <button
                           onClick={() => {
@@ -2721,7 +3003,9 @@ export default function Portfolio() {
 
                       <div className="space-y-2 max-h-48 overflow-y-auto pr-1 scrollbar-thin">
                         {savedResumes.map((item) => {
-                          const isActive = resumeData.personal.name === item.name && resumeData.personal.title === item.title;
+                          const isActive =
+                            resumeData.personal.name === item.name &&
+                            resumeData.personal.title === item.title;
                           return (
                             <div
                               key={item.id}
@@ -2741,7 +3025,9 @@ export default function Portfolio() {
                                     </span>
                                   )}
                                 </div>
-                                <div className="text-[10px] text-slate-400 truncate">{item.title}</div>
+                                <div className="text-[10px] text-slate-400 truncate">
+                                  {item.title}
+                                </div>
                                 <div className="text-[8px] text-slate-500">Parsed: {item.date}</div>
                               </div>
 
@@ -2760,8 +3046,6 @@ export default function Portfolio() {
                       </div>
                     </div>
                   )}
-
-
                 </div>
               )}
 
@@ -2770,16 +3054,18 @@ export default function Portfolio() {
                 <div className="space-y-5 animate-fadeIn">
                   <div>
                     <h2 className="text-base font-bold text-white">Personal details</h2>
-                    <p className="text-xs text-slate-400 mt-1">Update your identity, bio, and professional summary.</p>
+                    <p className="text-xs text-slate-400 mt-1">
+                      Update your identity, bio, and professional summary.
+                    </p>
                   </div>
 
                   {/* Profile Picture Upload Section */}
                   <div className="bg-slate-950/40 p-4 rounded-xl border border-slate-850 flex flex-col sm:flex-row items-center gap-4">
                     <div className="relative group w-16 h-16 rounded-xl overflow-hidden border border-slate-800 bg-slate-950 flex items-center justify-center shrink-0">
                       {resumeData.personal.avatar && resumeData.personal.avatar.length > 2 ? (
-                        <img 
-                          src={resumeData.personal.avatar} 
-                          alt={resumeData.personal.name} 
+                        <img
+                          src={resumeData.personal.avatar}
+                          alt={resumeData.personal.name}
                           className="w-full h-full object-cover"
                         />
                       ) : (
@@ -2788,25 +3074,28 @@ export default function Portfolio() {
                         </span>
                       )}
                     </div>
-                    
+
                     <div className="flex-1 text-center sm:text-left space-y-1">
-                      <label className="text-xs font-bold text-slate-300 block">Profile Picture</label>
+                      <label className="text-xs font-bold text-slate-300 block">
+                        Profile Picture
+                      </label>
                       <p className="text-[10px] text-slate-500 leading-normal">
-                        Upload a photo (PNG, JPG, or WebP, max 2MB). This will be displayed across your portfolio layouts.
+                        Upload a photo (PNG, JPG, or WebP, max 2MB). This will be displayed across
+                        your portfolio layouts.
                       </p>
                     </div>
 
                     <div className="flex items-center gap-2">
                       <label className="bg-indigo-650 hover:bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer block">
                         Upload
-                        <input 
-                          type="file" 
-                          accept="image/*" 
-                          onChange={handleAvatarUpload} 
-                          className="hidden" 
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleAvatarUpload}
+                          className="hidden"
                         />
                       </label>
-                      
+
                       {resumeData.personal.avatar && resumeData.personal.avatar.length > 2 && (
                         <button
                           type="button"
@@ -2830,7 +3119,9 @@ export default function Portfolio() {
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-slate-400">Professional Title</label>
+                      <label className="text-xs font-semibold text-slate-400">
+                        Professional Title
+                      </label>
                       <input
                         type="text"
                         value={resumeData.personal.title}
@@ -2852,8 +3143,12 @@ export default function Portfolio() {
 
                   <div className="space-y-1.5">
                     <div className="flex justify-between text-xs">
-                      <label className="font-semibold text-slate-400">Biography / Professional Summary</label>
-                      <span className="text-slate-500">{resumeData.personal.bio.length} characters</span>
+                      <label className="font-semibold text-slate-400">
+                        Biography / Professional Summary
+                      </label>
+                      <span className="text-slate-500">
+                        {resumeData.personal.bio.length} characters
+                      </span>
                     </div>
                     <textarea
                       rows={4}
@@ -2885,7 +3180,9 @@ export default function Portfolio() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-slate-400">Location (e.g. Austin, TX)</label>
+                    <label className="text-xs font-semibold text-slate-400">
+                      Location (e.g. Austin, TX)
+                    </label>
                     <input
                       type="text"
                       value={resumeData.personal.location}
@@ -2895,8 +3192,10 @@ export default function Portfolio() {
                   </div>
 
                   <div className="border-t border-slate-800/50 pt-4 space-y-4">
-                    <h3 className="text-xs font-bold text-white uppercase tracking-wider">Social Channels</h3>
-                    
+                    <h3 className="text-xs font-bold text-white uppercase tracking-wider">
+                      Social Channels
+                    </h3>
+
                     <div className="grid grid-cols-1 gap-3">
                       <div className="flex items-center bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5">
                         <span className="text-xs font-semibold text-slate-500 w-20">GitHub</span>
@@ -2939,16 +3238,23 @@ export default function Portfolio() {
                   <div className="flex justify-between items-center">
                     <div>
                       <h2 className="text-base font-bold text-white">Work History Timeline</h2>
-                      <p className="text-xs text-slate-400 mt-1">Add and adjust bullet points for your roles.</p>
+                      <p className="text-xs text-slate-400 mt-1">
+                        Add and adjust bullet points for your roles.
+                      </p>
                     </div>
                   </div>
 
                   {/* Job Accordions List */}
                   <div className="space-y-3">
                     {resumeData.experience.map((exp) => (
-                      <div key={exp.id} className="border border-slate-800 rounded-xl overflow-hidden bg-slate-950/20">
+                      <div
+                        key={exp.id}
+                        className="border border-slate-800 rounded-xl overflow-hidden bg-slate-950/20"
+                      >
                         <button
-                          onClick={() => setExpandedJobs(prev => ({ ...prev, [exp.id]: !prev[exp.id] }))}
+                          onClick={() =>
+                            setExpandedJobs((prev) => ({ ...prev, [exp.id]: !prev[exp.id] }))
+                          }
                           className="w-full px-4 py-3 bg-slate-950/40 hover:bg-slate-950/60 transition-colors flex items-center justify-between text-left text-xs"
                         >
                           <div>
@@ -2957,8 +3263,14 @@ export default function Portfolio() {
                             <span className="text-slate-400 font-medium">{exp.company}</span>
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="text-[10px] text-slate-500 font-semibold">{exp.period}</span>
-                            {expandedJobs[exp.id] ? <ChevronUp className="w-3.5 h-3.5 text-slate-500" /> : <ChevronDown className="w-3.5 h-3.5 text-slate-500" />}
+                            <span className="text-[10px] text-slate-500 font-semibold">
+                              {exp.period}
+                            </span>
+                            {expandedJobs[exp.id] ? (
+                              <ChevronUp className="w-3.5 h-3.5 text-slate-500" />
+                            ) : (
+                              <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
+                            )}
                           </div>
                         </button>
 
@@ -2966,20 +3278,28 @@ export default function Portfolio() {
                           <div className="p-4 border-t border-slate-800/50 space-y-4">
                             <div className="grid grid-cols-2 gap-3">
                               <div className="space-y-1">
-                                <label className="text-[10px] uppercase font-bold text-slate-500">Company Name</label>
+                                <label className="text-[10px] uppercase font-bold text-slate-500">
+                                  Company Name
+                                </label>
                                 <input
                                   type="text"
                                   value={exp.company}
-                                  onChange={(e) => handleJobChange(exp.id, 'company', e.target.value)}
+                                  onChange={(e) =>
+                                    handleJobChange(exp.id, 'company', e.target.value)
+                                  }
                                   className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
                                 />
                               </div>
                               <div className="space-y-1">
-                                <label className="text-[10px] uppercase font-bold text-slate-500">Position</label>
+                                <label className="text-[10px] uppercase font-bold text-slate-500">
+                                  Position
+                                </label>
                                 <input
                                   type="text"
                                   value={exp.position}
-                                  onChange={(e) => handleJobChange(exp.id, 'position', e.target.value)}
+                                  onChange={(e) =>
+                                    handleJobChange(exp.id, 'position', e.target.value)
+                                  }
                                   className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
                                 />
                               </div>
@@ -2987,20 +3307,28 @@ export default function Portfolio() {
 
                             <div className="grid grid-cols-2 gap-3">
                               <div className="space-y-1">
-                                <label className="text-[10px] uppercase font-bold text-slate-500">Period (e.g. 2022 - Present)</label>
+                                <label className="text-[10px] uppercase font-bold text-slate-500">
+                                  Period (e.g. 2022 - Present)
+                                </label>
                                 <input
                                   type="text"
                                   value={exp.period}
-                                  onChange={(e) => handleJobChange(exp.id, 'period', e.target.value)}
+                                  onChange={(e) =>
+                                    handleJobChange(exp.id, 'period', e.target.value)
+                                  }
                                   className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
                                 />
                               </div>
                               <div className="space-y-1">
-                                <label className="text-[10px] uppercase font-bold text-slate-500">Location</label>
+                                <label className="text-[10px] uppercase font-bold text-slate-500">
+                                  Location
+                                </label>
                                 <input
                                   type="text"
                                   value={exp.location}
-                                  onChange={(e) => handleJobChange(exp.id, 'location', e.target.value)}
+                                  onChange={(e) =>
+                                    handleJobChange(exp.id, 'location', e.target.value)
+                                  }
                                   className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
                                 />
                               </div>
@@ -3009,7 +3337,9 @@ export default function Portfolio() {
                             {/* Bullet Points Editing */}
                             <div className="space-y-2">
                               <div className="flex justify-between items-center">
-                                <label className="text-[10px] uppercase font-bold text-slate-500">Achievements & Bullet Points</label>
+                                <label className="text-[10px] uppercase font-bold text-slate-500">
+                                  Achievements & Bullet Points
+                                </label>
                                 <button
                                   onClick={() => handleAddBullet(exp.id)}
                                   className="text-[10px] text-indigo-400 hover:text-indigo-300 font-semibold flex items-center gap-1"
@@ -3026,7 +3356,9 @@ export default function Portfolio() {
                                     <textarea
                                       rows={2}
                                       value={bullet}
-                                      onChange={(e) => handleBulletChange(exp.id, bulletIdx, e.target.value)}
+                                      onChange={(e) =>
+                                        handleBulletChange(exp.id, bulletIdx, e.target.value)
+                                      }
                                       className="w-full bg-slate-950 border border-slate-850 rounded-lg p-2 text-xs text-slate-300 focus:outline-none focus:border-indigo-500 resize-none"
                                     />
                                     <button
@@ -3042,11 +3374,22 @@ export default function Portfolio() {
 
                             {/* Tech Tags */}
                             <div className="space-y-1.5">
-                              <label className="text-[10px] uppercase font-bold text-slate-500">Technologies (comma separated)</label>
+                              <label className="text-[10px] uppercase font-bold text-slate-500">
+                                Technologies (comma separated)
+                              </label>
                               <input
                                 type="text"
                                 value={exp.technologies.join(', ')}
-                                onChange={(e) => handleJobChange(exp.id, 'technologies', e.target.value.split(',').map(t => t.trim()).filter(Boolean))}
+                                onChange={(e) =>
+                                  handleJobChange(
+                                    exp.id,
+                                    'technologies',
+                                    e.target.value
+                                      .split(',')
+                                      .map((t) => t.trim())
+                                      .filter(Boolean)
+                                  )
+                                }
                                 className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
                                 placeholder="React, TypeScript, CSS"
                               />
@@ -3074,20 +3417,24 @@ export default function Portfolio() {
                       <Plus className="w-3.5 h-3.5 text-indigo-400" />
                       <span>Add New Experience</span>
                     </h3>
-                    
+
                     <div className="grid grid-cols-2 gap-3">
                       <input
                         type="text"
                         placeholder="Company Name"
                         value={newJob.company}
-                        onChange={(e) => setNewJob(prev => ({ ...prev, company: e.target.value }))}
+                        onChange={(e) =>
+                          setNewJob((prev) => ({ ...prev, company: e.target.value }))
+                        }
                         className="bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
                       />
                       <input
                         type="text"
                         placeholder="Position"
                         value={newJob.position}
-                        onChange={(e) => setNewJob(prev => ({ ...prev, position: e.target.value }))}
+                        onChange={(e) =>
+                          setNewJob((prev) => ({ ...prev, position: e.target.value }))
+                        }
                         className="bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
                       />
                     </div>
@@ -3097,14 +3444,16 @@ export default function Portfolio() {
                         type="text"
                         placeholder="Period (e.g. 2024)"
                         value={newJob.period}
-                        onChange={(e) => setNewJob(prev => ({ ...prev, period: e.target.value }))}
+                        onChange={(e) => setNewJob((prev) => ({ ...prev, period: e.target.value }))}
                         className="bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
                       />
                       <input
                         type="text"
                         placeholder="Location"
                         value={newJob.location}
-                        onChange={(e) => setNewJob(prev => ({ ...prev, location: e.target.value }))}
+                        onChange={(e) =>
+                          setNewJob((prev) => ({ ...prev, location: e.target.value }))
+                        }
                         className="bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
                       />
                     </div>
@@ -3125,27 +3474,35 @@ export default function Portfolio() {
                       Append Experience to Timeline
                     </button>
                   </div>
-
                 </div>
               )}
 
               {/* TAB 4: PROJECTS & TECHNICAL SKILLS */}
               {leftTab === 'projects' && (
                 <div className="space-y-8 animate-fadeIn">
-                  
                   {/* Sub-section 1: Featured Projects */}
                   <div className="space-y-6">
                     <div>
                       <h2 className="text-base font-bold text-white">Projects Showcase</h2>
-                      <p className="text-xs text-slate-400 mt-1">Detail key personal projects and custom code implementations.</p>
+                      <p className="text-xs text-slate-400 mt-1">
+                        Detail key personal projects and custom code implementations.
+                      </p>
                     </div>
 
                     {/* Accordion projects */}
                     <div className="space-y-3">
                       {resumeData.projects.map((proj) => (
-                        <div key={proj.id} className="border border-slate-800 rounded-xl overflow-hidden bg-slate-950/20">
+                        <div
+                          key={proj.id}
+                          className="border border-slate-800 rounded-xl overflow-hidden bg-slate-950/20"
+                        >
                           <button
-                            onClick={() => setExpandedProjects(prev => ({ ...prev, [proj.id]: !prev[proj.id] }))}
+                            onClick={() =>
+                              setExpandedProjects((prev) => ({
+                                ...prev,
+                                [proj.id]: !prev[proj.id],
+                              }))
+                            }
                             className="w-full px-4 py-3 bg-slate-950/40 hover:bg-slate-950/60 transition-colors flex items-center justify-between text-left text-xs"
                           >
                             <div className="flex items-center gap-2">
@@ -3154,26 +3511,38 @@ export default function Portfolio() {
                                 {proj.category}
                               </span>
                             </div>
-                            {expandedProjects[proj.id] ? <ChevronUp className="w-3.5 h-3.5 text-slate-500" /> : <ChevronDown className="w-3.5 h-3.5 text-slate-500" />}
+                            {expandedProjects[proj.id] ? (
+                              <ChevronUp className="w-3.5 h-3.5 text-slate-500" />
+                            ) : (
+                              <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
+                            )}
                           </button>
 
                           {expandedProjects[proj.id] && (
                             <div className="p-4 border-t border-slate-800/50 space-y-4">
                               <div className="grid grid-cols-2 gap-3">
                                 <div className="space-y-1">
-                                  <label className="text-[10px] uppercase font-bold text-slate-500">Project Title</label>
+                                  <label className="text-[10px] uppercase font-bold text-slate-500">
+                                    Project Title
+                                  </label>
                                   <input
                                     type="text"
                                     value={proj.title}
-                                    onChange={(e) => handleProjChange(proj.id, 'title', e.target.value)}
+                                    onChange={(e) =>
+                                      handleProjChange(proj.id, 'title', e.target.value)
+                                    }
                                     className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none"
                                   />
                                 </div>
                                 <div className="space-y-1">
-                                  <label className="text-[10px] uppercase font-bold text-slate-500">Category</label>
+                                  <label className="text-[10px] uppercase font-bold text-slate-500">
+                                    Category
+                                  </label>
                                   <select
                                     value={proj.category}
-                                    onChange={(e) => handleProjChange(proj.id, 'category', e.target.value)}
+                                    onChange={(e) =>
+                                      handleProjChange(proj.id, 'category', e.target.value)
+                                    }
                                     className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-300 focus:outline-none"
                                   >
                                     <option value="Frontend">Frontend</option>
@@ -3187,21 +3556,29 @@ export default function Portfolio() {
                               </div>
 
                               <div className="space-y-1">
-                                <label className="text-[10px] uppercase font-bold text-slate-500">Brief Description</label>
+                                <label className="text-[10px] uppercase font-bold text-slate-500">
+                                  Brief Description
+                                </label>
                                 <input
                                   type="text"
                                   value={proj.description}
-                                  onChange={(e) => handleProjChange(proj.id, 'description', e.target.value)}
+                                  onChange={(e) =>
+                                    handleProjChange(proj.id, 'description', e.target.value)
+                                  }
                                   className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none"
                                 />
                               </div>
 
                               <div className="space-y-1">
-                                <label className="text-[10px] uppercase font-bold text-slate-500">Detailed Case Study (Long Bio)</label>
+                                <label className="text-[10px] uppercase font-bold text-slate-500">
+                                  Detailed Case Study (Long Bio)
+                                </label>
                                 <textarea
                                   rows={3}
                                   value={proj.longDescription || ''}
-                                  onChange={(e) => handleProjChange(proj.id, 'longDescription', e.target.value)}
+                                  onChange={(e) =>
+                                    handleProjChange(proj.id, 'longDescription', e.target.value)
+                                  }
                                   className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs text-white focus:outline-none resize-none"
                                   placeholder="What challenges did you solve? What architecture did you use?"
                                 />
@@ -3209,21 +3586,29 @@ export default function Portfolio() {
 
                               <div className="grid grid-cols-2 gap-3">
                                 <div className="space-y-1">
-                                  <label className="text-[10px] uppercase font-bold text-slate-500">Live Demo URL</label>
+                                  <label className="text-[10px] uppercase font-bold text-slate-500">
+                                    Live Demo URL
+                                  </label>
                                   <input
                                     type="text"
                                     value={proj.link || ''}
-                                    onChange={(e) => handleProjChange(proj.id, 'link', e.target.value)}
+                                    onChange={(e) =>
+                                      handleProjChange(proj.id, 'link', e.target.value)
+                                    }
                                     className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none"
                                     placeholder="https://myproject.demo"
                                   />
                                 </div>
                                 <div className="space-y-1">
-                                  <label className="text-[10px] uppercase font-bold text-slate-500">GitHub Repository</label>
+                                  <label className="text-[10px] uppercase font-bold text-slate-500">
+                                    GitHub Repository
+                                  </label>
                                   <input
                                     type="text"
                                     value={proj.github || ''}
-                                    onChange={(e) => handleProjChange(proj.id, 'github', e.target.value)}
+                                    onChange={(e) =>
+                                      handleProjChange(proj.id, 'github', e.target.value)
+                                    }
                                     className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none"
                                     placeholder="https://github.com/username/project"
                                   />
@@ -3231,7 +3616,9 @@ export default function Portfolio() {
                               </div>
 
                               <div className="space-y-1.5">
-                                <label className="text-[10px] uppercase font-bold text-slate-500">Tech Stack (comma separated)</label>
+                                <label className="text-[10px] uppercase font-bold text-slate-500">
+                                  Tech Stack (comma separated)
+                                </label>
                                 <input
                                   type="text"
                                   value={proj.techStack.join(', ')}
@@ -3269,12 +3656,19 @@ export default function Portfolio() {
                           type="text"
                           placeholder="Project Title"
                           value={newProj.title}
-                          onChange={(e) => setNewProj(prev => ({ ...prev, title: e.target.value }))}
+                          onChange={(e) =>
+                            setNewProj((prev) => ({ ...prev, title: e.target.value }))
+                          }
                           className="bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
                         />
                         <select
                           value={newProj.category}
-                          onChange={(e) => setNewProj(prev => ({ ...prev, category: e.target.value as Project['category'] }))}
+                          onChange={(e) =>
+                            setNewProj((prev) => ({
+                              ...prev,
+                              category: e.target.value as Project['category'],
+                            }))
+                          }
                           className="bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-indigo-500"
                         >
                           <option value="Frontend">Frontend</option>
@@ -3290,7 +3684,9 @@ export default function Portfolio() {
                         type="text"
                         placeholder="Short project tagline description"
                         value={newProj.description}
-                        onChange={(e) => setNewProj(prev => ({ ...prev, description: e.target.value }))}
+                        onChange={(e) =>
+                          setNewProj((prev) => ({ ...prev, description: e.target.value }))
+                        }
                         className="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
                       />
 
@@ -3316,7 +3712,9 @@ export default function Portfolio() {
                   <div className="border-t border-slate-800 pt-6 space-y-6">
                     <div>
                       <h2 className="text-base font-bold text-white">Skills & Fluencies</h2>
-                      <p className="text-xs text-slate-400 mt-1">Calibrate skill score levels and category allocations.</p>
+                      <p className="text-xs text-slate-400 mt-1">
+                        Calibrate skill score levels and category allocations.
+                      </p>
                     </div>
 
                     {/* Quick Add Skill */}
@@ -3326,13 +3724,20 @@ export default function Portfolio() {
                           type="text"
                           placeholder="Skill (e.g. GraphQL, Docker)"
                           value={newSkill.name}
-                          onChange={(e) => setNewSkill(prev => ({ ...prev, name: e.target.value }))}
+                          onChange={(e) =>
+                            setNewSkill((prev) => ({ ...prev, name: e.target.value }))
+                          }
                           className="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
                         />
-                        
+
                         <select
                           value={newSkill.category}
-                          onChange={(e) => setNewSkill(prev => ({ ...prev, category: e.target.value as Skill['category'] }))}
+                          onChange={(e) =>
+                            setNewSkill((prev) => ({
+                              ...prev,
+                              category: e.target.value as Skill['category'],
+                            }))
+                          }
                           className="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-indigo-500"
                         >
                           <option value="Frontend">Frontend</option>
@@ -3345,14 +3750,18 @@ export default function Portfolio() {
                       </div>
 
                       <div className="flex flex-col justify-between">
-                        <span className="text-[10px] text-slate-400 text-center font-semibold">Level: {newSkill.level}%</span>
+                        <span className="text-[10px] text-slate-400 text-center font-semibold">
+                          Level: {newSkill.level}%
+                        </span>
                         <input
                           type="range"
                           min="10"
                           max="100"
                           step="5"
                           value={newSkill.level}
-                          onChange={(e) => setNewSkill(prev => ({ ...prev, level: parseInt(e.target.value) }))}
+                          onChange={(e) =>
+                            setNewSkill((prev) => ({ ...prev, level: parseInt(e.target.value) }))
+                          }
                           className="w-full accent-indigo-500 cursor-pointer"
                         />
                         <button
@@ -3368,10 +3777,15 @@ export default function Portfolio() {
                     {/* Skills list inline sliders */}
                     <div className="space-y-2.5 max-h-60 overflow-y-auto pr-1 scrollbar-thin">
                       {resumeData.skills.map((skill) => (
-                        <div key={skill.name} className="flex items-center justify-between gap-4 bg-slate-950/20 border border-slate-850 rounded-lg px-3 py-2 text-xs">
+                        <div
+                          key={skill.name}
+                          className="flex items-center justify-between gap-4 bg-slate-950/20 border border-slate-850 rounded-lg px-3 py-2 text-xs"
+                        >
                           <div className="w-32 truncate">
                             <span className="font-semibold text-slate-200 block">{skill.name}</span>
-                            <span className="text-[9px] text-slate-500 uppercase tracking-wider font-bold">{skill.category}</span>
+                            <span className="text-[9px] text-slate-500 uppercase tracking-wider font-bold">
+                              {skill.category}
+                            </span>
                           </div>
 
                           <div className="flex-grow flex items-center gap-3">
@@ -3381,10 +3795,14 @@ export default function Portfolio() {
                               max="100"
                               step="5"
                               value={skill.level}
-                              onChange={(e) => handleSkillLevelChange(skill.name, parseInt(e.target.value))}
+                              onChange={(e) =>
+                                handleSkillLevelChange(skill.name, parseInt(e.target.value))
+                              }
                               className="w-full accent-indigo-500 cursor-pointer"
                             />
-                            <span className="w-8 text-right text-slate-400 font-semibold">{skill.level}%</span>
+                            <span className="w-8 text-right text-slate-400 font-semibold">
+                              {skill.level}%
+                            </span>
                           </div>
 
                           <button
@@ -3396,137 +3814,182 @@ export default function Portfolio() {
                         </div>
                       ))}
                     </div>
-
                   </div>
 
                   {/* Sub-section 3: Academics & Education */}
                   <div className="border-t border-slate-800 pt-6 space-y-6">
                     <div>
                       <h2 className="text-base font-bold text-white">Academics & Education</h2>
-                      <p className="text-xs text-slate-400 mt-1">Manage school enrollment, degrees, locations, and achievements.</p>
+                      <p className="text-xs text-slate-400 mt-1">
+                        Manage school enrollment, degrees, locations, and achievements.
+                      </p>
                     </div>
 
                     {/* Accordion education */}
                     <div className="space-y-3">
-                      {resumeData.education && resumeData.education.map((edu) => (
-                        <div key={edu.id} className="border border-slate-800 rounded-xl overflow-hidden bg-slate-950/20">
-                          <button
-                            onClick={() => setExpandedEdu(prev => ({ ...prev, [edu.id]: !prev[edu.id] }))}
-                            className="w-full px-4 py-3 bg-slate-950/40 hover:bg-slate-950/60 transition-colors flex items-center justify-between text-left text-xs"
+                      {resumeData.education &&
+                        resumeData.education.map((edu) => (
+                          <div
+                            key={edu.id}
+                            className="border border-slate-800 rounded-xl overflow-hidden bg-slate-950/20"
                           >
-                            <div className="flex flex-col gap-0.5">
-                              <span className="font-bold text-white">{edu.institution || 'New Institution'}</span>
-                              <span className="text-[10px] text-indigo-400 font-medium">
-                                {edu.degree} {edu.fieldOfStudy ? `in ${edu.fieldOfStudy}` : ''}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-[10px] text-slate-500 font-medium">{edu.period}</span>
-                              {expandedEdu[edu.id] ? <ChevronUp className="w-3.5 h-3.5 text-slate-500" /> : <ChevronDown className="w-3.5 h-3.5 text-slate-500" />}
-                            </div>
-                          </button>
+                            <button
+                              onClick={() =>
+                                setExpandedEdu((prev) => ({ ...prev, [edu.id]: !prev[edu.id] }))
+                              }
+                              className="w-full px-4 py-3 bg-slate-950/40 hover:bg-slate-950/60 transition-colors flex items-center justify-between text-left text-xs"
+                            >
+                              <div className="flex flex-col gap-0.5">
+                                <span className="font-bold text-white">
+                                  {edu.institution || 'New Institution'}
+                                </span>
+                                <span className="text-[10px] text-indigo-400 font-medium">
+                                  {edu.degree} {edu.fieldOfStudy ? `in ${edu.fieldOfStudy}` : ''}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10px] text-slate-500 font-medium">
+                                  {edu.period}
+                                </span>
+                                {expandedEdu[edu.id] ? (
+                                  <ChevronUp className="w-3.5 h-3.5 text-slate-500" />
+                                ) : (
+                                  <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
+                                )}
+                              </div>
+                            </button>
 
-                          {expandedEdu[edu.id] && (
-                            <div className="p-4 border-t border-slate-800/50 space-y-4">
-                              <div className="grid grid-cols-2 gap-3">
-                                <div className="space-y-1">
-                                  <label className="text-[10px] uppercase font-bold text-slate-500">Institution</label>
-                                  <input
-                                    type="text"
-                                    value={edu.institution}
-                                    onChange={(e) => handleEduChange(edu.id, 'institution', e.target.value)}
-                                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none"
-                                  />
+                            {expandedEdu[edu.id] && (
+                              <div className="p-4 border-t border-slate-800/50 space-y-4">
+                                <div className="grid grid-cols-2 gap-3">
+                                  <div className="space-y-1">
+                                    <label className="text-[10px] uppercase font-bold text-slate-500">
+                                      Institution
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={edu.institution}
+                                      onChange={(e) =>
+                                        handleEduChange(edu.id, 'institution', e.target.value)
+                                      }
+                                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none"
+                                    />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <label className="text-[10px] uppercase font-bold text-slate-500">
+                                      Degree
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={edu.degree}
+                                      onChange={(e) =>
+                                        handleEduChange(edu.id, 'degree', e.target.value)
+                                      }
+                                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none"
+                                      placeholder="B.S., M.S., High School Diploma"
+                                    />
+                                  </div>
                                 </div>
-                                <div className="space-y-1">
-                                  <label className="text-[10px] uppercase font-bold text-slate-500">Degree</label>
-                                  <input
-                                    type="text"
-                                    value={edu.degree}
-                                    onChange={(e) => handleEduChange(edu.id, 'degree', e.target.value)}
-                                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none"
-                                    placeholder="B.S., M.S., High School Diploma"
-                                  />
+
+                                <div className="grid grid-cols-2 gap-3">
+                                  <div className="space-y-1">
+                                    <label className="text-[10px] uppercase font-bold text-slate-500">
+                                      Field of Study
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={edu.fieldOfStudy}
+                                      onChange={(e) =>
+                                        handleEduChange(edu.id, 'fieldOfStudy', e.target.value)
+                                      }
+                                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none"
+                                      placeholder="Computer Science, Cognitive Science"
+                                    />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <label className="text-[10px] uppercase font-bold text-slate-500">
+                                      Location
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={edu.location}
+                                      onChange={(e) =>
+                                        handleEduChange(edu.id, 'location', e.target.value)
+                                      }
+                                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none"
+                                      placeholder="Berkeley, CA"
+                                    />
+                                  </div>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                  <div className="space-y-1">
+                                    <label className="text-[10px] uppercase font-bold text-slate-500">
+                                      Period / Years
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={edu.period}
+                                      onChange={(e) =>
+                                        handleEduChange(edu.id, 'period', e.target.value)
+                                      }
+                                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none"
+                                      placeholder="2015 - 2019"
+                                    />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <label className="text-[10px] uppercase font-bold text-slate-500">
+                                      Grade / GPA (Optional)
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={edu.grade || ''}
+                                      onChange={(e) =>
+                                        handleEduChange(edu.id, 'grade', e.target.value)
+                                      }
+                                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none"
+                                      placeholder="3.84 GPA, First Class"
+                                    />
+                                  </div>
+                                </div>
+
+                                <div className="flex justify-end">
+                                  <button
+                                    onClick={() => handleRemoveEdu(edu.id)}
+                                    className="flex items-center gap-1 px-3 py-1.5 bg-rose-950/40 hover:bg-rose-900/60 border border-rose-800/50 rounded-lg text-[10px] font-bold text-rose-400 transition-colors"
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                    <span>Remove School</span>
+                                  </button>
                                 </div>
                               </div>
-
-                              <div className="grid grid-cols-2 gap-3">
-                                <div className="space-y-1">
-                                  <label className="text-[10px] uppercase font-bold text-slate-500">Field of Study</label>
-                                  <input
-                                    type="text"
-                                    value={edu.fieldOfStudy}
-                                    onChange={(e) => handleEduChange(edu.id, 'fieldOfStudy', e.target.value)}
-                                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none"
-                                    placeholder="Computer Science, Cognitive Science"
-                                  />
-                                </div>
-                                <div className="space-y-1">
-                                  <label className="text-[10px] uppercase font-bold text-slate-500">Location</label>
-                                  <input
-                                    type="text"
-                                    value={edu.location}
-                                    onChange={(e) => handleEduChange(edu.id, 'location', e.target.value)}
-                                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none"
-                                    placeholder="Berkeley, CA"
-                                  />
-                                </div>
-                              </div>
-
-                              <div className="grid grid-cols-2 gap-3">
-                                <div className="space-y-1">
-                                  <label className="text-[10px] uppercase font-bold text-slate-500">Period / Years</label>
-                                  <input
-                                    type="text"
-                                    value={edu.period}
-                                    onChange={(e) => handleEduChange(edu.id, 'period', e.target.value)}
-                                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none"
-                                    placeholder="2015 - 2019"
-                                  />
-                                </div>
-                                <div className="space-y-1">
-                                  <label className="text-[10px] uppercase font-bold text-slate-500">Grade / GPA (Optional)</label>
-                                  <input
-                                    type="text"
-                                    value={edu.grade || ''}
-                                    onChange={(e) => handleEduChange(edu.id, 'grade', e.target.value)}
-                                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none"
-                                    placeholder="3.84 GPA, First Class"
-                                  />
-                                </div>
-                              </div>
-
-                              <div className="flex justify-end">
-                                <button
-                                  onClick={() => handleRemoveEdu(edu.id)}
-                                  className="flex items-center gap-1 px-3 py-1.5 bg-rose-950/40 hover:bg-rose-900/60 border border-rose-800/50 rounded-lg text-[10px] font-bold text-rose-400 transition-colors"
-                                >
-                                  <Trash2 className="w-3 h-3" />
-                                  <span>Remove School</span>
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      ))}
+                            )}
+                          </div>
+                        ))}
                     </div>
 
                     {/* Quick Add Education */}
                     <div className="bg-slate-950/40 p-4 rounded-xl border border-slate-850 space-y-3">
-                      <span className="text-xs font-bold text-slate-300 block">Add New School / Degree</span>
+                      <span className="text-xs font-bold text-slate-300 block">
+                        Add New School / Degree
+                      </span>
                       <div className="grid grid-cols-2 gap-3">
                         <input
                           type="text"
                           placeholder="Institution Name *"
                           value={newEducation.institution || ''}
-                          onChange={(e) => setNewEducation(prev => ({ ...prev, institution: e.target.value }))}
+                          onChange={(e) =>
+                            setNewEducation((prev) => ({ ...prev, institution: e.target.value }))
+                          }
                           className="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
                         />
                         <input
                           type="text"
                           placeholder="Degree / Certificate *"
                           value={newEducation.degree || ''}
-                          onChange={(e) => setNewEducation(prev => ({ ...prev, degree: e.target.value }))}
+                          onChange={(e) =>
+                            setNewEducation((prev) => ({ ...prev, degree: e.target.value }))
+                          }
                           className="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
                         />
                       </div>
@@ -3535,14 +3998,18 @@ export default function Portfolio() {
                           type="text"
                           placeholder="Field of Study"
                           value={newEducation.fieldOfStudy || ''}
-                          onChange={(e) => setNewEducation(prev => ({ ...prev, fieldOfStudy: e.target.value }))}
+                          onChange={(e) =>
+                            setNewEducation((prev) => ({ ...prev, fieldOfStudy: e.target.value }))
+                          }
                           className="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
                         />
                         <input
                           type="text"
                           placeholder="Location (e.g. Austin, TX)"
                           value={newEducation.location || ''}
-                          onChange={(e) => setNewEducation(prev => ({ ...prev, location: e.target.value }))}
+                          onChange={(e) =>
+                            setNewEducation((prev) => ({ ...prev, location: e.target.value }))
+                          }
                           className="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
                         />
                       </div>
@@ -3551,14 +4018,18 @@ export default function Portfolio() {
                           type="text"
                           placeholder="Period (e.g. 2018 - 2022)"
                           value={newEducation.period || ''}
-                          onChange={(e) => setNewEducation(prev => ({ ...prev, period: e.target.value }))}
+                          onChange={(e) =>
+                            setNewEducation((prev) => ({ ...prev, period: e.target.value }))
+                          }
                           className="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
                         />
                         <input
                           type="text"
                           placeholder="Grade / GPA"
                           value={newEducation.grade || ''}
-                          onChange={(e) => setNewEducation(prev => ({ ...prev, grade: e.target.value }))}
+                          onChange={(e) =>
+                            setNewEducation((prev) => ({ ...prev, grade: e.target.value }))
+                          }
                           className="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
                         />
                       </div>
@@ -3576,107 +4047,145 @@ export default function Portfolio() {
                   <div className="border-t border-slate-800 pt-6 space-y-6">
                     <div>
                       <h2 className="text-base font-bold text-white">Awards & Certifications</h2>
-                      <p className="text-xs text-slate-400 mt-1">Showcase your industry certifications, accolades, and honors.</p>
+                      <p className="text-xs text-slate-400 mt-1">
+                        Showcase your industry certifications, accolades, and honors.
+                      </p>
                     </div>
 
                     {/* Accordion certificates */}
                     <div className="space-y-3">
-                      {resumeData.certificates && resumeData.certificates.map((cert) => (
-                        <div key={cert.id} className="border border-slate-800 rounded-xl overflow-hidden bg-slate-950/20">
-                          <button
-                            onClick={() => setExpandedCert(prev => ({ ...prev, [cert.id]: !prev[cert.id] }))}
-                            className="w-full px-4 py-3 bg-slate-950/40 hover:bg-slate-950/60 transition-colors flex items-center justify-between text-left text-xs"
+                      {resumeData.certificates &&
+                        resumeData.certificates.map((cert) => (
+                          <div
+                            key={cert.id}
+                            className="border border-slate-800 rounded-xl overflow-hidden bg-slate-950/20"
                           >
-                            <div className="flex flex-col gap-0.5">
-                              <span className="font-bold text-white">{cert.name || 'New Credential'}</span>
-                              <span className="text-[10px] text-indigo-400 font-medium">
-                                Issuer: {cert.issuer}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-[10px] text-slate-500 font-medium">{cert.date}</span>
-                              {expandedCert[cert.id] ? <ChevronUp className="w-3.5 h-3.5 text-slate-500" /> : <ChevronDown className="w-3.5 h-3.5 text-slate-500" />}
-                            </div>
-                          </button>
+                            <button
+                              onClick={() =>
+                                setExpandedCert((prev) => ({ ...prev, [cert.id]: !prev[cert.id] }))
+                              }
+                              className="w-full px-4 py-3 bg-slate-950/40 hover:bg-slate-950/60 transition-colors flex items-center justify-between text-left text-xs"
+                            >
+                              <div className="flex flex-col gap-0.5">
+                                <span className="font-bold text-white">
+                                  {cert.name || 'New Credential'}
+                                </span>
+                                <span className="text-[10px] text-indigo-400 font-medium">
+                                  Issuer: {cert.issuer}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10px] text-slate-500 font-medium">
+                                  {cert.date}
+                                </span>
+                                {expandedCert[cert.id] ? (
+                                  <ChevronUp className="w-3.5 h-3.5 text-slate-500" />
+                                ) : (
+                                  <ChevronDown className="w-3.5 h-3.5 text-slate-500" />
+                                )}
+                              </div>
+                            </button>
 
-                          {expandedCert[cert.id] && (
-                            <div className="p-4 border-t border-slate-800/50 space-y-4">
-                              <div className="grid grid-cols-2 gap-3">
-                                <div className="space-y-1">
-                                  <label className="text-[10px] uppercase font-bold text-slate-500">Certification / Award Name</label>
-                                  <input
-                                    type="text"
-                                    value={cert.name}
-                                    onChange={(e) => handleCertChange(cert.id, 'name', e.target.value)}
-                                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none"
-                                  />
+                            {expandedCert[cert.id] && (
+                              <div className="p-4 border-t border-slate-800/50 space-y-4">
+                                <div className="grid grid-cols-2 gap-3">
+                                  <div className="space-y-1">
+                                    <label className="text-[10px] uppercase font-bold text-slate-500">
+                                      Certification / Award Name
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={cert.name}
+                                      onChange={(e) =>
+                                        handleCertChange(cert.id, 'name', e.target.value)
+                                      }
+                                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none"
+                                    />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <label className="text-[10px] uppercase font-bold text-slate-500">
+                                      Issuer
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={cert.issuer}
+                                      onChange={(e) =>
+                                        handleCertChange(cert.id, 'issuer', e.target.value)
+                                      }
+                                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none"
+                                      placeholder="AWS, Scrum Alliance, etc."
+                                    />
+                                  </div>
                                 </div>
-                                <div className="space-y-1">
-                                  <label className="text-[10px] uppercase font-bold text-slate-500">Issuer</label>
-                                  <input
-                                    type="text"
-                                    value={cert.issuer}
-                                    onChange={(e) => handleCertChange(cert.id, 'issuer', e.target.value)}
-                                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none"
-                                    placeholder="AWS, Scrum Alliance, etc."
-                                  />
+
+                                <div className="grid grid-cols-2 gap-3">
+                                  <div className="space-y-1">
+                                    <label className="text-[10px] uppercase font-bold text-slate-500">
+                                      Date / Year
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={cert.date}
+                                      onChange={(e) =>
+                                        handleCertChange(cert.id, 'date', e.target.value)
+                                      }
+                                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none"
+                                      placeholder="2023"
+                                    />
+                                  </div>
+                                  <div className="space-y-1">
+                                    <label className="text-[10px] uppercase font-bold text-slate-500">
+                                      Credential / Link (Optional)
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={cert.link || ''}
+                                      onChange={(e) =>
+                                        handleCertChange(cert.id, 'link', e.target.value)
+                                      }
+                                      className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none"
+                                      placeholder="https://credly.com/..."
+                                    />
+                                  </div>
+                                </div>
+
+                                <div className="flex justify-end">
+                                  <button
+                                    onClick={() => handleRemoveCert(cert.id)}
+                                    className="flex items-center gap-1 px-3 py-1.5 bg-rose-950/40 hover:bg-rose-900/60 border border-rose-800/50 rounded-lg text-[10px] font-bold text-rose-400 transition-colors"
+                                  >
+                                    <Trash2 className="w-3 h-3" />
+                                    <span>Remove Entry</span>
+                                  </button>
                                 </div>
                               </div>
-
-                              <div className="grid grid-cols-2 gap-3">
-                                <div className="space-y-1">
-                                  <label className="text-[10px] uppercase font-bold text-slate-500">Date / Year</label>
-                                  <input
-                                    type="text"
-                                    value={cert.date}
-                                    onChange={(e) => handleCertChange(cert.id, 'date', e.target.value)}
-                                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none"
-                                    placeholder="2023"
-                                  />
-                                </div>
-                                <div className="space-y-1">
-                                  <label className="text-[10px] uppercase font-bold text-slate-500">Credential / Link (Optional)</label>
-                                  <input
-                                    type="text"
-                                    value={cert.link || ''}
-                                    onChange={(e) => handleCertChange(cert.id, 'link', e.target.value)}
-                                    className="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none"
-                                    placeholder="https://credly.com/..."
-                                  />
-                                </div>
-                              </div>
-
-                              <div className="flex justify-end">
-                                <button
-                                  onClick={() => handleRemoveCert(cert.id)}
-                                  className="flex items-center gap-1 px-3 py-1.5 bg-rose-950/40 hover:bg-rose-900/60 border border-rose-800/50 rounded-lg text-[10px] font-bold text-rose-400 transition-colors"
-                                >
-                                  <Trash2 className="w-3 h-3" />
-                                  <span>Remove Entry</span>
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      ))}
+                            )}
+                          </div>
+                        ))}
                     </div>
 
                     {/* Quick Add Certificate */}
                     <div className="bg-slate-950/40 p-4 rounded-xl border border-slate-850 space-y-3">
-                      <span className="text-xs font-bold text-slate-300 block">Add New Certificate / Award</span>
+                      <span className="text-xs font-bold text-slate-300 block">
+                        Add New Certificate / Award
+                      </span>
                       <div className="grid grid-cols-2 gap-3">
                         <input
                           type="text"
                           placeholder="Certificate Name *"
                           value={newCertificate.name || ''}
-                          onChange={(e) => setNewCertificate(prev => ({ ...prev, name: e.target.value }))}
+                          onChange={(e) =>
+                            setNewCertificate((prev) => ({ ...prev, name: e.target.value }))
+                          }
                           className="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
                         />
                         <input
                           type="text"
                           placeholder="Issuer / Organization *"
                           value={newCertificate.issuer || ''}
-                          onChange={(e) => setNewCertificate(prev => ({ ...prev, issuer: e.target.value }))}
+                          onChange={(e) =>
+                            setNewCertificate((prev) => ({ ...prev, issuer: e.target.value }))
+                          }
                           className="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
                         />
                       </div>
@@ -3685,14 +4194,18 @@ export default function Portfolio() {
                           type="text"
                           placeholder="Date (e.g. 2024)"
                           value={newCertificate.date || ''}
-                          onChange={(e) => setNewCertificate(prev => ({ ...prev, date: e.target.value }))}
+                          onChange={(e) =>
+                            setNewCertificate((prev) => ({ ...prev, date: e.target.value }))
+                          }
                           className="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
                         />
                         <input
                           type="text"
                           placeholder="Verification Link (URL)"
                           value={newCertificate.link || ''}
-                          onChange={(e) => setNewCertificate(prev => ({ ...prev, link: e.target.value }))}
+                          onChange={(e) =>
+                            setNewCertificate((prev) => ({ ...prev, link: e.target.value }))
+                          }
                           className="w-full bg-slate-950 border border-slate-850 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
                         />
                       </div>
@@ -3705,7 +4218,6 @@ export default function Portfolio() {
                       </button>
                     </div>
                   </div>
-
                 </div>
               )}
 
@@ -3714,23 +4226,32 @@ export default function Portfolio() {
                 <div className="space-y-6 animate-fadeIn">
                   <div>
                     <h2 className="text-base font-bold text-white">Layouts & Theme Palettes</h2>
-                    <p className="text-xs text-slate-400 mt-1">Fine tune details to change the style of your website.</p>
+                    <p className="text-xs text-slate-400 mt-1">
+                      Fine tune details to change the style of your website.
+                    </p>
                   </div>
 
                   {/* Theme presets */}
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Theme Engine</label>
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
+                      Theme Engine
+                    </label>
                     <div className="grid grid-cols-2 gap-2.5">
                       {[
                         { id: 'minimal', label: 'Minimal Slate', desc: 'Ultra-clean grid' },
                         { id: 'creative', label: 'Creative Morph', desc: 'Gradients & blobs' },
                         { id: 'gradient', label: 'Gradient Glow', desc: 'Centered & vibrant' },
                         { id: 'cyberpunk', label: 'Cyber terminal', desc: 'Monospaced neon' },
-                        { id: 'classic', label: 'Classic Serif', desc: 'Formal & structured' }
-                      ].map(t => (
+                        { id: 'classic', label: 'Classic Serif', desc: 'Formal & structured' },
+                      ].map((t) => (
                         <button
                           key={t.id}
-                          onClick={() => setThemeSettings(prev => ({ ...prev, id: t.id as ThemeSettings['id'] }))}
+                          onClick={() =>
+                            setThemeSettings((prev) => ({
+                              ...prev,
+                              id: t.id as ThemeSettings['id'],
+                            }))
+                          }
                           className={`p-3 text-left rounded-xl border transition-all cursor-pointer ${
                             themeSettings.id === t.id
                               ? appTheme === 'nord-light'
@@ -3750,7 +4271,9 @@ export default function Portfolio() {
 
                   {/* Primary Color Presets */}
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Primary Accent Color</label>
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
+                      Primary Accent Color
+                    </label>
                     <div className="flex items-center gap-3.5 py-2 bg-slate-950/30 rounded-xl border border-slate-850 px-4">
                       {[
                         { id: 'violet', color: 'bg-violet-500', border: 'border-violet-600' },
@@ -3758,14 +4281,19 @@ export default function Portfolio() {
                         { id: 'blue', color: 'bg-blue-500', border: 'border-blue-600' },
                         { id: 'amber', color: 'bg-amber-500', border: 'border-amber-650' },
                         { id: 'rose', color: 'bg-rose-500', border: 'border-rose-600' },
-                        { id: 'slate', color: 'bg-slate-500', border: 'border-slate-600' }
-                      ].map(color => (
+                        { id: 'slate', color: 'bg-slate-500', border: 'border-slate-600' },
+                      ].map((color) => (
                         <button
                           key={color.id}
-                          onClick={() => setThemeSettings(prev => ({ ...prev, primaryColor: color.id as ThemeSettings['primaryColor'] }))}
+                          onClick={() =>
+                            setThemeSettings((prev) => ({
+                              ...prev,
+                              primaryColor: color.id as ThemeSettings['primaryColor'],
+                            }))
+                          }
                           className={`w-7 h-7 rounded-full ${color.color} cursor-pointer relative transition-all duration-200 hover:scale-110 ${
-                            themeSettings.primaryColor === color.id 
-                              ? 'ring-2 ring-white ring-offset-2 ring-offset-slate-900' 
+                            themeSettings.primaryColor === color.id
+                              ? 'ring-2 ring-white ring-offset-2 ring-offset-slate-900'
                               : ''
                           }`}
                           title={`${color.id.charAt(0).toUpperCase() + color.id.slice(1)} Scheme`}
@@ -3778,9 +4306,9 @@ export default function Portfolio() {
                   <div className="bg-slate-950/40 p-4 rounded-xl border border-slate-850 flex flex-col sm:flex-row items-center gap-4 animate-fadeIn">
                     <div className="relative group w-16 h-16 rounded-xl overflow-hidden border border-slate-800 bg-slate-950 flex items-center justify-center shrink-0">
                       {resumeData.personal.avatar && resumeData.personal.avatar.length > 2 ? (
-                        <img 
-                          src={resumeData.personal.avatar} 
-                          alt={resumeData.personal.name} 
+                        <img
+                          src={resumeData.personal.avatar}
+                          alt={resumeData.personal.name}
                           className="w-full h-full object-cover"
                         />
                       ) : (
@@ -3789,9 +4317,11 @@ export default function Portfolio() {
                         </span>
                       )}
                     </div>
-                    
+
                     <div className="flex-1 text-center sm:text-left space-y-1">
-                      <label className="text-xs font-bold text-slate-300 block">Profile Picture</label>
+                      <label className="text-xs font-bold text-slate-300 block">
+                        Profile Picture
+                      </label>
                       <p className="text-[10px] text-slate-500 leading-normal">
                         Upload a photo (PNG, JPG, or WebP, max 2MB).
                       </p>
@@ -3800,14 +4330,14 @@ export default function Portfolio() {
                     <div className="flex items-center gap-2">
                       <label className="bg-indigo-650 hover:bg-indigo-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition-colors cursor-pointer block">
                         Upload
-                        <input 
-                          type="file" 
-                          accept="image/*" 
-                          onChange={handleAvatarUpload} 
-                          className="hidden" 
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleAvatarUpload}
+                          className="hidden"
                         />
                       </label>
-                      
+
                       {resumeData.personal.avatar && resumeData.personal.avatar.length > 2 && (
                         <button
                           type="button"
@@ -3822,20 +4352,29 @@ export default function Portfolio() {
 
                   {/* Typography Controls */}
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block">Font Family</label>
-                    <div className={`grid grid-cols-3 gap-2 p-1 rounded-lg border text-xs font-medium text-center ${
-                      appTheme === 'nord-light'
-                        ? 'bg-slate-100 border-slate-200'
-                        : 'bg-slate-950/40 border-slate-850'
-                    }`}>
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block">
+                      Font Family
+                    </label>
+                    <div
+                      className={`grid grid-cols-3 gap-2 p-1 rounded-lg border text-xs font-medium text-center ${
+                        appTheme === 'nord-light'
+                          ? 'bg-slate-100 border-slate-200'
+                          : 'bg-slate-950/40 border-slate-850'
+                      }`}
+                    >
                       {[
                         { id: 'sans', label: 'Sans Serif', font: 'font-sans' },
                         { id: 'serif', label: 'Classic Serif', font: 'font-serif' },
-                        { id: 'mono', label: 'Monospace', font: 'font-mono' }
-                      ].map(font => (
+                        { id: 'mono', label: 'Monospace', font: 'font-mono' },
+                      ].map((font) => (
                         <button
                           key={font.id}
-                          onClick={() => setThemeSettings(prev => ({ ...prev, fontFamily: font.id as ThemeSettings['fontFamily'] }))}
+                          onClick={() =>
+                            setThemeSettings((prev) => ({
+                              ...prev,
+                              fontFamily: font.id as ThemeSettings['fontFamily'],
+                            }))
+                          }
                           className={`py-2 px-1.5 rounded-md transition-colors cursor-pointer ${
                             themeSettings.fontFamily === font.id
                               ? 'bg-indigo-600 text-white shadow-sm'
@@ -3851,44 +4390,62 @@ export default function Portfolio() {
                   </div>
 
                   {/* Dark Mode Preview Toggler */}
-                  <div className={`flex items-center justify-between p-4 rounded-xl border ${
-                    appTheme === 'nord-light' ? 'bg-slate-100 border-slate-200' : 'bg-slate-950/20 border-slate-850'
-                  }`}>
+                  <div
+                    className={`flex items-center justify-between p-4 rounded-xl border ${
+                      appTheme === 'nord-light'
+                        ? 'bg-slate-100 border-slate-200'
+                        : 'bg-slate-950/20 border-slate-850'
+                    }`}
+                  >
                     <div>
                       <span className="text-xs font-bold text-white block">Preview Dark Mode</span>
-                      <span className="text-[9px] text-slate-500 mt-0.5 block">Toggles dark styling of target portfolio</span>
+                      <span className="text-[9px] text-slate-500 mt-0.5 block">
+                        Toggles dark styling of target portfolio
+                      </span>
                     </div>
 
                     <button
-                      onClick={() => setThemeSettings(prev => ({ ...prev, darkMode: !prev.darkMode }))}
+                      onClick={() =>
+                        setThemeSettings((prev) => ({ ...prev, darkMode: !prev.darkMode }))
+                      }
                       className={`w-12 h-6 rounded-full transition-colors relative cursor-pointer ${
                         themeSettings.darkMode ? 'bg-indigo-650' : 'bg-slate-850'
                       }`}
                     >
-                      <div 
+                      <div
                         className={`w-4.5 h-4.5 rounded-full bg-white absolute top-[3px] transition-all flex items-center justify-center text-[8px] ${
-                          themeSettings.darkMode ? 'left-[25px] text-indigo-600' : 'left-[4px] text-slate-500'
+                          themeSettings.darkMode
+                            ? 'left-[25px] text-indigo-600'
+                            : 'left-[4px] text-slate-500'
                         }`}
                       >
-                        {themeSettings.darkMode ? <Moon className="w-2.5 h-2.5" /> : <Sun className="w-2.5 h-2.5" />}
+                        {themeSettings.darkMode ? (
+                          <Moon className="w-2.5 h-2.5" />
+                        ) : (
+                          <Sun className="w-2.5 h-2.5" />
+                        )}
                       </div>
                     </button>
                   </div>
 
                   {/* Application Workspace Theme */}
-                  <div className={`space-y-2 pt-4 border-t ${
-                    appTheme === 'nord-light' ? 'border-slate-200' : 'border-slate-850'
-                  }`}>
+                  <div
+                    className={`space-y-2 pt-4 border-t ${
+                      appTheme === 'nord-light' ? 'border-slate-200' : 'border-slate-850'
+                    }`}
+                  >
                     <div className="flex flex-col">
                       <span className="text-xs font-bold text-white block">Workspace Theme</span>
-                      <span className="text-[9px] text-slate-500 mt-0.5 block">Customize the look and feel of the builder workspace interface</span>
+                      <span className="text-[9px] text-slate-500 mt-0.5 block">
+                        Customize the look and feel of the builder workspace interface
+                      </span>
                     </div>
                     <div className="grid grid-cols-3 gap-2 mt-2">
                       {[
                         { id: 'slate-dark', label: 'Slate Dark', desc: 'Default carbon' },
                         { id: 'indigo-midnight', label: 'Indigo Midnight', desc: 'Deep violet' },
-                        { id: 'nord-light', label: 'Nord Light', desc: 'Sleek light' }
-                      ].map(t => (
+                        { id: 'nord-light', label: 'Nord Light', desc: 'Sleek light' },
+                      ].map((t) => (
                         <button
                           type="button"
                           key={t.id}
@@ -3904,39 +4461,51 @@ export default function Portfolio() {
                           }`}
                         >
                           <span className="text-xs font-bold block">{t.label}</span>
-                          <span className="text-[9px] text-slate-500 block mt-0.5 leading-tight">{t.desc}</span>
+                          <span className="text-[9px] text-slate-500 block mt-0.5 leading-tight">
+                            {t.desc}
+                          </span>
                         </button>
                       ))}
                     </div>
                   </div>
                 </div>
               )}
-
             </div>
 
             {/* Sidebar Credits Footer */}
             <div className="flex-shrink-0 px-6 py-3 border-t border-slate-800 bg-slate-950/20 flex items-center justify-between text-[10px] text-slate-500 font-medium">
               <span>© {new Date().getFullYear()} ProPortfolio Builder</span>
-              <span>Developed by <span className="text-slate-400 font-semibold">Swetaprangya Sahoo</span></span>
+              <span>
+                Developed by{' '}
+                <span className="text-slate-400 font-semibold">Swetaprangya Sahoo</span>
+              </span>
             </div>
           </div>
         )}
 
         {/* RIGHT PANEL: DOUBLE-COLUMN AI WORKSPACE & PORTFOLIO SANDBOX */}
-        <div className={`flex-grow bg-slate-950 flex flex-col overflow-hidden relative ${
-          mobileActiveView === 'preview' ? 'flex' : 'hidden lg:flex'
-        }`}>
-          
+        <div
+          className={`flex-grow bg-slate-950 flex flex-col overflow-hidden relative ${
+            mobileActiveView === 'preview' ? 'flex' : 'hidden lg:flex'
+          }`}
+        >
           {/* RIGHT PANEL HEADER / TAB SELECTOR */}
           <div className="flex-shrink-0 h-12 border-b border-slate-900 bg-slate-950/80 flex items-center justify-between px-4 sm:px-6 z-20">
             {/* Right Panel Tabs */}
             <div className="flex gap-1 bg-slate-900 p-0.5 rounded-lg text-xs border border-slate-850">
-              {([
-                { id: 'coach', label: 'AI Coach', icon: Sparkles },
-                { id: 'interview', label: 'Interview Prep', icon: Target },
-                { id: 'inbox', label: 'Inbox', icon: MessageSquare, badge: contactMessages.filter(m => m.unread).length },
-                { id: 'sandbox', label: 'Live Sandbox', icon: Laptop }
-              ] as any[]).map(tab => (
+              {(
+                [
+                  { id: 'coach', label: 'AI Coach', icon: Sparkles },
+                  { id: 'interview', label: 'Interview Prep', icon: Target },
+                  {
+                    id: 'inbox',
+                    label: 'Inbox',
+                    icon: MessageSquare,
+                    badge: contactMessages.filter((m) => m.unread).length,
+                  },
+                  { id: 'sandbox', label: 'Live Sandbox', icon: Laptop },
+                ] as any[]
+              ).map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setRightTab(tab.id as any)}
@@ -3948,9 +4517,13 @@ export default function Portfolio() {
                 >
                   <tab.icon className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">{tab.label}</span>
-                  <span className="sm:hidden">{tab.id === 'interview' ? 'Interview' : tab.label.split(' ')[0]}</span>
+                  <span className="sm:hidden">
+                    {tab.id === 'interview' ? 'Interview' : tab.label.split(' ')[0]}
+                  </span>
                   {tab.badge !== undefined && tab.badge > 0 && (
-                    <span className="bg-rose-500 text-white text-[8px] px-1 rounded-full">{tab.badge}</span>
+                    <span className="bg-rose-500 text-white text-[8px] px-1 rounded-full">
+                      {tab.badge}
+                    </span>
                   )}
                 </button>
               ))}
@@ -3964,8 +4537,8 @@ export default function Portfolio() {
                   {[
                     { id: 'desktop', icon: Laptop, label: 'Desktop view' },
                     { id: 'tablet', icon: Tablet, label: 'Tablet size' },
-                    { id: 'mobile', icon: Smartphone, label: 'Mobile view' }
-                  ].map(device => (
+                    { id: 'mobile', icon: Smartphone, label: 'Mobile view' },
+                  ].map((device) => (
                     <button
                       key={device.id}
                       onClick={() => setPreviewDevice(device.id as any)}
@@ -3986,7 +4559,9 @@ export default function Portfolio() {
             {rightTab === 'coach' && (
               <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500">
                 <span className="hidden sm:inline">Resume Grade:</span>
-                <span className={`text-[11px] px-2 py-0.5 rounded bg-slate-900 border border-slate-800 ${activeAnalysis.color.split(' ')[0]}`}>
+                <span
+                  className={`text-[11px] px-2 py-0.5 rounded bg-slate-900 border border-slate-800 ${activeAnalysis.color.split(' ')[0]}`}
+                >
                   {activeAnalysis.grade} ({activeAnalysis.score}/100)
                 </span>
               </div>
@@ -3996,11 +4571,15 @@ export default function Portfolio() {
               <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500">
                 <span className="hidden sm:inline">AI Provider:</span>
                 <span className="text-[11px] px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-violet-400">
-                  {aiProvider === 'groq' ? 'Groq (Llama 3)' : aiProvider === 'openrouter' ? `OpenRouter (${openRouterModel.split('/').pop()?.replace(':free', '')})` : 'Gemini'}
+                  {aiProvider === 'groq'
+                    ? 'Groq (Llama 3)'
+                    : aiProvider === 'openrouter'
+                      ? `OpenRouter (${openRouterModel.split('/').pop()?.replace(':free', '')})`
+                      : 'Gemini'}
                 </span>
               </div>
             )}
-            
+
             {rightTab === 'inbox' && (
               <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500">
                 <span className="hidden sm:inline">Total Leads:</span>
@@ -4013,654 +4592,826 @@ export default function Portfolio() {
 
           {/* Right Panel Tab Content Container */}
           <div className="flex-grow overflow-y-auto p-6 space-y-6 scrollbar-thin">
-
             {/* TAB 6: RESUME ANALYZER COACH */}
             {rightTab === 'coach' && (
-                <div className="space-y-6 animate-fadeIn">
-                  <div>
-                    <h2 className="text-base font-bold text-white">AI Coach & ATS Keyword Scanner</h2>
-                    <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                      Double-check ATS readability, audit layout parsing structures, and optimize target keywords.
-                    </p>
-                  </div>
+              <div className="space-y-6 animate-fadeIn">
+                <div>
+                  <h2 className="text-base font-bold text-white">AI Coach & ATS Keyword Scanner</h2>
+                  <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                    Double-check ATS readability, audit layout parsing structures, and optimize
+                    target keywords.
+                  </p>
+                </div>
 
-                  {/* Sub-tab selection (Jobscan Pro Multi-Tab Presets) */}
-                  <div className="flex border-b border-slate-800 overflow-x-auto scrollbar-none text-[10px] font-bold uppercase tracking-wider bg-slate-950/40">
-                    {[
-                      { id: 'checklist', label: '📝 Format Checklist' },
-                      { id: 'ats', label: '🎯 Target Matcher' },
-                      { id: 'cover-letter', label: '✉️ Cover Letter' },
-                      { id: 'linkedin', label: '🔗 LinkedIn Check' },
-                      { id: 'plaintext', label: '📄 Plaintext Exporter' }
-                    ].map(tab => (
-                      <button
-                        key={tab.id}
-                        onClick={() => setCoachSubTab(tab.id as any)}
-                        className={`flex-1 px-2 py-2.5 text-center border-b-2 whitespace-nowrap transition-colors cursor-pointer ${
-                          coachSubTab === tab.id
-                            ? 'border-indigo-500 text-indigo-400'
-                            : 'border-transparent text-slate-500 hover:text-slate-300'
-                        }`}
-                      >
-                        {tab.label}
-                      </button>
-                    ))}
-                  </div>
+                {/* Sub-tab selection (Jobscan Pro Multi-Tab Presets) */}
+                <div className="flex border-b border-slate-800 overflow-x-auto scrollbar-none text-[10px] font-bold uppercase tracking-wider bg-slate-950/40">
+                  {[
+                    { id: 'checklist', label: '📝 Format Checklist' },
+                    { id: 'ats', label: '🎯 Target Matcher' },
+                    { id: 'cover-letter', label: '✉️ Cover Letter' },
+                    { id: 'linkedin', label: '🔗 LinkedIn Check' },
+                    { id: 'plaintext', label: '📄 Plaintext Exporter' },
+                  ].map((tab) => (
+                    <button
+                      key={tab.id}
+                      onClick={() => setCoachSubTab(tab.id as any)}
+                      className={`flex-1 px-2 py-2.5 text-center border-b-2 whitespace-nowrap transition-colors cursor-pointer ${
+                        coachSubTab === tab.id
+                          ? 'border-indigo-500 text-indigo-400'
+                          : 'border-transparent text-slate-500 hover:text-slate-300'
+                      }`}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
 
-                  {/* SUB-TAB 1: FORMAT CHECKLIST */}
-                  {coachSubTab === 'checklist' && (
-                    <div className="space-y-5 animate-fadeIn">
-                      {/* Score Card Grid */}
-                      <div className="grid grid-cols-3 gap-4 bg-slate-950/30 border border-slate-800 p-4 rounded-2xl items-center">
-                        <div className="col-span-1 flex flex-col items-center justify-center border-r border-slate-800 py-1">
-                          <span className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">Resume Grade</span>
-                          <span className={`text-3xl font-extrabold mt-1.5 ${activeAnalysis.color.split(' ')[0]}`}>
-                            {activeAnalysis.grade}
+                {/* SUB-TAB 1: FORMAT CHECKLIST */}
+                {coachSubTab === 'checklist' && (
+                  <div className="space-y-5 animate-fadeIn">
+                    {/* Score Card Grid */}
+                    <div className="grid grid-cols-3 gap-4 bg-slate-950/30 border border-slate-800 p-4 rounded-2xl items-center">
+                      <div className="col-span-1 flex flex-col items-center justify-center border-r border-slate-800 py-1">
+                        <span className="text-[10px] font-bold uppercase text-slate-500 tracking-wider">
+                          Resume Grade
+                        </span>
+                        <span
+                          className={`text-3xl font-extrabold mt-1.5 ${activeAnalysis.color.split(' ')[0]}`}
+                        >
+                          {activeAnalysis.grade}
+                        </span>
+                      </div>
+
+                      <div className="col-span-2 pl-2 space-y-1.5">
+                        <div className="flex justify-between text-xs font-bold">
+                          <span className="text-slate-400">Layout Quality Score</span>
+                          <span className={activeAnalysis.color.split(' ')[0]}>
+                            {activeAnalysis.score}/100
                           </span>
                         </div>
 
-                        <div className="col-span-2 pl-2 space-y-1.5">
-                          <div className="flex justify-between text-xs font-bold">
-                            <span className="text-slate-400">Layout Quality Score</span>
-                            <span className={activeAnalysis.color.split(' ')[0]}>{activeAnalysis.score}/100</span>
-                          </div>
-                          
-                          {/* Progress bar */}
-                          <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
-                            <div 
-                              className={`h-full rounded-full bg-indigo-500 transition-all duration-500`}
-                              style={{ width: `${activeAnalysis.score}%` }}
-                            ></div>
-                          </div>
-
-                          <p className="text-[10px] text-slate-500 leading-relaxed font-medium">
-                            Formatting metrics sync instantly as you refine jobs, bullet lists, and contact items!
-                          </p>
+                        {/* Progress bar */}
+                        <div className="h-2 w-full bg-slate-800 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full bg-indigo-500 transition-all duration-500`}
+                            style={{ width: `${activeAnalysis.score}%` }}
+                          ></div>
                         </div>
-                      </div>
 
-                      {/* Recommendations list */}
-                      <div className="space-y-3">
-                        <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider block">Improvement Recommendations</h3>
-                        
-                        {activeAnalysis.recommendations.length > 0 ? (
-                          <div className="space-y-2 max-h-[320px] overflow-y-auto pr-1 scrollbar-thin">
-                            {activeAnalysis.recommendations.map((rec) => (
-                              <div key={rec.id} className="flex gap-3 p-3 rounded-xl bg-slate-950/20 border border-slate-850 text-xs leading-relaxed animate-fadeIn">
-                                <div className="p-1 rounded-lg bg-amber-500/10 text-amber-400 flex-shrink-0 h-6 w-6 flex items-center justify-center">
-                                  <AlertCircle className="w-4 h-4" />
-                                </div>
-                                <div className="space-y-0.5">
-                                  <h4 className="font-bold text-slate-200 flex items-center gap-2">
-                                    <span>{rec.title}</span>
-                                    <span className="text-[9px] text-amber-400 font-semibold bg-amber-950/40 px-1 py-0.2 rounded-md">+{rec.scoreImpact} pts</span>
-                                  </h4>
-                                  <p className="text-slate-400 text-[11px]">{rec.description}</p>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="flex items-center gap-2 bg-emerald-900/20 border border-emerald-800/65 rounded-xl p-3 text-xs text-emerald-400 font-semibold">
-                            <CheckCircle className="w-4 h-4" />
-                            <span>Perfect Score! Your layout meets premium corporate parsing standards. Ready to export!</span>
-                          </div>
-                        )}
+                        <p className="text-[10px] text-slate-500 leading-relaxed font-medium">
+                          Formatting metrics sync instantly as you refine jobs, bullet lists, and
+                          contact items!
+                        </p>
                       </div>
                     </div>
-                  )}
 
-                  {/* SUB-TAB 2: ATS & RECRUITER TARGET MATCH */}
-                  {coachSubTab === 'ats' && (
-                    <div className="space-y-5 animate-fadeIn">
-                      {/* ATS Match Score Card */}
-                      <div className="grid grid-cols-3 gap-4 bg-slate-950/30 border border-slate-850 p-4 rounded-2xl items-center">
-                        <div className="col-span-1 flex flex-col items-center justify-center border-r border-slate-800 py-1">
-                          <span className="text-[9px] font-bold uppercase text-slate-500 tracking-wider text-center">Overall ATS Match</span>
-                          <span className="text-3xl font-extrabold mt-1.5 text-indigo-400">
-                            {activeAtsAnalysis.overallAtsScore}%
+                    {/* Recommendations list */}
+                    <div className="space-y-3">
+                      <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider block">
+                        Improvement Recommendations
+                      </h3>
+
+                      {activeAnalysis.recommendations.length > 0 ? (
+                        <div className="space-y-2 max-h-[320px] overflow-y-auto pr-1 scrollbar-thin">
+                          {activeAnalysis.recommendations.map((rec) => (
+                            <div
+                              key={rec.id}
+                              className="flex gap-3 p-3 rounded-xl bg-slate-950/20 border border-slate-850 text-xs leading-relaxed animate-fadeIn"
+                            >
+                              <div className="p-1 rounded-lg bg-amber-500/10 text-amber-400 flex-shrink-0 h-6 w-6 flex items-center justify-center">
+                                <AlertCircle className="w-4 h-4" />
+                              </div>
+                              <div className="space-y-0.5">
+                                <h4 className="font-bold text-slate-200 flex items-center gap-2">
+                                  <span>{rec.title}</span>
+                                  <span className="text-[9px] text-amber-400 font-semibold bg-amber-950/40 px-1 py-0.2 rounded-md">
+                                    +{rec.scoreImpact} pts
+                                  </span>
+                                </h4>
+                                <p className="text-slate-400 text-[11px]">{rec.description}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 bg-emerald-900/20 border border-emerald-800/65 rounded-xl p-3 text-xs text-emerald-400 font-semibold">
+                          <CheckCircle className="w-4 h-4" />
+                          <span>
+                            Perfect Score! Your layout meets premium corporate parsing standards.
+                            Ready to export!
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* SUB-TAB 2: ATS & RECRUITER TARGET MATCH */}
+                {coachSubTab === 'ats' && (
+                  <div className="space-y-5 animate-fadeIn">
+                    {/* ATS Match Score Card */}
+                    <div className="grid grid-cols-3 gap-4 bg-slate-950/30 border border-slate-850 p-4 rounded-2xl items-center">
+                      <div className="col-span-1 flex flex-col items-center justify-center border-r border-slate-800 py-1">
+                        <span className="text-[9px] font-bold uppercase text-slate-500 tracking-wider text-center">
+                          Overall ATS Match
+                        </span>
+                        <span className="text-3xl font-extrabold mt-1.5 text-indigo-400">
+                          {activeAtsAnalysis.overallAtsScore}%
+                        </span>
+                      </div>
+
+                      <div className="col-span-2 pl-2 space-y-1">
+                        <div className="flex justify-between text-xs">
+                          <span className="text-slate-400 font-semibold">
+                            Keyword Density Score
+                          </span>
+                          <span className="text-indigo-300 font-bold">
+                            {activeAtsAnalysis.matchScore}%
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-xs">
+                          <span className="text-slate-400 font-semibold">
+                            Compliance Format Score
+                          </span>
+                          <span className="text-indigo-300 font-bold">
+                            {activeAtsAnalysis.complianceScore}%
                           </span>
                         </div>
 
-                        <div className="col-span-2 pl-2 space-y-1">
-                          <div className="flex justify-between text-xs">
-                            <span className="text-slate-400 font-semibold">Keyword Density Score</span>
-                            <span className="text-indigo-300 font-bold">{activeAtsAnalysis.matchScore}%</span>
-                          </div>
-                          <div className="flex justify-between text-xs">
-                            <span className="text-slate-400 font-semibold">Compliance Format Score</span>
-                            <span className="text-indigo-300 font-bold">{activeAtsAnalysis.complianceScore}%</span>
-                          </div>
+                        <p className="text-[9px] text-slate-500 leading-normal font-medium pt-1">
+                          Jobscan Pro tip: Raising your keyword matches above 75% secures top 10%
+                          tier status.
+                        </p>
+                      </div>
+                    </div>
 
-                          <p className="text-[9px] text-slate-500 leading-normal font-medium pt-1">
-                            Jobscan Pro tip: Raising your keyword matches above 75% secures top 10% tier status.
+                    {/* Job Description paste field */}
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] uppercase font-bold text-slate-400">
+                        Target Job Description
+                      </label>
+                      <textarea
+                        rows={3}
+                        value={jobDescription}
+                        onChange={(e) => setJobDescription(e.target.value)}
+                        placeholder="Paste target requirements here... e.g. 'Seeking 5+ years experience in React, TypeScript, AWS Cloud, Jest, Docker...'"
+                        className="w-full bg-slate-950 border border-slate-850 rounded-lg p-2.5 text-xs text-slate-300 focus:outline-none resize-none"
+                      />
+                    </div>
+
+                    {/* Premium AI Auto-Optimizer Section */}
+                    <div className="p-4 rounded-2xl bg-gradient-to-br from-indigo-950/50 to-violet-950/40 border border-indigo-800/50 space-y-4">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="text-xs font-bold text-indigo-350 uppercase tracking-wider flex items-center gap-1.5">
+                            <Sparkles className="w-3.5 h-3.5 text-indigo-400 animate-pulse" />
+                            <span>Jobscan Auto-Score Optimizer</span>
+                          </h3>
+                          <p className="text-[10px] text-slate-400 mt-0.5 leading-relaxed">
+                            Generate an optimized copy in the <b>exact same format & design</b>{' '}
+                            instantly.
                           </p>
                         </div>
+
+                        <button
+                          onClick={triggerAIOptimization}
+                          className="bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg transition-colors shadow cursor-pointer"
+                        >
+                          ✨ Auto-Optimize Resume
+                        </button>
                       </div>
 
-                      {/* Job Description paste field */}
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] uppercase font-bold text-slate-400">Target Job Description</label>
-                        <textarea
-                          rows={3}
-                          value={jobDescription}
-                          onChange={(e) => setJobDescription(e.target.value)}
-                          placeholder="Paste target requirements here... e.g. 'Seeking 5+ years experience in React, TypeScript, AWS Cloud, Jest, Docker...'"
-                          className="w-full bg-slate-950 border border-slate-850 rounded-lg p-2.5 text-xs text-slate-300 focus:outline-none resize-none"
-                        />
-                      </div>
-
-                      {/* Premium AI Auto-Optimizer Section */}
-                      <div className="p-4 rounded-2xl bg-gradient-to-br from-indigo-950/50 to-violet-950/40 border border-indigo-800/50 space-y-4">
-                        <div className="flex justify-between items-start">
-                          <div>
-                            <h3 className="text-xs font-bold text-indigo-350 uppercase tracking-wider flex items-center gap-1.5">
-                              <Sparkles className="w-3.5 h-3.5 text-indigo-400 animate-pulse" />
-                              <span>Jobscan Auto-Score Optimizer</span>
-                            </h3>
-                            <p className="text-[10px] text-slate-400 mt-0.5 leading-relaxed">
-                              Generate an optimized copy in the <b>exact same format & design</b> instantly.
+                      {resumeData.personal.name === 'Alex Rivera' && (
+                        <div className="bg-amber-900/20 border border-amber-800/50 rounded-xl p-3 flex gap-2.5 items-start">
+                          <AlertCircle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
+                          <div className="space-y-1">
+                            <p className="text-[10px] font-bold text-amber-400">
+                              Placeholder Data Detected
+                            </p>
+                            <p className="text-[9px] text-slate-400 leading-relaxed">
+                              You are currently viewing the default sample profile (Alex Rivera).
+                              For best results, go to the <b>Import</b> tab to upload your own
+                              resume first!
                             </p>
                           </div>
-                          
+                        </div>
+                      )}
+
+                      {revisedResumeData && revisedAtsAnalysis && (
+                        <div className="space-y-3 pt-2 border-t border-slate-800/60 animate-fadeIn">
+                          {/* Side by side visual comparison */}
+                          <div className="grid grid-cols-2 gap-4 text-center">
+                            <div className="p-2.5 rounded-xl bg-slate-950/40 border border-slate-850">
+                              <span className="text-[9px] font-bold uppercase text-slate-500 block">
+                                Current Score
+                              </span>
+                              <span className="text-xl font-extrabold text-slate-300 mt-1 block">
+                                {atsAnalysis.overallAtsScore}%
+                              </span>
+                            </div>
+                            <div className="p-2.5 rounded-xl bg-indigo-950/40 border border-indigo-900/40 animate-pulse">
+                              <span className="text-[9px] font-bold uppercase text-indigo-400 block">
+                                Revised Score
+                              </span>
+                              <span className="text-xl font-extrabold text-emerald-400 mt-1 block">
+                                {revisedAtsAnalysis.overallAtsScore}%!
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Preview toggles */}
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => setShowRevisedPreview(true)}
+                              className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold border transition-all cursor-pointer ${
+                                showRevisedPreview
+                                  ? 'bg-indigo-900/45 border-indigo-500 text-indigo-300'
+                                  : 'border-slate-800 text-slate-400 hover:text-slate-300'
+                              }`}
+                            >
+                              👁️ View Revised Preview
+                            </button>
+                            <button
+                              onClick={() => setShowRevisedPreview(false)}
+                              className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold border transition-all cursor-pointer ${
+                                !showRevisedPreview
+                                  ? 'bg-slate-800 border-slate-700 text-slate-350'
+                                  : 'border-slate-800 text-slate-400 hover:text-slate-300'
+                              }`}
+                            >
+                              👁️ View Original Preview
+                            </button>
+                          </div>
+
                           <button
-                            onClick={triggerAIOptimization}
-                            className="bg-indigo-600 hover:bg-indigo-700 text-white text-[10px] font-bold px-3 py-1.5 rounded-lg transition-colors shadow cursor-pointer"
+                            onClick={() => setShowOptimizerModal(true)}
+                            className="w-full py-2.5 bg-indigo-600/20 hover:bg-indigo-600/40 border border-indigo-500/30 text-indigo-300 rounded-xl text-[10px] font-black tracking-wider transition-all cursor-pointer flex items-center justify-center gap-2 shadow-sm"
                           >
-                            ✨ Auto-Optimize Resume
+                            <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+                            <span>REVIEW AI DRAFT INTERACTIVELY</span>
+                          </button>
+
+                          {/* Premium Download Actions for AI Optimized Version */}
+                          <div className="grid grid-cols-2 gap-2">
+                            <button
+                              onClick={() => handleWordDownload()}
+                              className="bg-slate-950 hover:bg-slate-900 border border-slate-850 text-slate-200 text-[10px] py-2 rounded-lg font-bold transition-colors cursor-pointer flex items-center justify-center gap-1"
+                            >
+                              <FileText className="w-3 h-3 text-indigo-400" />
+                              <span>Download Word (.doc)</span>
+                            </button>
+
+                            <button
+                              onClick={handlePdfPrint}
+                              className="bg-slate-950 hover:bg-slate-900 border border-slate-850 text-slate-200 text-[10px] py-2 rounded-lg font-bold transition-colors cursor-pointer flex items-center justify-center gap-1"
+                            >
+                              <Download className="w-3 h-3 text-emerald-400" />
+                              <span>Export Document...</span>
+                            </button>
+                          </div>
+
+                          {/* List of fixes applied */}
+                          <div className="space-y-1.5 bg-slate-950/40 p-3 rounded-xl text-[11px]">
+                            <span className="text-[9px] font-bold uppercase text-slate-500 block">
+                              AI Adjustments Applied:
+                            </span>
+                            <ul className="space-y-1 pl-4 list-disc text-slate-400 leading-relaxed">
+                              {appliedFixes.map((fix, i) => (
+                                <li key={i}>{fix}</li>
+                              ))}
+                            </ul>
+                          </div>
+
+                          {/* Adopt permanently */}
+                          <button
+                            onClick={applyRevisedData}
+                            className="w-full bg-emerald-650 hover:bg-emerald-600 text-white py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+                          >
+                            <Check className="w-4 h-4" />
+                            <span>Save AI Revised Copy Permanently</span>
                           </button>
                         </div>
+                      )}
+                    </div>
 
-                        {resumeData.personal.name === 'Alex Rivera' && (
-                          <div className="bg-amber-900/20 border border-amber-800/50 rounded-xl p-3 flex gap-2.5 items-start">
-                            <AlertCircle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
-                            <div className="space-y-1">
-                              <p className="text-[10px] font-bold text-amber-400">Placeholder Data Detected</p>
-                              <p className="text-[9px] text-slate-400 leading-relaxed">
-                                You are currently viewing the default sample profile (Alex Rivera). 
-                                For best results, go to the <b>Import</b> tab to upload your own resume first!
-                              </p>
-                            </div>
-                          </div>
-                        )}
+                    {/* Jobscan Recruiter Findings Checklist */}
+                    <div className="space-y-2.5">
+                      <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">
+                        Recruiter Optimization Findings
+                      </span>
 
-                        {revisedResumeData && revisedAtsAnalysis && (
-                          <div className="space-y-3 pt-2 border-t border-slate-800/60 animate-fadeIn">
-                            {/* Side by side visual comparison */}
-                            <div className="grid grid-cols-2 gap-4 text-center">
-                              <div className="p-2.5 rounded-xl bg-slate-950/40 border border-slate-850">
-                                <span className="text-[9px] font-bold uppercase text-slate-500 block">Current Score</span>
-                                <span className="text-xl font-extrabold text-slate-300 mt-1 block">{atsAnalysis.overallAtsScore}%</span>
+                      <div className="space-y-2">
+                        {activeAtsAnalysis.recruiterInsights.map((insight) => (
+                          <div
+                            key={insight.id}
+                            className="p-3 rounded-xl bg-slate-950/20 border border-slate-850 flex items-start justify-between gap-3 text-xs leading-relaxed animate-fadeIn"
+                          >
+                            <div className="space-y-0.5">
+                              <div className="flex items-center gap-2">
+                                <span className="font-bold text-slate-200">{insight.label}</span>
+                                <span className="text-[10px] text-slate-500">
+                                  ({insight.value})
+                                </span>
                               </div>
-                              <div className="p-2.5 rounded-xl bg-indigo-950/40 border border-indigo-900/40 animate-pulse">
-                                <span className="text-[9px] font-bold uppercase text-indigo-400 block">Revised Score</span>
-                                <span className="text-xl font-extrabold text-emerald-400 mt-1 block">{revisedAtsAnalysis.overallAtsScore}%!</span>
-                              </div>
+                              <p className="text-[11px] text-slate-400">{insight.tip}</p>
                             </div>
 
-                            {/* Preview toggles */}
-                            <div className="flex gap-2">
-                              <button
-                                onClick={() => setShowRevisedPreview(true)}
-                                className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold border transition-all cursor-pointer ${
-                                  showRevisedPreview
-                                    ? 'bg-indigo-900/45 border-indigo-500 text-indigo-300'
-                                    : 'border-slate-800 text-slate-400 hover:text-slate-300'
-                                }`}
-                              >
-                                👁️ View Revised Preview
-                              </button>
-                              <button
-                                onClick={() => setShowRevisedPreview(false)}
-                                className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold border transition-all cursor-pointer ${
-                                  !showRevisedPreview
-                                    ? 'bg-slate-800 border-slate-700 text-slate-350'
-                                    : 'border-slate-800 text-slate-400 hover:text-slate-300'
-                                }`}
-                              >
-                                👁️ View Original Preview
-                              </button>
-                            </div>
-
-                            <button
-                              onClick={() => setShowOptimizerModal(true)}
-                              className="w-full py-2.5 bg-indigo-600/20 hover:bg-indigo-600/40 border border-indigo-500/30 text-indigo-300 rounded-xl text-[10px] font-black tracking-wider transition-all cursor-pointer flex items-center justify-center gap-2 shadow-sm"
-                            >
-                              <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-                              <span>REVIEW AI DRAFT INTERACTIVELY</span>
-                            </button>
-
-                            {/* Premium Download Actions for AI Optimized Version */}
-                            <div className="grid grid-cols-2 gap-2">
-                              <button
-                                onClick={() => handleWordDownload()}
-                                className="bg-slate-950 hover:bg-slate-900 border border-slate-850 text-slate-200 text-[10px] py-2 rounded-lg font-bold transition-colors cursor-pointer flex items-center justify-center gap-1"
-                              >
-                                <FileText className="w-3 h-3 text-indigo-400" />
-                                <span>Download Word (.doc)</span>
-                              </button>
-                              
-                              <button
-                                onClick={handlePdfPrint}
-                                className="bg-slate-950 hover:bg-slate-900 border border-slate-850 text-slate-200 text-[10px] py-2 rounded-lg font-bold transition-colors cursor-pointer flex items-center justify-center gap-1"
-                              >
-                                <Download className="w-3 h-3 text-emerald-400" />
-                                <span>Export Document...</span>
-                              </button>
-                            </div>
-
-                            {/* List of fixes applied */}
-                            <div className="space-y-1.5 bg-slate-950/40 p-3 rounded-xl text-[11px]">
-                              <span className="text-[9px] font-bold uppercase text-slate-500 block">AI Adjustments Applied:</span>
-                              <ul className="space-y-1 pl-4 list-disc text-slate-400 leading-relaxed">
-                                {appliedFixes.map((fix, i) => (
-                                  <li key={i}>{fix}</li>
-                                ))}
-                              </ul>
-                            </div>
-
-                            {/* Adopt permanently */}
-                            <button
-                              onClick={applyRevisedData}
-                              className="w-full bg-emerald-650 hover:bg-emerald-600 text-white py-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
-                            >
-                              <Check className="w-4 h-4" />
-                              <span>Save AI Revised Copy Permanently</span>
-                            </button>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Jobscan Recruiter Findings Checklist */}
-                      <div className="space-y-2.5">
-                        <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Recruiter Optimization Findings</span>
-                        
-                        <div className="space-y-2">
-                          {activeAtsAnalysis.recruiterInsights.map(insight => (
-                            <div key={insight.id} className="p-3 rounded-xl bg-slate-950/20 border border-slate-850 flex items-start justify-between gap-3 text-xs leading-relaxed animate-fadeIn">
-                              <div className="space-y-0.5">
-                                <div className="flex items-center gap-2">
-                                  <span className="font-bold text-slate-200">{insight.label}</span>
-                                  <span className="text-[10px] text-slate-500">({insight.value})</span>
-                                </div>
-                                <p className="text-[11px] text-slate-400">{insight.tip}</p>
-                              </div>
-
-                              <span className={`text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full flex-shrink-0 ${
+                            <span
+                              className={`text-[10px] font-bold uppercase px-2.5 py-0.5 rounded-full flex-shrink-0 ${
                                 insight.status === 'pass'
                                   ? 'bg-emerald-950 text-emerald-400 border border-emerald-900/50'
                                   : 'bg-amber-950 text-amber-400 border border-amber-900/50'
-                              }`}>
-                                {insight.status === 'pass' ? 'Aligned' : 'Needs Attention'}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Hard & Soft Skills Density Analysis */}
-                      <div className="space-y-3 border-t border-slate-800/60 pt-4">
-                        <div className="flex justify-between items-center">
-                          <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Keyword Density Analysis</span>
-                          <span className="text-[9px] text-slate-500">(Candidate Count vs Ideal Density)</span>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-48 overflow-y-auto pr-1 scrollbar-thin">
-                          {activeAtsAnalysis.skillsDensity.map((density, idx) => (
-                            <div key={idx} className="p-2 rounded-lg bg-slate-950/30 border border-slate-850 flex justify-between items-center text-xs animate-fadeIn">
-                              <div>
-                                <span className="font-bold text-slate-200 block">{density.keyword}</span>
-                                <span className="text-[9px] text-slate-500 uppercase tracking-wider font-bold">{density.type} Skill</span>
-                              </div>
-
-                              <div className="text-right">
-                                <div className="text-slate-300 font-bold">{density.count} matches</div>
-                                <div className="text-[9px] text-slate-500">Recommended: {density.recommended}</div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* ATS formatting checklist */}
-                      <div className="space-y-2 border-t border-slate-800/60 pt-4">
-                        <span className="text-[10px] uppercase font-bold text-slate-400">ATS Compliance Checklist</span>
-                        <div className="space-y-1.5 text-xs">
-                          {activeAtsAnalysis.complianceChecks.map(check => (
-                            <div key={check.id} className="flex justify-between items-center p-2 rounded bg-slate-950/20 border border-slate-850 animate-fadeIn">
-                              <div>
-                                <span className="font-bold text-slate-200 block">{check.label}</span>
-                                <span className="text-[9px] text-slate-500 block leading-normal">{check.description}</span>
-                              </div>
-                              <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
-                                check.status === 'pass' 
-                                  ? 'bg-emerald-950 text-emerald-400 border border-emerald-900'
-                                  : check.status === 'warning'
-                                  ? 'bg-amber-950 text-amber-400 border border-amber-900'
-                                  : 'bg-rose-950 text-rose-400 border border-rose-900'
-                              }`}>
-                                {check.status}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* SUB-TAB 3: COVER LETTER OPTIMIZER */}
-                  {coachSubTab === 'cover-letter' && (
-                    <div className="space-y-5 animate-fadeIn">
-                      <div className="grid grid-cols-3 gap-4 bg-slate-950/30 border border-slate-850 p-4 rounded-2xl items-center">
-                        <div className="col-span-1 flex flex-col items-center justify-center border-r border-slate-800 py-1">
-                          <span className="text-[9px] font-bold uppercase text-slate-500 tracking-wider text-center">Cover Letter Match</span>
-                          <span className="text-3xl font-extrabold mt-1.5 text-indigo-450">
-                            {coverLetterAnalysis.score}%
-                          </span>
-                        </div>
-
-                        <div className="col-span-2 pl-2 space-y-1">
-                          <div className="flex justify-between text-xs">
-                            <span className="text-slate-400">Word Count</span>
-                            <span className="text-slate-300 font-bold">{coverLetterAnalysis.wordCount} words</span>
-                          </div>
-                          <div className="flex justify-between text-xs">
-                            <span className="text-slate-400">Keyword Matches</span>
-                            <span className="text-slate-300 font-bold">{coverLetterAnalysis.matchedKeywords.length} matched</span>
-                          </div>
-                          <p className="text-[9px] text-slate-500 leading-normal font-medium pt-1">
-                            Pasting targeted keywords in cover letters raises human inspection rates by 42%.
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <label className="text-[10px] uppercase font-bold text-slate-400 block">Paste Cover Letter</label>
-                        <textarea
-                          rows={6}
-                          value={coverLetter}
-                          onChange={(e) => setCoverLetter(e.target.value)}
-                          placeholder="Paste cover letter content here...&#10;e.g. 'Dear Hiring Manager, I am thrilled to apply for the Senior React Developer role...'"
-                          className="w-full bg-slate-950 border border-slate-850 rounded-lg p-3 text-xs text-slate-300 focus:outline-none"
-                        />
-                      </div>
-
-                      {/* Cover Letter Insights */}
-                      <div className="space-y-2">
-                        <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Jobscan Cover Letter Audits</span>
-                        <div className="space-y-1.5 text-xs">
-                          {coverLetterAnalysis.insights.map((insight, i) => (
-                            <div key={i} className="p-2.5 rounded bg-slate-950/20 border border-slate-850 flex items-start gap-2">
-                              <div className="p-0.5 rounded bg-indigo-950 text-indigo-400 flex-shrink-0 mt-0.5">
-                                <Check className="w-3.5 h-3.5" />
-                              </div>
-                              <span className="text-slate-300 leading-relaxed">{insight}</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Matched vs Missing in Cover Letter */}
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="p-3 rounded-xl bg-indigo-950/10 border border-indigo-900/35 space-y-1.5">
-                          <span className="text-[9px] font-bold text-indigo-400 uppercase tracking-wider block">Matches ({coverLetterAnalysis.matchedKeywords.length})</span>
-                          <div className="flex flex-wrap gap-1 text-[9px]">
-                            {coverLetterAnalysis.matchedKeywords.map(kw => (
-                              <span key={kw} className="px-1 rounded bg-indigo-950 text-indigo-300">{kw}</span>
-                            ))}
-                          </div>
-                        </div>
-                        <div className="p-3 rounded-xl bg-amber-950/10 border border-amber-900/35 space-y-1.5">
-                          <span className="text-[9px] font-bold text-amber-400 uppercase tracking-wider block">Missing ({coverLetterAnalysis.missingKeywords.length})</span>
-                          <div className="flex flex-wrap gap-1 text-[9px]">
-                            {coverLetterAnalysis.missingKeywords.map(kw => (
-                              <span key={kw} className="px-1 rounded bg-amber-950 text-amber-300">+ {kw}</span>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-
-                    </div>
-                  )}
-
-                  {/* SUB-TAB 4: LINKEDIN PROFILE AUDITOR */}
-                  {coachSubTab === 'linkedin' && (
-                    <div className="space-y-5 animate-fadeIn">
-                      <div className="p-4 rounded-2xl bg-indigo-950/10 border border-indigo-900/35 space-y-2">
-                        <h3 className="text-xs font-bold text-indigo-400 uppercase tracking-wider">Jobscan LinkedIn Recruiter Search Optimizations</h3>
-                        <p className="text-[11px] text-slate-400 leading-relaxed">
-                          Recruiters search LinkedIn using Boolean search queries matching standard title structures and key technical acronyms. Double-check your status:
-                        </p>
-                      </div>
-
-                      <div className="space-y-2.5 text-xs">
-                        {[
-                          {
-                            title: 'Boolean Headline Density',
-                            desc: 'Your current headline has rich keyword parameters.',
-                            status: 'Pass'
-                          },
-                          {
-                            title: 'Professional Contact Linking',
-                            desc: 'A clean, direct LinkedIn connection is present in your portfolio headers.',
-                            status: activeData.personal.socials.linkedin ? 'Pass' : 'Needs Work'
-                          },
-                          {
-                            title: 'Core Skill Categories',
-                            desc: 'Ensure you map at least 5 key technical skills in your featured experience descriptions.',
-                            status: activeData.skills.length >= 8 ? 'Pass' : 'Warning'
-                          },
-                          {
-                            title: 'Profile Banner Tagline Alignment',
-                            desc: 'Headline matches target professional title parameters.',
-                            status: 'Pass'
-                          }
-                        ].map((item, i) => (
-                          <div key={i} className="p-3 rounded bg-slate-950/30 border border-slate-850 flex justify-between items-center">
-                            <div>
-                              <span className="font-bold text-slate-200 block">{item.title}</span>
-                              <span className="text-[10px] text-slate-500 leading-normal mt-0.5 block">{item.desc}</span>
-                            </div>
-                            <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-full ${
-                              item.status === 'Pass'
-                                ? 'bg-emerald-950 text-emerald-400 border border-emerald-900/45'
-                                : 'bg-amber-950 text-amber-400 border border-amber-900/45'
-                            }`}>
-                              {item.status}
+                              }`}
+                            >
+                              {insight.status === 'pass' ? 'Aligned' : 'Needs Attention'}
                             </span>
                           </div>
                         ))}
                       </div>
                     </div>
-                  )}
 
-                  {/* SUB-TAB 5: ATS PLAIN-TEXT EXPORTER */}
-                  {coachSubTab === 'plaintext' && (
-                    <div className="space-y-5 animate-fadeIn">
-                      <div className="p-3.5 rounded-xl bg-slate-950/30 border border-slate-850 text-xs leading-relaxed space-y-2">
-                        <span className="font-bold text-white block">Taleo & Greenhouse Parseable Plaintext</span>
-                        <p className="text-[10px] text-slate-400">
-                          Jobscan Pro validates that legacy ATS parses (such as Taleo or Workday) can read your details when converted to simple raw plain text. View and copy your optimized plain text below:
+                    {/* Hard & Soft Skills Density Analysis */}
+                    <div className="space-y-3 border-t border-slate-800/60 pt-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                          Keyword Density Analysis
+                        </span>
+                        <span className="text-[9px] text-slate-500">
+                          (Candidate Count vs Ideal Density)
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-48 overflow-y-auto pr-1 scrollbar-thin">
+                        {activeAtsAnalysis.skillsDensity.map((density, idx) => (
+                          <div
+                            key={idx}
+                            className="p-2 rounded-lg bg-slate-950/30 border border-slate-850 flex justify-between items-center text-xs animate-fadeIn"
+                          >
+                            <div>
+                              <span className="font-bold text-slate-200 block">
+                                {density.keyword}
+                              </span>
+                              <span className="text-[9px] text-slate-500 uppercase tracking-wider font-bold">
+                                {density.type} Skill
+                              </span>
+                            </div>
+
+                            <div className="text-right">
+                              <div className="text-slate-300 font-bold">
+                                {density.count} matches
+                              </div>
+                              <div className="text-[9px] text-slate-500">
+                                Recommended: {density.recommended}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* ATS formatting checklist */}
+                    <div className="space-y-2 border-t border-slate-800/60 pt-4">
+                      <span className="text-[10px] uppercase font-bold text-slate-400">
+                        ATS Compliance Checklist
+                      </span>
+                      <div className="space-y-1.5 text-xs">
+                        {activeAtsAnalysis.complianceChecks.map((check) => (
+                          <div
+                            key={check.id}
+                            className="flex justify-between items-center p-2 rounded bg-slate-950/20 border border-slate-850 animate-fadeIn"
+                          >
+                            <div>
+                              <span className="font-bold text-slate-200 block">{check.label}</span>
+                              <span className="text-[9px] text-slate-500 block leading-normal">
+                                {check.description}
+                              </span>
+                            </div>
+                            <span
+                              className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
+                                check.status === 'pass'
+                                  ? 'bg-emerald-950 text-emerald-400 border border-emerald-900'
+                                  : check.status === 'warning'
+                                    ? 'bg-amber-950 text-amber-400 border border-amber-900'
+                                    : 'bg-rose-950 text-rose-400 border border-rose-900'
+                              }`}
+                            >
+                              {check.status}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* SUB-TAB 3: COVER LETTER OPTIMIZER */}
+                {coachSubTab === 'cover-letter' && (
+                  <div className="space-y-5 animate-fadeIn">
+                    <div className="grid grid-cols-3 gap-4 bg-slate-950/30 border border-slate-850 p-4 rounded-2xl items-center">
+                      <div className="col-span-1 flex flex-col items-center justify-center border-r border-slate-800 py-1">
+                        <span className="text-[9px] font-bold uppercase text-slate-500 tracking-wider text-center">
+                          Cover Letter Match
+                        </span>
+                        <span className="text-3xl font-extrabold mt-1.5 text-indigo-450">
+                          {coverLetterAnalysis.score}%
+                        </span>
+                      </div>
+
+                      <div className="col-span-2 pl-2 space-y-1">
+                        <div className="flex justify-between text-xs">
+                          <span className="text-slate-400">Word Count</span>
+                          <span className="text-slate-300 font-bold">
+                            {coverLetterAnalysis.wordCount} words
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-xs">
+                          <span className="text-slate-400">Keyword Matches</span>
+                          <span className="text-slate-300 font-bold">
+                            {coverLetterAnalysis.matchedKeywords.length} matched
+                          </span>
+                        </div>
+                        <p className="text-[9px] text-slate-500 leading-normal font-medium pt-1">
+                          Pasting targeted keywords in cover letters raises human inspection rates
+                          by 42%.
                         </p>
                       </div>
-
-                      {/* Plaintext preview container */}
-                      <div className="p-3 rounded-xl bg-slate-950 border border-slate-850 font-mono text-[10px] text-slate-400 leading-normal h-64 overflow-y-auto select-text scrollbar-thin">
-                        <div className="border-b border-slate-900 pb-2 mb-3 text-slate-200">
-                          <div className="font-bold text-xs">{activeData.personal.name.toUpperCase()}</div>
-                          <div>{activeData.personal.title} | {activeData.personal.subtitle}</div>
-                          <div>Email: {activeData.personal.email} | Phone: {activeData.personal.phone}</div>
-                          <div>Location: {activeData.personal.location}</div>
-                        </div>
-
-                        <div className="mb-3">
-                          <div className="text-slate-200 font-bold border-b border-slate-900 pb-0.5 mb-1.5">PROFESSIONAL EXPERIENCES</div>
-                          {activeData.experience.map(exp => (
-                            <div key={exp.id} className="mb-2.5">
-                              <div className="font-bold text-slate-300">{exp.position} - {exp.company} | {exp.period}</div>
-                              <div className="text-[9px] text-slate-500">Location: {exp.location}</div>
-                              <ul className="list-disc pl-4 mt-0.5 space-y-0.5">
-                                {exp.description.map((bullet, i) => <li key={i}>{bullet}</li>)}
-                              </ul>
-                              <div className="text-[9px] text-slate-500 mt-0.5">Technologies: {exp.technologies.join(', ')}</div>
-                            </div>
-                          ))}
-                        </div>
-
-                        <div className="mb-3">
-                          <div className="text-slate-200 font-bold border-b border-slate-900 pb-0.5 mb-1.5">CORE TECH FRAMEWORK SKILLS</div>
-                          <div className="leading-relaxed">
-                            {resumeData.skills.map(s => `${s.name} (${s.level}%)`).join(', ')}
-                          </div>
-                        </div>
-
-                        <div className="mb-2">
-                          <div className="text-slate-200 font-bold border-b border-slate-900 pb-0.5 mb-1.5">ACADEMICS & EDUCATION</div>
-                          {resumeData.education.map(edu => (
-                            <div key={edu.id}>
-                              <div className="font-bold text-slate-300">{edu.degree} in {edu.fieldOfStudy}</div>
-                              <div className="text-[9px] text-slate-500">{edu.institution} | Grade: {edu.grade || 'Not specified'}</div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Copy to clipboard trigger */}
-                      <button
-                        onClick={() => {
-                          const textBlob = `${resumeData.personal.name.toUpperCase()}\n${resumeData.personal.title} | ${resumeData.personal.subtitle}\nEmail: ${resumeData.personal.email} | Phone: ${resumeData.personal.phone}\nLocation: ${resumeData.personal.location}\n\nPROFESSIONAL EXPERIENCES\n` + 
-                            resumeData.experience.map(exp => `${exp.position} - ${exp.company} | ${exp.period}\n` + exp.description.map(b => `• ${b}`).join('\n') + `\nTech: ${exp.technologies.join(', ')}`).join('\n\n') +
-                            `\n\nCORE TECHNICAL SKILLS\n` + resumeData.skills.map(s => `${s.name} (${s.level}%)`).join(', ') +
-                            `\n\nEDUCATION\n` + resumeData.education.map(edu => `${edu.degree} in ${edu.fieldOfStudy} | ${edu.institution}`).join('\n');
-                          
-                          setCopiedPlaintext(true);
-                          navigator.clipboard.writeText(textBlob);
-                          setTimeout(() => setCopiedPlaintext(false), 2500);
-                        }}
-                        className="w-full bg-slate-800 hover:bg-slate-750 text-white text-xs font-bold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2"
-                      >
-                        {copiedPlaintext ? (
-                          <>
-                            <Check className="w-4 h-4 text-emerald-400" />
-                            <span>Copied Plaintext Resume!</span>
-                          </>
-                        ) : (
-                          <>
-                            <Copy className="w-4 h-4" />
-                            <span>Copy Plaintext to Clipboard</span>
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  )}
-
-                  {/* Bullet Improver Sandbox */}
-                  <div className="border-t border-slate-800 pt-5 space-y-4">
-                    <div>
-                      <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider">Action Verb Bullet Improver</h3>
-                      <p className="text-[10px] text-slate-500 mt-0.5">Transform basic job sentences into premium hiring bullets.</p>
                     </div>
 
-                    <div className="space-y-3">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] uppercase font-bold text-slate-400 block">
+                        Paste Cover Letter
+                      </label>
                       <textarea
-                        rows={2}
-                        value={bulletInput}
-                        onChange={(e) => setBulletInput(e.target.value)}
-                        placeholder="Write a boring sentence, e.g. 'I worked on the React website speed stuff' or select from template..."
-                        className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs text-white focus:outline-none resize-none"
+                        rows={6}
+                        value={coverLetter}
+                        onChange={(e) => setCoverLetter(e.target.value)}
+                        placeholder="Paste cover letter content here...&#10;e.g. 'Dear Hiring Manager, I am thrilled to apply for the Senior React Developer role...'"
+                        className="w-full bg-slate-950 border border-slate-850 rounded-lg p-3 text-xs text-slate-300 focus:outline-none"
                       />
+                    </div>
 
-                      {/* Presets */}
-                      <div className="flex flex-wrap gap-1.5 text-[9px] font-medium">
-                        {[
-                          { label: 'React Speed Optimization', text: 'I worked on the React website speed stuff' },
-                          { label: 'Manager of Developers', text: 'I managed a team of junior developers' },
-                          { label: 'Created REST APIs', text: 'I made the REST APIs for the system' },
-                          { label: 'Custom Design Library', text: 'I built a custom UI design library' }
-                        ].map((preset, i) => (
-                          <button
+                    {/* Cover Letter Insights */}
+                    <div className="space-y-2">
+                      <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">
+                        Jobscan Cover Letter Audits
+                      </span>
+                      <div className="space-y-1.5 text-xs">
+                        {coverLetterAnalysis.insights.map((insight, i) => (
+                          <div
                             key={i}
-                            onClick={() => setBulletInput(preset.text)}
-                            className="px-2 py-1 rounded bg-slate-850 hover:bg-slate-800 text-slate-400 hover:text-white cursor-pointer"
+                            className="p-2.5 rounded bg-slate-950/20 border border-slate-850 flex items-start gap-2"
                           >
-                            {preset.label}
-                          </button>
+                            <div className="p-0.5 rounded bg-indigo-950 text-indigo-400 flex-shrink-0 mt-0.5">
+                              <Check className="w-3.5 h-3.5" />
+                            </div>
+                            <span className="text-slate-300 leading-relaxed">{insight}</span>
+                          </div>
                         ))}
                       </div>
+                    </div>
 
-                      {/* Tone / Style selections */}
-                      <div className="grid grid-cols-3 gap-2 text-xs font-medium text-center">
-                        {[
-                          { id: 'impact', label: 'Quantitative Impact' },
-                          { id: 'verbs', label: 'Strong Action Verbs' },
-                          { id: 'technical', label: 'Deep Technical' }
-                        ].map(style => (
-                          <button
-                            key={style.id}
-                            onClick={() => setBulletStyle(style.id as any)}
-                            className={`py-1.5 rounded-md border transition-all ${
-                              bulletStyle === style.id
-                                ? 'bg-indigo-650 border-indigo-500 text-white'
-                                : 'border-slate-800 text-slate-500 hover:text-slate-300'
+                    {/* Matched vs Missing in Cover Letter */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="p-3 rounded-xl bg-indigo-950/10 border border-indigo-900/35 space-y-1.5">
+                        <span className="text-[9px] font-bold text-indigo-400 uppercase tracking-wider block">
+                          Matches ({coverLetterAnalysis.matchedKeywords.length})
+                        </span>
+                        <div className="flex flex-wrap gap-1 text-[9px]">
+                          {coverLetterAnalysis.matchedKeywords.map((kw) => (
+                            <span key={kw} className="px-1 rounded bg-indigo-950 text-indigo-300">
+                              {kw}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="p-3 rounded-xl bg-amber-950/10 border border-amber-900/35 space-y-1.5">
+                        <span className="text-[9px] font-bold text-amber-400 uppercase tracking-wider block">
+                          Missing ({coverLetterAnalysis.missingKeywords.length})
+                        </span>
+                        <div className="flex flex-wrap gap-1 text-[9px]">
+                          {coverLetterAnalysis.missingKeywords.map((kw) => (
+                            <span key={kw} className="px-1 rounded bg-amber-950 text-amber-300">
+                              + {kw}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* SUB-TAB 4: LINKEDIN PROFILE AUDITOR */}
+                {coachSubTab === 'linkedin' && (
+                  <div className="space-y-5 animate-fadeIn">
+                    <div className="p-4 rounded-2xl bg-indigo-950/10 border border-indigo-900/35 space-y-2">
+                      <h3 className="text-xs font-bold text-indigo-400 uppercase tracking-wider">
+                        Jobscan LinkedIn Recruiter Search Optimizations
+                      </h3>
+                      <p className="text-[11px] text-slate-400 leading-relaxed">
+                        Recruiters search LinkedIn using Boolean search queries matching standard
+                        title structures and key technical acronyms. Double-check your status:
+                      </p>
+                    </div>
+
+                    <div className="space-y-2.5 text-xs">
+                      {[
+                        {
+                          title: 'Boolean Headline Density',
+                          desc: 'Your current headline has rich keyword parameters.',
+                          status: 'Pass',
+                        },
+                        {
+                          title: 'Professional Contact Linking',
+                          desc: 'A clean, direct LinkedIn connection is present in your portfolio headers.',
+                          status: activeData.personal.socials.linkedin ? 'Pass' : 'Needs Work',
+                        },
+                        {
+                          title: 'Core Skill Categories',
+                          desc: 'Ensure you map at least 5 key technical skills in your featured experience descriptions.',
+                          status: activeData.skills.length >= 8 ? 'Pass' : 'Warning',
+                        },
+                        {
+                          title: 'Profile Banner Tagline Alignment',
+                          desc: 'Headline matches target professional title parameters.',
+                          status: 'Pass',
+                        },
+                      ].map((item, i) => (
+                        <div
+                          key={i}
+                          className="p-3 rounded bg-slate-950/30 border border-slate-850 flex justify-between items-center"
+                        >
+                          <div>
+                            <span className="font-bold text-slate-200 block">{item.title}</span>
+                            <span className="text-[10px] text-slate-500 leading-normal mt-0.5 block">
+                              {item.desc}
+                            </span>
+                          </div>
+                          <span
+                            className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-full ${
+                              item.status === 'Pass'
+                                ? 'bg-emerald-950 text-emerald-400 border border-emerald-900/45'
+                                : 'bg-amber-950 text-amber-400 border border-amber-900/45'
                             }`}
                           >
-                            {style.label}
-                          </button>
+                            {item.status}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* SUB-TAB 5: ATS PLAIN-TEXT EXPORTER */}
+                {coachSubTab === 'plaintext' && (
+                  <div className="space-y-5 animate-fadeIn">
+                    <div className="p-3.5 rounded-xl bg-slate-950/30 border border-slate-850 text-xs leading-relaxed space-y-2">
+                      <span className="font-bold text-white block">
+                        Taleo & Greenhouse Parseable Plaintext
+                      </span>
+                      <p className="text-[10px] text-slate-400">
+                        Jobscan Pro validates that legacy ATS parses (such as Taleo or Workday) can
+                        read your details when converted to simple raw plain text. View and copy
+                        your optimized plain text below:
+                      </p>
+                    </div>
+
+                    {/* Plaintext preview container */}
+                    <div className="p-3 rounded-xl bg-slate-950 border border-slate-850 font-mono text-[10px] text-slate-400 leading-normal h-64 overflow-y-auto select-text scrollbar-thin">
+                      <div className="border-b border-slate-900 pb-2 mb-3 text-slate-200">
+                        <div className="font-bold text-xs">
+                          {activeData.personal.name.toUpperCase()}
+                        </div>
+                        <div>
+                          {activeData.personal.title} | {activeData.personal.subtitle}
+                        </div>
+                        <div>
+                          Email: {activeData.personal.email} | Phone: {activeData.personal.phone}
+                        </div>
+                        <div>Location: {activeData.personal.location}</div>
+                      </div>
+
+                      <div className="mb-3">
+                        <div className="text-slate-200 font-bold border-b border-slate-900 pb-0.5 mb-1.5">
+                          PROFESSIONAL EXPERIENCES
+                        </div>
+                        {activeData.experience.map((exp) => (
+                          <div key={exp.id} className="mb-2.5">
+                            <div className="font-bold text-slate-300">
+                              {exp.position} - {exp.company} | {exp.period}
+                            </div>
+                            <div className="text-[9px] text-slate-500">
+                              Location: {exp.location}
+                            </div>
+                            <ul className="list-disc pl-4 mt-0.5 space-y-0.5">
+                              {exp.description.map((bullet, i) => (
+                                <li key={i}>{bullet}</li>
+                              ))}
+                            </ul>
+                            <div className="text-[9px] text-slate-500 mt-0.5">
+                              Technologies: {exp.technologies.join(', ')}
+                            </div>
+                          </div>
                         ))}
                       </div>
 
-                      <button
-                        onClick={handleImproveBullet}
-                        disabled={!bulletInput.trim()}
-                        className="w-full bg-slate-800 hover:bg-slate-750 disabled:bg-slate-900 text-slate-300 disabled:text-slate-600 py-2 rounded-lg text-xs font-bold transition-colors"
-                      >
-                        Generate Optimized Bullet Variations
-                      </button>
-                    </div>
-
-                    {/* Results list */}
-                    {improvedBullets.length > 0 && (
-                      <div className="space-y-2.5 bg-slate-950/40 border border-slate-850 p-3 rounded-xl animate-fadeIn">
-                        <span className="text-[9px] font-bold uppercase text-slate-500 block">Action Verb Improver Outputs</span>
-                        
-                        <div className="space-y-2">
-                          {improvedBullets.map((bullet, idx) => (
-                            <div key={idx} className="p-2 rounded-lg bg-slate-900 border border-slate-850 flex gap-2 justify-between items-start text-xs">
-                              <p className="text-slate-300 leading-relaxed pr-4">{bullet}</p>
-                              <button
-                                onClick={() => copyToClipboard(bullet, 'bullet', idx)}
-                                className="p-1 rounded hover:bg-slate-800 text-slate-500 hover:text-indigo-400 flex-shrink-0 transition-colors"
-                                title="Copy Bullet Point"
-                              >
-                                {copiedBulletIdx === idx ? (
-                                  <Check className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
-                                ) : (
-                                  <Copy className="w-3.5 h-3.5" />
-                                )}
-                              </button>
-                            </div>
-                          ))}
+                      <div className="mb-3">
+                        <div className="text-slate-200 font-bold border-b border-slate-900 pb-0.5 mb-1.5">
+                          CORE TECH FRAMEWORK SKILLS
+                        </div>
+                        <div className="leading-relaxed">
+                          {resumeData.skills.map((s) => `${s.name} (${s.level}%)`).join(', ')}
                         </div>
                       </div>
-                    )}
+
+                      <div className="mb-2">
+                        <div className="text-slate-200 font-bold border-b border-slate-900 pb-0.5 mb-1.5">
+                          ACADEMICS & EDUCATION
+                        </div>
+                        {resumeData.education.map((edu) => (
+                          <div key={edu.id}>
+                            <div className="font-bold text-slate-300">
+                              {edu.degree} in {edu.fieldOfStudy}
+                            </div>
+                            <div className="text-[9px] text-slate-500">
+                              {edu.institution} | Grade: {edu.grade || 'Not specified'}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Copy to clipboard trigger */}
+                    <button
+                      onClick={() => {
+                        const textBlob =
+                          `${resumeData.personal.name.toUpperCase()}\n${resumeData.personal.title} | ${resumeData.personal.subtitle}\nEmail: ${resumeData.personal.email} | Phone: ${resumeData.personal.phone}\nLocation: ${resumeData.personal.location}\n\nPROFESSIONAL EXPERIENCES\n` +
+                          resumeData.experience
+                            .map(
+                              (exp) =>
+                                `${exp.position} - ${exp.company} | ${exp.period}\n` +
+                                exp.description.map((b) => `• ${b}`).join('\n') +
+                                `\nTech: ${exp.technologies.join(', ')}`
+                            )
+                            .join('\n\n') +
+                          `\n\nCORE TECHNICAL SKILLS\n` +
+                          resumeData.skills.map((s) => `${s.name} (${s.level}%)`).join(', ') +
+                          `\n\nEDUCATION\n` +
+                          resumeData.education
+                            .map(
+                              (edu) => `${edu.degree} in ${edu.fieldOfStudy} | ${edu.institution}`
+                            )
+                            .join('\n');
+
+                        setCopiedPlaintext(true);
+                        navigator.clipboard.writeText(textBlob);
+                        setTimeout(() => setCopiedPlaintext(false), 2500);
+                      }}
+                      className="w-full bg-slate-800 hover:bg-slate-750 text-white text-xs font-bold py-2.5 rounded-xl transition-colors flex items-center justify-center gap-2"
+                    >
+                      {copiedPlaintext ? (
+                        <>
+                          <Check className="w-4 h-4 text-emerald-400" />
+                          <span>Copied Plaintext Resume!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-4 h-4" />
+                          <span>Copy Plaintext to Clipboard</span>
+                        </>
+                      )}
+                    </button>
                   </div>
+                )}
 
-                </div>
-              )}
-
-              {/* TAB 7: MOCK INBOX */}
-              {/* INTERVIEW PREP COACH TAB */}
-              {rightTab === 'interview' && (
-                <div className="space-y-5 animate-fadeIn">
+                {/* Bullet Improver Sandbox */}
+                <div className="border-t border-slate-800 pt-5 space-y-4">
                   <div>
-                    <h2 className="text-base font-bold text-white flex items-center gap-2">🎯 Interview Prep Coach</h2>
-                    <p className="text-xs text-slate-400 mt-1 leading-relaxed">Paste a job description to get a tailored interview plan with real questions, study topics, and a live mock interview simulator.</p>
+                    <h3 className="text-xs font-bold uppercase text-slate-400 tracking-wider">
+                      Action Verb Bullet Improver
+                    </h3>
+                    <p className="text-[10px] text-slate-500 mt-0.5">
+                      Transform basic job sentences into premium hiring bullets.
+                    </p>
                   </div>
 
-                  {/* JD Input */}
-                  {!interviewPlan && (
-                    <>
-                      <div className="space-y-3">
+                  <div className="space-y-3">
+                    <textarea
+                      rows={2}
+                      value={bulletInput}
+                      onChange={(e) => setBulletInput(e.target.value)}
+                      placeholder="Write a boring sentence, e.g. 'I worked on the React website speed stuff' or select from template..."
+                      className="w-full bg-slate-950 border border-slate-800 rounded-lg p-2.5 text-xs text-white focus:outline-none resize-none"
+                    />
+
+                    {/* Presets */}
+                    <div className="flex flex-wrap gap-1.5 text-[9px] font-medium">
+                      {[
+                        {
+                          label: 'React Speed Optimization',
+                          text: 'I worked on the React website speed stuff',
+                        },
+                        {
+                          label: 'Manager of Developers',
+                          text: 'I managed a team of junior developers',
+                        },
+                        { label: 'Created REST APIs', text: 'I made the REST APIs for the system' },
+                        {
+                          label: 'Custom Design Library',
+                          text: 'I built a custom UI design library',
+                        },
+                      ].map((preset, i) => (
+                        <button
+                          key={i}
+                          onClick={() => setBulletInput(preset.text)}
+                          className="px-2 py-1 rounded bg-slate-850 hover:bg-slate-800 text-slate-400 hover:text-white cursor-pointer"
+                        >
+                          {preset.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Tone / Style selections */}
+                    <div className="grid grid-cols-3 gap-2 text-xs font-medium text-center">
+                      {[
+                        { id: 'impact', label: 'Quantitative Impact' },
+                        { id: 'verbs', label: 'Strong Action Verbs' },
+                        { id: 'technical', label: 'Deep Technical' },
+                      ].map((style) => (
+                        <button
+                          key={style.id}
+                          onClick={() => setBulletStyle(style.id as any)}
+                          className={`py-1.5 rounded-md border transition-all ${
+                            bulletStyle === style.id
+                              ? 'bg-indigo-650 border-indigo-500 text-white'
+                              : 'border-slate-800 text-slate-500 hover:text-slate-300'
+                          }`}
+                        >
+                          {style.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    <button
+                      onClick={handleImproveBullet}
+                      disabled={!bulletInput.trim()}
+                      className="w-full bg-slate-800 hover:bg-slate-750 disabled:bg-slate-900 text-slate-300 disabled:text-slate-600 py-2 rounded-lg text-xs font-bold transition-colors"
+                    >
+                      Generate Optimized Bullet Variations
+                    </button>
+                  </div>
+
+                  {/* Results list */}
+                  {improvedBullets.length > 0 && (
+                    <div className="space-y-2.5 bg-slate-950/40 border border-slate-850 p-3 rounded-xl animate-fadeIn">
+                      <span className="text-[9px] font-bold uppercase text-slate-500 block">
+                        Action Verb Improver Outputs
+                      </span>
+
+                      <div className="space-y-2">
+                        {improvedBullets.map((bullet, idx) => (
+                          <div
+                            key={idx}
+                            className="p-2 rounded-lg bg-slate-900 border border-slate-850 flex gap-2 justify-between items-start text-xs"
+                          >
+                            <p className="text-slate-300 leading-relaxed pr-4">{bullet}</p>
+                            <button
+                              onClick={() => copyToClipboard(bullet, 'bullet', idx)}
+                              className="p-1 rounded hover:bg-slate-800 text-slate-500 hover:text-indigo-400 flex-shrink-0 transition-colors"
+                              title="Copy Bullet Point"
+                            >
+                              {copiedBulletIdx === idx ? (
+                                <Check className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+                              ) : (
+                                <Copy className="w-3.5 h-3.5" />
+                              )}
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* TAB 7: MOCK INBOX */}
+            {/* INTERVIEW PREP COACH TAB */}
+            {rightTab === 'interview' && (
+              <div className="space-y-5 animate-fadeIn">
+                <div>
+                  <h2 className="text-base font-bold text-white flex items-center gap-2">
+                    🎯 Interview Prep Coach
+                  </h2>
+                  <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+                    Paste a job description to get a tailored interview plan with real questions,
+                    study topics, and a live mock interview simulator.
+                  </p>
+                </div>
+
+                {/* JD Input */}
+                {!interviewPlan && (
+                  <>
+                    <div className="space-y-3">
                       {/* AI Provider & API Key Section */}
                       <div className="rounded-xl border border-slate-800 bg-slate-950/40 overflow-hidden">
                         <button
@@ -4668,7 +5419,16 @@ export default function Portfolio() {
                           className="w-full flex items-center justify-between px-3 py-2 text-[10px] font-bold text-slate-400 hover:text-slate-300 transition-colors"
                         >
                           <span className="flex items-center gap-1.5">
-                            {geminiApiKey ? '🟢' : '⚪'} {aiProvider === 'groq' ? 'Groq' : aiProvider === 'openrouter' ? 'OpenRouter' : 'Gemini'} API Key {geminiApiKey ? '(Connected)' : '(Optional — Enables AI-Powered Insights)'}
+                            {geminiApiKey ? '🟢' : '⚪'}{' '}
+                            {aiProvider === 'groq'
+                              ? 'Groq'
+                              : aiProvider === 'openrouter'
+                                ? 'OpenRouter'
+                                : 'Gemini'}{' '}
+                            API Key{' '}
+                            {geminiApiKey
+                              ? '(Connected)'
+                              : '(Optional — Enables AI-Powered Insights)'}
                           </span>
                           <span className="text-slate-600">{showApiKeyInput ? '▲' : '▼'}</span>
                         </button>
@@ -4677,36 +5437,102 @@ export default function Portfolio() {
                             {/* Provider Toggle */}
                             <div className="flex items-center gap-1 p-0.5 bg-slate-900 rounded-lg w-fit">
                               <button
-                                onClick={() => { setAiProvider('groq'); localStorage.setItem('ai_provider', 'groq'); setGeminiApiKey(''); localStorage.removeItem('gemini-api-key'); setConnectionTest({ testing: false, result: null }); }}
+                                onClick={() => {
+                                  setAiProvider('groq');
+                                  localStorage.setItem('ai_provider', 'groq');
+                                  setGeminiApiKey('');
+                                  localStorage.removeItem('gemini-api-key');
+                                  setConnectionTest({ testing: false, result: null });
+                                }}
                                 className={`px-3 py-1 rounded-md text-[10px] font-bold transition-all ${aiProvider === 'groq' ? 'bg-green-600 text-white' : 'text-slate-500 hover:text-slate-300'}`}
-                              >🟢 Groq</button>
+                              >
+                                🟢 Groq
+                              </button>
                               <button
-                                onClick={() => { setAiProvider('openrouter'); localStorage.setItem('ai_provider', 'openrouter'); setGeminiApiKey(''); localStorage.removeItem('gemini-api-key'); setConnectionTest({ testing: false, result: null }); }}
+                                onClick={() => {
+                                  setAiProvider('openrouter');
+                                  localStorage.setItem('ai_provider', 'openrouter');
+                                  setGeminiApiKey('');
+                                  localStorage.removeItem('gemini-api-key');
+                                  setConnectionTest({ testing: false, result: null });
+                                }}
                                 className={`px-3 py-1 rounded-md text-[10px] font-bold transition-all ${aiProvider === 'openrouter' ? 'bg-purple-600 text-white' : 'text-slate-500 hover:text-slate-300'}`}
-                              >🟣 OpenRouter</button>
+                              >
+                                🟣 OpenRouter
+                              </button>
                               <button
-                                onClick={() => { setAiProvider('gemini'); localStorage.setItem('ai_provider', 'gemini'); setGeminiApiKey(''); localStorage.removeItem('gemini-api-key'); setConnectionTest({ testing: false, result: null }); }}
+                                onClick={() => {
+                                  setAiProvider('gemini');
+                                  localStorage.setItem('ai_provider', 'gemini');
+                                  setGeminiApiKey('');
+                                  localStorage.removeItem('gemini-api-key');
+                                  setConnectionTest({ testing: false, result: null });
+                                }}
                                 className={`px-3 py-1 rounded-md text-[10px] font-bold transition-all ${aiProvider === 'gemini' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:text-slate-300'}`}
-                              >🔵 Gemini</button>
+                              >
+                                🔵 Gemini
+                              </button>
                             </div>
 
                             <p className="text-[10px] text-slate-500 leading-relaxed">
                               {aiProvider === 'groq' ? (
-                                <>Groq is <strong className="text-green-400">free with generous limits</strong> (30 req/min). Uses Llama 3.3 70B. <a href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer" className="text-green-400 hover:text-green-300 underline">Get a free Groq key →</a></>
+                                <>
+                                  Groq is{' '}
+                                  <strong className="text-green-400">
+                                    free with generous limits
+                                  </strong>{' '}
+                                  (30 req/min). Uses Llama 3.3 70B.{' '}
+                                  <a
+                                    href="https://console.groq.com/keys"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-green-400 hover:text-green-300 underline"
+                                  >
+                                    Get a free Groq key →
+                                  </a>
+                                </>
                               ) : aiProvider === 'openrouter' ? (
-                                <>OpenRouter gives access to <strong className="text-purple-400">100+ free models</strong> under one key. No region locks. <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300 underline">Get a free OpenRouter key (sk-or-...) →</a></>
+                                <>
+                                  OpenRouter gives access to{' '}
+                                  <strong className="text-purple-400">100+ free models</strong>{' '}
+                                  under one key. No region locks.{' '}
+                                  <a
+                                    href="https://openrouter.ai/keys"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-purple-400 hover:text-purple-300 underline"
+                                  >
+                                    Get a free OpenRouter key (sk-or-...) →
+                                  </a>
+                                </>
                               ) : (
-                                <>Gemini free tier: 15 req/min. Get your key from <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" className="text-violet-400 hover:text-violet-300 underline">aistudio.google.com/apikey →</a>. Keys may start with <strong className="text-yellow-400">AIza...</strong> or <strong className="text-yellow-400">AQ.</strong> — both are supported.</>
+                                <>
+                                  Gemini free tier: 15 req/min. Get your key from{' '}
+                                  <a
+                                    href="https://aistudio.google.com/apikey"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-violet-400 hover:text-violet-300 underline"
+                                  >
+                                    aistudio.google.com/apikey →
+                                  </a>
+                                  . Keys may start with{' '}
+                                  <strong className="text-yellow-400">AIza...</strong> or{' '}
+                                  <strong className="text-yellow-400">AQ.</strong> — both are
+                                  supported.
+                                </>
                               )}
                             </p>
 
                             {/* OpenRouter Model Selector */}
                             {aiProvider === 'openrouter' && (
                               <div className="space-y-1">
-                                <label className="block text-[10px] font-bold text-purple-400 uppercase tracking-wider">Model</label>
+                                <label className="block text-[10px] font-bold text-purple-400 uppercase tracking-wider">
+                                  Model
+                                </label>
                                 <select
                                   value={openRouterModel}
-                                  onChange={e => {
+                                  onChange={(e) => {
                                     setOpenRouterModel(e.target.value);
                                     localStorage.setItem('openrouter_model', e.target.value);
                                     setConnectionTest({ testing: false, result: null });
@@ -4714,23 +5540,48 @@ export default function Portfolio() {
                                   className="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-[10px] text-slate-300 focus:outline-none focus:border-purple-500 transition-colors cursor-pointer"
                                 >
                                   <optgroup label="🆓 Free — Verified Working (auto-fallback)">
-                                    <option value="google/gemma-4-31b-it:free">Gemma 4 31B (free) — Best reliability ✅</option>
-                                    <option value="moonshotai/kimi-k2.6:free">Kimi K2.6 (free) — Moonshot AI ✅</option>
-                                    <option value="google/gemma-4-26b-a4b-it:free">Gemma 4 26B (free) — Google fast ✅</option>
-                                    <option value="meta-llama/llama-3.3-70b-instruct:free">Llama 3.3 70B (free) — Meta flagship</option>
-                                    <option value="qwen/qwen3-next-80b-a3b-instruct:free">Qwen 3 Next 80B (free) — Multilingual</option>
-                                    <option value="qwen/qwen3-coder:free">Qwen 3 Coder (free) — Programming focus</option>
-                                    <option value="meta-llama/llama-3.2-3b-instruct:free">Llama 3.2 3B (free) — Fast & light</option>
-                                    <option value="nousresearch/hermes-3-llama-3.1-405b:free">Hermes 3 405B (free) — Large reasoning</option>
+                                    <option value="google/gemma-4-31b-it:free">
+                                      Gemma 4 31B (free) — Best reliability ✅
+                                    </option>
+                                    <option value="moonshotai/kimi-k2.6:free">
+                                      Kimi K2.6 (free) — Moonshot AI ✅
+                                    </option>
+                                    <option value="google/gemma-4-26b-a4b-it:free">
+                                      Gemma 4 26B (free) — Google fast ✅
+                                    </option>
+                                    <option value="meta-llama/llama-3.3-70b-instruct:free">
+                                      Llama 3.3 70B (free) — Meta flagship
+                                    </option>
+                                    <option value="qwen/qwen3-next-80b-a3b-instruct:free">
+                                      Qwen 3 Next 80B (free) — Multilingual
+                                    </option>
+                                    <option value="qwen/qwen3-coder:free">
+                                      Qwen 3 Coder (free) — Programming focus
+                                    </option>
+                                    <option value="meta-llama/llama-3.2-3b-instruct:free">
+                                      Llama 3.2 3B (free) — Fast & light
+                                    </option>
+                                    <option value="nousresearch/hermes-3-llama-3.1-405b:free">
+                                      Hermes 3 405B (free) — Large reasoning
+                                    </option>
                                   </optgroup>
                                   <optgroup label="💎 Paid (credits required)">
-                                    <option value="anthropic/claude-sonnet-4.6">Claude 3.5 Sonnet — Premium quality</option>
+                                    <option value="anthropic/claude-sonnet-4.6">
+                                      Claude 3.5 Sonnet — Premium quality
+                                    </option>
                                     <option value="openai/gpt-4o">GPT-4o — OpenAI flagship</option>
-                                    <option value="google/gemini-2.5-flash">Gemini 2.5 Flash — Google fast model</option>
-                                    <option value="meta-llama/llama-3.3-70b-instruct">Llama 3.3 70B (paid) — Faster, no limits</option>
+                                    <option value="google/gemini-2.5-flash">
+                                      Gemini 2.5 Flash — Google fast model
+                                    </option>
+                                    <option value="meta-llama/llama-3.3-70b-instruct">
+                                      Llama 3.3 70B (paid) — Faster, no limits
+                                    </option>
                                   </optgroup>
                                 </select>
-                                <p className="text-[9px] text-slate-600">If a free model is rate-limited, the app automatically retries the next one. Top 3 (✅) had the highest success rate in live testing.</p>
+                                <p className="text-[9px] text-slate-600">
+                                  If a free model is rate-limited, the app automatically retries the
+                                  next one. Top 3 (✅) had the highest success rate in live testing.
+                                </p>
                               </div>
                             )}
 
@@ -4738,20 +5589,32 @@ export default function Portfolio() {
                               <input
                                 type="password"
                                 value={geminiApiKey}
-                                onChange={e => {
+                                onChange={(e) => {
                                   const v = e.target.value;
                                   setGeminiApiKey(v);
                                   localStorage.setItem('gemini-api-key', v);
                                   setConnectionTest({ testing: false, result: null });
                                 }}
-                                placeholder={aiProvider === 'groq' ? 'Paste your Groq key (gsk_...)' : aiProvider === 'openrouter' ? 'Paste your OpenRouter key (sk-or-...)' : 'Paste your Gemini key (AIza... or AQ....)'}
+                                placeholder={
+                                  aiProvider === 'groq'
+                                    ? 'Paste your Groq key (gsk_...)'
+                                    : aiProvider === 'openrouter'
+                                      ? 'Paste your OpenRouter key (sk-or-...)'
+                                      : 'Paste your Gemini key (AIza... or AQ....)'
+                                }
                                 className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-[10px] text-slate-300 placeholder-slate-600 focus:outline-none focus:border-violet-500 transition-colors font-mono"
                               />
                               {geminiApiKey && (
                                 <button
-                                  onClick={() => { setGeminiApiKey(''); localStorage.removeItem('gemini-api-key'); setConnectionTest({ testing: false, result: null }); }}
+                                  onClick={() => {
+                                    setGeminiApiKey('');
+                                    localStorage.removeItem('gemini-api-key');
+                                    setConnectionTest({ testing: false, result: null });
+                                  }}
                                   className="text-[10px] text-slate-500 hover:text-rose-400 px-2"
-                                >Clear</button>
+                                >
+                                  Clear
+                                </button>
                               )}
                             </div>
 
@@ -4762,27 +5625,36 @@ export default function Portfolio() {
                                   <button
                                     onClick={async () => {
                                       setConnectionTest({ testing: true, result: null });
-                                      const result = await testApiConnection(geminiApiKey, aiProvider);
+                                      const result = await testApiConnection(
+                                        geminiApiKey,
+                                        aiProvider
+                                      );
                                       setConnectionTest({ testing: false, result });
                                     }}
                                     disabled={connectionTest.testing}
                                     className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-[10px] font-bold text-slate-300 transition-all flex items-center gap-1.5"
                                   >
                                     {connectionTest.testing ? (
-                                      <><span className="w-3 h-3 border-2 border-slate-500 border-t-violet-400 rounded-full animate-spin" /> Testing...</>
+                                      <>
+                                        <span className="w-3 h-3 border-2 border-slate-500 border-t-violet-400 rounded-full animate-spin" />{' '}
+                                        Testing...
+                                      </>
                                     ) : (
                                       <>🔌 Test Connection</>
                                     )}
                                   </button>
                                   {connectionTest.result && (
-                                    <span className={`text-[10px] font-semibold ${connectionTest.result.ok ? 'text-green-400' : 'text-rose-400'}`}>
+                                    <span
+                                      className={`text-[10px] font-semibold ${connectionTest.result.ok ? 'text-green-400' : 'text-rose-400'}`}
+                                    >
                                       {connectionTest.result.message}
                                     </span>
                                   )}
                                 </div>
                                 {aiProvider === 'openrouter' && (
                                   <p className="text-[9px] text-slate-500 leading-relaxed mt-1">
-                                    💡 Verification query checks key metadata/credits directly. It doesn't consume model tokens or trigger fallback rate-limits.
+                                    💡 Verification query checks key metadata/credits directly. It
+                                    doesn't consume model tokens or trigger fallback rate-limits.
                                   </p>
                                 )}
                               </div>
@@ -4793,36 +5665,53 @@ export default function Portfolio() {
 
                       {/* Company Name input */}
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Company Name</label>
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                          Company Name
+                        </label>
                         <input
                           type="text"
                           value={interviewCompanyName}
-                          onChange={e => setInterviewCompanyName(e.target.value)}
+                          onChange={(e) => setInterviewCompanyName(e.target.value)}
                           placeholder="e.g. Google, Amazon, Stripe, Infosys..."
                           className="w-full bg-slate-950/50 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-violet-500 transition-colors"
                         />
-                        <p className="text-[10px] text-slate-400 mt-1">{aiProvider === 'groq' ? 'Groq' : aiProvider === 'openrouter' ? 'OpenRouter' : 'Gemini'} will search for this company's real interview process, questions, and what people do in this role.</p>
+                        <p className="text-[10px] text-slate-400 mt-1">
+                          {aiProvider === 'groq'
+                            ? 'Groq'
+                            : aiProvider === 'openrouter'
+                              ? 'OpenRouter'
+                              : 'Gemini'}{' '}
+                          will search for this company's real interview process, questions, and what
+                          people do in this role.
+                        </p>
                       </div>
 
                       {/* Position Name input */}
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Position / Job Title *</label>
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                          Position / Job Title *
+                        </label>
                         <input
                           type="text"
                           value={interviewPositionName}
-                          onChange={e => setInterviewPositionName(e.target.value)}
+                          onChange={(e) => setInterviewPositionName(e.target.value)}
                           placeholder="e.g. Senior Software Engineer, Tech Support Specialist, Product Manager..."
                           className="w-full bg-slate-950/50 border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-slate-200 placeholder-slate-600 focus:outline-none focus:border-violet-500 transition-colors"
                         />
-                        <p className="text-[10px] text-slate-400 mt-1">Used to tailor the question bank specifically for your role — a support engineer won't get DSA questions!</p>
+                        <p className="text-[10px] text-slate-400 mt-1">
+                          Used to tailor the question bank specifically for your role — a support
+                          engineer won't get DSA questions!
+                        </p>
                       </div>
 
                       {/* JD textarea */}
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Job Description</label>
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
+                          Job Description
+                        </label>
                         <textarea
                           value={interviewJD}
-                          onChange={e => setInterviewJD(e.target.value)}
+                          onChange={(e) => setInterviewJD(e.target.value)}
                           placeholder="Paste the full job description here (include company name, role, requirements, and any culture info)..."
                           className="w-full h-44 bg-slate-950/50 border border-slate-700 rounded-xl p-3 text-xs text-slate-300 placeholder-slate-600 resize-none focus:outline-none focus:border-violet-500 transition-colors"
                         />
@@ -4835,9 +5724,17 @@ export default function Portfolio() {
                           setGeminiData(null);
                           setGeminiError('');
 
-                           // Step 1: Generate local plan immediately
-                          const plan = generateInterviewPlan(resumeData, interviewPositionName, interviewJD, interviewCompanyName);
-                          const recruiter = getRecruiterPersona(interviewCompanyName.trim() || plan.context.company, plan.context.companyCulture);
+                          // Step 1: Generate local plan immediately
+                          const plan = generateInterviewPlan(
+                            resumeData,
+                            interviewPositionName,
+                            interviewJD,
+                            interviewCompanyName
+                          );
+                          const recruiter = getRecruiterPersona(
+                            interviewCompanyName.trim() || plan.context.company,
+                            plan.context.companyCulture
+                          );
                           setSelectedRecruiter(recruiter);
 
                           const sessionId = 'session-' + Date.now();
@@ -4851,7 +5748,7 @@ export default function Portfolio() {
                               day: 'numeric',
                               year: 'numeric',
                               hour: '2-digit',
-                              minute: '2-digit'
+                              minute: '2-digit',
                             }),
                             plan: plan,
                             geminiData: null,
@@ -4862,10 +5759,10 @@ export default function Portfolio() {
                             recruiterPersonaId: recruiter.id,
                             recruiterReplies: {},
                             interfaceMode: mockInterfaceMode,
-                            isCompleted: false
+                            isCompleted: false,
                           };
 
-                          setSavedSessions(prev => [newSession, ...prev]);
+                          setSavedSessions((prev) => [newSession, ...prev]);
 
                           setTimeout(() => {
                             setInterviewPlan(plan);
@@ -4896,7 +5793,8 @@ export default function Portfolio() {
                             setIsFetchingGemini(true);
                             setAiProgress('Connecting...');
                             try {
-                              const companyForSearch = interviewCompanyName.trim() || plan.context.company;
+                              const companyForSearch =
+                                interviewCompanyName.trim() || plan.context.company;
                               const enhanced = await fetchGeminiInsights(
                                 geminiApiKey,
                                 companyForSearch,
@@ -4908,20 +5806,28 @@ export default function Portfolio() {
                               if (enhanced) {
                                 setGeminiData(enhanced);
                               } else {
-                                setGeminiError('Could not fetch data from Google Search. Using local templates.');
+                                setGeminiError(
+                                  'Could not fetch data from Google Search. Using local templates.'
+                                );
                               }
                             } catch (err: any) {
-                              setGeminiError(err?.message || 'Gemini API call failed. Check your API key.');
+                              setGeminiError(
+                                err?.message || 'Gemini API call failed. Check your API key.'
+                              );
                             } finally {
                               setIsFetchingGemini(false);
                             }
                           }
                         }}
-                        disabled={isGeneratingPlan || (!interviewPositionName.trim() && !interviewJD.trim())}
+                        disabled={
+                          isGeneratingPlan || (!interviewPositionName.trim() && !interviewJD.trim())
+                        }
                         className="w-full py-3 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-40 text-white text-xs font-bold transition-all flex items-center justify-center gap-2"
                       >
                         {isGeneratingPlan ? (
-                          <><span className="animate-spin">⏳</span> Generating Interview Plan...</>
+                          <>
+                            <span className="animate-spin">⏳</span> Generating Interview Plan...
+                          </>
                         ) : (
                           <>🎯 Generate My Interview Plan</>
                         )}
@@ -4934,7 +5840,9 @@ export default function Portfolio() {
                         <h3 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center justify-between gap-1.5">
                           <div className="flex items-center gap-1.5">
                             <span>🕒 Past Sessions History</span>
-                            <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full lowercase font-semibold">{savedSessions.length} session{savedSessions.length > 1 ? 's' : ''}</span>
+                            <span className="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full lowercase font-semibold">
+                              {savedSessions.length} session{savedSessions.length > 1 ? 's' : ''}
+                            </span>
                           </div>
                           <span className="text-[9px] text-slate-550 lowercase font-medium flex items-center gap-1">
                             {user ? '☁ synced to cloud' : '💾 saved locally (sign in to sync)'}
@@ -4943,18 +5851,30 @@ export default function Portfolio() {
 
                         <div className="grid grid-cols-1 gap-2.5 max-h-96 overflow-y-auto scrollbar-thin pr-1">
                           {savedSessions.map((session) => {
-                            const totalQuestions = session.plan.rounds.reduce((acc, r) => acc + r.questions.length, 0);
+                            const totalQuestions = session.plan.rounds.reduce(
+                              (acc, r) => acc + r.questions.length,
+                              0
+                            );
                             const answeredCount = Object.keys(session.mockAnswers).length;
                             const scoredCount = Object.keys(session.mockScores).length;
 
                             return (
-                              <div key={session.id} className="p-3.5 rounded-xl border border-slate-800 bg-slate-950/20 hover:bg-slate-950/45 transition-colors flex flex-col sm:flex-row justify-between gap-3 text-xs">
+                              <div
+                                key={session.id}
+                                className="p-3.5 rounded-xl border border-slate-800 bg-slate-950/20 hover:bg-slate-950/45 transition-colors flex flex-col sm:flex-row justify-between gap-3 text-xs"
+                              >
                                 <div className="space-y-1 min-w-0">
                                   <div className="flex items-center gap-1.5 flex-wrap">
-                                    <h4 className="font-bold text-slate-200 truncate max-w-[150px]">{session.companyName}</h4>
-                                    <span className="text-[9px] bg-violet-950/40 border border-violet-900 text-violet-400 px-1.5 py-0.5 rounded-md font-semibold truncate max-w-[120px]">{session.positionName}</span>
+                                    <h4 className="font-bold text-slate-200 truncate max-w-[150px]">
+                                      {session.companyName}
+                                    </h4>
+                                    <span className="text-[9px] bg-violet-950/40 border border-violet-900 text-violet-400 px-1.5 py-0.5 rounded-md font-semibold truncate max-w-[120px]">
+                                      {session.positionName}
+                                    </span>
                                   </div>
-                                  <p className="text-[10px] text-slate-500 font-medium">Created: {session.generatedAt}</p>
+                                  <p className="text-[10px] text-slate-500 font-medium">
+                                    Created: {session.generatedAt}
+                                  </p>
                                   <div className="flex gap-3 text-[10px] text-slate-400 font-semibold pt-1">
                                     <span>📋 {totalQuestions} Qs</span>
                                     <span>✍️ {answeredCount} Answered</span>
@@ -4981,13 +5901,22 @@ export default function Portfolio() {
                                         setInterviewSubTab('overview');
                                       }
                                       setMockMode('idle');
-                                      
-                                      const storedPersona = RECRUITER_PERSONAS.find(p => p.id === session.recruiterPersonaId) || RECRUITER_PERSONAS[4];
+
+                                      const storedPersona =
+                                        RECRUITER_PERSONAS.find(
+                                          (p) => p.id === session.recruiterPersonaId
+                                        ) || RECRUITER_PERSONAS[4];
                                       setSelectedRecruiter(storedPersona);
                                       setMockInterfaceMode(session.interfaceMode || 'standard');
                                       setRecruiterReplies(session.recruiterReplies || {});
-                                      setSessionSummaryFeedback(session.sessionSummaryFeedback || '');
-                                      setRecruiterQuestions(session.recruiterQuestions ? (session.recruiterQuestions as any) : null);
+                                      setSessionSummaryFeedback(
+                                        session.sessionSummaryFeedback || ''
+                                      );
+                                      setRecruiterQuestions(
+                                        session.recruiterQuestions
+                                          ? (session.recruiterQuestions as any)
+                                          : null
+                                      );
                                       setIsSessionCompleted(session.isCompleted || false);
                                     }}
                                     className="px-3 py-1.5 rounded-lg bg-violet-600/80 hover:bg-violet-600 text-white font-bold transition-all text-[11px]"
@@ -4996,8 +5925,14 @@ export default function Portfolio() {
                                   </button>
                                   <button
                                     onClick={() => {
-                                      if (confirm(`Are you sure you want to delete the interview history for ${session.companyName}?`)) {
-                                        setSavedSessions(prev => prev.filter(s => s.id !== session.id));
+                                      if (
+                                        confirm(
+                                          `Are you sure you want to delete the interview history for ${session.companyName}?`
+                                        )
+                                      ) {
+                                        setSavedSessions((prev) =>
+                                          prev.filter((s) => s.id !== session.id)
+                                        );
                                         if (currentSessionId === session.id) {
                                           setInterviewPlan(null);
                                           setCurrentSessionId(null);
@@ -5019,200 +5954,328 @@ export default function Portfolio() {
                   </>
                 )}
 
-                  {/* Plan Header */}
-                  {interviewPlan && (
-                    <>
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h3 className="text-sm font-bold text-white">{interviewPlan.context.company}</h3>
-                          <p className="text-[11px] text-violet-400 font-semibold">{interviewPlan.context.role} · {interviewPlan.context.seniority}</p>
-                        </div>
+                {/* Plan Header */}
+                {interviewPlan && (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-sm font-bold text-white">
+                          {interviewPlan.context.company}
+                        </h3>
+                        <p className="text-[11px] text-violet-400 font-semibold">
+                          {interviewPlan.context.role} · {interviewPlan.context.seniority}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => {
+                          setInterviewPlan(null);
+                          setCurrentSessionId(null);
+                          setInterviewJD('');
+                          setInterviewPositionName('');
+                          setInterviewCompanyName('');
+                          setGeminiData(null);
+                          setGeminiError('');
+                        }}
+                        className="text-[10px] text-slate-500 hover:text-rose-400 transition-colors border border-slate-700 rounded-lg px-2 py-1"
+                      >
+                        ↩ Reset
+                      </button>
+                    </div>
+
+                    {/* Sub-tabs */}
+                    <div className="flex gap-1 bg-slate-950/40 border border-slate-800 rounded-xl p-1 text-[10px] font-bold overflow-x-auto scrollbar-none">
+                      {(['overview', 'questions', 'study-plan', 'mock'] as const).map((tab) => (
                         <button
-                          onClick={() => {
-                            setInterviewPlan(null);
-                            setCurrentSessionId(null);
-                            setInterviewJD('');
-                            setInterviewPositionName('');
-                            setInterviewCompanyName('');
-                            setGeminiData(null);
-                            setGeminiError('');
-                          }}
-                          className="text-[10px] text-slate-500 hover:text-rose-400 transition-colors border border-slate-700 rounded-lg px-2 py-1"
-                        >↩ Reset</button>
-                      </div>
+                          key={tab}
+                          onClick={() => setInterviewSubTab(tab)}
+                          className={`flex-1 py-1.5 px-2 rounded-lg whitespace-nowrap transition-all ${
+                            interviewSubTab === tab
+                              ? 'bg-violet-600 text-white'
+                              : 'text-slate-500 hover:text-slate-300'
+                          }`}
+                        >
+                          {tab === 'overview'
+                            ? '🏢 Process'
+                            : tab === 'questions'
+                              ? '📋 Questions'
+                              : tab === 'study-plan'
+                                ? '📚 Study Plan'
+                                : '🎤 Mock'}
+                        </button>
+                      ))}
+                    </div>
 
-                      {/* Sub-tabs */}
-                      <div className="flex gap-1 bg-slate-950/40 border border-slate-800 rounded-xl p-1 text-[10px] font-bold overflow-x-auto scrollbar-none">
-                        {(['overview', 'questions', 'study-plan', 'mock'] as const).map(tab => (
-                          <button
-                            key={tab}
-                            onClick={() => setInterviewSubTab(tab)}
-                            className={`flex-1 py-1.5 px-2 rounded-lg whitespace-nowrap transition-all ${
-                              interviewSubTab === tab
-                                ? 'bg-violet-600 text-white'
-                                : 'text-slate-500 hover:text-slate-300'
-                            }`}
-                          >
-                            {tab === 'overview' ? '🏢 Process' : tab === 'questions' ? '📋 Questions' : tab === 'study-plan' ? '📚 Study Plan' : '🎤 Mock'}
-                          </button>
-                        ))}
-                      </div>
-
-                      {/* OVERVIEW: Interview Process */}
-                      {interviewSubTab === 'overview' && (
-                        <div className="space-y-3 animate-fadeIn">
-
-                          {/* Gemini Loading Indicator */}
-                          {isFetchingGemini && (
-                            <div className="flex items-start gap-2.5 p-3 rounded-xl bg-blue-500/10 border border-blue-500/20">
-                              <span className="animate-spin text-sm flex-shrink-0 mt-0.5">{aiProvider === 'groq' ? '⚡' : aiProvider === 'openrouter' ? '🟣' : '🌐'}</span>
-                              <div className="space-y-0.5">
-                                <p className="text-[11px] text-blue-300 font-semibold">Fetching real data about this role at {interviewPlan.context.company} via {aiProvider === 'groq' ? 'Groq' : aiProvider === 'openrouter' ? 'OpenRouter' : 'Gemini'}...</p>
-                                <p className="text-[10px] text-slate-400 font-mono">{aiProgress || 'Initializing connection...'}</p>
-                              </div>
+                    {/* OVERVIEW: Interview Process */}
+                    {interviewSubTab === 'overview' && (
+                      <div className="space-y-3 animate-fadeIn">
+                        {/* Gemini Loading Indicator */}
+                        {isFetchingGemini && (
+                          <div className="flex items-start gap-2.5 p-3 rounded-xl bg-blue-500/10 border border-blue-500/20">
+                            <span className="animate-spin text-sm flex-shrink-0 mt-0.5">
+                              {aiProvider === 'groq'
+                                ? '⚡'
+                                : aiProvider === 'openrouter'
+                                  ? '🟣'
+                                  : '🌐'}
+                            </span>
+                            <div className="space-y-0.5">
+                              <p className="text-[11px] text-blue-300 font-semibold">
+                                Fetching real data about this role at{' '}
+                                {interviewPlan.context.company} via{' '}
+                                {aiProvider === 'groq'
+                                  ? 'Groq'
+                                  : aiProvider === 'openrouter'
+                                    ? 'OpenRouter'
+                                    : 'Gemini'}
+                                ...
+                              </p>
+                              <p className="text-[10px] text-slate-400 font-mono">
+                                {aiProgress || 'Initializing connection...'}
+                              </p>
                             </div>
-                          )}
-                          {geminiError && (
-                            <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20">
-                              <p className="text-[10px] text-amber-400">{geminiError}</p>
-                            </div>
-                          )}
+                          </div>
+                        )}
+                        {geminiError && (
+                          <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20">
+                            <p className="text-[10px] text-amber-400">{geminiError}</p>
+                          </div>
+                        )}
 
-                          {/* Role Insights Card */}
-                          {(() => {
-                            const insights = geminiData?.roleInsights?.glance ? geminiData.roleInsights : interviewPlan.roleInsights;
-                            const isGemini = !!(geminiData?.roleInsights?.glance);
-                            return (
-                              <div className={`rounded-xl border overflow-hidden ${isGemini ? 'border-blue-500/30 bg-blue-500/5' : 'border-violet-500/25 bg-violet-500/5'}`}>
-                                <div className={`px-4 py-3 border-b ${isGemini ? 'bg-blue-500/10 border-blue-500/20' : 'bg-violet-500/10 border-violet-500/20'}`}>
-                                  <div className="flex items-center justify-between flex-wrap gap-2">
-                                    <p className={`text-[10px] font-black uppercase tracking-wider ${isGemini ? 'text-blue-400' : 'text-violet-400'}`}>🔍 What People Do In This Role</p>
-                                    <div className="flex items-center gap-1.5">
-                                      {geminiData?.providerUsed && (
-                                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
-                                          geminiData.providerUsed === 'openrouter' ? 'bg-purple-500/20 text-purple-300' :
-                                          geminiData.providerUsed === 'groq' ? 'bg-green-500/20 text-green-300' :
-                                          'bg-blue-500/20 text-blue-300'
-                                        }`}>
-                                          🤖 {geminiData.providerUsed === 'openrouter' ? 'OpenRouter' : geminiData.providerUsed === 'groq' ? 'Groq' : 'Gemini'}
-                                          {geminiData.modelUsed && ` (${geminiData.modelUsed.split('/').pop()?.replace(':free', '')})`}
-                                        </span>
-                                      )}
-                                      {isGemini && geminiData?.searchSources && geminiData.searchSources.length > 0 && (
+                        {/* Role Insights Card */}
+                        {(() => {
+                          const insights = geminiData?.roleInsights?.glance
+                            ? geminiData.roleInsights
+                            : interviewPlan.roleInsights;
+                          const isGemini = !!geminiData?.roleInsights?.glance;
+                          return (
+                            <div
+                              className={`rounded-xl border overflow-hidden ${isGemini ? 'border-blue-500/30 bg-blue-500/5' : 'border-violet-500/25 bg-violet-500/5'}`}
+                            >
+                              <div
+                                className={`px-4 py-3 border-b ${isGemini ? 'bg-blue-500/10 border-blue-500/20' : 'bg-violet-500/10 border-violet-500/20'}`}
+                              >
+                                <div className="flex items-center justify-between flex-wrap gap-2">
+                                  <p
+                                    className={`text-[10px] font-black uppercase tracking-wider ${isGemini ? 'text-blue-400' : 'text-violet-400'}`}
+                                  >
+                                    🔍 What People Do In This Role
+                                  </p>
+                                  <div className="flex items-center gap-1.5">
+                                    {geminiData?.providerUsed && (
+                                      <span
+                                        className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
+                                          geminiData.providerUsed === 'openrouter'
+                                            ? 'bg-purple-500/20 text-purple-300'
+                                            : geminiData.providerUsed === 'groq'
+                                              ? 'bg-green-500/20 text-green-300'
+                                              : 'bg-blue-500/20 text-blue-300'
+                                        }`}
+                                      >
+                                        🤖{' '}
+                                        {geminiData.providerUsed === 'openrouter'
+                                          ? 'OpenRouter'
+                                          : geminiData.providerUsed === 'groq'
+                                            ? 'Groq'
+                                            : 'Gemini'}
+                                        {geminiData.modelUsed &&
+                                          ` (${geminiData.modelUsed.split('/').pop()?.replace(':free', '')})`}
+                                      </span>
+                                    )}
+                                    {isGemini &&
+                                      geminiData?.searchSources &&
+                                      geminiData.searchSources.length > 0 && (
                                         <span className="text-[9px] font-bold bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
                                           <span>🌐</span> Live Google Search
                                         </span>
                                       )}
-                                    </div>
                                   </div>
-                                  <p className="text-xs text-slate-200 font-semibold mt-0.5">{insights.glance}</p>
                                 </div>
-                                <div className="p-4 space-y-3">
-                                  {/* What you do */}
+                                <p className="text-xs text-slate-200 font-semibold mt-0.5">
+                                  {insights.glance}
+                                </p>
+                              </div>
+                              <div className="p-4 space-y-3">
+                                {/* What you do */}
+                                <div>
+                                  <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1.5">
+                                    Day-to-Day Responsibilities
+                                  </p>
+                                  <ul className="space-y-1">
+                                    {insights.whatYouDo.map((item, i) => (
+                                      <li
+                                        key={i}
+                                        className="flex items-start gap-2 text-[11px] text-slate-300"
+                                      >
+                                        <span
+                                          className={`mt-0.5 flex-shrink-0 ${isGemini ? 'text-blue-400' : 'text-violet-400'}`}
+                                        >
+                                          ▸
+                                        </span>
+                                        {item}
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+
+                                {/* Typical day */}
+                                <div className="p-2.5 rounded-lg bg-slate-900/60 border border-slate-800">
+                                  <p className="text-[10px] text-amber-400 font-bold mb-1">
+                                    ⏰ Typical Day at {interviewPlan.context.company}
+                                  </p>
+                                  <p className="text-[11px] text-slate-400 leading-relaxed">
+                                    {insights.typicalDay}
+                                  </p>
+                                </div>
+
+                                {/* Key skills + challenges row */}
+                                <div className="grid grid-cols-2 gap-2">
                                   <div>
-                                    <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1.5">Day-to-Day Responsibilities</p>
-                                    <ul className="space-y-1">
-                                      {insights.whatYouDo.map((item, i) => (
-                                        <li key={i} className="flex items-start gap-2 text-[11px] text-slate-300">
-                                          <span className={`mt-0.5 flex-shrink-0 ${isGemini ? 'text-blue-400' : 'text-violet-400'}`}>▸</span>
-                                          {item}
+                                    <p className="text-[10px] text-emerald-400 font-bold mb-1">
+                                      ✅ Key Skills
+                                    </p>
+                                    <ul className="space-y-0.5">
+                                      {insights.keySkills.map((s, i) => (
+                                        <li key={i} className="text-[10px] text-slate-400">
+                                          • {s}
                                         </li>
                                       ))}
                                     </ul>
                                   </div>
-
-                                  {/* Typical day */}
-                                  <div className="p-2.5 rounded-lg bg-slate-900/60 border border-slate-800">
-                                    <p className="text-[10px] text-amber-400 font-bold mb-1">⏰ Typical Day at {interviewPlan.context.company}</p>
-                                    <p className="text-[11px] text-slate-400 leading-relaxed">{insights.typicalDay}</p>
+                                  <div>
+                                    <p className="text-[10px] text-rose-400 font-bold mb-1">
+                                      ⚠️ Top Challenges
+                                    </p>
+                                    <ul className="space-y-0.5">
+                                      {insights.topChallenges.map((c, i) => (
+                                        <li key={i} className="text-[10px] text-slate-400">
+                                          • {c}
+                                        </li>
+                                      ))}
+                                    </ul>
                                   </div>
-
-                                  {/* Key skills + challenges row */}
-                                  <div className="grid grid-cols-2 gap-2">
-                                    <div>
-                                      <p className="text-[10px] text-emerald-400 font-bold mb-1">✅ Key Skills</p>
-                                      <ul className="space-y-0.5">
-                                        {insights.keySkills.map((s, i) => (
-                                          <li key={i} className="text-[10px] text-slate-400">• {s}</li>
-                                        ))}
-                                      </ul>
-                                    </div>
-                                    <div>
-                                      <p className="text-[10px] text-rose-400 font-bold mb-1">⚠️ Top Challenges</p>
-                                      <ul className="space-y-0.5">
-                                        {insights.topChallenges.map((c, i) => (
-                                          <li key={i} className="text-[10px] text-slate-400">• {c}</li>
-                                        ))}
-                                      </ul>
-                                    </div>
-                                  </div>
-
-                                  {/* Gemini search sources */}
-                                  {isGemini && geminiData!.searchSources.length > 0 && (
-                                    <div className="pt-1 border-t border-slate-800">
-                                      <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-1">Sources</p>
-                                      <div className="flex flex-wrap gap-1">
-                                        {geminiData!.searchSources.slice(0, 5).map((src, i) => {
-                                          try {
-                                            const domain = new URL(src).hostname.replace('www.', '');
-                                            return <a key={i} href={src} target="_blank" rel="noopener noreferrer" className="text-[9px] text-blue-400/60 hover:text-blue-300 underline">{domain}</a>;
-                                          } catch {
-                                            return <span key={i} className="text-[9px] text-slate-450">{src}</span>;
-                                          }
-                                        })}
-                                      </div>
-                                    </div>
-                                  )}
                                 </div>
-                              </div>
-                            );
-                          })()}
 
-                          {/* Process overview */}
-                          <p className="text-[11px] text-slate-500 font-semibold uppercase tracking-wider pt-1 flex items-center gap-2">
-                            Expected Interview Process
-                            {geminiData?.interviewProcess && geminiData.interviewProcess.length > 0 && (
-                              <span className="text-[9px] font-bold bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded-full">🌐 From Google</span>
+                                {/* Gemini search sources */}
+                                {isGemini && geminiData!.searchSources.length > 0 && (
+                                  <div className="pt-1 border-t border-slate-800">
+                                    <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-1">
+                                      Sources
+                                    </p>
+                                    <div className="flex flex-wrap gap-1">
+                                      {geminiData!.searchSources.slice(0, 5).map((src, i) => {
+                                        try {
+                                          const domain = new URL(src).hostname.replace('www.', '');
+                                          return (
+                                            <a
+                                              key={i}
+                                              href={src}
+                                              target="_blank"
+                                              rel="noopener noreferrer"
+                                              className="text-[9px] text-blue-400/60 hover:text-blue-300 underline"
+                                            >
+                                              {domain}
+                                            </a>
+                                          );
+                                        } catch {
+                                          return (
+                                            <span key={i} className="text-[9px] text-slate-450">
+                                              {src}
+                                            </span>
+                                          );
+                                        }
+                                      })}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })()}
+
+                        {/* Process overview */}
+                        <p className="text-[11px] text-slate-500 font-semibold uppercase tracking-wider pt-1 flex items-center gap-2">
+                          Expected Interview Process
+                          {geminiData?.interviewProcess &&
+                            geminiData.interviewProcess.length > 0 && (
+                              <span className="text-[9px] font-bold bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded-full">
+                                🌐 From Google
+                              </span>
                             )}
-                          </p>
-                          <div className="space-y-2">
-                            {(geminiData?.interviewProcess && geminiData.interviewProcess.length > 0 ? geminiData.interviewProcess : interviewPlan.processOverview).map((step, i) => (
-                              <div key={i} className="flex items-start gap-3 p-3 rounded-xl bg-slate-950/40 border border-slate-800">
-                                <span className="text-[11px] font-black text-violet-400 bg-violet-500/10 w-5 h-5 flex items-center justify-center rounded-full flex-shrink-0 mt-0.5">{i + 1}</span>
-                                <span className="text-xs text-slate-300">{step}</span>
-                              </div>
-                            ))}
-                          </div>
-                          <div className="p-3 rounded-xl bg-violet-500/5 border border-violet-500/20">
-                            <p className="text-[11px] text-violet-300 leading-relaxed">💡 <strong>Tip:</strong> Switch to <strong>Questions</strong> to see curated real interview questions by round, or jump to <strong>Mock</strong> to practice answering them live.</p>
-                          </div>
-                          <div className="flex gap-2">
-                            <button onClick={() => setInterviewSubTab('questions')} className="flex-1 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300 transition-colors">📋 View Questions →</button>
-                            <button onClick={() => { setInterviewSubTab('mock'); setMockMode('idle'); setMockQuestionIdx(0); }} className="flex-1 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-xs font-bold text-white transition-colors">🎤 Start Mock →</button>
-                          </div>
+                        </p>
+                        <div className="space-y-2">
+                          {(geminiData?.interviewProcess && geminiData.interviewProcess.length > 0
+                            ? geminiData.interviewProcess
+                            : interviewPlan.processOverview
+                          ).map((step, i) => (
+                            <div
+                              key={i}
+                              className="flex items-start gap-3 p-3 rounded-xl bg-slate-950/40 border border-slate-800"
+                            >
+                              <span className="text-[11px] font-black text-violet-400 bg-violet-500/10 w-5 h-5 flex items-center justify-center rounded-full flex-shrink-0 mt-0.5">
+                                {i + 1}
+                              </span>
+                              <span className="text-xs text-slate-300">{step}</span>
+                            </div>
+                          ))}
                         </div>
-                      )}
+                        <div className="p-3 rounded-xl bg-violet-500/5 border border-violet-500/20">
+                          <p className="text-[11px] text-violet-300 leading-relaxed">
+                            💡 <strong>Tip:</strong> Switch to <strong>Questions</strong> to see
+                            curated real interview questions by round, or jump to{' '}
+                            <strong>Mock</strong> to practice answering them live.
+                          </p>
+                        </div>
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => setInterviewSubTab('questions')}
+                            className="flex-1 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-300 transition-colors"
+                          >
+                            📋 View Questions →
+                          </button>
+                          <button
+                            onClick={() => {
+                              setInterviewSubTab('mock');
+                              setMockMode('idle');
+                              setMockQuestionIdx(0);
+                            }}
+                            className="flex-1 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-xs font-bold text-white transition-colors"
+                          >
+                            🎤 Start Mock →
+                          </button>
+                        </div>
+                      </div>
+                    )}
 
-                      {/* QUESTIONS: Round-filtered question bank */}
-                      {interviewSubTab === 'questions' && (
-                        <div className="space-y-3 animate-fadeIn">
-
-                          {/* Gemini Reported Questions */}
-                          {geminiData?.reportedQuestions && geminiData.reportedQuestions.length > 0 && (
+                    {/* QUESTIONS: Round-filtered question bank */}
+                    {interviewSubTab === 'questions' && (
+                      <div className="space-y-3 animate-fadeIn">
+                        {/* Gemini Reported Questions */}
+                        {geminiData?.reportedQuestions &&
+                          geminiData.reportedQuestions.length > 0 && (
                             <div className="rounded-xl border border-blue-500/25 bg-blue-500/5 overflow-hidden">
                               <div className="px-3 py-2 bg-blue-500/10 border-b border-blue-500/20 flex items-center justify-between">
-                                <p className="text-[10px] font-black text-blue-400 uppercase tracking-wider">🌐 Real Interview Questions From Candidates</p>
-                                <span className="text-[9px] bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded-full font-bold">{geminiData.reportedQuestions.length} found</span>
+                                <p className="text-[10px] font-black text-blue-400 uppercase tracking-wider">
+                                  🌐 Real Interview Questions From Candidates
+                                </p>
+                                <span className="text-[9px] bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded-full font-bold">
+                                  {geminiData.reportedQuestions.length} found
+                                </span>
                               </div>
                               <div className="divide-y divide-slate-800/50">
                                 {geminiData.reportedQuestions.map((q, i) => (
                                   <div key={i} className="px-3 py-2.5 flex items-start gap-2">
-                                    <span className="text-[10px] font-black text-blue-400/60 w-4 flex-shrink-0 mt-0.5">{i + 1}.</span>
+                                    <span className="text-[10px] font-black text-blue-400/60 w-4 flex-shrink-0 mt-0.5">
+                                      {i + 1}.
+                                    </span>
                                     <div className="flex-1">
                                       <p className="text-[11px] text-slate-200">{q.question}</p>
                                       <div className="flex items-center gap-2 mt-1">
-                                        <span className="text-[9px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded font-medium">{q.round}</span>
-                                        <span className="text-[9px] text-slate-400">Source: {q.source}</span>
+                                        <span className="text-[9px] bg-slate-800 text-slate-400 px-1.5 py-0.5 rounded font-medium">
+                                          {q.round}
+                                        </span>
+                                        <span className="text-[9px] text-slate-400">
+                                          Source: {q.source}
+                                        </span>
                                       </div>
                                       <div className="flex gap-2.5 mt-2">
                                         <button
@@ -5221,16 +6284,26 @@ export default function Portfolio() {
                                             setMockQuestionIdx(i);
                                             setMockMode('answering');
                                             setMockTimerSec(0);
-                                            if (mockTimerRef.current) clearInterval(mockTimerRef.current);
-                                            mockTimerRef.current = setInterval(() => setMockTimerSec(s => s + 1), 1000);
+                                            if (mockTimerRef.current)
+                                              clearInterval(mockTimerRef.current);
+                                            mockTimerRef.current = setInterval(
+                                              () => setMockTimerSec((s) => s + 1),
+                                              1000
+                                            );
                                             setInterviewSubTab('mock');
                                           }}
                                           className="text-[10px] text-blue-400 hover:text-blue-300 font-bold transition-colors"
-                                        >🎤 Practice This</button>
+                                        >
+                                          🎤 Practice This
+                                        </button>
                                         <button
-                                          onClick={() => toggleSpeakQuestion(`reported-${i}`, q.question)}
+                                          onClick={() =>
+                                            toggleSpeakQuestion(`reported-${i}`, q.question)
+                                          }
                                           className={`text-[10px] font-bold transition-colors ${
-                                            speakingQId === `reported-${i}` ? 'text-rose-450 hover:text-rose-400' : 'text-slate-400 hover:text-blue-400'
+                                            speakingQId === `reported-${i}`
+                                              ? 'text-rose-450 hover:text-rose-400'
+                                              : 'text-slate-400 hover:text-blue-400'
                                           }`}
                                         >
                                           {speakingQId === `reported-${i}` ? '⏹ Stop' : '🔊 Listen'}
@@ -5243,71 +6316,108 @@ export default function Portfolio() {
                             </div>
                           )}
 
-                          {/* Curated question bank header */}
-                          <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">📋 Curated Practice Questions by Round</p>
+                        {/* Curated question bank header */}
+                        <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+                          📋 Curated Practice Questions by Round
+                        </p>
 
-                          {/* Round selector pills */}
-                          <div className="flex gap-1.5 flex-wrap">
-                            {interviewPlan.rounds.map(r => (
-                              <button
-                                key={r.round}
-                                onClick={() => setActiveRound(r.round)}
-                                className={`px-3 py-1.5 rounded-full text-[10px] font-bold transition-all border ${
-                                  activeRound === r.round
-                                    ? 'bg-violet-600 text-white border-violet-600'
-                                    : 'bg-slate-900 text-slate-400 border-slate-700 hover:border-violet-500 hover:text-slate-200'
-                                }`}
-                              >
-                                {r.emoji} {r.label}
-                              </button>
-                            ))}
-                          </div>
+                        {/* Round selector pills */}
+                        <div className="flex gap-1.5 flex-wrap">
+                          {interviewPlan.rounds.map((r) => (
+                            <button
+                              key={r.round}
+                              onClick={() => setActiveRound(r.round)}
+                              className={`px-3 py-1.5 rounded-full text-[10px] font-bold transition-all border ${
+                                activeRound === r.round
+                                  ? 'bg-violet-600 text-white border-violet-600'
+                                  : 'bg-slate-900 text-slate-400 border-slate-700 hover:border-violet-500 hover:text-slate-200'
+                              }`}
+                            >
+                              {r.emoji} {r.label}
+                            </button>
+                          ))}
+                        </div>
 
-                          {/* Active round description */}
-                          {interviewPlan.rounds.filter(r => r.round === activeRound).map(r => (
+                        {/* Active round description */}
+                        {interviewPlan.rounds
+                          .filter((r) => r.round === activeRound)
+                          .map((r) => (
                             <div key={r.round} className="space-y-2">
-                              <p className="text-[11px] text-slate-500 leading-relaxed">{r.description}</p>
-                              <p className="text-[10px] text-violet-400 font-bold">{r.questions.length} questions · sorted by difficulty</p>
-                              {r.questions.map(q => (
-                                <div key={q.id} className={`p-3.5 rounded-xl border space-y-2 ${
-                                  q.difficulty === 'hard' ? 'border-rose-800/50 bg-rose-950/10'
-                                  : q.difficulty === 'medium' ? 'border-amber-800/50 bg-amber-950/10'
-                                  : 'border-emerald-800/50 bg-emerald-950/10'
-                                }`}>
+                              <p className="text-[11px] text-slate-500 leading-relaxed">
+                                {r.description}
+                              </p>
+                              <p className="text-[10px] text-violet-400 font-bold">
+                                {r.questions.length} questions · sorted by difficulty
+                              </p>
+                              {r.questions.map((q) => (
+                                <div
+                                  key={q.id}
+                                  className={`p-3.5 rounded-xl border space-y-2 ${
+                                    q.difficulty === 'hard'
+                                      ? 'border-rose-800/50 bg-rose-950/10'
+                                      : q.difficulty === 'medium'
+                                        ? 'border-amber-800/50 bg-amber-950/10'
+                                        : 'border-emerald-800/50 bg-emerald-950/10'
+                                  }`}
+                                >
                                   <div className="flex items-start justify-between gap-2">
-                                    <p className="text-xs text-slate-200 font-medium leading-relaxed flex-grow">{q.question}</p>
-                                    <span className={`text-[9px] font-black px-1.5 py-0.5 rounded flex-shrink-0 ${
-                                      q.difficulty === 'hard' ? 'bg-rose-900/60 text-rose-400'
-                                      : q.difficulty === 'medium' ? 'bg-amber-900/60 text-amber-400'
-                                      : 'bg-emerald-900/60 text-emerald-400'
-                                    }`}>{q.difficulty.toUpperCase()}</span>
+                                    <p className="text-xs text-slate-200 font-medium leading-relaxed flex-grow">
+                                      {q.question}
+                                    </p>
+                                    <span
+                                      className={`text-[9px] font-black px-1.5 py-0.5 rounded flex-shrink-0 ${
+                                        q.difficulty === 'hard'
+                                          ? 'bg-rose-900/60 text-rose-400'
+                                          : q.difficulty === 'medium'
+                                            ? 'bg-amber-900/60 text-amber-400'
+                                            : 'bg-emerald-900/60 text-emerald-400'
+                                      }`}
+                                    >
+                                      {q.difficulty.toUpperCase()}
+                                    </span>
                                   </div>
                                   <p className="text-[10px] text-slate-400">📍 {q.source}</p>
                                   <div className="flex gap-2">
                                     {q.hint && (
                                       <button
-                                        onClick={() => setHintVisible(p => ({ ...p, [q.id]: !p[q.id] }))}
+                                        onClick={() =>
+                                          setHintVisible((p) => ({ ...p, [q.id]: !p[q.id] }))
+                                        }
                                         className="text-[10px] text-violet-400 hover:text-violet-300 font-bold transition-colors"
-                                      >💡 {hintVisible[q.id] ? 'Hide Hint' : 'Show Hint'}</button>
+                                      >
+                                        💡 {hintVisible[q.id] ? 'Hide Hint' : 'Show Hint'}
+                                      </button>
                                     )}
                                     <button
                                       onClick={() => {
-                                        const roundIdx = interviewPlan.rounds.findIndex(r => r.round === q.round);
-                                        const qIdx = interviewPlan.rounds[roundIdx].questions.findIndex(qq => qq.id === q.id);
+                                        const roundIdx = interviewPlan.rounds.findIndex(
+                                          (r) => r.round === q.round
+                                        );
+                                        const qIdx = interviewPlan.rounds[
+                                          roundIdx
+                                        ].questions.findIndex((qq) => qq.id === q.id);
                                         setMockRound(q.round);
                                         setMockQuestionIdx(qIdx);
                                         setMockMode('answering');
                                         setMockTimerSec(0);
-                                        if (mockTimerRef.current) clearInterval(mockTimerRef.current);
-                                        mockTimerRef.current = setInterval(() => setMockTimerSec(s => s + 1), 1000);
+                                        if (mockTimerRef.current)
+                                          clearInterval(mockTimerRef.current);
+                                        mockTimerRef.current = setInterval(
+                                          () => setMockTimerSec((s) => s + 1),
+                                          1000
+                                        );
                                         setInterviewSubTab('mock');
                                       }}
                                       className="text-[10px] text-slate-400 hover:text-white font-bold transition-colors"
-                                    >🎤 Practice This</button>
+                                    >
+                                      🎤 Practice This
+                                    </button>
                                     <button
                                       onClick={() => toggleSpeakQuestion(q.id, q.question)}
                                       className={`text-[10px] font-bold transition-colors ${
-                                        speakingQId === q.id ? 'text-rose-450 hover:text-rose-400' : 'text-slate-400 hover:text-violet-400'
+                                        speakingQId === q.id
+                                          ? 'text-rose-450 hover:text-rose-400'
+                                          : 'text-slate-400 hover:text-violet-400'
                                       }`}
                                     >
                                       {speakingQId === q.id ? '⏹ Stop' : '🔊 Listen'}
@@ -5322,112 +6432,174 @@ export default function Portfolio() {
                               ))}
                             </div>
                           ))}
-                        </div>
-                      )}
+                      </div>
+                    )}
 
-                      {/* STUDY PLAN */}
-                      {interviewSubTab === 'study-plan' && (
-                        <div className="space-y-3 animate-fadeIn">
-                          <p className="text-[11px] text-slate-500">Based on your resume vs. the job description, here are your personalized study priorities:</p>
-                          {interviewPlan.studyPlan.map((topic, i) => (
-                            <div key={i} className={`p-3.5 rounded-xl border space-y-2 ${
-                              topic.priority === 'high' ? 'border-rose-800/50 bg-rose-950/10'
-                              : topic.priority === 'medium' ? 'border-amber-800/50 bg-amber-950/10'
-                              : 'border-emerald-800/50 bg-emerald-950/10'
-                            }`}>
-                              <div className="flex items-center gap-2">
-                                <span className={`text-[9px] font-black px-1.5 py-0.5 rounded ${
-                                  topic.priority === 'high' ? 'bg-rose-900/60 text-rose-400'
-                                  : topic.priority === 'medium' ? 'bg-amber-900/60 text-amber-400'
-                                  : 'bg-emerald-900/60 text-emerald-400'
-                                }`}>{topic.priority.toUpperCase()} PRIORITY</span>
-                                <p className="text-xs font-bold text-slate-200">{topic.topic}</p>
-                              </div>
-                              <p className="text-[11px] text-slate-400 leading-relaxed">{topic.reason}</p>
-                              <div className="space-y-1 pt-1">
-                                <p className="text-[10px] text-slate-400 font-bold uppercase">Resources</p>
-                                {topic.resources.map((res, ri) => (
-                                  <a key={ri} href={res.url} target="_blank" rel="noopener noreferrer"
-                                    className="flex items-center gap-1.5 text-[11px] text-violet-400 hover:text-violet-300 transition-colors">
-                                    <span>🔗</span>{res.label}
-                                  </a>
-                                ))}
-                              </div>
+                    {/* STUDY PLAN */}
+                    {interviewSubTab === 'study-plan' && (
+                      <div className="space-y-3 animate-fadeIn">
+                        <p className="text-[11px] text-slate-500">
+                          Based on your resume vs. the job description, here are your personalized
+                          study priorities:
+                        </p>
+                        {interviewPlan.studyPlan.map((topic, i) => (
+                          <div
+                            key={i}
+                            className={`p-3.5 rounded-xl border space-y-2 ${
+                              topic.priority === 'high'
+                                ? 'border-rose-800/50 bg-rose-950/10'
+                                : topic.priority === 'medium'
+                                  ? 'border-amber-800/50 bg-amber-950/10'
+                                  : 'border-emerald-800/50 bg-emerald-950/10'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <span
+                                className={`text-[9px] font-black px-1.5 py-0.5 rounded ${
+                                  topic.priority === 'high'
+                                    ? 'bg-rose-900/60 text-rose-400'
+                                    : topic.priority === 'medium'
+                                      ? 'bg-amber-900/60 text-amber-400'
+                                      : 'bg-emerald-900/60 text-emerald-400'
+                                }`}
+                              >
+                                {topic.priority.toUpperCase()} PRIORITY
+                              </span>
+                              <p className="text-xs font-bold text-slate-200">{topic.topic}</p>
                             </div>
-                          ))}
-                        </div>
-                      )}
+                            <p className="text-[11px] text-slate-400 leading-relaxed">
+                              {topic.reason}
+                            </p>
+                            <div className="space-y-1 pt-1">
+                              <p className="text-[10px] text-slate-400 font-bold uppercase">
+                                Resources
+                              </p>
+                              {topic.resources.map((res, ri) => (
+                                <a
+                                  key={ri}
+                                  href={res.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center gap-1.5 text-[11px] text-violet-400 hover:text-violet-300 transition-colors"
+                                >
+                                  <span>🔗</span>
+                                  {res.label}
+                                </a>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
 
-                      {/* MOCK INTERVIEW SIMULATOR */}
-                      {interviewSubTab === 'mock' && (() => {
+                    {/* MOCK INTERVIEW SIMULATOR */}
+                    {interviewSubTab === 'mock' &&
+                      (() => {
                         const allRounds = [...interviewPlan.rounds];
-                        if (geminiData?.reportedQuestions && geminiData.reportedQuestions.length > 0) {
-                          const reportedQuestionsForPractice = geminiData.reportedQuestions.map((q, idx) => {
-                            let mappedRound: InterviewRound = 'technical';
-                            const rLower = (q.round || '').toLowerCase();
-                            if (rLower.includes('behavioral') || rLower.includes('fit') || rLower.includes('hr') || rLower.includes('culture') || rLower.includes('personal')) {
-                              mappedRound = 'behavioral';
-                            } else if (rLower.includes('system design') || rLower.includes('architecture')) {
-                              mappedRound = 'system-design';
-                            } else if (rLower.includes('dsa') || rLower.includes('coding') || rLower.includes('algorithm')) {
-                              mappedRound = 'dsa';
-                            } else if (rLower.includes('product') || rLower.includes('pm')) {
-                              mappedRound = 'product-sense';
-                            } else if (rLower.includes('sql') || rLower.includes('data') || rLower.includes('analytics')) {
-                              mappedRound = 'sql-analytics';
-                            } else if (rLower.includes('manager') || rLower.includes('lead') || rLower.includes('leadership')) {
-                              mappedRound = 'leadership';
-                            }
+                        if (
+                          geminiData?.reportedQuestions &&
+                          geminiData.reportedQuestions.length > 0
+                        ) {
+                          const reportedQuestionsForPractice = geminiData.reportedQuestions.map(
+                            (q, idx) => {
+                              let mappedRound: InterviewRound = 'technical';
+                              const rLower = (q.round || '').toLowerCase();
+                              if (
+                                rLower.includes('behavioral') ||
+                                rLower.includes('fit') ||
+                                rLower.includes('hr') ||
+                                rLower.includes('culture') ||
+                                rLower.includes('personal')
+                              ) {
+                                mappedRound = 'behavioral';
+                              } else if (
+                                rLower.includes('system design') ||
+                                rLower.includes('architecture')
+                              ) {
+                                mappedRound = 'system-design';
+                              } else if (
+                                rLower.includes('dsa') ||
+                                rLower.includes('coding') ||
+                                rLower.includes('algorithm')
+                              ) {
+                                mappedRound = 'dsa';
+                              } else if (rLower.includes('product') || rLower.includes('pm')) {
+                                mappedRound = 'product-sense';
+                              } else if (
+                                rLower.includes('sql') ||
+                                rLower.includes('data') ||
+                                rLower.includes('analytics')
+                              ) {
+                                mappedRound = 'sql-analytics';
+                              } else if (
+                                rLower.includes('manager') ||
+                                rLower.includes('lead') ||
+                                rLower.includes('leadership')
+                              ) {
+                                mappedRound = 'leadership';
+                              }
 
-                            return {
-                              id: `reported-${idx}`,
-                              round: mappedRound,
-                              question: q.question,
-                              hint: `This is a real candidate-reported question from ${interviewPlan.context.company} during the ${q.round || 'interview'}.`,
-                              difficulty: 'medium' as const,
-                              source: `${q.source} (${q.round})`,
-                              tags: ['Real', 'Candidate-Reported']
-                            };
-                          });
+                              return {
+                                id: `reported-${idx}`,
+                                round: mappedRound,
+                                question: q.question,
+                                hint: `This is a real candidate-reported question from ${interviewPlan.context.company} during the ${q.round || 'interview'}.`,
+                                difficulty: 'medium' as const,
+                                source: `${q.source} (${q.round})`,
+                                tags: ['Real', 'Candidate-Reported'],
+                              };
+                            }
+                          );
 
                           allRounds.push({
                             round: 'reported',
                             label: '🌐 Real Company Questions',
                             emoji: '🏢',
                             description: `Real interview questions reported by candidates who interviewed at ${interviewPlan.context.company}.`,
-                            questions: reportedQuestionsForPractice
+                            questions: reportedQuestionsForPractice,
                           });
                         }
 
                         // In interactive mode, override the hr round with company-specific recruiter questions
-                        if (mockInterfaceMode === 'interactive' && recruiterQuestions && recruiterQuestions.length > 0) {
-                          const hrIdx = allRounds.findIndex(r => r.round === 'hr');
+                        if (
+                          mockInterfaceMode === 'interactive' &&
+                          recruiterQuestions &&
+                          recruiterQuestions.length > 0
+                        ) {
+                          const hrIdx = allRounds.findIndex((r) => r.round === 'hr');
                           const hrRound = hrIdx >= 0 ? allRounds[hrIdx] : allRounds[0];
                           const overrideRound = {
                             ...hrRound,
                             label: `🎙️ Recruiter Screen — ${interviewPlan.context.company}`,
                             description: `Company-specific recruiter questions for ${interviewPlan.context.company}`,
-                            questions: recruiterQuestions.map(q => ({
+                            questions: recruiterQuestions.map((q) => ({
                               ...q,
                               round: 'hr' as InterviewRound,
                               tags: q.source ? [q.source] : [],
-                            }))
+                            })),
                           };
                           if (hrIdx >= 0) allRounds[hrIdx] = overrideRound;
                           else allRounds.unshift(overrideRound);
                         }
 
-                        const currentRoundData = allRounds.find(r => r.round === mockRound) || allRounds[0];
+                        const currentRoundData =
+                          allRounds.find((r) => r.round === mockRound) || allRounds[0];
                         const questions = currentRoundData.questions;
                         const currentQ = questions[mockQuestionIdx];
                         const totalQ = questions.length;
                         const currentScore = currentQ ? mockScores[currentQ.id] : null;
-                        const currentAnswer = currentQ ? (mockAnswers[currentQ.id] || '') : '';
-                        const timerMins = Math.floor(mockTimerSec / 60).toString().padStart(2, '0');
+                        const currentAnswer = currentQ ? mockAnswers[currentQ.id] || '' : '';
+                        const timerMins = Math.floor(mockTimerSec / 60)
+                          .toString()
+                          .padStart(2, '0');
                         const timerSecs = (mockTimerSec % 60).toString().padStart(2, '0');
 
-                        const isStarApplicable = currentQ && 
-                          (mockRound === 'behavioral' || mockRound === 'hr' || mockRound === 'leadership' || mockRound === 'customer-scenarios') && 
+                        const isStarApplicable =
+                          currentQ &&
+                          (mockRound === 'behavioral' ||
+                            mockRound === 'hr' ||
+                            mockRound === 'leadership' ||
+                            mockRound === 'customer-scenarios') &&
                           !isNonStarQuestion(currentQ.question);
 
                         const getPlaceholderText = () => {
@@ -5441,7 +6613,11 @@ export default function Portfolio() {
                           if (mockRound === 'sql-analytics') {
                             return 'Write your SQL query or database design schema here... Reference JOINs, indexes, window functions, or analytics metrics.';
                           }
-                          if (['technical', 'infrastructure', 'ml-statistics', 'qa-testing'].includes(mockRound)) {
+                          if (
+                            ['technical', 'infrastructure', 'ml-statistics', 'qa-testing'].includes(
+                              mockRound
+                            )
+                          ) {
                             return 'Describe your technical implementation, tools, and engineering trade-offs here... Be as specific as possible.';
                           }
                           if (currentQ && isNonStarQuestion(currentQ.question)) {
@@ -5462,7 +6638,10 @@ export default function Portfolio() {
                           setStarMode(false);
                           setAudioUrl(null);
                           if (mockTimerRef.current) clearInterval(mockTimerRef.current);
-                          mockTimerRef.current = setInterval(() => setMockTimerSec(s => s + 1), 1000);
+                          mockTimerRef.current = setInterval(
+                            () => setMockTimerSec((s) => s + 1),
+                            1000
+                          );
                         };
 
                         const enableStarMode = async () => {
@@ -5471,11 +6650,24 @@ export default function Portfolio() {
                           const text = currentAnswer.trim();
 
                           // Case 1: Text already has STAR tags — parse them directly (fast path)
-                          if (text.includes('[Situation]') || text.includes('[Task]') || text.includes('[Action]') || text.includes('[Result]')) {
-                            const sitMatch = text.match(/\[Situation\]\s*([\s\S]*?)(?=\[Task\]|\[Action\]|\[Result\]|$)/i);
-                            const tskMatch = text.match(/\[Task\]\s*([\s\S]*?)(?=\[Situation\]|\[Action\]|\[Result\]|$)/i);
-                            const actMatch = text.match(/\[Action\]\s*([\s\S]*?)(?=\[Situation\]|\[Task\]|\[Result\]|$)/i);
-                            const resMatch = text.match(/\[Result\]\s*([\s\S]*?)(?=\[Situation\]|\[Task\]|\[Action\]|$)/i);
+                          if (
+                            text.includes('[Situation]') ||
+                            text.includes('[Task]') ||
+                            text.includes('[Action]') ||
+                            text.includes('[Result]')
+                          ) {
+                            const sitMatch = text.match(
+                              /\[Situation\]\s*([\s\S]*?)(?=\[Task\]|\[Action\]|\[Result\]|$)/i
+                            );
+                            const tskMatch = text.match(
+                              /\[Task\]\s*([\s\S]*?)(?=\[Situation\]|\[Action\]|\[Result\]|$)/i
+                            );
+                            const actMatch = text.match(
+                              /\[Action\]\s*([\s\S]*?)(?=\[Situation\]|\[Task\]|\[Result\]|$)/i
+                            );
+                            const resMatch = text.match(
+                              /\[Result\]\s*([\s\S]*?)(?=\[Situation\]|\[Task\]|\[Action\]|$)/i
+                            );
                             setStarSituation(sitMatch ? sitMatch[1].trim() : '');
                             setStarTask(tskMatch ? tskMatch[1].trim() : '');
                             setStarAction(actMatch ? actMatch[1].trim() : '');
@@ -5510,11 +6702,12 @@ export default function Portfolio() {
                               setStarResult(sections.result);
                               // Update the compiled answer field too
                               const parts: string[] = [];
-                              if (sections.situation) parts.push(`[Situation]\n${sections.situation}`);
+                              if (sections.situation)
+                                parts.push(`[Situation]\n${sections.situation}`);
                               if (sections.task) parts.push(`[Task]\n${sections.task}`);
                               if (sections.action) parts.push(`[Action]\n${sections.action}`);
                               if (sections.result) parts.push(`[Result]\n${sections.result}`);
-                              setMockAnswers(p => ({ ...p, [currentQ.id]: parts.join('\n\n') }));
+                              setMockAnswers((p) => ({ ...p, [currentQ.id]: parts.join('\n\n') }));
                               setStarMode(true);
                             } catch (err) {
                               console.error('STAR split failed:', err);
@@ -5537,7 +6730,12 @@ export default function Portfolio() {
                           }
                         };
 
-                        const updateStarAnswer = (sit: string, tsk: string, act: string, res: string) => {
+                        const updateStarAnswer = (
+                          sit: string,
+                          tsk: string,
+                          act: string,
+                          res: string
+                        ) => {
                           if (!currentQ) return;
                           const parts = [];
                           if (sit.trim()) parts.push(`[Situation]\n${sit.trim()}`);
@@ -5545,18 +6743,22 @@ export default function Portfolio() {
                           if (act.trim()) parts.push(`[Action]\n${act.trim()}`);
                           if (res.trim()) parts.push(`[Result]\n${res.trim()}`);
                           const compiled = parts.join('\n\n');
-                          setMockAnswers(p => ({ ...p, [currentQ.id]: compiled }));
+                          setMockAnswers((p) => ({ ...p, [currentQ.id]: compiled }));
                         };
 
                         const submitAnswer = () => {
                           if (!currentQ || !currentAnswer.trim()) return;
                           if (mockTimerRef.current) clearInterval(mockTimerRef.current);
-                          
+
                           if (mockInterfaceMode === 'interactive') {
                             submitAnswerInteractive(currentQ.id, currentQ.question, currentAnswer);
                           } else {
-                            const scored = scoreAnswer(currentQ.question, currentAnswer, currentQ.round);
-                            setMockScores(p => ({ ...p, [currentQ.id]: scored }));
+                            const scored = scoreAnswer(
+                              currentQ.question,
+                              currentAnswer,
+                              currentQ.round
+                            );
+                            setMockScores((p) => ({ ...p, [currentQ.id]: scored }));
                             setMockMode('reviewed');
                           }
                         };
@@ -5569,7 +6771,7 @@ export default function Portfolio() {
                             if (mockInterfaceMode === 'interactive') {
                               finishInteractiveSession(questions);
                             } else {
-                              const roundIdx = allRounds.findIndex(r => r.round === mockRound);
+                              const roundIdx = allRounds.findIndex((r) => r.round === mockRound);
                               if (roundIdx + 1 < allRounds.length) {
                                 const nextRound = allRounds[roundIdx + 1];
                                 startQuestion(nextRound.round, 0);
@@ -5582,7 +6784,8 @@ export default function Portfolio() {
 
                         // Navigate to a question without submitting — saves draft answer and moves freely
                         const navigateToQuestion = (targetIdx: number) => {
-                          if (targetIdx < 0 || targetIdx >= totalQ || targetIdx === mockQuestionIdx) return;
+                          if (targetIdx < 0 || targetIdx >= totalQ || targetIdx === mockQuestionIdx)
+                            return;
                           // Stop timer & recording
                           if (mockTimerRef.current) clearInterval(mockTimerRef.current);
                           if (isRecording) {
@@ -5607,7 +6810,10 @@ export default function Portfolio() {
                           } else {
                             setMockMode('answering');
                             setMockTimerSec(0);
-                            mockTimerRef.current = setInterval(() => setMockTimerSec(s => s + 1), 1000);
+                            mockTimerRef.current = setInterval(
+                              () => setMockTimerSec((s) => s + 1),
+                              1000
+                            );
                           }
                         };
 
@@ -5621,7 +6827,10 @@ export default function Portfolio() {
                                     <h3 className="text-sm font-bold text-white flex items-center gap-1.5">
                                       <span>📋 Recruiter Interview Report</span>
                                     </h3>
-                                    <p className="text-[10px] text-slate-500 mt-0.5">Summary of your interactive screen with {selectedRecruiter.name}</p>
+                                    <p className="text-[10px] text-slate-500 mt-0.5">
+                                      Summary of your interactive screen with{' '}
+                                      {selectedRecruiter.name}
+                                    </p>
                                   </div>
                                   <button
                                     type="button"
@@ -5640,65 +6849,113 @@ export default function Portfolio() {
                                 <div className="p-4 rounded-xl bg-slate-900/50 border border-slate-800 space-y-3">
                                   <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-3">
-                                      <div className="w-10 h-10 rounded-full bg-violet-955 border border-violet-850 flex items-center justify-center text-xl">{selectedRecruiter.avatar}</div>
+                                      <div className="w-10 h-10 rounded-full bg-violet-955 border border-violet-850 flex items-center justify-center text-xl">
+                                        {selectedRecruiter.avatar}
+                                      </div>
                                       <div>
-                                        <h4 className="text-xs font-bold text-slate-200">{selectedRecruiter.name}</h4>
-                                        <p className="text-[10px] text-slate-500">{selectedRecruiter.title} • {selectedRecruiter.company}</p>
+                                        <h4 className="text-xs font-bold text-slate-200">
+                                          {selectedRecruiter.name}
+                                        </h4>
+                                        <p className="text-[10px] text-slate-500">
+                                          {selectedRecruiter.title} • {selectedRecruiter.company}
+                                        </p>
                                       </div>
                                     </div>
                                     <div className="text-right">
                                       {(() => {
-                                        const scores = questions.map(q => mockScores[q.id]?.score || 0);
-                                        const avgScore = Math.round(scores.reduce((a, b) => a + b, 0) / (scores.length || 1));
-                                        let color = 'text-rose-400 bg-rose-955/20 border-rose-900/50';
+                                        const scores = questions.map(
+                                          (q) => mockScores[q.id]?.score || 0
+                                        );
+                                        const avgScore = Math.round(
+                                          scores.reduce((a, b) => a + b, 0) / (scores.length || 1)
+                                        );
+                                        let color =
+                                          'text-rose-400 bg-rose-955/20 border-rose-900/50';
                                         let verdict = 'Hold / No Hire';
-                                        if (avgScore >= 85) { color = 'text-emerald-400 bg-emerald-955/30 border-emerald-900/50'; verdict = 'Strong Hire'; }
-                                        else if (avgScore >= 70) { color = 'text-emerald-400 bg-emerald-955/20 border-emerald-900/30'; verdict = 'Hire'; }
-                                        else if (avgScore >= 55) { color = 'text-amber-455 bg-amber-955/20 border-amber-900/30'; verdict = 'Leaning Hire'; }
-                                        
+                                        if (avgScore >= 85) {
+                                          color =
+                                            'text-emerald-400 bg-emerald-955/30 border-emerald-900/50';
+                                          verdict = 'Strong Hire';
+                                        } else if (avgScore >= 70) {
+                                          color =
+                                            'text-emerald-400 bg-emerald-955/20 border-emerald-900/30';
+                                          verdict = 'Hire';
+                                        } else if (avgScore >= 55) {
+                                          color =
+                                            'text-amber-455 bg-amber-955/20 border-amber-900/30';
+                                          verdict = 'Leaning Hire';
+                                        }
+
                                         return (
-                                          <div className={`p-1.5 px-3 rounded-lg border text-center ${color}`}>
-                                            <div className="text-[10px] font-bold uppercase tracking-wider">Verdict</div>
-                                            <div className="text-xs font-black">{verdict} ({avgScore}%)</div>
+                                          <div
+                                            className={`p-1.5 px-3 rounded-lg border text-center ${color}`}
+                                          >
+                                            <div className="text-[10px] font-bold uppercase tracking-wider">
+                                              Verdict
+                                            </div>
+                                            <div className="text-xs font-black">
+                                              {verdict} ({avgScore}%)
+                                            </div>
                                           </div>
                                         );
                                       })()}
                                     </div>
                                   </div>
-                                  
+
                                   <div className="p-3 bg-slate-955/60 rounded-xl border border-slate-850 text-[11px] text-slate-350 leading-relaxed">
-                                    <p className="font-bold text-[9px] text-violet-400 uppercase tracking-wider mb-1.5">📢 Recruiter Executive Assessment</p>
+                                    <p className="font-bold text-[9px] text-violet-400 uppercase tracking-wider mb-1.5">
+                                      📢 Recruiter Executive Assessment
+                                    </p>
                                     {isLoadingSummary ? (
                                       <div className="flex items-center gap-2 py-2">
                                         <span className="animate-spin text-sm">⏳</span>
-                                        <span className="text-[10px] text-slate-500 italic">Writing performance summary...</span>
+                                        <span className="text-[10px] text-slate-500 italic">
+                                          Writing performance summary...
+                                        </span>
                                       </div>
                                     ) : (
-                                      <p className="text-justify leading-relaxed whitespace-pre-line">{sessionSummaryFeedback}</p>
+                                      <p className="text-justify leading-relaxed whitespace-pre-line">
+                                        {sessionSummaryFeedback}
+                                      </p>
                                     )}
                                   </div>
                                 </div>
 
                                 {/* Detailed Transcript / Question Logs */}
                                 <div className="space-y-2">
-                                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">📝 Detailed Round Logs</p>
+                                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                    📝 Detailed Round Logs
+                                  </p>
                                   {questions.map((q, idx) => {
                                     const answer = mockAnswers[q.id] || '(No answer provided)';
                                     const score = mockScores[q.id];
                                     const reply = recruiterReplies[q.id];
-                                    
+
                                     return (
-                                      <div key={q.id} className="rounded-xl border border-slate-800 bg-slate-955/25 overflow-hidden">
+                                      <div
+                                        key={q.id}
+                                        className="rounded-xl border border-slate-800 bg-slate-955/25 overflow-hidden"
+                                      >
                                         <div className="p-3 bg-slate-900/40 flex justify-between items-center gap-3">
                                           <div className="flex items-center gap-2 min-w-0">
-                                            <span className="text-[10px] bg-slate-800 border border-slate-700 text-slate-400 font-bold w-5 h-5 rounded-full flex items-center justify-center shrink-0">Q{idx + 1}</span>
-                                            <p className="text-xs font-medium text-slate-200 truncate">{q.question}</p>
+                                            <span className="text-[10px] bg-slate-800 border border-slate-700 text-slate-400 font-bold w-5 h-5 rounded-full flex items-center justify-center shrink-0">
+                                              Q{idx + 1}
+                                            </span>
+                                            <p className="text-xs font-medium text-slate-200 truncate">
+                                              {q.question}
+                                            </p>
                                           </div>
                                           <div className="flex items-center gap-2 shrink-0">
                                             {score ? (
-                                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${score.color.replace('bg-', 'bg-opacity-20 bg-')}`}>{score.grade} ({score.score} pts)</span>
+                                              <span
+                                                className={`text-[10px] font-bold px-2 py-0.5 rounded border ${score.color.replace('bg-', 'bg-opacity-20 bg-')}`}
+                                              >
+                                                {score.grade} ({score.score} pts)
+                                              </span>
                                             ) : (
-                                              <span className="text-[9px] bg-slate-800 text-slate-500 px-1.5 py-0.5 rounded">Unscored</span>
+                                              <span className="text-[9px] bg-slate-800 text-slate-500 px-1.5 py-0.5 rounded">
+                                                Unscored
+                                              </span>
                                             )}
                                           </div>
                                         </div>
@@ -5706,20 +6963,28 @@ export default function Portfolio() {
                                         <div className="p-3.5 space-y-3">
                                           {/* Question row */}
                                           <div className="space-y-1">
-                                            <p className="text-[9px] font-bold text-slate-500 uppercase">Question asked by {selectedRecruiter.name}:</p>
+                                            <p className="text-[9px] font-bold text-slate-500 uppercase">
+                                              Question asked by {selectedRecruiter.name}:
+                                            </p>
                                             <p className="text-xs text-slate-350">{q.question}</p>
                                           </div>
 
                                           {/* Answer row */}
                                           <div className="space-y-1">
-                                            <p className="text-[9px] font-bold text-violet-400 uppercase">Your Response:</p>
-                                            <p className="text-xs text-slate-250 italic">"{answer}"</p>
+                                            <p className="text-[9px] font-bold text-violet-400 uppercase">
+                                              Your Response:
+                                            </p>
+                                            <p className="text-xs text-slate-250 italic">
+                                              "{answer}"
+                                            </p>
                                           </div>
 
                                           {/* Recruiter reply row */}
                                           {reply && (
                                             <div className="space-y-1">
-                                              <p className="text-[9px] font-bold text-blue-400 uppercase">Recruiter Reaction:</p>
+                                              <p className="text-[9px] font-bold text-blue-400 uppercase">
+                                                Recruiter Reaction:
+                                              </p>
                                               <p className="text-xs text-slate-300">"{reply}"</p>
                                             </div>
                                           )}
@@ -5728,17 +6993,29 @@ export default function Portfolio() {
                                           {score && (
                                             <div className="border-t border-slate-850 pt-2.5 grid grid-cols-1 md:grid-cols-2 gap-3 text-[11px]">
                                               <div className="space-y-1 bg-emerald-950/10 border border-emerald-900/20 rounded-lg p-2">
-                                                <span className="text-[9px] text-emerald-450 font-bold uppercase tracking-wider block">✓ Strengths</span>
+                                                <span className="text-[9px] text-emerald-450 font-bold uppercase tracking-wider block">
+                                                  ✓ Strengths
+                                                </span>
                                                 <ul className="list-disc pl-3 text-slate-300 space-y-0.5">
-                                                  {score.strengths.map((str, sIdx) => <li key={sIdx}>{str}</li>)}
-                                                  {score.strengths.length === 0 && <li>Good attempt.</li>}
+                                                  {score.strengths.map((str, sIdx) => (
+                                                    <li key={sIdx}>{str}</li>
+                                                  ))}
+                                                  {score.strengths.length === 0 && (
+                                                    <li>Good attempt.</li>
+                                                  )}
                                                 </ul>
                                               </div>
                                               <div className="space-y-1 bg-amber-955/10 border border-amber-900/20 rounded-lg p-2">
-                                                <span className="text-[9px] text-amber-450 font-bold uppercase tracking-wider block">⚠ Improvements</span>
+                                                <span className="text-[9px] text-amber-450 font-bold uppercase tracking-wider block">
+                                                  ⚠ Improvements
+                                                </span>
                                                 <ul className="list-disc pl-3 text-slate-300 space-y-0.5">
-                                                  {score.improvements.map((imp, iIdx) => <li key={iIdx}>{imp}</li>)}
-                                                  {score.improvements.length === 0 && <li>No critical improvements detected.</li>}
+                                                  {score.improvements.map((imp, iIdx) => (
+                                                    <li key={iIdx}>{imp}</li>
+                                                  ))}
+                                                  {score.improvements.length === 0 && (
+                                                    <li>No critical improvements detected.</li>
+                                                  )}
                                                 </ul>
                                               </div>
                                             </div>
@@ -5750,16 +7027,28 @@ export default function Portfolio() {
                                               <div className="space-y-1.5">
                                                 <button
                                                   type="button"
-                                                  onClick={() => setReportShowIdealMap(p => ({ ...p, [q.id]: !p[q.id] }))}
+                                                  onClick={() =>
+                                                    setReportShowIdealMap((p) => ({
+                                                      ...p,
+                                                      [q.id]: !p[q.id],
+                                                    }))
+                                                  }
                                                   className="flex items-center gap-1.5 text-[9px] font-bold text-violet-400 uppercase tracking-wider hover:text-violet-300 transition-colors"
                                                 >
-                                                  <span className="text-xs">{reportShowIdealMap[q.id] ? '▾' : '▸'}</span>
-                                                  ✨ Suggested Answer {reportShowIdealMap[q.id] ? '(hide)' : '(show)'}
+                                                  <span className="text-xs">
+                                                    {reportShowIdealMap[q.id] ? '▾' : '▸'}
+                                                  </span>
+                                                  ✨ Suggested Answer{' '}
+                                                  {reportShowIdealMap[q.id] ? '(hide)' : '(show)'}
                                                 </button>
                                                 {reportShowIdealMap[q.id] && (
                                                   <div className="p-3 rounded-xl bg-violet-955/15 border border-violet-900/40 space-y-1.5 animate-fadeIn">
-                                                    <p className="text-[9px] font-bold text-violet-400 uppercase tracking-wider">✨ What a strong answer looks like:</p>
-                                                    <p className="text-[11px] text-slate-250 leading-relaxed whitespace-pre-line">{idealAnswers[q.id]}</p>
+                                                    <p className="text-[9px] font-bold text-violet-400 uppercase tracking-wider">
+                                                      ✨ What a strong answer looks like:
+                                                    </p>
+                                                    <p className="text-[11px] text-slate-250 leading-relaxed whitespace-pre-line">
+                                                      {idealAnswers[q.id]}
+                                                    </p>
                                                   </div>
                                                 )}
                                               </div>
@@ -5774,26 +7063,48 @@ export default function Portfolio() {
                                                   <button
                                                     type="button"
                                                     onClick={async () => {
-                                                      setReportIdealLoadingMap(p => ({ ...p, [q.id]: true }));
+                                                      setReportIdealLoadingMap((p) => ({
+                                                        ...p,
+                                                        [q.id]: true,
+                                                      }));
                                                       try {
                                                         const ans = await generateIdealAnswer(
                                                           geminiApiKey,
                                                           aiProvider,
                                                           q.question,
-                                                          interviewPositionName || interviewPlan.context.role,
+                                                          interviewPositionName ||
+                                                            interviewPlan.context.role,
                                                           resumeData,
                                                           starMode,
                                                           // Pass already-answered questions so AI avoids repeating the same facts
                                                           questions
-                                                            .filter(prevQ => prevQ.id !== q.id && mockAnswers[prevQ.id])
-                                                            .map(prevQ => ({ question: prevQ.question, answer: mockAnswers[prevQ.id] }))
+                                                            .filter(
+                                                              (prevQ) =>
+                                                                prevQ.id !== q.id &&
+                                                                mockAnswers[prevQ.id]
+                                                            )
+                                                            .map((prevQ) => ({
+                                                              question: prevQ.question,
+                                                              answer: mockAnswers[prevQ.id],
+                                                            }))
                                                         );
-                                                        setIdealAnswers(p => ({ ...p, [q.id]: ans }));
-                                                        setReportShowIdealMap(p => ({ ...p, [q.id]: true }));
+                                                        setIdealAnswers((p) => ({
+                                                          ...p,
+                                                          [q.id]: ans,
+                                                        }));
+                                                        setReportShowIdealMap((p) => ({
+                                                          ...p,
+                                                          [q.id]: true,
+                                                        }));
                                                       } catch (err: any) {
-                                                        alert(`AI Error: ${err?.message || 'Failed to generate suggested answer'}`);
+                                                        alert(
+                                                          `AI Error: ${err?.message || 'Failed to generate suggested answer'}`
+                                                        );
                                                       } finally {
-                                                        setReportIdealLoadingMap(p => ({ ...p, [q.id]: false }));
+                                                        setReportIdealLoadingMap((p) => ({
+                                                          ...p,
+                                                          [q.id]: false,
+                                                        }));
                                                       }
                                                     }}
                                                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold bg-violet-955/20 border border-violet-900/50 text-violet-400 hover:bg-violet-955/40 hover:text-violet-300 transition-all"
@@ -5803,7 +7114,15 @@ export default function Portfolio() {
                                                 )}
                                               </div>
                                             ) : (
-                                              <p className="text-[9px] text-slate-600 italic">Add a {aiProvider === 'groq' ? 'Groq' : aiProvider === 'openrouter' ? 'OpenRouter' : 'Gemini'} API key to generate suggested answers.</p>
+                                              <p className="text-[9px] text-slate-600 italic">
+                                                Add a{' '}
+                                                {aiProvider === 'groq'
+                                                  ? 'Groq'
+                                                  : aiProvider === 'openrouter'
+                                                    ? 'OpenRouter'
+                                                    : 'Gemini'}{' '}
+                                                API key to generate suggested answers.
+                                              </p>
                                             )}
                                           </div>
                                         </div>
@@ -5829,7 +7148,10 @@ export default function Portfolio() {
                                         type="button"
                                         onClick={() => {
                                           setMockInterfaceMode('interactive');
-                                          const recruiter = getRecruiterPersona(interviewCompanyName || interviewPlan.context.company, interviewPlan.context.companyCulture);
+                                          const recruiter = getRecruiterPersona(
+                                            interviewCompanyName || interviewPlan.context.company,
+                                            interviewPlan.context.companyCulture
+                                          );
                                           setSelectedRecruiter(recruiter);
                                         }}
                                         className={`flex-1 py-1.5 text-center rounded-lg text-[11px] font-bold transition-all ${mockInterfaceMode === 'interactive' ? 'bg-violet-650 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`}
@@ -5841,9 +7163,11 @@ export default function Portfolio() {
                                     {mockInterfaceMode === 'interactive' ? (
                                       <div className="space-y-3">
                                         <div className="space-y-1.5">
-                                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Recruiter Persona</label>
+                                          <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                                            Recruiter Persona
+                                          </label>
                                           <div className="grid grid-cols-5 gap-2">
-                                            {RECRUITER_PERSONAS.map(p => (
+                                            {RECRUITER_PERSONAS.map((p) => (
                                               <button
                                                 key={p.id}
                                                 type="button"
@@ -5852,7 +7176,9 @@ export default function Portfolio() {
                                                 title={`${p.name} - ${p.title} (${p.company})`}
                                               >
                                                 <span className="text-base">{p.avatar}</span>
-                                                <span className="text-[8px] font-bold truncate max-w-full">{p.name.split(' ')[0]}</span>
+                                                <span className="text-[8px] font-bold truncate max-w-full">
+                                                  {p.name.split(' ')[0]}
+                                                </span>
                                               </button>
                                             ))}
                                           </div>
@@ -5860,19 +7186,30 @@ export default function Portfolio() {
 
                                         <div className="p-3 rounded-xl border border-slate-800 bg-slate-900/35 space-y-1.5 animate-fadeIn">
                                           <div className="flex justify-between items-center gap-2">
-                                            <span className="text-[11px] font-bold text-slate-200">{selectedRecruiter.name}</span>
-                                            <span className="text-[8px] px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-400 font-bold uppercase tracking-wider">{selectedRecruiter.company}</span>
+                                            <span className="text-[11px] font-bold text-slate-200">
+                                              {selectedRecruiter.name}
+                                            </span>
+                                            <span className="text-[8px] px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-400 font-bold uppercase tracking-wider">
+                                              {selectedRecruiter.company}
+                                            </span>
                                           </div>
-                                          <p className="text-[9px] text-slate-505 font-semibold">{selectedRecruiter.title} • Voice: {selectedRecruiter.voiceGender === 'female' ? 'Female' : 'Male'}</p>
-                                          <p className="text-[10px] text-slate-400 leading-relaxed text-justify">{selectedRecruiter.description}</p>
-                                          
+                                          <p className="text-[9px] text-slate-505 font-semibold">
+                                            {selectedRecruiter.title} • Voice:{' '}
+                                            {selectedRecruiter.voiceGender === 'female'
+                                              ? 'Female'
+                                              : 'Male'}
+                                          </p>
+                                          <p className="text-[10px] text-slate-400 leading-relaxed text-justify">
+                                            {selectedRecruiter.description}
+                                          </p>
+
                                           {/* Audio settings */}
                                           <div className="pt-2 flex items-center justify-between border-t border-slate-850">
                                             <label className="flex items-center gap-1.5 text-[9px] text-slate-400 cursor-pointer">
                                               <input
                                                 type="checkbox"
                                                 checked={autoPlayVoice}
-                                                onChange={e => setAutoPlayVoice(e.target.checked)}
+                                                onChange={(e) => setAutoPlayVoice(e.target.checked)}
                                                 className="rounded border-slate-700 bg-slate-955 text-violet-650 focus:ring-violet-500 w-3 h-3 cursor-pointer"
                                               />
                                               <span>Speak Questions (TTS)</span>
@@ -5881,7 +7218,9 @@ export default function Portfolio() {
                                               <input
                                                 type="checkbox"
                                                 checked={autoActivateMic}
-                                                onChange={e => setAutoActivateMic(e.target.checked)}
+                                                onChange={(e) =>
+                                                  setAutoActivateMic(e.target.checked)
+                                                }
                                                 className="rounded border-slate-700 bg-slate-955 text-violet-650 focus:ring-violet-500 w-3 h-3 cursor-pointer"
                                               />
                                               <span>Auto-Activate Mic</span>
@@ -5890,29 +7229,42 @@ export default function Portfolio() {
                                         </div>
                                       </div>
                                     ) : (
-                                      <p className="text-[11px] text-slate-400 leading-relaxed">Select a round to begin your self-paced mock interview. You will see scores and improvements immediately after submitting each answer.</p>
+                                      <p className="text-[11px] text-slate-400 leading-relaxed">
+                                        Select a round to begin your self-paced mock interview. You
+                                        will see scores and improvements immediately after
+                                        submitting each answer.
+                                      </p>
                                     )}
 
                                     {/* Rounds listing */}
                                     <div className="space-y-2 pt-1">
-                                      {allRounds.map(r => (
+                                      {allRounds.map((r) => (
                                         <button
                                           key={r.round}
                                           type="button"
                                           onClick={async () => {
                                             // In interactive mode, fetch company-specific recruiter questions for the hr round
-                                            if (mockInterfaceMode === 'interactive' && r.round === 'hr' && !recruiterQuestions) {
+                                            if (
+                                              mockInterfaceMode === 'interactive' &&
+                                              r.round === 'hr' &&
+                                              !recruiterQuestions
+                                            ) {
                                               setIsLoadingRecruiterQuestions(true);
                                               try {
                                                 const qs = await generateRecruiterRoundQuestions(
-                                                  interviewCompanyName || interviewPlan.context.company,
-                                                  interviewPositionName || interviewPlan.context.role,
+                                                  interviewCompanyName ||
+                                                    interviewPlan.context.company,
+                                                  interviewPositionName ||
+                                                    interviewPlan.context.role,
                                                   geminiApiKey,
                                                   aiProvider
                                                 );
                                                 setRecruiterQuestions(qs);
                                               } catch (err) {
-                                                console.warn('Failed to fetch recruiter questions, using generic HR round:', err);
+                                                console.warn(
+                                                  'Failed to fetch recruiter questions, using generic HR round:',
+                                                  err
+                                                );
                                               } finally {
                                                 setIsLoadingRecruiterQuestions(false);
                                               }
@@ -5926,18 +7278,28 @@ export default function Portfolio() {
                                             <div className="flex items-center gap-2">
                                               <span className="text-base">{r.emoji}</span>
                                               <div>
-                                                <p className="text-[11px] font-bold text-slate-200 group-hover:text-violet-300 transition-colors">{r.label}</p>
-                                                <p className="text-[9px] text-slate-500">{r.questions.length} questions
-                                                  {mockInterfaceMode === 'interactive' && r.round === 'hr' && (
-                                                    <span className="ml-1.5 text-violet-400 font-bold">
-                                                      {recruiterQuestions ? `• ${interviewPlan.context.company}-specific` : isLoadingRecruiterQuestions ? '• Loading…' : '• Will load company questions'}
-                                                    </span>
-                                                  )}
+                                                <p className="text-[11px] font-bold text-slate-200 group-hover:text-violet-300 transition-colors">
+                                                  {r.label}
+                                                </p>
+                                                <p className="text-[9px] text-slate-500">
+                                                  {r.questions.length} questions
+                                                  {mockInterfaceMode === 'interactive' &&
+                                                    r.round === 'hr' && (
+                                                      <span className="ml-1.5 text-violet-400 font-bold">
+                                                        {recruiterQuestions
+                                                          ? `• ${interviewPlan.context.company}-specific`
+                                                          : isLoadingRecruiterQuestions
+                                                            ? '• Loading…'
+                                                            : '• Will load company questions'}
+                                                      </span>
+                                                    )}
                                                 </p>
                                               </div>
                                             </div>
                                             <span className="text-[9px] text-violet-400 font-bold opacity-0 group-hover:opacity-100 transition-all transform translate-x-1 group-hover:translate-x-0">
-                                              {isLoadingRecruiterQuestions ? '⏳ Loading…' : 'Start Screen →'}
+                                              {isLoadingRecruiterQuestions
+                                                ? '⏳ Loading…'
+                                                : 'Start Screen →'}
                                             </span>
                                           </div>
                                         </button>
@@ -5947,346 +7309,214 @@ export default function Portfolio() {
                                 )}
 
                                 {/* mockMode === 'answering' or 'reviewed' */}
-                                {(mockMode === 'answering' || mockMode === 'reviewed') && currentQ && (
-                                  <div className="space-y-3.5">
-                                    {/* Progress */}
-                                    <div className="flex items-center justify-between text-[10px]">
-                                      <div className="flex items-center gap-2">
-                                        <span className="text-violet-400 font-bold">{currentRoundData.emoji} {currentRoundData.label}</span>
-                                        <span className="text-slate-400">Question {mockQuestionIdx + 1} of {totalQ}</span>
-                                      </div>
-                                      <div className="flex items-center gap-2">
-                                        <span className="text-slate-500 font-mono font-bold">⏱ {timerMins}:{timerSecs}</span>
-                                        <span className={`text-[8px] font-bold px-1.5 py-0.5 rounded ${
-                                          currentQ.difficulty === 'hard' ? 'bg-rose-900/60 text-rose-400'
-                                          : currentQ.difficulty === 'medium' ? 'bg-amber-900/60 text-amber-400'
-                                          : 'bg-emerald-900/60 text-emerald-400'
-                                        }`}>{currentQ.difficulty.toUpperCase()}</span>
-                                      </div>
-                                    </div>
-
-                                    {/* Question navigation arrows + dots */}
-                                    <div className="flex items-center gap-2">
-                                      <button
-                                        type="button"
-                                        onClick={() => navigateToQuestion(mockQuestionIdx - 1)}
-                                        disabled={mockQuestionIdx <= 0}
-                                        className="w-7 h-7 rounded-lg border border-slate-700 flex items-center justify-center text-[11px] text-slate-400 hover:text-white hover:border-violet-500 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                                        title="Previous question"
-                                      >←</button>
-                                      <div className="flex-1 flex items-center justify-center gap-1 flex-wrap">
-                                        {questions.map((q, i) => (
-                                          <button
-                                            key={q.id}
-                                            type="button"
-                                            onClick={() => navigateToQuestion(i)}
-                                            className={`w-2.5 h-2.5 rounded-full transition-all ${
-                                              i === mockQuestionIdx
-                                                ? 'bg-violet-500 ring-2 ring-violet-400/30 scale-125'
-                                                : mockScores[q.id]
-                                                  ? 'bg-emerald-500/70 hover:bg-emerald-400'
-                                                  : mockAnswers[q.id]?.trim()
-                                                    ? 'bg-amber-500/60 hover:bg-amber-400'
-                                                    : 'bg-slate-700 hover:bg-slate-500'
-                                            }`}
-                                            title={`Q${i + 1}: ${q.question.slice(0, 60)}${q.question.length > 60 ? '...' : ''}${mockScores[q.id] ? ` (${mockScores[q.id].grade})` : mockAnswers[q.id]?.trim() ? ' (draft)' : ''}`}
-                                          />
-                                        ))}
-                                      </div>
-                                      <button
-                                        type="button"
-                                        onClick={() => navigateToQuestion(mockQuestionIdx + 1)}
-                                        disabled={mockQuestionIdx >= totalQ - 1}
-                                        className="w-7 h-7 rounded-lg border border-slate-700 flex items-center justify-center text-[11px] text-slate-400 hover:text-white hover:border-violet-500 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                                        title="Next question"
-                                      >→</button>
-                                    </div>
-
-                                    {/* Progress bar */}
-                                    <div className="w-full h-1 bg-slate-800 rounded-full">
-                                      <div
-                                        className="h-1 bg-violet-500 rounded-full transition-all"
-                                        style={{ width: `${((mockQuestionIdx + 1) / totalQ) * 100}%` }}
-                                      />
-                                    </div>
-
-                                    {/* INTERACTIVE VOICE RECRUITER SCREEN VIEW */}
-                                    {mockInterfaceMode === 'interactive' ? (
-                                      <div className="space-y-3">
-                                        {/* Recruiter Bubble */}
-                                        <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 flex gap-3.5 items-start">
-                                          <div className="w-10 h-10 rounded-full bg-violet-955 border border-violet-850 flex items-center justify-center text-xl shrink-0">
-                                            {selectedRecruiter.avatar}
-                                          </div>
-                                          <div className="flex-1 space-y-1.5 min-w-0">
-                                            <div className="flex items-center justify-between">
-                                              <span className="text-[10px] font-bold text-slate-200">{selectedRecruiter.name} • Recruiter</span>
-                                              
-                                              {/* Recruiter Speaking Bounce animation */}
-                                              {isRecruiterSpeaking && (
-                                                <div className="flex gap-0.5 items-center px-1.5 py-0.5 rounded bg-violet-955/45 border border-violet-900/50">
-                                                  <span className="text-[8px] text-violet-400 font-bold uppercase tracking-wider mr-1 animate-pulse">Speaking</span>
-                                                  <div className="w-0.5 h-1.5 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                                                  <div className="w-0.5 h-2.5 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                                                  <div className="w-0.5 h-2 bg-violet-400 rounded-full animate-bounce" style={{ animationDelay: '0.3s' }}></div>
-                                                </div>
-                                              )}
-                                            </div>
-                                            <p className="text-xs text-slate-300 leading-relaxed text-justify">{currentQ.question}</p>
-                                            
-                                            <div className="flex items-center gap-2 pt-1">
-                                              <button
-                                                type="button"
-                                                onClick={() => speakRecruiterText(currentQ.question)}
-                                                className="text-[9px] text-slate-500 hover:text-slate-350 flex items-center gap-1 font-semibold"
-                                              >
-                                                🔊 Replay Voice
-                                              </button>
-                                              {currentQ.hint && (
-                                                <button
-                                                  type="button"
-                                                  onClick={() => setHintVisible(p => ({ ...p, [currentQ.id]: !p[currentQ.id] }))}
-                                                  className="text-[9px] text-slate-505 hover:text-slate-350 flex items-center gap-1 font-semibold"
-                                                >
-                                                  💡 {hintVisible[currentQ.id] ? 'Hide Hint' : 'View Hint'}
-                                                </button>
-                                              )}
-                                            </div>
-
-                                            {hintVisible[currentQ.id] && currentQ.hint && (
-                                              <p className="text-[10px] text-violet-300 bg-violet-950/20 border border-violet-900/20 rounded-lg p-2 animate-fadeIn">{currentQ.hint}</p>
-                                            )}
-                                          </div>
+                                {(mockMode === 'answering' || mockMode === 'reviewed') &&
+                                  currentQ && (
+                                    <div className="space-y-3.5">
+                                      {/* Progress */}
+                                      <div className="flex items-center justify-between text-[10px]">
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-violet-400 font-bold">
+                                            {currentRoundData.emoji} {currentRoundData.label}
+                                          </span>
+                                          <span className="text-slate-400">
+                                            Question {mockQuestionIdx + 1} of {totalQ}
+                                          </span>
                                         </div>
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-slate-500 font-mono font-bold">
+                                            ⏱ {timerMins}:{timerSecs}
+                                          </span>
+                                          <span
+                                            className={`text-[8px] font-bold px-1.5 py-0.5 rounded ${
+                                              currentQ.difficulty === 'hard'
+                                                ? 'bg-rose-900/60 text-rose-400'
+                                                : currentQ.difficulty === 'medium'
+                                                  ? 'bg-amber-900/60 text-amber-400'
+                                                  : 'bg-emerald-900/60 text-emerald-400'
+                                            }`}
+                                          >
+                                            {currentQ.difficulty.toUpperCase()}
+                                          </span>
+                                        </div>
+                                      </div>
 
-                                        {/* Typing/Thinking indicator */}
-                                        {mockMode === 'reviewed' && isRecruiterTyping && (
-                                          <div className="flex gap-2 items-center p-3 rounded-xl bg-slate-900/30 border border-slate-800/50 w-fit">
-                                            <span className="text-[9px] text-slate-500 font-bold uppercase">{selectedRecruiter.name} is typing</span>
-                                            <div className="flex gap-1 items-center">
-                                              <span className="w-1 h-1 bg-violet-450 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></span>
-                                              <span className="w-1 h-1 bg-violet-450 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></span>
-                                              <span className="w-1 h-1 bg-violet-450 rounded-full animate-bounce" style={{ animationDelay: '0.3s' }}></span>
-                                            </div>
-                                          </div>
-                                        )}
-                                        {/* Recruiter Reply Card */}
-                                        {mockMode === 'reviewed' && !isRecruiterTyping && recruiterReplies[currentQ.id] && (
-                                          <div className="p-3.5 rounded-xl bg-violet-955/15 border border-violet-900/30 flex gap-3 items-start animate-fadeIn">
-                                            <div className="w-8 h-8 rounded-full bg-violet-900 border border-violet-850 flex items-center justify-center text-sm shrink-0">
+                                      {/* Question navigation arrows + dots */}
+                                      <div className="flex items-center gap-2">
+                                        <button
+                                          type="button"
+                                          onClick={() => navigateToQuestion(mockQuestionIdx - 1)}
+                                          disabled={mockQuestionIdx <= 0}
+                                          className="w-7 h-7 rounded-lg border border-slate-700 flex items-center justify-center text-[11px] text-slate-400 hover:text-white hover:border-violet-500 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                                          title="Previous question"
+                                        >
+                                          ←
+                                        </button>
+                                        <div className="flex-1 flex items-center justify-center gap-1 flex-wrap">
+                                          {questions.map((q, i) => (
+                                            <button
+                                              key={q.id}
+                                              type="button"
+                                              onClick={() => navigateToQuestion(i)}
+                                              className={`w-2.5 h-2.5 rounded-full transition-all ${
+                                                i === mockQuestionIdx
+                                                  ? 'bg-violet-500 ring-2 ring-violet-400/30 scale-125'
+                                                  : mockScores[q.id]
+                                                    ? 'bg-emerald-500/70 hover:bg-emerald-400'
+                                                    : mockAnswers[q.id]?.trim()
+                                                      ? 'bg-amber-500/60 hover:bg-amber-400'
+                                                      : 'bg-slate-700 hover:bg-slate-500'
+                                              }`}
+                                              title={`Q${i + 1}: ${q.question.slice(0, 60)}${q.question.length > 60 ? '...' : ''}${mockScores[q.id] ? ` (${mockScores[q.id].grade})` : mockAnswers[q.id]?.trim() ? ' (draft)' : ''}`}
+                                            />
+                                          ))}
+                                        </div>
+                                        <button
+                                          type="button"
+                                          onClick={() => navigateToQuestion(mockQuestionIdx + 1)}
+                                          disabled={mockQuestionIdx >= totalQ - 1}
+                                          className="w-7 h-7 rounded-lg border border-slate-700 flex items-center justify-center text-[11px] text-slate-400 hover:text-white hover:border-violet-500 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                                          title="Next question"
+                                        >
+                                          →
+                                        </button>
+                                      </div>
+
+                                      {/* Progress bar */}
+                                      <div className="w-full h-1 bg-slate-800 rounded-full">
+                                        <div
+                                          className="h-1 bg-violet-500 rounded-full transition-all"
+                                          style={{
+                                            width: `${((mockQuestionIdx + 1) / totalQ) * 100}%`,
+                                          }}
+                                        />
+                                      </div>
+
+                                      {/* INTERACTIVE VOICE RECRUITER SCREEN VIEW */}
+                                      {mockInterfaceMode === 'interactive' ? (
+                                        <div className="space-y-3">
+                                          {/* Recruiter Bubble */}
+                                          <div className="p-4 rounded-xl bg-slate-900/60 border border-slate-800 flex gap-3.5 items-start">
+                                            <div className="w-10 h-10 rounded-full bg-violet-955 border border-violet-850 flex items-center justify-center text-xl shrink-0">
                                               {selectedRecruiter.avatar}
                                             </div>
-                                            <div className="flex-1 min-w-0">
-                                              <span className="text-[9px] font-black text-violet-400 uppercase tracking-wider block mb-0.5">{selectedRecruiter.name} (Reaction)</span>
-                                              <p className="text-[11px] text-slate-300 leading-relaxed text-justify">"{recruiterReplies[currentQ.id]}"</p>
+                                            <div className="flex-1 space-y-1.5 min-w-0">
+                                              <div className="flex items-center justify-between">
+                                                <span className="text-[10px] font-bold text-slate-200">
+                                                  {selectedRecruiter.name} • Recruiter
+                                                </span>
+
+                                                {/* Recruiter Speaking Bounce animation */}
+                                                {isRecruiterSpeaking && (
+                                                  <div className="flex gap-0.5 items-center px-1.5 py-0.5 rounded bg-violet-955/45 border border-violet-900/50">
+                                                    <span className="text-[8px] text-violet-400 font-bold uppercase tracking-wider mr-1 animate-pulse">
+                                                      Speaking
+                                                    </span>
+                                                    <div
+                                                      className="w-0.5 h-1.5 bg-violet-400 rounded-full animate-bounce"
+                                                      style={{ animationDelay: '0.1s' }}
+                                                    ></div>
+                                                    <div
+                                                      className="w-0.5 h-2.5 bg-violet-400 rounded-full animate-bounce"
+                                                      style={{ animationDelay: '0.2s' }}
+                                                    ></div>
+                                                    <div
+                                                      className="w-0.5 h-2 bg-violet-400 rounded-full animate-bounce"
+                                                      style={{ animationDelay: '0.3s' }}
+                                                    ></div>
+                                                  </div>
+                                                )}
+                                              </div>
+                                              <p className="text-xs text-slate-300 leading-relaxed text-justify">
+                                                {currentQ.question}
+                                              </p>
+
+                                              <div className="flex items-center gap-2 pt-1">
+                                                <button
+                                                  type="button"
+                                                  onClick={() =>
+                                                    speakRecruiterText(currentQ.question)
+                                                  }
+                                                  className="text-[9px] text-slate-500 hover:text-slate-350 flex items-center gap-1 font-semibold"
+                                                >
+                                                  🔊 Replay Voice
+                                                </button>
+                                                {currentQ.hint && (
+                                                  <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                      setHintVisible((p) => ({
+                                                        ...p,
+                                                        [currentQ.id]: !p[currentQ.id],
+                                                      }))
+                                                    }
+                                                    className="text-[9px] text-slate-505 hover:text-slate-350 flex items-center gap-1 font-semibold"
+                                                  >
+                                                    💡{' '}
+                                                    {hintVisible[currentQ.id]
+                                                      ? 'Hide Hint'
+                                                      : 'View Hint'}
+                                                  </button>
+                                                )}
+                                              </div>
+
+                                              {hintVisible[currentQ.id] && currentQ.hint && (
+                                                <p className="text-[10px] text-violet-300 bg-violet-950/20 border border-violet-900/20 rounded-lg p-2 animate-fadeIn">
+                                                  {currentQ.hint}
+                                                </p>
+                                              )}
                                             </div>
                                           </div>
-                                        )}
 
-                                        {/* Candidate Answer Section */}
-                                        <div className="space-y-3 pt-1">
-                                          {mockMode === 'answering' && geminiApiKey.trim() && (
-                                            <div className="flex justify-between items-center bg-slate-900/50 p-2 rounded-xl border border-slate-850">
-                                              <div className="text-[10px] text-slate-400 pl-2">
-                                                <span className="font-bold text-violet-400">🧠 AI Answer Assistant</span>: Need help? Reveal custom ideal answer.
+                                          {/* Typing/Thinking indicator */}
+                                          {mockMode === 'reviewed' && isRecruiterTyping && (
+                                            <div className="flex gap-2 items-center p-3 rounded-xl bg-slate-900/30 border border-slate-800/50 w-fit">
+                                              <span className="text-[9px] text-slate-500 font-bold uppercase">
+                                                {selectedRecruiter.name} is typing
+                                              </span>
+                                              <div className="flex gap-1 items-center">
+                                                <span
+                                                  className="w-1 h-1 bg-violet-450 rounded-full animate-bounce"
+                                                  style={{ animationDelay: '0.1s' }}
+                                                ></span>
+                                                <span
+                                                  className="w-1 h-1 bg-violet-450 rounded-full animate-bounce"
+                                                  style={{ animationDelay: '0.2s' }}
+                                                ></span>
+                                                <span
+                                                  className="w-1 h-1 bg-violet-450 rounded-full animate-bounce"
+                                                  style={{ animationDelay: '0.3s' }}
+                                                ></span>
                                               </div>
-                                              <button
-                                                type="button"
-                                                onClick={async () => {
-                                                  if (loadingIdealAnswer) return;
-                                                  const cached = idealAnswers[currentQ.id];
-                                                  if (cached) {
-                                                    setShowIdealAnswer(p => ({ ...p, [currentQ.id]: !p[currentQ.id] }));
-                                                    return;
-                                                  }
-                                                  setLoadingIdealAnswer(true);
-                                                  try {
-                                                    const ans = await generateIdealAnswer(
-                                                      geminiApiKey,
-                                                      aiProvider,
-                                                      currentQ.question,
-                                                      interviewPositionName || interviewPlan.context.role,
-                                                      resumeData,
-                                                      false,
-                                                      questions
-                                                        .filter(prevQ => prevQ.id !== currentQ.id && mockAnswers[prevQ.id])
-                                                        .map(prevQ => ({ question: prevQ.question, answer: mockAnswers[prevQ.id] }))
-                                                    );
-                                                    setIdealAnswers(p => ({ ...p, [currentQ.id]: ans }));
-                                                    setShowIdealAnswer(p => ({ ...p, [currentQ.id]: true }));
-                                                  } catch (err: any) {
-                                                    alert(`AI Error: ${err?.message || 'Failed to generate answer'}`);
-                                                  } finally {
-                                                    setLoadingIdealAnswer(false);
-                                                  }
-                                                }}
-                                                className="px-2.5 py-0.5 rounded bg-violet-650 hover:bg-violet-600 text-[9px] font-bold text-white transition-colors"
-                                              >
-                                                {loadingIdealAnswer ? '⏳ Generating...' : showIdealAnswer[currentQ.id] ? 'Hide Ideal' : 'Reveal Ideal'}
-                                              </button>
                                             </div>
                                           )}
-
-                                          {mockMode === 'answering' && showIdealAnswer[currentQ.id] && idealAnswers[currentQ.id] && (
-                                            <div className="p-3 rounded-xl bg-violet-500/5 border border-violet-500/20 text-[11px] text-violet-200 leading-relaxed animate-fadeIn">
-                                              {idealAnswers[currentQ.id]}
-                                            </div>
-                                          )}
-
-                                          <div className="flex items-center justify-between">
-                                            <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Candidate Draft Answer</span>
-                                            
-                                            {isRecording && (
-                                              <div className="flex gap-1.5 items-center px-2 py-0.5 rounded bg-red-955/30 border border-red-900/40">
-                                                <span className="text-[8px] text-red-400 font-bold uppercase tracking-wider animate-pulse">Mic Listening</span>
-                                                <div className="flex gap-0.5 items-center">
-                                                  <div className="w-0.5 h-1.5 bg-red-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                                                  <div className="w-0.5 h-3 bg-red-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
-                                                  <div className="w-0.5 h-2.5 bg-red-400 rounded-full animate-bounce" style={{ animationDelay: '0.3s' }}></div>
+                                          {/* Recruiter Reply Card */}
+                                          {mockMode === 'reviewed' &&
+                                            !isRecruiterTyping &&
+                                            recruiterReplies[currentQ.id] && (
+                                              <div className="p-3.5 rounded-xl bg-violet-955/15 border border-violet-900/30 flex gap-3 items-start animate-fadeIn">
+                                                <div className="w-8 h-8 rounded-full bg-violet-900 border border-violet-850 flex items-center justify-center text-sm shrink-0">
+                                                  {selectedRecruiter.avatar}
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                  <span className="text-[9px] font-black text-violet-400 uppercase tracking-wider block mb-0.5">
+                                                    {selectedRecruiter.name} (Reaction)
+                                                  </span>
+                                                  <p className="text-[11px] text-slate-300 leading-relaxed text-justify">
+                                                    "{recruiterReplies[currentQ.id]}"
+                                                  </p>
                                                 </div>
                                               </div>
                                             )}
-                                          </div>
 
-                                          {mockMode === 'answering' ? (
-                                            <div className="relative">
-                                              <textarea
-                                                value={currentAnswer}
-                                                onChange={e => setMockAnswers(p => ({ ...p, [currentQ.id]: e.target.value }))}
-                                                placeholder={isRecording ? '🎙️ Recruiter voice ended, microphone activated... Speak your answer now!' : 'Start speaking your answer, or type it directly here...'}
-                                                className={`w-full h-32 bg-slate-950/50 border rounded-xl p-3 pr-12 text-xs text-slate-300 placeholder-slate-600 resize-none focus:outline-none transition-all ${isRecording ? 'border-red-500/80 bg-red-950/10' : 'border-slate-700 focus:border-violet-500'}`}
-                                              />
-                                              
-                                              {/* Microphone Trigger */}
-                                              <button
-                                                type="button"
-                                                onClick={() => {
-                                                  if (isRecording) {
-                                                    stopListening();
-                                                  } else {
-                                                    startListening(currentQ.id);
-                                                  }
-                                                }}
-                                                className={`absolute right-3 top-3 w-8 h-8 rounded-full flex items-center justify-center transition-all ${
-                                                  isRecording
-                                                    ? 'bg-red-650 text-white animate-pulse shadow-md shadow-red-555/40'
-                                                    : 'bg-slate-800 text-slate-400 hover:bg-violet-655 hover:text-white'
-                                                }`}
-                                                title={isRecording ? 'Stop recording' : 'Start voice recording'}
-                                              >
-                                                {isRecording ? '⏹' : '🎙️'}
-                                              </button>
-                                            </div>
-                                          ) : (
-                                            <div className="p-3 rounded-xl border border-slate-800 bg-slate-955/40 text-xs text-slate-350 italic text-justify leading-relaxed">
-                                              "{currentAnswer || '(No answer recorded)'}"
-                                            </div>
-                                          )}
-
-                                          {/* Audio playback */}
-                                          {audioUrl && !isRecording && mockMode === 'answering' && (
-                                            <div className="flex items-center gap-2 p-1.5 px-2.5 rounded-xl bg-slate-900/60 border border-slate-850">
-                                              <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider shrink-0">🔊 Playback Draft:</span>
-                                              <audio src={audioUrl} controls className="h-6 flex-1" style={{ maxHeight: '24px' }} />
-                                            </div>
-                                          )}
-
-                                          {/* Action Buttons */}
-                                          {mockMode === 'answering' ? (
-                                            <div className="flex gap-2">
-                                              <button
-                                                type="button"
-                                                onClick={() => {
-                                                  if (mockTimerRef.current) clearInterval(mockTimerRef.current);
-                                                  stopListening();
-                                                  setMockMode('idle');
-                                                }}
-                                                className="flex-1 py-2 rounded-xl border border-slate-800 text-xs font-bold text-slate-500 hover:text-slate-300 hover:border-slate-650 transition-all"
-                                              >
-                                                ✕ Cancel
-                                              </button>
-                                              <button
-                                                type="button"
-                                                onClick={() => {
-                                                  stopListening();
-                                                  submitAnswer();
-                                                }}
-                                                disabled={!currentAnswer.trim()}
-                                                className="flex-1 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-40 text-white text-xs font-bold transition-all"
-                                              >
-                                                ✓ Submit Response
-                                              </button>
-                                            </div>
-                                          ) : (
-                                            <div className="flex gap-2 pt-1 animate-fadeIn">
-                                              <button
-                                                type="button"
-                                                onClick={() => {
-                                                  setMockMode('answering');
-                                                  setMockTimerSec(0);
-                                                  if (mockTimerRef.current) clearInterval(mockTimerRef.current);
-                                                  mockTimerRef.current = setInterval(() => setMockTimerSec(s => s + 1), 1000);
-                                                }}
-                                                className="flex-1 py-2 rounded-xl border border-slate-800 text-xs font-bold text-slate-500 hover:text-slate-300 hover:border-slate-750 transition-all"
-                                              >
-                                                🔄 Redo Answer
-                                              </button>
-                                              
-                                              {mockQuestionIdx + 1 < totalQ ? (
-                                                <button
-                                                  type="button"
-                                                  onClick={nextQuestion}
-                                                  className="flex-grow-[2] py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-xs font-bold text-white transition-all"
-                                                >
-                                                  Next Question →
-                                                </button>
-                                              ) : (
-                                                <button
-                                                  type="button"
-                                                  onClick={() => finishInteractiveSession(questions)}
-                                                  className="flex-grow-[2] py-2 rounded-xl bg-emerald-650 hover:bg-emerald-600 text-xs font-bold text-white transition-all shadow-md shadow-emerald-950/20"
-                                                >
-                                                  ✓ Complete Screen & Report
-                                                </button>
-                                              )}
-                                            </div>
-                                          )}
-                                        </div>
-                                      </div>
-                                    ) : (
-                                      /* STANDARD SELF-PACED VIEW */
-                                      <>
-                                        {/* Question card */}
-                                        <div className="p-4 rounded-xl bg-slate-955/50 border border-slate-700 relative group flex justify-between items-start gap-4">
-                                          <div className="flex-grow">
-                                            <p className="text-xs font-medium text-slate-200 leading-relaxed">{currentQ.question}</p>
-                                            <p className="text-[10px] text-slate-500 mt-2">📍 {currentQ.source}</p>
-                                          </div>
-                                          <button
-                                            type="button"
-                                            onClick={() => toggleSpeakQuestion(currentQ.id, currentQ.question)}
-                                            className={`p-2 rounded-xl border flex items-center justify-center transition-all ${
-                                              speakingQId === currentQ.id
-                                                ? 'bg-rose-955/40 border-rose-900/50 text-rose-455 animate-pulse shadow-md shadow-rose-950/40'
-                                                : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-violet-450 hover:border-violet-500/50 hover:bg-violet-955/10'
-                                            }`}
-                                            title={speakingQId === currentQ.id ? 'Stop reading' : 'Read question aloud'}
-                                          >
-                                            {speakingQId === currentQ.id ? (
-                                              <span className="text-xs font-bold">⏹ Stop</span>
-                                            ) : (
-                                              <span className="text-xs font-bold flex items-center gap-1">🔊 Listen</span>
-                                            )}
-                                          </button>
-                                        </div>
-
-                                        {/* Answer Mode Selector & Guided Builder */}
-                                        {mockMode === 'answering' && (
-                                          <>
-                                            {geminiApiKey.trim() && (
-                                              <div className="mb-3 flex justify-between items-center bg-slate-900/50 p-2.5 rounded-xl border border-slate-800">
-                                                <div className="text-[10px] text-slate-400">
-                                                  <span className="font-bold text-violet-400">🧠 AI Answer Assistant</span>: Get an ideal answer customized to your profile.
+                                          {/* Candidate Answer Section */}
+                                          <div className="space-y-3 pt-1">
+                                            {mockMode === 'answering' && geminiApiKey.trim() && (
+                                              <div className="flex justify-between items-center bg-slate-900/50 p-2 rounded-xl border border-slate-850">
+                                                <div className="text-[10px] text-slate-400 pl-2">
+                                                  <span className="font-bold text-violet-400">
+                                                    🧠 AI Answer Assistant
+                                                  </span>
+                                                  : Need help? Reveal custom ideal answer.
                                                 </div>
                                                 <button
                                                   type="button"
@@ -6294,7 +7524,10 @@ export default function Portfolio() {
                                                     if (loadingIdealAnswer) return;
                                                     const cached = idealAnswers[currentQ.id];
                                                     if (cached) {
-                                                      setShowIdealAnswer(p => ({ ...p, [currentQ.id]: !p[currentQ.id] }));
+                                                      setShowIdealAnswer((p) => ({
+                                                        ...p,
+                                                        [currentQ.id]: !p[currentQ.id],
+                                                      }));
                                                       return;
                                                     }
                                                     setLoadingIdealAnswer(true);
@@ -6303,613 +7536,1203 @@ export default function Portfolio() {
                                                         geminiApiKey,
                                                         aiProvider,
                                                         currentQ.question,
-                                                        interviewPositionName || interviewPlan.context.role,
+                                                        interviewPositionName ||
+                                                          interviewPlan.context.role,
                                                         resumeData,
-                                                        starMode,
-                                                        // Pass already-answered questions so AI avoids repeating the same facts
+                                                        false,
                                                         questions
-                                                          .filter(prevQ => prevQ.id !== currentQ.id && mockAnswers[prevQ.id])
-                                                          .map(prevQ => ({ question: prevQ.question, answer: mockAnswers[prevQ.id] }))
+                                                          .filter(
+                                                            (prevQ) =>
+                                                              prevQ.id !== currentQ.id &&
+                                                              mockAnswers[prevQ.id]
+                                                          )
+                                                          .map((prevQ) => ({
+                                                            question: prevQ.question,
+                                                            answer: mockAnswers[prevQ.id],
+                                                          }))
                                                       );
-                                                      setIdealAnswers(p => ({ ...p, [currentQ.id]: ans }));
-                                                      setShowIdealAnswer(p => ({ ...p, [currentQ.id]: true }));
+                                                      setIdealAnswers((p) => ({
+                                                        ...p,
+                                                        [currentQ.id]: ans,
+                                                      }));
+                                                      setShowIdealAnswer((p) => ({
+                                                        ...p,
+                                                        [currentQ.id]: true,
+                                                      }));
                                                     } catch (err: any) {
-                                                      alert(`AI Error: ${err?.message || 'Failed to generate answer'}`);
+                                                      alert(
+                                                        `AI Error: ${err?.message || 'Failed to generate answer'}`
+                                                      );
                                                     } finally {
                                                       setLoadingIdealAnswer(false);
                                                     }
                                                   }}
-                                                  className="px-2.5 py-1 rounded bg-violet-650 hover:bg-violet-600 text-[9px] font-bold text-white transition-colors"
+                                                  className="px-2.5 py-0.5 rounded bg-violet-650 hover:bg-violet-600 text-[9px] font-bold text-white transition-colors"
                                                 >
-                                                  {loadingIdealAnswer ? '⏳ Generating...' : showIdealAnswer[currentQ.id] ? '🙈 Hide Ideal' : '💡 Reveal Ideal'}
+                                                  {loadingIdealAnswer
+                                                    ? '⏳ Generating...'
+                                                    : showIdealAnswer[currentQ.id]
+                                                      ? 'Hide Ideal'
+                                                      : 'Reveal Ideal'}
                                                 </button>
                                               </div>
                                             )}
 
-                                            {showIdealAnswer[currentQ.id] && idealAnswers[currentQ.id] && (
-                                              <div className="mb-3 p-3 rounded-xl bg-violet-500/5 border border-violet-500/20 space-y-2 animate-fadeIn">
-                                                <div className="flex justify-between items-center">
-                                                  <span className="text-[9px] font-bold text-violet-400 uppercase">💡 Model Ideal Answer (Customized to Profile)</span>
-                                                  <button
-                                                    type="button"
-                                                    onClick={async () => {
-                                                      const text = idealAnswers[currentQ.id];
-                                                      if (!text) return;
-
-                                                      // If NOT in STAR mode, just copy to freeform textarea
-                                                      if (!starMode) {
-                                                        setMockAnswers(p => ({ ...p, [currentQ.id]: text }));
-                                                        return;
-                                                      }
-
-                                                      // If text already has STAR tags, parse them directly
-                                                      if (text.includes('[Situation]') || text.includes('[Task]') || text.includes('[Action]') || text.includes('[Result]')) {
-                                                        const sitMatch = text.match(/\[Situation\]\s*([\s\S]*?)(?=\[Task\]|\[Action\]|\[Result\]|$)/i);
-                                                        const tskMatch = text.match(/\[Task\]\s*([\s\S]*?)(?=\[Situation\]|\[Action\]|\[Result\]|$)/i);
-                                                        const actMatch = text.match(/\[Action\]\s*([\s\S]*?)(?=\[Situation\]|\[Task\]|\[Result\]|$)/i);
-                                                        const resMatch = text.match(/\[Result\]\s*([\s\S]*?)(?=\[Situation\]|\[Task\]|\[Action\]|$)/i);
-                                                        const sit = sitMatch ? sitMatch[1].trim() : '';
-                                                        const tsk = tskMatch ? tskMatch[1].trim() : '';
-                                                        const act = actMatch ? actMatch[1].trim() : '';
-                                                        const res = resMatch ? resMatch[1].trim() : '';
-                                                        setStarSituation(sit);
-                                                        setStarTask(tsk);
-                                                        setStarAction(act);
-                                                        setStarResult(res);
-                                                        updateStarAnswer(sit, tsk, act, res);
-                                                        return;
-                                                      }
-
-                                                      // Narrative text without tags — use AI to split into STAR
-                                                      if (geminiApiKey.trim()) {
-                                                        setIsStarSplitting(true);
-                                                        try {
-                                                          const sections = await splitIntoStarSections(
-                                                            geminiApiKey,
-                                                            aiProvider,
-                                                            text,
-                                                            currentQ.question
-                                                          );
-                                                          setStarSituation(sections.situation);
-                                                          setStarTask(sections.task);
-                                                          setStarAction(sections.action);
-                                                          setStarResult(sections.result);
-                                                          updateStarAnswer(sections.situation, sections.task, sections.action, sections.result);
-                                                        } catch {
-                                                          // Fallback: just put it all in freeform
-                                                          setStarMode(false);
-                                                          setMockAnswers(p => ({ ...p, [currentQ.id]: text }));
-                                                        } finally {
-                                                          setIsStarSplitting(false);
-                                                        }
-                                                      } else {
-                                                        // No API key: copy to freeform
-                                                        setStarMode(false);
-                                                        setMockAnswers(p => ({ ...p, [currentQ.id]: text }));
-                                                      }
-                                                    }}
-                                                    className="text-[9px] text-violet-400 hover:text-violet-300 font-bold transition-colors"
-                                                  >📋 Copy to Draft</button>
+                                            {mockMode === 'answering' &&
+                                              showIdealAnswer[currentQ.id] &&
+                                              idealAnswers[currentQ.id] && (
+                                                <div className="p-3 rounded-xl bg-violet-500/5 border border-violet-500/20 text-[11px] text-violet-200 leading-relaxed animate-fadeIn">
+                                                  {idealAnswers[currentQ.id]}
                                                 </div>
-                                                <p className="text-[11px] text-slate-350 leading-relaxed text-justify">{idealAnswers[currentQ.id]}</p>
-                                              </div>
-                                            )}
+                                              )}
 
-                                            <div className="flex items-center justify-between mb-2">
-                                              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Your Answer</label>
-                                              {/* Only show the Guided STAR toggle for questions that actually benefit from STAR structure */}
-                                              {isStarApplicable && (
-                                                <div className="flex p-0.5 bg-slate-950/60 rounded-lg border border-slate-800">
-                                                  <button
-                                                    type="button"
-                                                    onClick={() => setStarMode(false)}
-                                                    className={`px-2.5 py-1 rounded-md text-[9px] font-bold transition-all ${!starMode ? 'bg-violet-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}
-                                                  >
-                                                    ✍️ Freeform
-                                                  </button>
-                                                  <button
-                                                    type="button"
-                                                    onClick={enableStarMode}
-                                                    disabled={isStarSplitting}
-                                                    className={`px-2.5 py-1 rounded-md text-[9px] font-bold transition-all ${starMode ? 'bg-violet-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-355'} ${isStarSplitting ? 'opacity-70 cursor-wait' : ''}`}
-                                                  >
-                                                    {isStarSplitting ? '⏳ Analyzing...' : '🧠 Guided STAR'}
-                                                  </button>
+                                            <div className="flex items-center justify-between">
+                                              <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">
+                                                Candidate Draft Answer
+                                              </span>
+
+                                              {isRecording && (
+                                                <div className="flex gap-1.5 items-center px-2 py-0.5 rounded bg-red-955/30 border border-red-900/40">
+                                                  <span className="text-[8px] text-red-400 font-bold uppercase tracking-wider animate-pulse">
+                                                    Mic Listening
+                                                  </span>
+                                                  <div className="flex gap-0.5 items-center">
+                                                    <div
+                                                      className="w-0.5 h-1.5 bg-red-400 rounded-full animate-bounce"
+                                                      style={{ animationDelay: '0.1s' }}
+                                                    ></div>
+                                                    <div
+                                                      className="w-0.5 h-3 bg-red-400 rounded-full animate-bounce"
+                                                      style={{ animationDelay: '0.2s' }}
+                                                    ></div>
+                                                    <div
+                                                      className="w-0.5 h-2.5 bg-red-400 rounded-full animate-bounce"
+                                                      style={{ animationDelay: '0.3s' }}
+                                                    ></div>
+                                                  </div>
                                                 </div>
                                               )}
                                             </div>
 
-                                            {starMode && isStarApplicable ? (
-                                              <div className="space-y-3.5">
-                                                {/* Situation */}
-                                                <div className="space-y-1">
-                                                  <div className="flex justify-between items-center">
-                                                    <label className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1">
-                                                      <span className="w-4 h-4 rounded-full bg-blue-550/20 text-blue-400 border border-blue-500/20 flex items-center justify-center text-[9px] font-black">S</span>
-                                                      Situation
-                                                    </label>
-                                                    <span className="text-[9px] text-slate-500">Set the scene & context</span>
-                                                  </div>
-                                                  <textarea
-                                                    value={starSituation}
-                                                    onChange={e => {
-                                                      setStarSituation(e.target.value);
-                                                      updateStarAnswer(e.target.value, starTask, starAction, starResult);
-                                                    }}
-                                                    placeholder="What was the situation? (e.g., 'Our service latency spiked by 40% during a traffic spike...')"
-                                                    className="w-full h-16 bg-slate-950/40 border border-slate-700 focus:border-violet-500 rounded-xl p-2.5 text-xs text-slate-300 placeholder-slate-650 resize-none focus:outline-none transition-colors"
-                                                  />
-                                                </div>
-
-                                                {/* Task */}
-                                                <div className="space-y-1">
-                                                  <div className="flex justify-between items-center">
-                                                    <label className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1">
-                                                      <span className="w-4 h-4 rounded-full bg-amber-550/20 text-amber-400 border border-amber-500/20 flex items-center justify-center text-[9px] font-black">T</span>
-                                                      Task
-                                                    </label>
-                                                    <span className="text-[9px] text-slate-500">What was your goal or challenge?</span>
-                                                  </div>
-                                                  <textarea
-                                                    value={starTask}
-                                                    onChange={e => {
-                                                      setStarTask(e.target.value);
-                                                      updateStarAnswer(starSituation, e.target.value, starAction, starResult);
-                                                    }}
-                                                    placeholder="What did you need to do? (e.g., 'I was tasked with identifying the bottleneck and reducing latency under 200ms...')"
-                                                    className="w-full h-16 bg-slate-955/40 border border-slate-700 focus:border-violet-500 rounded-xl p-2.5 text-xs text-slate-300 placeholder-slate-650 resize-none focus:outline-none transition-colors"
-                                                  />
-                                                </div>
-
-                                                {/* Action */}
-                                                <div className="space-y-1">
-                                                  <div className="flex justify-between items-center">
-                                                    <label className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1">
-                                                      <span className="w-4 h-4 rounded-full bg-emerald-555/20 text-emerald-400 border border-emerald-500/20 flex items-center justify-center text-[9px] font-black">A</span>
-                                                      Action
-                                                    </label>
-                                                    <span className="text-[9px] font-semibold text-violet-400">Most important (60% of answer)</span>
-                                                  </div>
-                                                  <textarea
-                                                    value={starAction}
-                                                    onChange={e => {
-                                                      setStarAction(e.target.value);
-                                                      updateStarAnswer(starSituation, starTask, e.target.value, starResult);
-                                                    }}
-                                                    placeholder="What actions did you take? (e.g., 'I profiled the DB queries, added Redis caching, and optimized the indexes...')"
-                                                    className="w-full h-20 bg-slate-955/40 border border-slate-700 focus:border-violet-500 rounded-xl p-2.5 text-xs text-slate-300 placeholder-slate-650 resize-none focus:outline-none transition-colors"
-                                                  />
-                                                </div>
-
-                                                {/* Result */}
-                                                <div className="space-y-1">
-                                                  <div className="flex justify-between items-center">
-                                                    <label className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1">
-                                                      <span className="w-4 h-4 rounded-full bg-rose-555/20 text-rose-455 border border-rose-500/20 flex items-center justify-center text-[9px] font-black">R</span>
-                                                      Result
-                                                    </label>
-                                                    <span className="text-[9px] text-slate-500">Outcome with quantitative metrics</span>
-                                                  </div>
-                                                  <textarea
-                                                    value={starResult}
-                                                    onChange={e => {
-                                                      setStarResult(e.target.value);
-                                                      updateStarAnswer(starSituation, starTask, starAction, e.target.value);
-                                                    }}
-                                                    placeholder="What was the result? (e.g., 'We reduced p99 latency by 65% and saved $4k in server costs...')"
-                                                    className="w-full h-16 bg-slate-955/40 border border-slate-700 focus:border-violet-500 rounded-xl p-2.5 text-xs text-slate-300 placeholder-slate-650 resize-none focus:outline-none transition-colors"
-                                                  />
-                                                </div>
-                                              </div>
-                                            ) : (
+                                            {mockMode === 'answering' ? (
                                               <div className="relative">
                                                 <textarea
                                                   value={currentAnswer}
-                                                  onChange={e => setMockAnswers(p => ({ ...p, [currentQ.id]: e.target.value }))}
-                                                  placeholder={getPlaceholderText()}
-                                                  className={`w-full h-36 bg-slate-950/50 border rounded-xl p-3 pr-12 text-xs text-slate-300 placeholder-slate-600 resize-none focus:outline-none transition-colors ${isRecording ? 'border-red-500 bg-red-950/10' : 'border-slate-700 focus:border-violet-500'}`}
+                                                  onChange={(e) =>
+                                                    setMockAnswers((p) => ({
+                                                      ...p,
+                                                      [currentQ.id]: e.target.value,
+                                                    }))
+                                                  }
+                                                  placeholder={
+                                                    isRecording
+                                                      ? '🎙️ Recruiter voice ended, microphone activated... Speak your answer now!'
+                                                      : 'Start speaking your answer, or type it directly here...'
+                                                  }
+                                                  className={`w-full h-32 bg-slate-950/50 border rounded-xl p-3 pr-12 text-xs text-slate-300 placeholder-slate-600 resize-none focus:outline-none transition-all ${isRecording ? 'border-red-500/80 bg-red-950/10' : 'border-slate-700 focus:border-violet-500'}`}
                                                 />
-                                                {/* Microphone button */}
+
+                                                {/* Microphone Trigger */}
+                                                <button
+                                                  type="button"
+                                                  onClick={() => {
+                                                    if (isRecording) {
+                                                      stopListening();
+                                                    } else {
+                                                      startListening(currentQ.id);
+                                                    }
+                                                  }}
+                                                  className={`absolute right-3 top-3 w-8 h-8 rounded-full flex items-center justify-center transition-all ${
+                                                    isRecording
+                                                      ? 'bg-red-650 text-white animate-pulse shadow-md shadow-red-555/40'
+                                                      : 'bg-slate-800 text-slate-400 hover:bg-violet-655 hover:text-white'
+                                                  }`}
+                                                  title={
+                                                    isRecording
+                                                      ? 'Stop recording'
+                                                      : 'Start voice recording'
+                                                  }
+                                                >
+                                                  {isRecording ? '⏹' : '🎙️'}
+                                                </button>
+                                              </div>
+                                            ) : (
+                                              <div className="p-3 rounded-xl border border-slate-800 bg-slate-955/40 text-xs text-slate-350 italic text-justify leading-relaxed">
+                                                "{currentAnswer || '(No answer recorded)'}"
+                                              </div>
+                                            )}
+
+                                            {/* Audio playback */}
+                                            {audioUrl &&
+                                              !isRecording &&
+                                              mockMode === 'answering' && (
+                                                <div className="flex items-center gap-2 p-1.5 px-2.5 rounded-xl bg-slate-900/60 border border-slate-850">
+                                                  <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider shrink-0">
+                                                    🔊 Playback Draft:
+                                                  </span>
+                                                  <audio
+                                                    src={audioUrl}
+                                                    controls
+                                                    className="h-6 flex-1"
+                                                    style={{ maxHeight: '24px' }}
+                                                  />
+                                                </div>
+                                              )}
+
+                                            {/* Action Buttons */}
+                                            {mockMode === 'answering' ? (
+                                              <div className="flex gap-2">
+                                                <button
+                                                  type="button"
+                                                  onClick={() => {
+                                                    if (mockTimerRef.current)
+                                                      clearInterval(mockTimerRef.current);
+                                                    stopListening();
+                                                    setMockMode('idle');
+                                                  }}
+                                                  className="flex-1 py-2 rounded-xl border border-slate-800 text-xs font-bold text-slate-500 hover:text-slate-300 hover:border-slate-650 transition-all"
+                                                >
+                                                  ✕ Cancel
+                                                </button>
+                                                <button
+                                                  type="button"
+                                                  onClick={() => {
+                                                    stopListening();
+                                                    submitAnswer();
+                                                  }}
+                                                  disabled={!currentAnswer.trim()}
+                                                  className="flex-1 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-40 text-white text-xs font-bold transition-all"
+                                                >
+                                                  ✓ Submit Response
+                                                </button>
+                                              </div>
+                                            ) : (
+                                              <div className="flex gap-2 pt-1 animate-fadeIn">
+                                                <button
+                                                  type="button"
+                                                  onClick={() => {
+                                                    setMockMode('answering');
+                                                    setMockTimerSec(0);
+                                                    if (mockTimerRef.current)
+                                                      clearInterval(mockTimerRef.current);
+                                                    mockTimerRef.current = setInterval(
+                                                      () => setMockTimerSec((s) => s + 1),
+                                                      1000
+                                                    );
+                                                  }}
+                                                  className="flex-1 py-2 rounded-xl border border-slate-800 text-xs font-bold text-slate-500 hover:text-slate-300 hover:border-slate-750 transition-all"
+                                                >
+                                                  🔄 Redo Answer
+                                                </button>
+
+                                                {mockQuestionIdx + 1 < totalQ ? (
+                                                  <button
+                                                    type="button"
+                                                    onClick={nextQuestion}
+                                                    className="flex-grow-[2] py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-xs font-bold text-white transition-all"
+                                                  >
+                                                    Next Question →
+                                                  </button>
+                                                ) : (
+                                                  <button
+                                                    type="button"
+                                                    onClick={() =>
+                                                      finishInteractiveSession(questions)
+                                                    }
+                                                    className="flex-grow-[2] py-2 rounded-xl bg-emerald-650 hover:bg-emerald-600 text-xs font-bold text-white transition-all shadow-md shadow-emerald-950/20"
+                                                  >
+                                                    ✓ Complete Screen & Report
+                                                  </button>
+                                                )}
+                                              </div>
+                                            )}
+                                          </div>
+                                        </div>
+                                      ) : (
+                                        /* STANDARD SELF-PACED VIEW */
+                                        <>
+                                          {/* Question card */}
+                                          <div className="p-4 rounded-xl bg-slate-955/50 border border-slate-700 relative group flex justify-between items-start gap-4">
+                                            <div className="flex-grow">
+                                              <p className="text-xs font-medium text-slate-200 leading-relaxed">
+                                                {currentQ.question}
+                                              </p>
+                                              <p className="text-[10px] text-slate-500 mt-2">
+                                                📍 {currentQ.source}
+                                              </p>
+                                            </div>
+                                            <button
+                                              type="button"
+                                              onClick={() =>
+                                                toggleSpeakQuestion(currentQ.id, currentQ.question)
+                                              }
+                                              className={`p-2 rounded-xl border flex items-center justify-center transition-all ${
+                                                speakingQId === currentQ.id
+                                                  ? 'bg-rose-955/40 border-rose-900/50 text-rose-455 animate-pulse shadow-md shadow-rose-950/40'
+                                                  : 'bg-slate-900 border-slate-800 text-slate-400 hover:text-violet-450 hover:border-violet-500/50 hover:bg-violet-955/10'
+                                              }`}
+                                              title={
+                                                speakingQId === currentQ.id
+                                                  ? 'Stop reading'
+                                                  : 'Read question aloud'
+                                              }
+                                            >
+                                              {speakingQId === currentQ.id ? (
+                                                <span className="text-xs font-bold">⏹ Stop</span>
+                                              ) : (
+                                                <span className="text-xs font-bold flex items-center gap-1">
+                                                  🔊 Listen
+                                                </span>
+                                              )}
+                                            </button>
+                                          </div>
+
+                                          {/* Answer Mode Selector & Guided Builder */}
+                                          {mockMode === 'answering' && (
+                                            <>
+                                              {geminiApiKey.trim() && (
+                                                <div className="mb-3 flex justify-between items-center bg-slate-900/50 p-2.5 rounded-xl border border-slate-800">
+                                                  <div className="text-[10px] text-slate-400">
+                                                    <span className="font-bold text-violet-400">
+                                                      🧠 AI Answer Assistant
+                                                    </span>
+                                                    : Get an ideal answer customized to your
+                                                    profile.
+                                                  </div>
+                                                  <button
+                                                    type="button"
+                                                    onClick={async () => {
+                                                      if (loadingIdealAnswer) return;
+                                                      const cached = idealAnswers[currentQ.id];
+                                                      if (cached) {
+                                                        setShowIdealAnswer((p) => ({
+                                                          ...p,
+                                                          [currentQ.id]: !p[currentQ.id],
+                                                        }));
+                                                        return;
+                                                      }
+                                                      setLoadingIdealAnswer(true);
+                                                      try {
+                                                        const ans = await generateIdealAnswer(
+                                                          geminiApiKey,
+                                                          aiProvider,
+                                                          currentQ.question,
+                                                          interviewPositionName ||
+                                                            interviewPlan.context.role,
+                                                          resumeData,
+                                                          starMode,
+                                                          // Pass already-answered questions so AI avoids repeating the same facts
+                                                          questions
+                                                            .filter(
+                                                              (prevQ) =>
+                                                                prevQ.id !== currentQ.id &&
+                                                                mockAnswers[prevQ.id]
+                                                            )
+                                                            .map((prevQ) => ({
+                                                              question: prevQ.question,
+                                                              answer: mockAnswers[prevQ.id],
+                                                            }))
+                                                        );
+                                                        setIdealAnswers((p) => ({
+                                                          ...p,
+                                                          [currentQ.id]: ans,
+                                                        }));
+                                                        setShowIdealAnswer((p) => ({
+                                                          ...p,
+                                                          [currentQ.id]: true,
+                                                        }));
+                                                      } catch (err: any) {
+                                                        alert(
+                                                          `AI Error: ${err?.message || 'Failed to generate answer'}`
+                                                        );
+                                                      } finally {
+                                                        setLoadingIdealAnswer(false);
+                                                      }
+                                                    }}
+                                                    className="px-2.5 py-1 rounded bg-violet-650 hover:bg-violet-600 text-[9px] font-bold text-white transition-colors"
+                                                  >
+                                                    {loadingIdealAnswer
+                                                      ? '⏳ Generating...'
+                                                      : showIdealAnswer[currentQ.id]
+                                                        ? '🙈 Hide Ideal'
+                                                        : '💡 Reveal Ideal'}
+                                                  </button>
+                                                </div>
+                                              )}
+
+                                              {showIdealAnswer[currentQ.id] &&
+                                                idealAnswers[currentQ.id] && (
+                                                  <div className="mb-3 p-3 rounded-xl bg-violet-500/5 border border-violet-500/20 space-y-2 animate-fadeIn">
+                                                    <div className="flex justify-between items-center">
+                                                      <span className="text-[9px] font-bold text-violet-400 uppercase">
+                                                        💡 Model Ideal Answer (Customized to
+                                                        Profile)
+                                                      </span>
+                                                      <button
+                                                        type="button"
+                                                        onClick={async () => {
+                                                          const text = idealAnswers[currentQ.id];
+                                                          if (!text) return;
+
+                                                          // If NOT in STAR mode, just copy to freeform textarea
+                                                          if (!starMode) {
+                                                            setMockAnswers((p) => ({
+                                                              ...p,
+                                                              [currentQ.id]: text,
+                                                            }));
+                                                            return;
+                                                          }
+
+                                                          // If text already has STAR tags, parse them directly
+                                                          if (
+                                                            text.includes('[Situation]') ||
+                                                            text.includes('[Task]') ||
+                                                            text.includes('[Action]') ||
+                                                            text.includes('[Result]')
+                                                          ) {
+                                                            const sitMatch = text.match(
+                                                              /\[Situation\]\s*([\s\S]*?)(?=\[Task\]|\[Action\]|\[Result\]|$)/i
+                                                            );
+                                                            const tskMatch = text.match(
+                                                              /\[Task\]\s*([\s\S]*?)(?=\[Situation\]|\[Action\]|\[Result\]|$)/i
+                                                            );
+                                                            const actMatch = text.match(
+                                                              /\[Action\]\s*([\s\S]*?)(?=\[Situation\]|\[Task\]|\[Result\]|$)/i
+                                                            );
+                                                            const resMatch = text.match(
+                                                              /\[Result\]\s*([\s\S]*?)(?=\[Situation\]|\[Task\]|\[Action\]|$)/i
+                                                            );
+                                                            const sit = sitMatch
+                                                              ? sitMatch[1].trim()
+                                                              : '';
+                                                            const tsk = tskMatch
+                                                              ? tskMatch[1].trim()
+                                                              : '';
+                                                            const act = actMatch
+                                                              ? actMatch[1].trim()
+                                                              : '';
+                                                            const res = resMatch
+                                                              ? resMatch[1].trim()
+                                                              : '';
+                                                            setStarSituation(sit);
+                                                            setStarTask(tsk);
+                                                            setStarAction(act);
+                                                            setStarResult(res);
+                                                            updateStarAnswer(sit, tsk, act, res);
+                                                            return;
+                                                          }
+
+                                                          // Narrative text without tags — use AI to split into STAR
+                                                          if (geminiApiKey.trim()) {
+                                                            setIsStarSplitting(true);
+                                                            try {
+                                                              const sections =
+                                                                await splitIntoStarSections(
+                                                                  geminiApiKey,
+                                                                  aiProvider,
+                                                                  text,
+                                                                  currentQ.question
+                                                                );
+                                                              setStarSituation(sections.situation);
+                                                              setStarTask(sections.task);
+                                                              setStarAction(sections.action);
+                                                              setStarResult(sections.result);
+                                                              updateStarAnswer(
+                                                                sections.situation,
+                                                                sections.task,
+                                                                sections.action,
+                                                                sections.result
+                                                              );
+                                                            } catch {
+                                                              // Fallback: just put it all in freeform
+                                                              setStarMode(false);
+                                                              setMockAnswers((p) => ({
+                                                                ...p,
+                                                                [currentQ.id]: text,
+                                                              }));
+                                                            } finally {
+                                                              setIsStarSplitting(false);
+                                                            }
+                                                          } else {
+                                                            // No API key: copy to freeform
+                                                            setStarMode(false);
+                                                            setMockAnswers((p) => ({
+                                                              ...p,
+                                                              [currentQ.id]: text,
+                                                            }));
+                                                          }
+                                                        }}
+                                                        className="text-[9px] text-violet-400 hover:text-violet-300 font-bold transition-colors"
+                                                      >
+                                                        📋 Copy to Draft
+                                                      </button>
+                                                    </div>
+                                                    <p className="text-[11px] text-slate-350 leading-relaxed text-justify">
+                                                      {idealAnswers[currentQ.id]}
+                                                    </p>
+                                                  </div>
+                                                )}
+
+                                              <div className="flex items-center justify-between mb-2">
+                                                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                                  Your Answer
+                                                </label>
+                                                {/* Only show the Guided STAR toggle for questions that actually benefit from STAR structure */}
+                                                {isStarApplicable && (
+                                                  <div className="flex p-0.5 bg-slate-950/60 rounded-lg border border-slate-800">
+                                                    <button
+                                                      type="button"
+                                                      onClick={() => setStarMode(false)}
+                                                      className={`px-2.5 py-1 rounded-md text-[9px] font-bold transition-all ${!starMode ? 'bg-violet-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-300'}`}
+                                                    >
+                                                      ✍️ Freeform
+                                                    </button>
+                                                    <button
+                                                      type="button"
+                                                      onClick={enableStarMode}
+                                                      disabled={isStarSplitting}
+                                                      className={`px-2.5 py-1 rounded-md text-[9px] font-bold transition-all ${starMode ? 'bg-violet-600 text-white shadow-sm' : 'text-slate-500 hover:text-slate-355'} ${isStarSplitting ? 'opacity-70 cursor-wait' : ''}`}
+                                                    >
+                                                      {isStarSplitting
+                                                        ? '⏳ Analyzing...'
+                                                        : '🧠 Guided STAR'}
+                                                    </button>
+                                                  </div>
+                                                )}
+                                              </div>
+
+                                              {starMode && isStarApplicable ? (
+                                                <div className="space-y-3.5">
+                                                  {/* Situation */}
+                                                  <div className="space-y-1">
+                                                    <div className="flex justify-between items-center">
+                                                      <label className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1">
+                                                        <span className="w-4 h-4 rounded-full bg-blue-550/20 text-blue-400 border border-blue-500/20 flex items-center justify-center text-[9px] font-black">
+                                                          S
+                                                        </span>
+                                                        Situation
+                                                      </label>
+                                                      <span className="text-[9px] text-slate-500">
+                                                        Set the scene & context
+                                                      </span>
+                                                    </div>
+                                                    <textarea
+                                                      value={starSituation}
+                                                      onChange={(e) => {
+                                                        setStarSituation(e.target.value);
+                                                        updateStarAnswer(
+                                                          e.target.value,
+                                                          starTask,
+                                                          starAction,
+                                                          starResult
+                                                        );
+                                                      }}
+                                                      placeholder="What was the situation? (e.g., 'Our service latency spiked by 40% during a traffic spike...')"
+                                                      className="w-full h-16 bg-slate-950/40 border border-slate-700 focus:border-violet-500 rounded-xl p-2.5 text-xs text-slate-300 placeholder-slate-650 resize-none focus:outline-none transition-colors"
+                                                    />
+                                                  </div>
+
+                                                  {/* Task */}
+                                                  <div className="space-y-1">
+                                                    <div className="flex justify-between items-center">
+                                                      <label className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1">
+                                                        <span className="w-4 h-4 rounded-full bg-amber-550/20 text-amber-400 border border-amber-500/20 flex items-center justify-center text-[9px] font-black">
+                                                          T
+                                                        </span>
+                                                        Task
+                                                      </label>
+                                                      <span className="text-[9px] text-slate-500">
+                                                        What was your goal or challenge?
+                                                      </span>
+                                                    </div>
+                                                    <textarea
+                                                      value={starTask}
+                                                      onChange={(e) => {
+                                                        setStarTask(e.target.value);
+                                                        updateStarAnswer(
+                                                          starSituation,
+                                                          e.target.value,
+                                                          starAction,
+                                                          starResult
+                                                        );
+                                                      }}
+                                                      placeholder="What did you need to do? (e.g., 'I was tasked with identifying the bottleneck and reducing latency under 200ms...')"
+                                                      className="w-full h-16 bg-slate-955/40 border border-slate-700 focus:border-violet-500 rounded-xl p-2.5 text-xs text-slate-300 placeholder-slate-650 resize-none focus:outline-none transition-colors"
+                                                    />
+                                                  </div>
+
+                                                  {/* Action */}
+                                                  <div className="space-y-1">
+                                                    <div className="flex justify-between items-center">
+                                                      <label className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1">
+                                                        <span className="w-4 h-4 rounded-full bg-emerald-555/20 text-emerald-400 border border-emerald-500/20 flex items-center justify-center text-[9px] font-black">
+                                                          A
+                                                        </span>
+                                                        Action
+                                                      </label>
+                                                      <span className="text-[9px] font-semibold text-violet-400">
+                                                        Most important (60% of answer)
+                                                      </span>
+                                                    </div>
+                                                    <textarea
+                                                      value={starAction}
+                                                      onChange={(e) => {
+                                                        setStarAction(e.target.value);
+                                                        updateStarAnswer(
+                                                          starSituation,
+                                                          starTask,
+                                                          e.target.value,
+                                                          starResult
+                                                        );
+                                                      }}
+                                                      placeholder="What actions did you take? (e.g., 'I profiled the DB queries, added Redis caching, and optimized the indexes...')"
+                                                      className="w-full h-20 bg-slate-955/40 border border-slate-700 focus:border-violet-500 rounded-xl p-2.5 text-xs text-slate-300 placeholder-slate-650 resize-none focus:outline-none transition-colors"
+                                                    />
+                                                  </div>
+
+                                                  {/* Result */}
+                                                  <div className="space-y-1">
+                                                    <div className="flex justify-between items-center">
+                                                      <label className="text-[10px] font-bold text-slate-400 uppercase flex items-center gap-1">
+                                                        <span className="w-4 h-4 rounded-full bg-rose-555/20 text-rose-455 border border-rose-500/20 flex items-center justify-center text-[9px] font-black">
+                                                          R
+                                                        </span>
+                                                        Result
+                                                      </label>
+                                                      <span className="text-[9px] text-slate-500">
+                                                        Outcome with quantitative metrics
+                                                      </span>
+                                                    </div>
+                                                    <textarea
+                                                      value={starResult}
+                                                      onChange={(e) => {
+                                                        setStarResult(e.target.value);
+                                                        updateStarAnswer(
+                                                          starSituation,
+                                                          starTask,
+                                                          starAction,
+                                                          e.target.value
+                                                        );
+                                                      }}
+                                                      placeholder="What was the result? (e.g., 'We reduced p99 latency by 65% and saved $4k in server costs...')"
+                                                      className="w-full h-16 bg-slate-955/40 border border-slate-700 focus:border-violet-500 rounded-xl p-2.5 text-xs text-slate-300 placeholder-slate-650 resize-none focus:outline-none transition-colors"
+                                                    />
+                                                  </div>
+                                                </div>
+                                              ) : (
+                                                <div className="relative">
+                                                  <textarea
+                                                    value={currentAnswer}
+                                                    onChange={(e) =>
+                                                      setMockAnswers((p) => ({
+                                                        ...p,
+                                                        [currentQ.id]: e.target.value,
+                                                      }))
+                                                    }
+                                                    placeholder={getPlaceholderText()}
+                                                    className={`w-full h-36 bg-slate-950/50 border rounded-xl p-3 pr-12 text-xs text-slate-300 placeholder-slate-600 resize-none focus:outline-none transition-colors ${isRecording ? 'border-red-500 bg-red-950/10' : 'border-slate-700 focus:border-violet-500'}`}
+                                                  />
+                                                  {/* Microphone button */}
+                                                  <button
+                                                    onClick={() => {
+                                                      if (isRecording) {
+                                                        recognitionRef.current?.stop();
+                                                        mediaRecorderRef.current?.stop();
+                                                        setIsRecording(false);
+                                                      } else {
+                                                        const SpeechRecognition =
+                                                          (window as any).SpeechRecognition ||
+                                                          (window as any).webkitSpeechRecognition;
+                                                        if (!SpeechRecognition) {
+                                                          alert(
+                                                            'Speech recognition is not supported in this browser. Please use Chrome or Edge.'
+                                                          );
+                                                          return;
+                                                        }
+                                                        const recognition = new SpeechRecognition();
+                                                        recognition.continuous = true;
+                                                        recognition.interimResults = true;
+                                                        recognition.lang = 'en-US';
+                                                        let finalTranscript = currentAnswer;
+                                                        recognition.onresult = (event: any) => {
+                                                          let interim = '';
+                                                          for (
+                                                            let i = event.resultIndex;
+                                                            i < event.results.length;
+                                                            i++
+                                                          ) {
+                                                            if (event.results[i].isFinal) {
+                                                              finalTranscript +=
+                                                                (finalTranscript ? ' ' : '') +
+                                                                event.results[i][0].transcript;
+                                                            } else {
+                                                              interim +=
+                                                                event.results[i][0].transcript;
+                                                            }
+                                                          }
+                                                          setMockAnswers((p) => ({
+                                                            ...p,
+                                                            [currentQ.id]:
+                                                              finalTranscript +
+                                                              (interim ? ' ' + interim : ''),
+                                                          }));
+                                                        };
+                                                        recognition.onerror = () =>
+                                                          setIsRecording(false);
+                                                        recognition.onend = () =>
+                                                          setIsRecording(false);
+                                                        recognition.start();
+                                                        recognitionRef.current = recognition;
+
+                                                        navigator.mediaDevices
+                                                          .getUserMedia({ audio: true })
+                                                          .then((stream) => {
+                                                            const recorder = new MediaRecorder(
+                                                              stream
+                                                            );
+                                                            audioChunksRef.current = [];
+                                                            recorder.ondataavailable = (e) =>
+                                                              audioChunksRef.current.push(e.data);
+                                                            recorder.onstop = () => {
+                                                              const blob = new Blob(
+                                                                audioChunksRef.current,
+                                                                { type: 'audio/webm' }
+                                                              );
+                                                              setAudioUrl(
+                                                                URL.createObjectURL(blob)
+                                                              );
+                                                              stream
+                                                                .getTracks()
+                                                                .forEach((t) => t.stop());
+                                                            };
+                                                            recorder.start();
+                                                            mediaRecorderRef.current = recorder;
+                                                          })
+                                                          .catch(() => {});
+
+                                                        setIsRecording(true);
+                                                        setAudioUrl(null);
+                                                      }
+                                                    }}
+                                                    className={`absolute right-2 top-2 w-8 h-8 rounded-full flex items-center justify-center transition-all ${
+                                                      isRecording
+                                                        ? 'bg-red-500 text-white animate-pulse shadow-lg shadow-red-500/40'
+                                                        : 'bg-slate-800 text-slate-400 hover:bg-violet-600 hover:text-white'
+                                                    }`}
+                                                    title={
+                                                      isRecording
+                                                        ? 'Stop recording'
+                                                        : 'Start voice recording'
+                                                    }
+                                                  >
+                                                    {isRecording ? '⏹' : '🎙️'}
+                                                  </button>
+                                                </div>
+                                              )}
+
+                                              {/* Recording status */}
+                                              {isRecording && (
+                                                <div className="flex items-center gap-2 text-[10px] text-red-400 font-semibold">
+                                                  <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                                                  Recording... speak your answer clearly. Click ⏹
+                                                  when done.
+                                                </div>
+                                              )}
+
+                                              {/* Audio playback */}
+                                              {audioUrl && !isRecording && (
+                                                <div className="flex items-center gap-2 p-2 rounded-lg bg-slate-900/60 border border-slate-800">
+                                                  <span className="text-[10px] text-slate-400 font-bold">
+                                                    🔊 Playback:
+                                                  </span>
+                                                  <audio
+                                                    src={audioUrl}
+                                                    controls
+                                                    className="h-8 flex-1"
+                                                    style={{ maxHeight: '32px' }}
+                                                  />
+                                                </div>
+                                              )}
+
+                                              <div className="flex gap-2">
+                                                <button
+                                                  onClick={() => {
+                                                    if (mockTimerRef.current)
+                                                      clearInterval(mockTimerRef.current);
+                                                    if (isRecording) {
+                                                      recognitionRef.current?.stop();
+                                                      mediaRecorderRef.current?.stop();
+                                                      setIsRecording(false);
+                                                    }
+                                                    setMockMode('idle');
+                                                  }}
+                                                  className="flex-1 py-2 rounded-xl border border-slate-700 text-xs font-bold text-slate-400 hover:text-slate-200 hover:border-slate-500 transition-all"
+                                                >
+                                                  ✕ Skip
+                                                </button>
                                                 <button
                                                   onClick={() => {
                                                     if (isRecording) {
                                                       recognitionRef.current?.stop();
                                                       mediaRecorderRef.current?.stop();
                                                       setIsRecording(false);
-                                                    } else {
-                                                      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-                                                      if (!SpeechRecognition) {
-                                                        alert('Speech recognition is not supported in this browser. Please use Chrome or Edge.');
-                                                        return;
-                                                      }
-                                                      const recognition = new SpeechRecognition();
-                                                      recognition.continuous = true;
-                                                      recognition.interimResults = true;
-                                                      recognition.lang = 'en-US';
-                                                      let finalTranscript = currentAnswer;
-                                                      recognition.onresult = (event: any) => {
-                                                        let interim = '';
-                                                        for (let i = event.resultIndex; i < event.results.length; i++) {
-                                                          if (event.results[i].isFinal) {
-                                                            finalTranscript += (finalTranscript ? ' ' : '') + event.results[i][0].transcript;
-                                                          } else {
-                                                            interim += event.results[i][0].transcript;
-                                                          }
-                                                        }
-                                                        setMockAnswers(p => ({ ...p, [currentQ.id]: finalTranscript + (interim ? ' ' + interim : '') }));
-                                                      };
-                                                      recognition.onerror = () => setIsRecording(false);
-                                                      recognition.onend = () => setIsRecording(false);
-                                                      recognition.start();
-                                                      recognitionRef.current = recognition;
-
-                                                      navigator.mediaDevices.getUserMedia({ audio: true })
-                                                        .then(stream => {
-                                                          const recorder = new MediaRecorder(stream);
-                                                          audioChunksRef.current = [];
-                                                          recorder.ondataavailable = (e) => audioChunksRef.current.push(e.data);
-                                                          recorder.onstop = () => {
-                                                            const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-                                                            setAudioUrl(URL.createObjectURL(blob));
-                                                            stream.getTracks().forEach(t => t.stop());
-                                                          };
-                                                          recorder.start();
-                                                          mediaRecorderRef.current = recorder;
-                                                        })
-                                                        .catch(() => {});
-
-                                                      setIsRecording(true);
-                                                      setAudioUrl(null);
                                                     }
+                                                    submitAnswer();
                                                   }}
-                                                  className={`absolute right-2 top-2 w-8 h-8 rounded-full flex items-center justify-center transition-all ${
-                                                    isRecording
-                                                      ? 'bg-red-500 text-white animate-pulse shadow-lg shadow-red-500/40'
-                                                      : 'bg-slate-800 text-slate-400 hover:bg-violet-600 hover:text-white'
-                                                  }`}
-                                                  title={isRecording ? 'Stop recording' : 'Start voice recording'}
+                                                  disabled={!currentAnswer.trim()}
+                                                  className="flex-1 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-40 text-white text-xs font-bold transition-all"
                                                 >
-                                                  {isRecording ? '⏹' : '🎙️'}
+                                                  ✓ Submit Answer
                                                 </button>
                                               </div>
-                                            )}
+                                            </>
+                                          )}
 
-                                            {/* Recording status */}
-                                            {isRecording && (
-                                              <div className="flex items-center gap-2 text-[10px] text-red-400 font-semibold">
-                                                <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-                                                Recording... speak your answer clearly. Click ⏹ when done.
-                                              </div>
-                                            )}
-
-                                            {/* Audio playback */}
-                                            {audioUrl && !isRecording && (
-                                              <div className="flex items-center gap-2 p-2 rounded-lg bg-slate-900/60 border border-slate-800">
-                                                <span className="text-[10px] text-slate-400 font-bold">🔊 Playback:</span>
-                                                <audio src={audioUrl} controls className="h-8 flex-1" style={{ maxHeight: '32px' }} />
-                                              </div>
-                                            )}
-
-                                            <div className="flex gap-2">
-                                              <button
-                                                onClick={() => {
-                                                  if (mockTimerRef.current) clearInterval(mockTimerRef.current);
-                                                  if (isRecording) { recognitionRef.current?.stop(); mediaRecorderRef.current?.stop(); setIsRecording(false); }
-                                                  setMockMode('idle');
-                                                }}
-                                                className="flex-1 py-2 rounded-xl border border-slate-700 text-xs font-bold text-slate-400 hover:text-slate-200 hover:border-slate-500 transition-all"
-                                              >✕ Skip</button>
-                                              <button
-                                                onClick={() => {
-                                                  if (isRecording) { recognitionRef.current?.stop(); mediaRecorderRef.current?.stop(); setIsRecording(false); }
-                                                  submitAnswer();
-                                                }}
-                                                disabled={!currentAnswer.trim()}
-                                                className="flex-1 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 disabled:opacity-40 text-white text-xs font-bold transition-all"
-                                              >✓ Submit Answer</button>
-                                            </div>
-                                          </>
-                                        )}
-
-                                        {/* Score panel */}
-                                        {mockMode === 'reviewed' && currentScore && (
-                                          <div className="space-y-3 animate-fadeIn">
-                                            {/* Score badge */}
-                                            <div className={`flex items-center gap-4 p-4 rounded-xl border ${currentScore.color}`}>
-                                              <div className="text-center">
-                                                <div className="text-3xl font-black">{currentScore.grade}</div>
-                                                <div className="text-[10px] font-bold mt-0.5">{currentScore.score}/100</div>
-                                              </div>
-                                              <p className="text-xs leading-relaxed flex-grow">{currentScore.feedback}</p>
-                                            </div>
-
-                                            {/* Your Submitted Response */}
-                                            <div className="space-y-1.5">
-                                              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Your Submitted Answer</p>
-                                              <div className="p-3 bg-slate-900/60 border border-slate-800 rounded-xl space-y-2.5 text-xs text-slate-300 leading-relaxed text-justify">
-                                                {(() => {
-                                                  const isStar = currentAnswer.includes('[Situation]') || currentAnswer.includes('[Task]') || currentAnswer.includes('[Action]') || currentAnswer.includes('[Result]');
-                                                  if (isStar) {
-                                                    const sitMatch = currentAnswer.match(/\[Situation\]\s*([\s\S]*?)(?=\[Task\]|\[Action\]|\[Result\]|$)/i);
-                                                    const tskMatch = currentAnswer.match(/\[Task\]\s*([\s\S]*?)(?=\[Situation\]|\[Action\]|\[Result\]|$)/i);
-                                                    const actMatch = currentAnswer.match(/\[Action\]\s*([\s\S]*?)(?=\[Situation\]|\[Task\]|\[Result\]|$)/i);
-                                                    const resMatch = currentAnswer.match(/\[Result\]\s*([\s\S]*?)(?=\[Situation\]|\[Task\]|\[Action\]|$)/i);
-                                                    const sit = sitMatch ? sitMatch[1].trim() : '';
-                                                    const tsk = tskMatch ? tskMatch[1].trim() : '';
-                                                    const act = actMatch ? actMatch[1].trim() : '';
-                                                    const res = resMatch ? resMatch[1].trim() : '';
-
-                                                    return (
-                                                      <div className="space-y-2 text-[11px]">
-                                                        {sit && (
-                                                          <div className="flex gap-2">
-                                                            <span className="w-5 h-5 rounded-full bg-blue-550/20 text-blue-400 border border-blue-500/20 flex items-center justify-center text-[10px] font-black shrink-0">S</span>
-                                                            <div className="flex-1"><span className="font-bold text-slate-400 text-[10px] uppercase block mb-0.5">Situation</span>{sit}</div>
-                                                          </div>
-                                                        )}
-                                                        {tsk && (
-                                                          <div className="flex gap-2">
-                                                            <span className="w-5 h-5 rounded-full bg-amber-550/20 text-amber-400 border border-amber-500/20 flex items-center justify-center text-[10px] font-black shrink-0">T</span>
-                                                            <div className="flex-1"><span className="font-bold text-slate-400 text-[10px] uppercase block mb-0.5">Task</span>{tsk}</div>
-                                                          </div>
-                                                        )}
-                                                        {act && (
-                                                          <div className="flex gap-2">
-                                                            <span className="w-5 h-5 rounded-full bg-emerald-555/20 text-emerald-400 border border-emerald-500/20 flex items-center justify-center text-[10px] font-black shrink-0">A</span>
-                                                            <div className="flex-1"><span className="font-bold text-slate-400 text-[10px] uppercase block mb-0.5">Action</span>{act}</div>
-                                                          </div>
-                                                        )}
-                                                        {res && (
-                                                          <div className="flex gap-2">
-                                                            <span className="w-5 h-5 rounded-full bg-rose-555/20 text-rose-455 border border-rose-500/20 flex items-center justify-center text-[10px] font-black shrink-0">R</span>
-                                                            <div className="flex-1"><span className="font-bold text-slate-400 text-[10px] uppercase block mb-0.5">Result</span>{res}</div>
-                                                          </div>
-                                                        )}
-                                                      </div>
-                                                    );
-                                                  }
-                                                  return <p className="whitespace-pre-wrap">{currentAnswer}</p>;
-                                                })()}
-                                              </div>
-                                            </div>
-
-                                            {/* Strengths */}
-                                            {currentScore.strengths.length > 0 && (
-                                              <div className="space-y-1.5">
-                                                <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">✓ Strengths</p>
-                                                {currentScore.strengths.map((s, i) => (
-                                                  <p key={i} className="text-[11px] text-slate-300 bg-emerald-950/20 border border-emerald-900/30 rounded-lg p-2">{s}</p>
-                                                ))}
-                                              </div>
-                                            )}
-
-                                            {/* Improvements */}
-                                            {currentScore.improvements.length > 0 && (
-                                              <div className="space-y-1.5">
-                                                <p className="text-[10px] text-amber-400 font-bold uppercase tracking-wider">⚠ Improve</p>
-                                                {currentScore.improvements.map((s, i) => (
-                                                  <p key={i} className="text-[11px] text-slate-300 bg-amber-955/20 border border-amber-900/30 rounded-lg p-2">{s}</p>
-                                                ))}
-                                              </div>
-                                            )}
-
-                                            {/* Sample answer toggle */}
-                                            {currentQ.sampleAnswer && (
-                                              <>
-                                                <button
-                                                  onClick={() => setSampleVisible(p => ({ ...p, [currentQ.id]: !p[currentQ.id] }))}
-                                                  className="w-full py-2 border border-slate-700 rounded-xl text-xs font-bold text-slate-400 hover:text-violet-300 hover:border-violet-500 transition-all"
-                                                >📝 {sampleVisible[currentQ.id] ? 'Hide' : 'View'} Sample Answer</button>
-                                                {sampleVisible[currentQ.id] && (
-                                                  <div className="p-3 rounded-xl bg-violet-500/5 border border-violet-500/20 text-[11px] text-violet-200 leading-relaxed animate-fadeIn">
-                                                    {currentQ.sampleAnswer}
+                                          {/* Score panel */}
+                                          {mockMode === 'reviewed' && currentScore && (
+                                            <div className="space-y-3 animate-fadeIn">
+                                              {/* Score badge */}
+                                              <div
+                                                className={`flex items-center gap-4 p-4 rounded-xl border ${currentScore.color}`}
+                                              >
+                                                <div className="text-center">
+                                                  <div className="text-3xl font-black">
+                                                    {currentScore.grade}
                                                   </div>
-                                                )}
-                                              </>
-                                            )}
-
-                                            {/* AI Answer Polishing & Rewrite */}
-                                            <div className="border-t border-slate-800 pt-3.5 space-y-2">
-                                              <div className="flex justify-between items-center">
-                                                <p className="text-[10px] text-violet-400 font-bold uppercase tracking-wider">✨ AI Response Optimizer & Coach</p>
-                                                {geminiApiKey.trim() && !optimizedResults[currentQ.id] && (
-                                                  <button
-                                                    type="button"
-                                                    onClick={async () => {
-                                                      if (loadingOptimization) return;
-                                                      setLoadingOptimization(true);
-                                                      try {
-                                                        const opt = await optimizeUserAnswer(
-                                                          geminiApiKey,
-                                                          aiProvider,
-                                                          currentQ.question,
-                                                          interviewPositionName || interviewPlan.context.role,
-                                                          currentAnswer,
-                                                          resumeData
-                                                        );
-                                                        setOptimizedResults(p => ({ ...p, [currentQ.id]: opt }));
-                                                      } catch (err: any) {
-                                                        alert(`AI Error: ${err?.message || 'Failed to optimize answer'}`);
-                                                      } finally {
-                                                        setLoadingOptimization(false);
-                                                      }
-                                                    }}
-                                                    className="px-2.5 py-1 rounded bg-violet-650 hover:bg-violet-600 text-[9px] font-bold text-white transition-colors"
-                                                  >
-                                                    {loadingOptimization ? '⏳ Polishing...' : '🧠 Polish & Rewrite My Answer'}
-                                                  </button>
-                                                )}
-                                              </div>
-
-                                              {!geminiApiKey.trim() ? (
-                                                <p className="text-[10px] text-slate-500 italic">🔑 Configure your {aiProvider === 'groq' ? 'Groq' : aiProvider === 'openrouter' ? 'OpenRouter' : 'Gemini'} API key in the configuration settings to enable real-time AI feedback and polished response rewrites.</p>
-                                              ) : optimizedResults[currentQ.id] ? (
-                                                <div className="space-y-3 animate-fadeIn">
-                                                  {/* Feedback card */}
-                                                  <div className="p-3.5 rounded-xl border border-violet-500/20 bg-violet-500/5 space-y-1.5">
-                                                    <p className="text-[9px] text-violet-400 font-bold uppercase">💡 AI Coach Suggestions</p>
-                                                    <p className="text-[11px] text-slate-350 leading-relaxed text-justify">{optimizedResults[currentQ.id].feedback}</p>
-                                                  </div>
-                                                  
-                                                  {/* Polished rewrite card */}
-                                                  <div className="p-3.5 rounded-xl border border-blue-500/25 bg-blue-500/5 space-y-2 relative group">
-                                                    <div className="flex justify-between items-center">
-                                                      <p className="text-[9px] text-blue-400 font-bold uppercase">✨ Your Response (Polished & Upgraded)</p>
-                                                      <button
-                                                        type="button"
-                                                        onClick={() => {
-                                                          navigator.clipboard.writeText(optimizedResults[currentQ.id].optimizedAnswer);
-                                                          alert('📋 Copied optimized response to clipboard!');
-                                                        }}
-                                                        className="text-[9px] text-blue-400 hover:text-blue-355 font-bold transition-colors"
-                                                      >📋 Copy Answer</button>
-                                                    </div>
-                                                    <p className="text-[11px] text-slate-300 leading-relaxed text-justify italic">
-                                                      "{optimizedResults[currentQ.id].optimizedAnswer}"
-                                                    </p>
+                                                  <div className="text-[10px] font-bold mt-0.5">
+                                                    {currentScore.score}/100
                                                   </div>
                                                 </div>
-                                              ) : (
-                                                !loadingOptimization && (
-                                                  <p className="text-[10px] text-slate-500 italic">Click the button above to get a customized, professional rewrite of your response featuring advanced industry phrasing and metrics.</p>
-                                                )
-                                              )}
-                                            </div>
+                                                <p className="text-xs leading-relaxed flex-grow">
+                                                  {currentScore.feedback}
+                                                </p>
+                                              </div>
 
-                                            {/* Next button */}
-                                            <button
-                                              onClick={nextQuestion}
-                                              className="w-full py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-xs font-bold text-white transition-all"
-                                            >
-                                              {mockQuestionIdx + 1 < totalQ ? 'Next Question →' : '✓ Finish Round'}
-                                            </button>
-                                          </div>
-                                        )}
-                                      </>
-                                    )}
-                                  </div>
-                                )}
+                                              {/* Your Submitted Response */}
+                                              <div className="space-y-1.5">
+                                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+                                                  Your Submitted Answer
+                                                </p>
+                                                <div className="p-3 bg-slate-900/60 border border-slate-800 rounded-xl space-y-2.5 text-xs text-slate-300 leading-relaxed text-justify">
+                                                  {(() => {
+                                                    const isStar =
+                                                      currentAnswer.includes('[Situation]') ||
+                                                      currentAnswer.includes('[Task]') ||
+                                                      currentAnswer.includes('[Action]') ||
+                                                      currentAnswer.includes('[Result]');
+                                                    if (isStar) {
+                                                      const sitMatch = currentAnswer.match(
+                                                        /\[Situation\]\s*([\s\S]*?)(?=\[Task\]|\[Action\]|\[Result\]|$)/i
+                                                      );
+                                                      const tskMatch = currentAnswer.match(
+                                                        /\[Task\]\s*([\s\S]*?)(?=\[Situation\]|\[Action\]|\[Result\]|$)/i
+                                                      );
+                                                      const actMatch = currentAnswer.match(
+                                                        /\[Action\]\s*([\s\S]*?)(?=\[Situation\]|\[Task\]|\[Result\]|$)/i
+                                                      );
+                                                      const resMatch = currentAnswer.match(
+                                                        /\[Result\]\s*([\s\S]*?)(?=\[Situation\]|\[Task\]|\[Action\]|$)/i
+                                                      );
+                                                      const sit = sitMatch
+                                                        ? sitMatch[1].trim()
+                                                        : '';
+                                                      const tsk = tskMatch
+                                                        ? tskMatch[1].trim()
+                                                        : '';
+                                                      const act = actMatch
+                                                        ? actMatch[1].trim()
+                                                        : '';
+                                                      const res = resMatch
+                                                        ? resMatch[1].trim()
+                                                        : '';
+
+                                                      return (
+                                                        <div className="space-y-2 text-[11px]">
+                                                          {sit && (
+                                                            <div className="flex gap-2">
+                                                              <span className="w-5 h-5 rounded-full bg-blue-550/20 text-blue-400 border border-blue-500/20 flex items-center justify-center text-[10px] font-black shrink-0">
+                                                                S
+                                                              </span>
+                                                              <div className="flex-1">
+                                                                <span className="font-bold text-slate-400 text-[10px] uppercase block mb-0.5">
+                                                                  Situation
+                                                                </span>
+                                                                {sit}
+                                                              </div>
+                                                            </div>
+                                                          )}
+                                                          {tsk && (
+                                                            <div className="flex gap-2">
+                                                              <span className="w-5 h-5 rounded-full bg-amber-550/20 text-amber-400 border border-amber-500/20 flex items-center justify-center text-[10px] font-black shrink-0">
+                                                                T
+                                                              </span>
+                                                              <div className="flex-1">
+                                                                <span className="font-bold text-slate-400 text-[10px] uppercase block mb-0.5">
+                                                                  Task
+                                                                </span>
+                                                                {tsk}
+                                                              </div>
+                                                            </div>
+                                                          )}
+                                                          {act && (
+                                                            <div className="flex gap-2">
+                                                              <span className="w-5 h-5 rounded-full bg-emerald-555/20 text-emerald-400 border border-emerald-500/20 flex items-center justify-center text-[10px] font-black shrink-0">
+                                                                A
+                                                              </span>
+                                                              <div className="flex-1">
+                                                                <span className="font-bold text-slate-400 text-[10px] uppercase block mb-0.5">
+                                                                  Action
+                                                                </span>
+                                                                {act}
+                                                              </div>
+                                                            </div>
+                                                          )}
+                                                          {res && (
+                                                            <div className="flex gap-2">
+                                                              <span className="w-5 h-5 rounded-full bg-rose-555/20 text-rose-455 border border-rose-500/20 flex items-center justify-center text-[10px] font-black shrink-0">
+                                                                R
+                                                              </span>
+                                                              <div className="flex-1">
+                                                                <span className="font-bold text-slate-400 text-[10px] uppercase block mb-0.5">
+                                                                  Result
+                                                                </span>
+                                                                {res}
+                                                              </div>
+                                                            </div>
+                                                          )}
+                                                        </div>
+                                                      );
+                                                    }
+                                                    return (
+                                                      <p className="whitespace-pre-wrap">
+                                                        {currentAnswer}
+                                                      </p>
+                                                    );
+                                                  })()}
+                                                </div>
+                                              </div>
+
+                                              {/* Strengths */}
+                                              {currentScore.strengths.length > 0 && (
+                                                <div className="space-y-1.5">
+                                                  <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider">
+                                                    ✓ Strengths
+                                                  </p>
+                                                  {currentScore.strengths.map((s, i) => (
+                                                    <p
+                                                      key={i}
+                                                      className="text-[11px] text-slate-300 bg-emerald-950/20 border border-emerald-900/30 rounded-lg p-2"
+                                                    >
+                                                      {s}
+                                                    </p>
+                                                  ))}
+                                                </div>
+                                              )}
+
+                                              {/* Improvements */}
+                                              {currentScore.improvements.length > 0 && (
+                                                <div className="space-y-1.5">
+                                                  <p className="text-[10px] text-amber-400 font-bold uppercase tracking-wider">
+                                                    ⚠ Improve
+                                                  </p>
+                                                  {currentScore.improvements.map((s, i) => (
+                                                    <p
+                                                      key={i}
+                                                      className="text-[11px] text-slate-300 bg-amber-955/20 border border-amber-900/30 rounded-lg p-2"
+                                                    >
+                                                      {s}
+                                                    </p>
+                                                  ))}
+                                                </div>
+                                              )}
+
+                                              {/* Sample answer toggle */}
+                                              {currentQ.sampleAnswer && (
+                                                <>
+                                                  <button
+                                                    onClick={() =>
+                                                      setSampleVisible((p) => ({
+                                                        ...p,
+                                                        [currentQ.id]: !p[currentQ.id],
+                                                      }))
+                                                    }
+                                                    className="w-full py-2 border border-slate-700 rounded-xl text-xs font-bold text-slate-400 hover:text-violet-300 hover:border-violet-500 transition-all"
+                                                  >
+                                                    📝{' '}
+                                                    {sampleVisible[currentQ.id] ? 'Hide' : 'View'}{' '}
+                                                    Sample Answer
+                                                  </button>
+                                                  {sampleVisible[currentQ.id] && (
+                                                    <div className="p-3 rounded-xl bg-violet-500/5 border border-violet-500/20 text-[11px] text-violet-200 leading-relaxed animate-fadeIn">
+                                                      {currentQ.sampleAnswer}
+                                                    </div>
+                                                  )}
+                                                </>
+                                              )}
+
+                                              {/* AI Answer Polishing & Rewrite */}
+                                              <div className="border-t border-slate-800 pt-3.5 space-y-2">
+                                                <div className="flex justify-between items-center">
+                                                  <p className="text-[10px] text-violet-400 font-bold uppercase tracking-wider">
+                                                    ✨ AI Response Optimizer & Coach
+                                                  </p>
+                                                  {geminiApiKey.trim() &&
+                                                    !optimizedResults[currentQ.id] && (
+                                                      <button
+                                                        type="button"
+                                                        onClick={async () => {
+                                                          if (loadingOptimization) return;
+                                                          setLoadingOptimization(true);
+                                                          try {
+                                                            const opt = await optimizeUserAnswer(
+                                                              geminiApiKey,
+                                                              aiProvider,
+                                                              currentQ.question,
+                                                              interviewPositionName ||
+                                                                interviewPlan.context.role,
+                                                              currentAnswer,
+                                                              resumeData
+                                                            );
+                                                            setOptimizedResults((p) => ({
+                                                              ...p,
+                                                              [currentQ.id]: opt,
+                                                            }));
+                                                          } catch (err: any) {
+                                                            alert(
+                                                              `AI Error: ${err?.message || 'Failed to optimize answer'}`
+                                                            );
+                                                          } finally {
+                                                            setLoadingOptimization(false);
+                                                          }
+                                                        }}
+                                                        className="px-2.5 py-1 rounded bg-violet-650 hover:bg-violet-600 text-[9px] font-bold text-white transition-colors"
+                                                      >
+                                                        {loadingOptimization
+                                                          ? '⏳ Polishing...'
+                                                          : '🧠 Polish & Rewrite My Answer'}
+                                                      </button>
+                                                    )}
+                                                </div>
+
+                                                {!geminiApiKey.trim() ? (
+                                                  <p className="text-[10px] text-slate-500 italic">
+                                                    🔑 Configure your{' '}
+                                                    {aiProvider === 'groq'
+                                                      ? 'Groq'
+                                                      : aiProvider === 'openrouter'
+                                                        ? 'OpenRouter'
+                                                        : 'Gemini'}{' '}
+                                                    API key in the configuration settings to enable
+                                                    real-time AI feedback and polished response
+                                                    rewrites.
+                                                  </p>
+                                                ) : optimizedResults[currentQ.id] ? (
+                                                  <div className="space-y-3 animate-fadeIn">
+                                                    {/* Feedback card */}
+                                                    <div className="p-3.5 rounded-xl border border-violet-500/20 bg-violet-500/5 space-y-1.5">
+                                                      <p className="text-[9px] text-violet-400 font-bold uppercase">
+                                                        💡 AI Coach Suggestions
+                                                      </p>
+                                                      <p className="text-[11px] text-slate-350 leading-relaxed text-justify">
+                                                        {optimizedResults[currentQ.id].feedback}
+                                                      </p>
+                                                    </div>
+
+                                                    {/* Polished rewrite card */}
+                                                    <div className="p-3.5 rounded-xl border border-blue-500/25 bg-blue-500/5 space-y-2 relative group">
+                                                      <div className="flex justify-between items-center">
+                                                        <p className="text-[9px] text-blue-400 font-bold uppercase">
+                                                          ✨ Your Response (Polished & Upgraded)
+                                                        </p>
+                                                        <button
+                                                          type="button"
+                                                          onClick={() => {
+                                                            navigator.clipboard.writeText(
+                                                              optimizedResults[currentQ.id]
+                                                                .optimizedAnswer
+                                                            );
+                                                            alert(
+                                                              '📋 Copied optimized response to clipboard!'
+                                                            );
+                                                          }}
+                                                          className="text-[9px] text-blue-400 hover:text-blue-355 font-bold transition-colors"
+                                                        >
+                                                          📋 Copy Answer
+                                                        </button>
+                                                      </div>
+                                                      <p className="text-[11px] text-slate-300 leading-relaxed text-justify italic">
+                                                        "
+                                                        {
+                                                          optimizedResults[currentQ.id]
+                                                            .optimizedAnswer
+                                                        }
+                                                        "
+                                                      </p>
+                                                    </div>
+                                                  </div>
+                                                ) : (
+                                                  !loadingOptimization && (
+                                                    <p className="text-[10px] text-slate-500 italic">
+                                                      Click the button above to get a customized,
+                                                      professional rewrite of your response
+                                                      featuring advanced industry phrasing and
+                                                      metrics.
+                                                    </p>
+                                                  )
+                                                )}
+                                              </div>
+
+                                              {/* Next button */}
+                                              <button
+                                                onClick={nextQuestion}
+                                                className="w-full py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 text-xs font-bold text-white transition-all"
+                                              >
+                                                {mockQuestionIdx + 1 < totalQ
+                                                  ? 'Next Question →'
+                                                  : '✓ Finish Round'}
+                                              </button>
+                                            </div>
+                                          )}
+                                        </>
+                                      )}
+                                    </div>
+                                  )}
                               </>
                             )}
                           </div>
                         );
                       })()}
-                    </>
-                  )}
-                </div>
-              )}
-
-              {rightTab === 'inbox' && (
-                <div className="space-y-6 animate-fadeIn">
-                  <div>
-                    <h2 className="text-base font-bold text-white">Mock Inbound Leads</h2>
-                    <p className="text-xs text-slate-400 mt-1">Inspect mock inquiries received via the contact form in the live portfolio preview.</p>
-                  </div>
-
-                  <div className="space-y-3.5">
-                    {contactMessages.length > 0 ? (
-                      contactMessages.map((msg) => (
-                        <div key={msg.id} className="p-4 rounded-xl bg-slate-950/30 border border-slate-800 space-y-2 text-xs relative">
-                          {msg.unread && (
-                            <span className="absolute top-3 right-3 w-2 h-2 bg-indigo-500 rounded-full"></span>
-                          )}
-                          
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <h4 className="font-bold text-slate-200">{msg.name}</h4>
-                              <span className="text-[10px] text-slate-500">{msg.email}</span>
-                            </div>
-                            <span className="text-[9px] text-slate-500 font-semibold">{msg.date}</span>
-                          </div>
-
-                          <div className="border-t border-slate-850 pt-2 space-y-1">
-                            <span className="font-bold text-indigo-400 block text-[10px] uppercase">Subject: {msg.subject}</span>
-                            <p className="text-slate-400 leading-relaxed leading-normal font-normal">
-                              {msg.message}
-                            </p>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <p className="text-slate-500 italic text-center py-8">No submissions yet. Open the preview on the right and try filling out the contact form!</p>
-                    )}
-                  </div>
-                </div>
-              )}
-
-            </div>
-
-            {rightTab === 'sandbox' && (
-              <div className="flex-grow p-6 md:p-8 overflow-y-auto flex flex-col items-center justify-center gap-4">
-            
-            {showRevisedPreview && revisedResumeData && (
-              <div className="w-full max-w-4xl bg-indigo-900/95 border border-indigo-700 rounded-xl p-3 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-indigo-100 animate-fadeIn">
-                <div className="flex items-center gap-3">
-                  <span className="p-1 px-2 rounded bg-indigo-950 text-indigo-400 font-bold uppercase text-[9px]">AI ACTIVE PREVIEW</span>
-                  <div className="flex items-center gap-2">
-                    <button 
-                      onClick={() => setHighlightChanges(!highlightChanges)}
-                      className={`flex items-center gap-1.5 px-2 py-1 rounded transition-colors ${highlightChanges ? 'bg-indigo-400 text-indigo-950' : 'bg-indigo-800 text-indigo-300'}`}
-                    >
-                      {highlightChanges ? <CheckCircle className="w-3.5 h-3.5" /> : <AlertCircle className="w-3.5 h-3.5" />}
-                      <span>{highlightChanges ? 'Highlighting On' : 'Highlighting Off'}</span>
-                    </button>
-                  </div>
-                </div>
-                <div className="flex gap-2">
-                  <button 
-                    onClick={applyRevisedData}
-                    className="bg-white text-indigo-950 px-3 py-1.5 rounded-lg font-bold hover:bg-slate-100 transition-colors cursor-pointer shadow-lg"
-                  >
-                    Apply AI Fixes
-                  </button>
-                  <button 
-                    onClick={() => {
-                      setShowRevisedPreview(false);
-                      setRevisedResumeData(null);
-                      setAppliedFixes([]);
-                    }}
-                    className="bg-indigo-950/50 text-indigo-300 px-3 py-1.5 rounded-lg font-bold hover:bg-indigo-900 transition-colors cursor-pointer border border-indigo-700"
-                  >
-                    Discard Draft
-                  </button>
-                </div>
+                  </>
+                )}
               </div>
             )}
 
-            <div 
-              className={`transition-all duration-500 h-full w-full overflow-y-auto border border-slate-850 rounded-2xl shadow-2xl scrollbar-thin ${
-                (themeSettings.darkMode || themeSettings.id === 'cyberpunk') ? 'dark' : ''
-              } ${
-                previewDevice === 'desktop' 
-                  ? 'max-w-full' 
-                  : previewDevice === 'tablet' 
-                  ? 'max-w-3xl' 
-                  : 'max-w-[375px]'
-              }`}
-            >
-              <ThemeRenderer 
-                data={activeData} 
-                originalData={showRevisedPreview && highlightChanges ? resumeData : undefined}
-                settings={themeSettings} 
-                onContactSubmit={(data) => handleMockContactSubmit(data.name, data.email, data.subject, data.message)}
-                previewMode={true} 
-                previewDevice={previewDevice}
-              />
-            </div>
+            {rightTab === 'inbox' && (
+              <div className="space-y-6 animate-fadeIn">
+                <div>
+                  <h2 className="text-base font-bold text-white">Mock Inbound Leads</h2>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Inspect mock inquiries received via the contact form in the live portfolio
+                    preview.
+                  </p>
+                </div>
 
+                <div className="space-y-3.5">
+                  {contactMessages.length > 0 ? (
+                    contactMessages.map((msg) => (
+                      <div
+                        key={msg.id}
+                        className="p-4 rounded-xl bg-slate-950/30 border border-slate-800 space-y-2 text-xs relative"
+                      >
+                        {msg.unread && (
+                          <span className="absolute top-3 right-3 w-2 h-2 bg-indigo-500 rounded-full"></span>
+                        )}
+
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <h4 className="font-bold text-slate-200">{msg.name}</h4>
+                            <span className="text-[10px] text-slate-500">{msg.email}</span>
+                          </div>
+                          <span className="text-[9px] text-slate-500 font-semibold">
+                            {msg.date}
+                          </span>
+                        </div>
+
+                        <div className="border-t border-slate-850 pt-2 space-y-1">
+                          <span className="font-bold text-indigo-400 block text-[10px] uppercase">
+                            Subject: {msg.subject}
+                          </span>
+                          <p className="text-slate-400 leading-relaxed leading-normal font-normal">
+                            {msg.message}
+                          </p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-slate-500 italic text-center py-8">
+                      No submissions yet. Open the preview on the right and try filling out the
+                      contact form!
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
-        )}
+
+          {rightTab === 'sandbox' && (
+            <div className="flex-grow p-6 md:p-8 overflow-y-auto flex flex-col items-center justify-center gap-4">
+              {showRevisedPreview && revisedResumeData && (
+                <div className="w-full max-w-4xl bg-indigo-900/95 border border-indigo-700 rounded-xl p-3 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-indigo-100 animate-fadeIn">
+                  <div className="flex items-center gap-3">
+                    <span className="p-1 px-2 rounded bg-indigo-950 text-indigo-400 font-bold uppercase text-[9px]">
+                      AI ACTIVE PREVIEW
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setHighlightChanges(!highlightChanges)}
+                        className={`flex items-center gap-1.5 px-2 py-1 rounded transition-colors ${highlightChanges ? 'bg-indigo-400 text-indigo-950' : 'bg-indigo-800 text-indigo-300'}`}
+                      >
+                        {highlightChanges ? (
+                          <CheckCircle className="w-3.5 h-3.5" />
+                        ) : (
+                          <AlertCircle className="w-3.5 h-3.5" />
+                        )}
+                        <span>{highlightChanges ? 'Highlighting On' : 'Highlighting Off'}</span>
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={applyRevisedData}
+                      className="bg-white text-indigo-950 px-3 py-1.5 rounded-lg font-bold hover:bg-slate-100 transition-colors cursor-pointer shadow-lg"
+                    >
+                      Apply AI Fixes
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowRevisedPreview(false);
+                        setRevisedResumeData(null);
+                        setAppliedFixes([]);
+                      }}
+                      className="bg-indigo-950/50 text-indigo-300 px-3 py-1.5 rounded-lg font-bold hover:bg-indigo-900 transition-colors cursor-pointer border border-indigo-700"
+                    >
+                      Discard Draft
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <div
+                className={`transition-all duration-500 h-full w-full overflow-y-auto border border-slate-850 rounded-2xl shadow-2xl scrollbar-thin ${
+                  themeSettings.darkMode || themeSettings.id === 'cyberpunk' ? 'dark' : ''
+                } ${
+                  previewDevice === 'desktop'
+                    ? 'max-w-full'
+                    : previewDevice === 'tablet'
+                      ? 'max-w-3xl'
+                      : 'max-w-[375px]'
+                }`}
+              >
+                <ThemeRenderer
+                  data={activeData}
+                  originalData={showRevisedPreview && highlightChanges ? resumeData : undefined}
+                  settings={themeSettings}
+                  onContactSubmit={(data) =>
+                    handleMockContactSubmit(data.name, data.email, data.subject, data.message)
+                  }
+                  previewMode={true}
+                  previewDevice={previewDevice}
+                />
+              </div>
+            </div>
+          )}
+        </div>
       </div>
-    </div>
-
-
 
       {/* PDF Export Layout Preview Modal */}
       {showPrintModal && (
         <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 md:p-8 bg-slate-900/90 backdrop-blur-md animate-fadeIn print:hidden">
           <div className="w-full max-w-7xl h-full flex flex-col md:flex-row gap-6">
-            
             {/* Sidebar Controls */}
             <div className="w-full md:w-80 bg-slate-950 border border-slate-800 rounded-2xl flex flex-col overflow-hidden shrink-0">
               <div className="p-5 border-b border-slate-800 flex justify-between items-center">
@@ -6917,172 +8740,196 @@ export default function Portfolio() {
                   <Download className="w-5 h-5 text-emerald-400" />
                   Document Export
                 </h2>
-                <button 
+                <button
                   onClick={() => setShowPrintModal(false)}
                   className="text-slate-500 hover:text-white transition-colors"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
-              
+
               <div className="p-5 flex-1 overflow-y-auto space-y-6">
                 <div>
                   <p className="text-xs text-slate-400 mb-4 leading-relaxed">
-                    Select a professional layout below. When you click download, your browser's print dialog will open—be sure to select <strong className="text-slate-200">Save as PDF</strong>.
+                    Select a professional layout below. When you click download, your browser's
+                    print dialog will open—be sure to select{' '}
+                    <strong className="text-slate-200">Save as PDF</strong>.
                   </p>
-                  
+
                   <div className="grid grid-cols-2 gap-3">
-                    {([
-                      { 
-                        id: 'classic', 
-                        label: 'Classic Serif', 
-                        desc: 'Formal & Traditional',
-                        icon: '📜',
-                        atsScore: 100,
-                        atsLevel: 'PERFECT',
-                        preview: (
-                          <div className="w-full h-full bg-white p-2 font-serif text-[4px] border-t-2 border-slate-900">
-                            <div className="text-center mb-1">
-                              <div className="font-bold text-[6px]">ALEX RIVERA</div>
+                    {(
+                      [
+                        {
+                          id: 'classic',
+                          label: 'Classic Serif',
+                          desc: 'Formal & Traditional',
+                          icon: '📜',
+                          atsScore: 100,
+                          atsLevel: 'PERFECT',
+                          preview: (
+                            <div className="w-full h-full bg-white p-2 font-serif text-[4px] border-t-2 border-slate-900">
+                              <div className="text-center mb-1">
+                                <div className="font-bold text-[6px]">ALEX RIVERA</div>
+                              </div>
+                              <div className="border-b border-slate-200 mb-1"></div>
+                              <div className="mb-1">
+                                <span className="font-bold">Experience:</span> Lead Developer
+                              </div>
+                              <div className="mb-1">
+                                <span className="font-bold">Skills:</span> React, Node.js
+                              </div>
                             </div>
-                            <div className="border-b border-slate-200 mb-1"></div>
-                            <div className="mb-1"><span className="font-bold">Experience:</span> Lead Developer</div>
-                            <div className="mb-1"><span className="font-bold">Skills:</span> React, Node.js</div>
-                          </div>
-                        )
-                      },
-                      { 
-                        id: 'modern', 
-                        label: 'Modern Sans', 
-                        desc: 'Clean & Efficient',
-                        icon: '💎',
-                        atsScore: 90,
-                        atsLevel: 'EXCELLENT',
-                        preview: (
-                          <div className="w-full h-full bg-white p-2 font-sans text-[4px]">
-                            <div className="flex justify-between border-b-2 border-indigo-600 mb-1 pb-1">
-                              <div className="font-black text-[6px] text-slate-900">ALEX R.</div>
-                              <div className="text-[3px] text-indigo-600">alex@mail.com</div>
+                          ),
+                        },
+                        {
+                          id: 'modern',
+                          label: 'Modern Sans',
+                          desc: 'Clean & Efficient',
+                          icon: '💎',
+                          atsScore: 90,
+                          atsLevel: 'EXCELLENT',
+                          preview: (
+                            <div className="w-full h-full bg-white p-2 font-sans text-[4px]">
+                              <div className="flex justify-between border-b-2 border-indigo-600 mb-1 pb-1">
+                                <div className="font-black text-[6px] text-slate-900">ALEX R.</div>
+                                <div className="text-[3px] text-indigo-600">alex@mail.com</div>
+                              </div>
+                              <div className="text-[3px] font-bold text-slate-400 mb-1">
+                                EXPERIENCE
+                              </div>
+                              <div className="border-l-2 border-indigo-100 pl-1 mb-1">
+                                <div className="font-bold">Senior Engineer</div>
+                              </div>
                             </div>
-                            <div className="text-[3px] font-bold text-slate-400 mb-1">EXPERIENCE</div>
-                            <div className="border-l-2 border-indigo-100 pl-1 mb-1">
-                              <div className="font-bold">Senior Engineer</div>
+                          ),
+                        },
+                        {
+                          id: 'compact',
+                          label: 'Compact Grid',
+                          desc: 'Space Optimized',
+                          icon: '📦',
+                          atsScore: 75,
+                          atsLevel: 'GOOD',
+                          preview: (
+                            <div className="w-full h-full bg-white p-1 font-sans text-[3px] grid grid-cols-4 gap-1">
+                              <div className="col-span-1 bg-slate-50 p-1 border-r border-slate-100">
+                                <div className="font-black text-[5px]">ALEX</div>
+                              </div>
+                              <div className="col-span-3 p-1">
+                                <div className="border-b border-slate-800 mb-1 font-bold">
+                                  Profile
+                                </div>
+                                <div className="text-[2px]">High impact results...</div>
+                              </div>
                             </div>
-                          </div>
-                        )
-                      },
-                      { 
-                        id: 'compact', 
-                        label: 'Compact Grid', 
-                        desc: 'Space Optimized',
-                        icon: '📦',
-                        atsScore: 75,
-                        atsLevel: 'GOOD',
-                        preview: (
-                          <div className="w-full h-full bg-white p-1 font-sans text-[3px] grid grid-cols-4 gap-1">
-                            <div className="col-span-1 bg-slate-50 p-1 border-r border-slate-100">
-                              <div className="font-black text-[5px]">ALEX</div>
+                          ),
+                        },
+                        {
+                          id: 'executive',
+                          label: 'Executive',
+                          desc: 'Bold & Authoritative',
+                          icon: '🏛️',
+                          atsScore: 90,
+                          atsLevel: 'EXCELLENT',
+                          preview: (
+                            <div className="w-full h-full bg-white p-0 font-sans text-[4px]">
+                              <div className="bg-slate-900 text-white p-2 mb-1">
+                                <div className="font-black text-[6px]">ALEX RIVERA</div>
+                              </div>
+                              <div className="px-2">
+                                <div className="border-b-2 border-slate-900 mb-1 font-bold">
+                                  LATEST ROLE
+                                </div>
+                                <div className="text-[3px]">VP of Engineering</div>
+                              </div>
                             </div>
-                            <div className="col-span-3 p-1">
-                              <div className="border-b border-slate-800 mb-1 font-bold">Profile</div>
-                              <div className="text-[2px]">High impact results...</div>
+                          ),
+                        },
+                        {
+                          id: 'creative',
+                          label: 'Creative',
+                          desc: 'Vibrant & Artistic',
+                          icon: '🎨',
+                          atsScore: 70,
+                          atsLevel: 'MODERATE',
+                          preview: (
+                            <div className="w-full h-full bg-white p-0 flex font-sans text-[4px]">
+                              <div className="w-1/3 bg-slate-900 p-1 text-white">
+                                <div className="w-4 h-4 bg-emerald-400 rounded-sm mb-1"></div>
+                                <div className="font-bold text-[4px]">ALEX R.</div>
+                              </div>
+                              <div className="flex-1 p-2">
+                                <div className="w-full h-1 bg-emerald-400 mb-2"></div>
+                                <div className="font-bold text-slate-900">PROJECTS</div>
+                              </div>
                             </div>
-                          </div>
-                        )
-                      },
-                      { 
-                        id: 'executive', 
-                        label: 'Executive', 
-                        desc: 'Bold & Authoritative',
-                        icon: '🏛️',
-                        atsScore: 90,
-                        atsLevel: 'EXCELLENT',
-                        preview: (
-                          <div className="w-full h-full bg-white p-0 font-sans text-[4px]">
-                            <div className="bg-slate-900 text-white p-2 mb-1">
-                              <div className="font-black text-[6px]">ALEX RIVERA</div>
+                          ),
+                        },
+                        {
+                          id: 'stellar',
+                          label: 'Stellar Tech',
+                          desc: 'Tech-Forward Style',
+                          icon: '⭐',
+                          atsScore: 65,
+                          atsLevel: 'MODERATE',
+                          preview: (
+                            <div className="w-full h-full bg-slate-950 p-2 font-mono text-[3.5px] text-slate-300">
+                              <div className="border border-indigo-500/30 p-1 mb-2">
+                                <div className="text-indigo-400 font-bold tracking-tighter">
+                                  ALEX_RIVERA.v1
+                                </div>
+                              </div>
+                              <div className="text-emerald-400">{'>'} EXPERIENCE</div>
+                              <div className="pl-2 mt-1 text-[3px]">
+                                System Architect @ TechCorp
+                              </div>
                             </div>
-                            <div className="px-2">
-                              <div className="border-b-2 border-slate-900 mb-1 font-bold">LATEST ROLE</div>
-                              <div className="text-[3px]">VP of Engineering</div>
+                          ),
+                        },
+                        {
+                          id: 'minimal',
+                          label: 'Minimal Clean',
+                          desc: 'Ultra Clean & Spacious',
+                          icon: '🍃',
+                          atsScore: 100,
+                          atsLevel: 'PERFECT',
+                          preview: (
+                            <div className="w-full h-full bg-white p-2 font-sans text-[4px]">
+                              <div className="mb-2">
+                                <div className="font-light text-[6px]">Alex Rivera</div>
+                              </div>
+                              <div className="text-slate-400 mb-2 font-normal uppercase tracking-widest text-[4px]">
+                                Experience
+                              </div>
                             </div>
-                          </div>
-                        )
-                      },
-                      { 
-                        id: 'creative', 
-                        label: 'Creative', 
-                        desc: 'Vibrant & Artistic',
-                        icon: '🎨',
-                        atsScore: 70,
-                        atsLevel: 'MODERATE',
-                        preview: (
-                          <div className="w-full h-full bg-white p-0 flex font-sans text-[4px]">
-                            <div className="w-1/3 bg-slate-900 p-1 text-white">
-                              <div className="w-4 h-4 bg-emerald-400 rounded-sm mb-1"></div>
-                              <div className="font-bold text-[4px]">ALEX R.</div>
+                          ),
+                        },
+                        {
+                          id: 'original',
+                          label: 'Professional Std',
+                          desc: 'Traditional Corporate',
+                          icon: '🏢',
+                          atsScore: 100,
+                          atsLevel: 'PERFECT',
+                          preview: (
+                            <div className="w-full h-full bg-white p-2 font-serif text-[4px]">
+                              <div className="text-center font-bold text-[6px] border-b border-slate-900 pb-1 mb-1">
+                                ALEX RIVERA
+                              </div>
+                              <div className="font-bold text-[4px] uppercase mb-1">
+                                Professional Experience
+                              </div>
                             </div>
-                            <div className="flex-1 p-2">
-                              <div className="w-full h-1 bg-emerald-400 mb-2"></div>
-                              <div className="font-bold text-slate-900">PROJECTS</div>
-                            </div>
-                          </div>
-                        )
-                      },
-                      { 
-                        id: 'stellar', 
-                        label: 'Stellar Tech', 
-                        desc: 'Tech-Forward Style',
-                        icon: '⭐',
-                        atsScore: 65,
-                        atsLevel: 'MODERATE',
-                        preview: (
-                          <div className="w-full h-full bg-slate-950 p-2 font-mono text-[3.5px] text-slate-300">
-                            <div className="border border-indigo-500/30 p-1 mb-2">
-                              <div className="text-indigo-400 font-bold tracking-tighter">ALEX_RIVERA.v1</div>
-                            </div>
-                            <div className="text-emerald-400">{">"} EXPERIENCE</div>
-                            <div className="pl-2 mt-1 text-[3px]">System Architect @ TechCorp</div>
-                          </div>
-                        )
-                      },
-                      { 
-                        id: 'minimal', 
-                        label: 'Minimal Clean', 
-                        desc: 'Ultra Clean & Spacious',
-                        icon: '🍃',
-                        atsScore: 100,
-                        atsLevel: 'PERFECT',
-                        preview: (
-                          <div className="w-full h-full bg-white p-2 font-sans text-[4px]">
-                            <div className="mb-2">
-                              <div className="font-light text-[6px]">Alex Rivera</div>
-                            </div>
-                            <div className="text-slate-400 mb-2 font-normal uppercase tracking-widest text-[4px]">Experience</div>
-                          </div>
-                        )
-                      },
-                      { 
-                        id: 'original', 
-                        label: 'Professional Std', 
-                        desc: 'Traditional Corporate',
-                        icon: '🏢',
-                        atsScore: 100,
-                        atsLevel: 'PERFECT',
-                        preview: (
-                          <div className="w-full h-full bg-white p-2 font-serif text-[4px]">
-                            <div className="text-center font-bold text-[6px] border-b border-slate-900 pb-1 mb-1">ALEX RIVERA</div>
-                            <div className="font-bold text-[4px] uppercase mb-1">Professional Experience</div>
-                          </div>
-                        )
-                      }
-                    ] as const).map((t) => (
+                          ),
+                        },
+                      ] as const
+                    ).map((t) => (
                       <button
                         key={t.id}
                         onClick={() => setPrintTemplate(t.id)}
                         className={`group relative p-3 rounded-2xl border text-left transition-all duration-300 ${
-                          printTemplate === t.id 
-                            ? 'bg-indigo-900/40 border-indigo-500 ring-4 ring-indigo-500/20' 
+                          printTemplate === t.id
+                            ? 'bg-indigo-900/40 border-indigo-500 ring-4 ring-indigo-500/20'
                             : 'bg-slate-900/50 border-slate-800 hover:border-slate-600 hover:bg-slate-800'
                         }`}
                       >
@@ -7091,19 +8938,29 @@ export default function Portfolio() {
                         </div>
                         <div className="relative flex justify-between items-start">
                           <div>
-                            <div className="font-black text-[11px] text-slate-100 mb-0.5">{t.label}</div>
-                            <div className="text-[9px] text-slate-500 font-medium leading-tight mb-2">{t.desc}</div>
+                            <div className="font-black text-[11px] text-slate-100 mb-0.5">
+                              {t.label}
+                            </div>
+                            <div className="text-[9px] text-slate-500 font-medium leading-tight mb-2">
+                              {t.desc}
+                            </div>
                             <div className="flex items-center gap-1">
-                              <span className={`text-[8px] font-black px-1.5 py-0.5 rounded-md ${
-                                t.atsLevel === 'PERFECT' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' :
-                                t.atsLevel === 'EXCELLENT' ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20' :
-                                'bg-slate-500/10 text-slate-400 border border-slate-500/20'
-                              }`}>
+                              <span
+                                className={`text-[8px] font-black px-1.5 py-0.5 rounded-md ${
+                                  t.atsLevel === 'PERFECT'
+                                    ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                                    : t.atsLevel === 'EXCELLENT'
+                                      ? 'bg-indigo-500/10 text-indigo-400 border border-indigo-500/20'
+                                      : 'bg-slate-500/10 text-slate-400 border border-slate-500/20'
+                                }`}
+                              >
                                 ATS: {t.atsLevel} ({t.atsScore}%)
                               </span>
                             </div>
                           </div>
-                          <span className="text-sm grayscale group-hover:grayscale-0 transition-all">{t.icon}</span>
+                          <span className="text-sm grayscale group-hover:grayscale-0 transition-all">
+                            {t.icon}
+                          </span>
                         </div>
                         {printTemplate === t.id && (
                           <div className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-indigo-500 rounded-full flex items-center justify-center shadow-lg border-2 border-slate-900">
@@ -7117,7 +8974,9 @@ export default function Portfolio() {
 
                 {/* Paper Size Selector */}
                 <div>
-                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">Paper Size</label>
+                  <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2">
+                    Paper Size
+                  </label>
                   <div className="flex gap-2">
                     <button
                       onClick={() => setPaperSize('letter')}
@@ -7145,9 +9004,13 @@ export default function Portfolio() {
                 {/* Spacing & Page Fit Selector */}
                 <div>
                   <div className="flex justify-between items-center mb-2">
-                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Spacing & Page Fit</label>
+                    <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                      Spacing & Page Fit
+                    </label>
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] text-slate-400 font-semibold">Auto-Fit 1 Page</span>
+                      <span className="text-[10px] text-slate-400 font-semibold">
+                        Auto-Fit 1 Page
+                      </span>
                       <button
                         type="button"
                         onClick={() => setAutoFitToPage(!autoFitToPage)}
@@ -7165,10 +9028,22 @@ export default function Portfolio() {
                   </div>
                   <div className="flex flex-col gap-2">
                     {[
-                      { id: 'normal', label: 'Normal Spacing', desc: 'Standard margins and line height' },
-                      { id: 'compact', label: 'Compact Spacing', desc: 'Saves ~10-15% vertical space (prevents 2nd page spill)' },
-                      { id: 'tight', label: 'Tight Spacing', desc: 'Maximum compression for dense resumes' }
-                    ].map(opt => (
+                      {
+                        id: 'normal',
+                        label: 'Normal Spacing',
+                        desc: 'Standard margins and line height',
+                      },
+                      {
+                        id: 'compact',
+                        label: 'Compact Spacing',
+                        desc: 'Saves ~10-15% vertical space (prevents 2nd page spill)',
+                      },
+                      {
+                        id: 'tight',
+                        label: 'Tight Spacing',
+                        desc: 'Maximum compression for dense resumes',
+                      },
+                    ].map((opt) => (
                       <button
                         key={opt.id}
                         onClick={() => setSpacingDensity(opt.id as any)}
@@ -7182,9 +9057,7 @@ export default function Portfolio() {
                           <div className="text-xs font-bold">{opt.label}</div>
                           <div className="text-[9px] text-slate-500 mt-0.5">{opt.desc}</div>
                         </div>
-                        {spacingDensity === opt.id && (
-                          <Check className="w-4 h-4 text-indigo-400" />
-                        )}
+                        {spacingDensity === opt.id && <Check className="w-4 h-4 text-indigo-400" />}
                       </button>
                     ))}
                   </div>
@@ -7193,111 +9066,120 @@ export default function Portfolio() {
                     <div className="mt-3 p-2.5 bg-indigo-950/40 border border-indigo-900/40 rounded-xl flex items-center gap-2 text-indigo-300 animate-fadeIn">
                       <Sparkles className="w-3.5 h-3.5 text-indigo-400 shrink-0 animate-pulse" />
                       <span className="text-[10px] font-medium leading-tight">
-                        Auto-scaled to <strong className="text-white">{Math.round(printScaleFactor * 100)}%</strong> to fit everything perfectly on one page.
+                        Auto-scaled to{' '}
+                        <strong className="text-white">
+                          {Math.round(printScaleFactor * 100)}%
+                        </strong>{' '}
+                        to fit everything perfectly on one page.
                       </span>
                     </div>
                   )}
                 </div>
               </div>
-              
+
               <div className="p-5 border-t border-slate-800 bg-slate-900/50 space-y-4">
-                    <button
-                      onClick={triggerPdfPrint}
-                      disabled={isGeneratingPdf}
-                      className="w-full py-4 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-850 text-white rounded-2xl font-black text-sm shadow-xl shadow-indigo-900/40 transition-all flex justify-center items-center gap-3 active:scale-[0.98] disabled:opacity-75 disabled:cursor-not-allowed"
-                    >
-                      {isGeneratingPdf ? (
-                        <>
-                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                          <span>GENERATING RESUME PDF...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Download className="w-5 h-5" />
-                          <span>DOWNLOAD RESUME (PDF)</span>
-                        </>
-                      )}
-                    </button>
-                    <button
-                      onClick={() => handleWordDownload(printTemplate)}
-                      disabled={isGeneratingPdf}
-                      className="w-full py-3 bg-slate-800 hover:bg-slate-700 disabled:bg-slate-900 text-slate-300 rounded-2xl text-xs font-bold transition-all flex justify-center items-center gap-2 disabled:opacity-50"
-                    >
-                      <FileText className="w-4 h-4 text-slate-500" />
-                      <span>Export to Word / OpenOffice (.docx)</span>
-                    </button>
-                    <div className="text-[10px] text-center text-slate-400 mt-1">
-                      ✨ Optimized for MS Word, OpenOffice, LibreOffice, & Google Docs
-                    </div>
-                    <button
-                      onClick={() => window.print()}
-                      disabled={isGeneratingPdf}
-                      className="w-full py-2.5 bg-slate-950 hover:bg-slate-900 text-slate-400 border border-slate-800 hover:text-slate-200 rounded-2xl text-xs font-bold transition-all flex justify-center items-center gap-2 disabled:opacity-50"
-                    >
-                      <Sparkles className="w-3.5 h-3.5 text-slate-500" />
-                      <span>Open Browser System Printer...</span>
-                    </button>
-                  
-                  {jobDescription && !showRevisedPreview && (
-                    <div className="bg-indigo-950/30 border border-indigo-900/50 rounded-2xl p-4 space-y-3">
-                      <div className="flex items-center gap-2 text-indigo-400 font-bold text-[10px] uppercase tracking-widest">
-                        <Sparkles className="w-4 h-4 animate-pulse" />
-                        <span>AI Optimization Available</span>
-                      </div>
-                      <p className="text-[10px] text-slate-400 leading-relaxed">
-                        We can auto-rewrite your bullets to match the target job description while maintaining this exact design.
-                      </p>
-                      <button
-                        onClick={() => {
-                          setShowPrintModal(false);
-                          setTimeout(() => triggerAIOptimization(), 100);
-                        }}
-                        className="w-full py-2.5 bg-white text-indigo-950 rounded-xl font-black text-[10px] uppercase tracking-wider hover:bg-indigo-50 transition-all active:scale-95 shadow-lg"
-                      >
-                        Optimize for ATS Matches
-                      </button>
-                    </div>
+                <button
+                  onClick={triggerPdfPrint}
+                  disabled={isGeneratingPdf}
+                  className="w-full py-4 bg-indigo-600 hover:bg-indigo-500 disabled:bg-indigo-850 text-white rounded-2xl font-black text-sm shadow-xl shadow-indigo-900/40 transition-all flex justify-center items-center gap-3 active:scale-[0.98] disabled:opacity-75 disabled:cursor-not-allowed"
+                >
+                  {isGeneratingPdf ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      <span>GENERATING RESUME PDF...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Download className="w-5 h-5" />
+                      <span>DOWNLOAD RESUME (PDF)</span>
+                    </>
                   )}
-                  {showRevisedPreview && (
-                    <div className="bg-emerald-950/40 border border-emerald-900/60 rounded-2xl p-4 flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400">
-                        <CheckCircle className="w-5 h-5" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Optimized Copy Active</div>
-                        <p className="text-[9px] text-emerald-500/80 leading-tight">Your resume content is now perfectly aligned with the job requirements.</p>
-                      </div>
-                    </div>
-                  )}
+                </button>
+                <button
+                  onClick={() => handleWordDownload(printTemplate)}
+                  disabled={isGeneratingPdf}
+                  className="w-full py-3 bg-slate-800 hover:bg-slate-700 disabled:bg-slate-900 text-slate-300 rounded-2xl text-xs font-bold transition-all flex justify-center items-center gap-2 disabled:opacity-50"
+                >
+                  <FileText className="w-4 h-4 text-slate-500" />
+                  <span>Export to Word / OpenOffice (.docx)</span>
+                </button>
+                <div className="text-[10px] text-center text-slate-400 mt-1">
+                  ✨ Optimized for MS Word, OpenOffice, LibreOffice, & Google Docs
                 </div>
+                <button
+                  onClick={() => window.print()}
+                  disabled={isGeneratingPdf}
+                  className="w-full py-2.5 bg-slate-950 hover:bg-slate-900 text-slate-400 border border-slate-800 hover:text-slate-200 rounded-2xl text-xs font-bold transition-all flex justify-center items-center gap-2 disabled:opacity-50"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-slate-500" />
+                  <span>Open Browser System Printer...</span>
+                </button>
+
+                {jobDescription && !showRevisedPreview && (
+                  <div className="bg-indigo-950/30 border border-indigo-900/50 rounded-2xl p-4 space-y-3">
+                    <div className="flex items-center gap-2 text-indigo-400 font-bold text-[10px] uppercase tracking-widest">
+                      <Sparkles className="w-4 h-4 animate-pulse" />
+                      <span>AI Optimization Available</span>
+                    </div>
+                    <p className="text-[10px] text-slate-400 leading-relaxed">
+                      We can auto-rewrite your bullets to match the target job description while
+                      maintaining this exact design.
+                    </p>
+                    <button
+                      onClick={() => {
+                        setShowPrintModal(false);
+                        setTimeout(() => triggerAIOptimization(), 100);
+                      }}
+                      className="w-full py-2.5 bg-white text-indigo-950 rounded-xl font-black text-[10px] uppercase tracking-wider hover:bg-indigo-50 transition-all active:scale-95 shadow-lg"
+                    >
+                      Optimize for ATS Matches
+                    </button>
+                  </div>
+                )}
+                {showRevisedPreview && (
+                  <div className="bg-emerald-950/40 border border-emerald-900/60 rounded-2xl p-4 flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400">
+                      <CheckCircle className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">
+                        Optimized Copy Active
+                      </div>
+                      <p className="text-[9px] text-emerald-500/80 leading-tight">
+                        Your resume content is now perfectly aligned with the job requirements.
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Live Preview Pane */}
             <div className="flex-1 bg-slate-800/50 border border-slate-800 rounded-2xl overflow-auto">
               <div className="min-h-full flex justify-center p-2 md:p-4">
-                <div 
+                <div
                   ref={previewContainerRef}
                   className={`print-resume-container shadow-2xl transition-all duration-300 pointer-events-none density-${spacingDensity} ${
                     printTemplate === 'classic' ? 'font-serif' : 'font-sans'
                   }`}
-                  style={{ 
+                  style={{
                     width: paperSize === 'letter' ? '8.5in' : '210mm',
                     minWidth: paperSize === 'letter' ? '8.5in' : '210mm',
                     height: paperSize === 'letter' ? '11in' : '297mm',
-                    padding: (printTemplate === 'creative' || printTemplate === 'stellar') ? '0' : '0.5in',
+                    padding:
+                      printTemplate === 'creative' || printTemplate === 'stellar' ? '0' : '0.5in',
                     background: printTemplate === 'stellar' ? '#020617' : 'white',
                     color: printTemplate === 'stellar' ? '#cbd5e1' : 'black',
                     transform: 'scale(0.9)',
                     transformOrigin: 'top center',
                     overflow: 'hidden',
-                    boxSizing: 'border-box'
+                    boxSizing: 'border-box',
                   }}
                 >
                   <ResumeDocumentTemplate data={activeData} template={printTemplate} />
                 </div>
               </div>
             </div>
-
           </div>
         </div>
       )}
@@ -7308,7 +9190,7 @@ export default function Portfolio() {
           <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden flex flex-col relative animate-scaleUp">
             {/* Close Button */}
             {!authLoading && (
-              <button 
+              <button
                 onClick={() => setShowAuthModal(false)}
                 className="absolute top-4 right-4 text-slate-400 hover:text-white hover:bg-slate-800/50 p-1.5 rounded-lg transition-all cursor-pointer"
               >
@@ -7327,7 +9209,9 @@ export default function Portfolio() {
                     {authMode === 'login' ? 'Welcome Back' : 'Create Account'}
                   </h3>
                   <p className="text-[11px] text-slate-550 font-semibold">
-                    {authMode === 'login' ? 'Sign in to sync your data' : 'Register to save your progress'}
+                    {authMode === 'login'
+                      ? 'Sign in to sync your data'
+                      : 'Register to save your progress'}
                   </p>
                 </div>
               </div>
@@ -7344,7 +9228,9 @@ export default function Portfolio() {
                 )}
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-slate-450 uppercase tracking-wider">Email Address</label>
+                  <label className="text-[10px] font-bold text-slate-450 uppercase tracking-wider">
+                    Email Address
+                  </label>
                   <input
                     type="email"
                     required
@@ -7356,7 +9242,9 @@ export default function Portfolio() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-slate-450 uppercase tracking-wider">Password</label>
+                  <label className="text-[10px] font-bold text-slate-450 uppercase tracking-wider">
+                    Password
+                  </label>
                   <input
                     type="password"
                     required
@@ -7373,7 +9261,9 @@ export default function Portfolio() {
                   className="w-full bg-indigo-650 hover:bg-indigo-550 text-white font-extrabold py-2.5 rounded-xl text-xs transition-all shadow-md disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
                 >
                   {authLoading ? (
-                    <><span className="animate-spin text-slate-300">⏳</span> Processing...</>
+                    <>
+                      <span className="animate-spin text-slate-300">⏳</span> Processing...
+                    </>
                   ) : (
                     <span>{authMode === 'login' ? '🔑 Sign In' : '📝 Register'}</span>
                   )}
@@ -7383,7 +9273,9 @@ export default function Portfolio() {
               {/* Divider */}
               <div className="relative my-5 text-center">
                 <hr className="border-slate-800" />
-                <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-900 px-3 text-[9px] font-bold text-slate-500 uppercase tracking-widest">Or</span>
+                <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-900 px-3 text-[9px] font-bold text-slate-500 uppercase tracking-widest">
+                  Or
+                </span>
               </div>
 
               {/* Google OAuth Button */}
@@ -7416,7 +9308,7 @@ export default function Portfolio() {
 
               {/* Mode Switcher */}
               <p className="text-[10px] text-slate-500 font-medium text-center mt-5">
-                {authMode === 'login' ? "Don't have an account?" : "Already have an account?"}{' '}
+                {authMode === 'login' ? "Don't have an account?" : 'Already have an account?'}{' '}
                 <button
                   type="button"
                   onClick={() => {
@@ -7438,8 +9330,10 @@ export default function Portfolio() {
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-fadeIn">
           <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col relative animate-scaleUp">
             {/* Close Button */}
-            {(vercelDeployState === 'idle' || vercelDeployState === 'success' || vercelDeployState === 'error') && (
-              <button 
+            {(vercelDeployState === 'idle' ||
+              vercelDeployState === 'success' ||
+              vercelDeployState === 'error') && (
+              <button
                 onClick={() => setShowVercelModal(false)}
                 className="absolute top-4 right-4 text-slate-400 hover:text-white hover:bg-slate-800/50 p-1.5 rounded-lg transition-all"
               >
@@ -7452,12 +9346,14 @@ export default function Portfolio() {
               <div className="flex items-center gap-3">
                 <div className="bg-white text-black p-2 rounded-xl flex items-center justify-center shadow-lg">
                   <svg className="w-6 h-6 fill-current text-black" viewBox="0 0 512 512">
-                    <path d="M256,48,496,464H16Z"/>
+                    <path d="M256,48,496,464H16Z" />
                   </svg>
                 </div>
                 <div>
                   <h3 className="text-base font-extrabold text-white">One-Click Vercel Deploy</h3>
-                  <p className="text-[11px] text-slate-500 font-semibold">Instant Production Serverless Hosting</p>
+                  <p className="text-[11px] text-slate-500 font-semibold">
+                    Instant Production Serverless Hosting
+                  </p>
                 </div>
               </div>
             </div>
@@ -7468,7 +9364,8 @@ export default function Portfolio() {
               {(vercelDeployState === 'idle' || vercelDeployState === 'error') && (
                 <div className="space-y-5">
                   <p className="text-xs text-slate-400 leading-relaxed font-semibold">
-                    Deploy your high-fidelity React + Vite portfolio website directly to Vercel production. No command lines, git pushes, or configuration files required.
+                    Deploy your high-fidelity React + Vite portfolio website directly to Vercel
+                    production. No command lines, git pushes, or configuration files required.
                   </p>
 
                   {vercelError && (
@@ -7485,11 +9382,13 @@ export default function Portfolio() {
                     {/* Access Token Field */}
                     <div className="space-y-1.5">
                       <div className="flex items-center justify-between">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Vercel Personal Access Token</label>
-                        <a 
-                          href="https://vercel.com/account/tokens" 
-                          target="_blank" 
-                          rel="noopener noreferrer" 
+                        <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                          Vercel Personal Access Token
+                        </label>
+                        <a
+                          href="https://vercel.com/account/tokens"
+                          target="_blank"
+                          rel="noopener noreferrer"
                           className="text-[10px] text-indigo-400 hover:text-indigo-300 font-bold underline transition-colors"
                         >
                           Generate Token →
@@ -7505,18 +9404,25 @@ export default function Portfolio() {
                         />
                       </div>
                       <p className="text-[10px] text-slate-500 leading-normal">
-                        Your Vercel token is stored safely in your own browser's local storage and used solely to trigger this deployment.
+                        Your Vercel token is stored safely in your own browser's local storage and
+                        used solely to trigger this deployment.
                       </p>
                     </div>
 
                     {/* Project Name Field */}
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Vercel Project Name</label>
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                        Vercel Project Name
+                      </label>
                       <div className="relative">
                         <input
                           type="text"
                           value={vercelProjectName}
-                          onChange={(e) => setVercelProjectName(e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-'))}
+                          onChange={(e) =>
+                            setVercelProjectName(
+                              e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-')
+                            )
+                          }
                           placeholder="e.g. my-awesome-portfolio"
                           className="w-full bg-slate-950 border border-slate-800 focus:border-indigo-500 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-600 focus:outline-none transition-colors"
                         />
@@ -7535,7 +9441,7 @@ export default function Portfolio() {
                     className="w-full bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-extrabold py-3 rounded-xl text-xs transition-all shadow-lg hover:shadow-indigo-500/20 active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2 mt-2"
                   >
                     <svg className="w-3.5 h-3.5 fill-current text-white" viewBox="0 0 512 512">
-                      <path d="M256,48,496,464H16Z"/>
+                      <path d="M256,48,496,464H16Z" />
                     </svg>
                     <span>Deploy Portfolio Website</span>
                   </button>
@@ -7543,7 +9449,9 @@ export default function Portfolio() {
               )}
 
               {/* LOADING / DEPLOYING PROGRESS STATE */}
-              {(vercelDeployState === 'preparing' || vercelDeployState === 'deploying' || vercelDeployState === 'polling') && (
+              {(vercelDeployState === 'preparing' ||
+                vercelDeployState === 'deploying' ||
+                vercelDeployState === 'polling') && (
                 <div className="py-8 flex flex-col items-center justify-center text-center space-y-6">
                   {/* Glowing Pulse Spinner */}
                   <div className="relative flex items-center justify-center animate-pulse">
@@ -7551,13 +9459,15 @@ export default function Portfolio() {
                     <div className="relative w-16 h-16 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin"></div>
                     <div className="absolute flex items-center justify-center text-black">
                       <svg className="w-6 h-6 fill-current text-indigo-400" viewBox="0 0 512 512">
-                        <path d="M256,48,496,464H16Z"/>
+                        <path d="M256,48,496,464H16Z" />
                       </svg>
                     </div>
                   </div>
 
                   <div className="space-y-2 max-w-xs">
-                    <h4 className="text-sm font-bold text-white tracking-wide">Publishing Live Portfolio</h4>
+                    <h4 className="text-sm font-bold text-white tracking-wide">
+                      Publishing Live Portfolio
+                    </h4>
                     <p className="text-xs text-slate-400 leading-relaxed font-medium">
                       {vercelDeployProgress}
                     </p>
@@ -7566,56 +9476,73 @@ export default function Portfolio() {
                   {/* Elegant step-by-step indicator */}
                   <div className="w-full max-w-sm border border-slate-800/80 bg-slate-950/20 rounded-2xl p-4.5 text-left space-y-3.5">
                     <div className="flex items-center gap-3">
-                      <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
-                        vercelDeployState !== 'preparing' 
-                          ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' 
-                          : 'bg-indigo-600 text-white animate-pulse'
-                      }`}>
+                      <div
+                        className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                          vercelDeployState !== 'preparing'
+                            ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                            : 'bg-indigo-600 text-white animate-pulse'
+                        }`}
+                      >
                         {vercelDeployState !== 'preparing' ? '✓' : '1'}
                       </div>
-                      <span className={`text-[11px] font-semibold ${vercelDeployState !== 'preparing' ? 'text-slate-300' : 'text-indigo-400 font-bold'}`}>
+                      <span
+                        className={`text-[11px] font-semibold ${vercelDeployState !== 'preparing' ? 'text-slate-300' : 'text-indigo-400 font-bold'}`}
+                      >
                         Compiling responsive portfolio modules
                       </span>
                     </div>
 
                     <div className="flex items-center gap-3">
-                      <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
-                        vercelDeployState === 'polling' || (vercelDeployState as string) === 'success'
-                          ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-                          : vercelDeployState === 'deploying'
-                            ? 'bg-indigo-600 text-white animate-pulse'
-                            : 'bg-slate-800 text-slate-500'
-                      }`}>
-                        {vercelDeployState === 'polling' || (vercelDeployState as string) === 'success' ? '✓' : '2'}
+                      <div
+                        className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                          vercelDeployState === 'polling' ||
+                          (vercelDeployState as string) === 'success'
+                            ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                            : vercelDeployState === 'deploying'
+                              ? 'bg-indigo-600 text-white animate-pulse'
+                              : 'bg-slate-800 text-slate-500'
+                        }`}
+                      >
+                        {vercelDeployState === 'polling' ||
+                        (vercelDeployState as string) === 'success'
+                          ? '✓'
+                          : '2'}
                       </div>
-                      <span className={`text-[11px] font-semibold ${
-                        vercelDeployState === 'polling' || (vercelDeployState as string) === 'success'
-                          ? 'text-slate-300'
-                          : vercelDeployState === 'deploying'
-                            ? 'text-indigo-400 font-bold'
-                            : 'text-slate-500'
-                      }`}>
+                      <span
+                        className={`text-[11px] font-semibold ${
+                          vercelDeployState === 'polling' ||
+                          (vercelDeployState as string) === 'success'
+                            ? 'text-slate-300'
+                            : vercelDeployState === 'deploying'
+                              ? 'text-indigo-400 font-bold'
+                              : 'text-slate-500'
+                        }`}
+                      >
                         Bundling code with Vite and Vercel CDN
                       </span>
                     </div>
 
                     <div className="flex items-center gap-3">
-                      <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
-                        (vercelDeployState as string) === 'success'
-                          ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-                          : vercelDeployState === 'polling'
-                            ? 'bg-indigo-600 text-white animate-pulse'
-                            : 'bg-slate-800 text-slate-500'
-                      }`}>
+                      <div
+                        className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                          (vercelDeployState as string) === 'success'
+                            ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                            : vercelDeployState === 'polling'
+                              ? 'bg-indigo-600 text-white animate-pulse'
+                              : 'bg-slate-800 text-slate-500'
+                        }`}
+                      >
                         {(vercelDeployState as string) === 'success' ? '✓' : '3'}
                       </div>
-                      <span className={`text-[11px] font-semibold ${
-                        (vercelDeployState as string) === 'success'
-                          ? 'text-slate-300'
-                          : vercelDeployState === 'polling'
-                            ? 'text-indigo-400 font-bold'
-                            : 'text-slate-500'
-                      }`}>
+                      <span
+                        className={`text-[11px] font-semibold ${
+                          (vercelDeployState as string) === 'success'
+                            ? 'text-slate-300'
+                            : vercelDeployState === 'polling'
+                              ? 'text-indigo-400 font-bold'
+                              : 'text-slate-500'
+                        }`}
+                      >
                         Publishing to edge network domains
                       </span>
                     </div>
@@ -7630,7 +9557,9 @@ export default function Portfolio() {
                     <div className="w-12 h-12 bg-emerald-500/10 border border-emerald-500/30 rounded-full flex items-center justify-center shadow-lg shadow-emerald-500/5">
                       <Check className="w-6 h-6 text-emerald-400" />
                     </div>
-                    <h4 className="text-sm font-extrabold text-white tracking-wide">Deploy Complete!</h4>
+                    <h4 className="text-sm font-extrabold text-white tracking-wide">
+                      Deploy Complete!
+                    </h4>
                     <p className="text-xs text-slate-400 leading-normal max-w-xs">
                       Your premium portfolio is now live on the Vercel edge CDN globally!
                     </p>
@@ -7639,12 +9568,14 @@ export default function Portfolio() {
                   {/* Details Card */}
                   <div className="border border-slate-800/80 bg-slate-950/30 rounded-2xl p-5 space-y-4">
                     <div className="space-y-1">
-                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Live Production URL</label>
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                        Live Production URL
+                      </label>
                       <div className="flex items-center justify-between gap-3 bg-slate-950 border border-slate-850 rounded-xl p-3">
-                        <a 
+                        <a
                           href={vercelDeployUrl}
-                          target="_blank" 
-                          rel="noopener noreferrer" 
+                          target="_blank"
+                          rel="noopener noreferrer"
                           className="text-xs text-indigo-400 hover:text-indigo-300 font-bold underline truncate font-semibold"
                         >
                           {vercelDeployUrl}
@@ -7669,19 +9600,33 @@ export default function Portfolio() {
 
                     <div className="grid grid-cols-2 gap-4 text-left border-t border-slate-800/80 pt-4">
                       <div>
-                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block">Hosting Platform</span>
-                        <span className="text-[11px] font-bold text-slate-200 mt-0.5 block font-semibold">Vercel Edge</span>
+                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block">
+                          Hosting Platform
+                        </span>
+                        <span className="text-[11px] font-bold text-slate-200 mt-0.5 block font-semibold">
+                          Vercel Edge
+                        </span>
                       </div>
                       <div>
-                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block">Framework</span>
-                        <span className="text-[11px] font-bold text-slate-200 mt-0.5 block font-semibold">Vite + React</span>
+                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block">
+                          Framework
+                        </span>
+                        <span className="text-[11px] font-bold text-slate-200 mt-0.5 block font-semibold">
+                          Vite + React
+                        </span>
                       </div>
                       <div>
-                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block">Project Name</span>
-                        <span className="text-[11px] font-bold text-slate-200 mt-0.5 block truncate font-semibold">{vercelProjectName}</span>
+                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block">
+                          Project Name
+                        </span>
+                        <span className="text-[11px] font-bold text-slate-200 mt-0.5 block truncate font-semibold">
+                          {vercelProjectName}
+                        </span>
                       </div>
                       <div>
-                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block">SSL Certificate</span>
+                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block">
+                          SSL Certificate
+                        </span>
                         <span className="text-[11px] font-bold text-emerald-400 mt-0.5 block flex items-center gap-1 font-semibold">
                           <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-ping"></span>
                           <span>Active SSL</span>
@@ -7717,13 +9662,13 @@ export default function Portfolio() {
       {showOptimizerModal && revisedResumeData && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8 bg-slate-900/90 backdrop-blur-md animate-fadeIn">
           <div className="w-full max-w-6xl h-full max-h-[90vh] flex flex-col relative">
-            <button 
+            <button
               onClick={closeOptimizerModal}
               className="absolute -top-4 -right-4 bg-slate-800 hover:bg-slate-700 text-white p-2 rounded-full shadow-xl transition-all z-[110]"
             >
               <X className="w-5 h-5" />
             </button>
-            <ResumeInteractivePreview 
+            <ResumeInteractivePreview
               originalData={resumeData}
               revisedData={revisedResumeData}
               appliedFixes={appliedFixes}
@@ -7735,23 +9680,23 @@ export default function Portfolio() {
       )}
 
       {/* Print-only hidden resume that shows during printing */}
-      <div 
+      <div
         className={`print-resume-container hidden print:block density-${spacingDensity} ${
           printTemplate === 'classic' ? 'font-serif' : 'font-sans'
         }`}
         style={{
           width: paperSize === 'letter' ? '8.5in' : '210mm',
-          padding: (printTemplate === 'creative' || printTemplate === 'stellar') ? '0' : '0.5in',
+          padding: printTemplate === 'creative' || printTemplate === 'stellar' ? '0' : '0.5in',
           margin: '0 auto',
           background: printTemplate === 'stellar' ? '#020617' : 'white',
-          color: printTemplate === 'stellar' ? '#cbd5e1' : 'black'
+          color: printTemplate === 'stellar' ? '#cbd5e1' : 'black',
         }}
       >
         <ResumeDocumentTemplate data={activeData} template={printTemplate} />
       </div>
 
       {/* Offscreen container for direct high-fidelity PDF capture */}
-      <div 
+      <div
         id="pdf-render-target"
         className={`density-${spacingDensity} ${
           printTemplate === 'classic' ? 'font-serif' : 'font-sans'
@@ -7764,13 +9709,13 @@ export default function Portfolio() {
           minWidth: paperSize === 'letter' ? '8.5in' : '210mm',
           height: paperSize === 'letter' ? '11in' : '297mm',
           minHeight: paperSize === 'letter' ? '11in' : '297mm',
-          padding: (printTemplate === 'creative' || printTemplate === 'stellar') ? '0' : '0.5in',
+          padding: printTemplate === 'creative' || printTemplate === 'stellar' ? '0' : '0.5in',
           background: printTemplate === 'stellar' ? '#020617' : 'white',
           color: printTemplate === 'stellar' ? '#cbd5e1' : 'black',
           overflow: 'hidden',
           boxSizing: 'border-box',
           zIndex: -1000,
-          pointerEvents: 'none'
+          pointerEvents: 'none',
         }}
       >
         <ResumeDocumentTemplate data={activeData} template={printTemplate} />
@@ -7824,7 +9769,7 @@ export default function Portfolio() {
             min-height: ${paperSize === 'letter' ? '11in' : '297mm'} !important;
             height: ${paperSize === 'letter' ? '11in' : '297mm'} !important;
             margin: 0 auto !important;
-            padding: ${(printTemplate === 'creative' || printTemplate === 'stellar') ? '0' : '0.5in'} !important;
+            padding: ${printTemplate === 'creative' || printTemplate === 'stellar' ? '0' : '0.5in'} !important;
             background: ${printTemplate === 'stellar' ? '#020617' : 'white'} !important;
             color: ${printTemplate === 'stellar' ? '#cbd5e1' : 'black'} !important;
             border: none !important;
@@ -7860,16 +9805,18 @@ export default function Portfolio() {
           }
         }
       `}</style>
-      
+
       {/* MOBILE BOTTOM VIEW TOGGLER */}
       {!fullscreenPreview && (
-        <div className={`lg:hidden flex-shrink-0 h-14 border-t flex items-center justify-around px-4 z-40 ${
-          appTheme === 'nord-light'
-            ? 'bg-white border-slate-200 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]'
-            : appTheme === 'indigo-midnight'
-              ? 'bg-[#0c0920] border-[#2b1f63] shadow-[0_-2px_10px_rgba(0,0,0,0.2)]'
-              : 'bg-slate-950 border-slate-800 shadow-[0_-2px_10px_rgba(0,0,0,0.3)]'
-        }`}>
+        <div
+          className={`lg:hidden flex-shrink-0 h-14 border-t flex items-center justify-around px-4 z-40 ${
+            appTheme === 'nord-light'
+              ? 'bg-white border-slate-200 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]'
+              : appTheme === 'indigo-midnight'
+                ? 'bg-[#0c0920] border-[#2b1f63] shadow-[0_-2px_10px_rgba(0,0,0,0.2)]'
+                : 'bg-slate-950 border-slate-800 shadow-[0_-2px_10px_rgba(0,0,0,0.3)]'
+          }`}
+        >
           <button
             onClick={() => setMobileActiveView('editor')}
             className={`flex flex-col items-center justify-center gap-1 py-1 px-4 rounded-xl transition-all cursor-pointer ${

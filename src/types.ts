@@ -112,14 +112,14 @@ export type InterviewRound =
   | 'technical'
   | 'dsa'
   | 'system-design'
-  | 'customer-scenarios'   // Tech Support, Customer Success
-  | 'product-sense'        // Product Managers
-  | 'sql-analytics'        // Data Analysts, BI
-  | 'ml-statistics'        // Data Scientists
-  | 'infrastructure'       // DevOps, SRE
-  | 'qa-testing'           // QA Engineers
-  | 'design-portfolio'     // UX/UI Designers
-  | 'leadership'          // Managers, Directors
+  | 'customer-scenarios' // Tech Support, Customer Success
+  | 'product-sense' // Product Managers
+  | 'sql-analytics' // Data Analysts, BI
+  | 'ml-statistics' // Data Scientists
+  | 'infrastructure' // DevOps, SRE
+  | 'qa-testing' // QA Engineers
+  | 'design-portfolio' // UX/UI Designers
+  | 'leadership' // Managers, Directors
   | 'reported';
 
 export type CompanyCulture = 'big-tech' | 'startup' | 'consulting' | 'finance' | 'generic';
@@ -141,17 +141,17 @@ export type RoleCategory =
   | 'general';
 
 export interface RoleInsights {
-  whatYouDo: string[];        // Bullet points: what this role does day-to-day
-  typicalDay: string;         // A paragraph describing a typical day
-  keySkills: string[];        // Top skills expected in this role
-  topChallenges: string[];    // Common challenges candidates face in this role
-  glance: string;             // One-line summary shown at the top
+  whatYouDo: string[]; // Bullet points: what this role does day-to-day
+  typicalDay: string; // A paragraph describing a typical day
+  keySkills: string[]; // Top skills expected in this role
+  topChallenges: string[]; // Common challenges candidates face in this role
+  glance: string; // One-line summary shown at the top
 }
 
 export interface JobContext {
   company: string;
   role: string;
-  positionName: string;       // Explicitly entered position title
+  positionName: string; // Explicitly entered position title
   roleCategory: RoleCategory; // Detected role family
   seniority: 'junior' | 'mid' | 'senior' | 'lead';
   skills: string[];
@@ -213,7 +213,7 @@ export interface GeminiEnhancedData {
     source: string;
   }[];
   searchSources: string[];
-  modelUsed?: string;   // Which AI model actually responded (e.g. "google/gemma-4-31b-it:free")
+  modelUsed?: string; // Which AI model actually responded (e.g. "google/gemma-4-31b-it:free")
   providerUsed?: string; // Which provider (groq | openrouter | gemini)
 }
 
@@ -242,12 +242,17 @@ export interface InterviewSession {
   optimizedResults?: Record<string, { optimizedAnswer: string; feedback: string }>;
   recruiterPersonaId?: string;
   recruiterReplies?: Record<string, string>; // Maps questionId -> recruiter's conversational reaction
-  sessionSummaryFeedback?: string;           // Recruiter executive assessment text shown at end
-  recruiterQuestions?: Array<{ id: string; question: string; hint: string; source: string; difficulty: 'easy' | 'medium' | 'hard' }>; // Company-specific recruiter round questions
+  sessionSummaryFeedback?: string; // Recruiter executive assessment text shown at end
+  recruiterQuestions?: Array<{
+    id: string;
+    question: string;
+    hint: string;
+    source: string;
+    difficulty: 'easy' | 'medium' | 'hard';
+  }>; // Company-specific recruiter round questions
   interfaceMode?: 'standard' | 'interactive';
   isCompleted?: boolean;
   mockRound?: InterviewRound;
   mockQuestionIdx?: number;
   mockMode?: 'idle' | 'answering' | 'reviewed';
 }
-
