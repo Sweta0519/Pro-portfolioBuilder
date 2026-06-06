@@ -1123,22 +1123,33 @@ export async function testApiConnection(apiKey: string, provider: AiProvider): P
 
   try {
     if (provider === 'openrouter') {
-      const r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-        method: 'POST',
+      const r = await fetch('https://openrouter.ai/api/v1/key', {
+        method: 'GET',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${apiKey}`,
-          'HTTP-Referer': 'https://pro-portfolio-builder.vercel.app',
-          'X-Title': 'Pro Portfolio Builder',
         },
-        body: JSON.stringify({ model: 'meta-llama/llama-3.3-70b-instruct:free', messages: [{ role: 'user', content: 'Hi' }], max_tokens: 5 }),
       });
-      if (r.ok) return { ok: true, message: '✅ OpenRouter connected! Llama 3.3 70B (free) ready.' };
-      let errMsg = '';
-      try { const d = await r.json(); errMsg = d?.error?.message || ''; } catch {}
+      if (r.ok) {
+        try {
+          const d = await r.json();
+          const label = d?.data?.label || 'Key';
+          const isFree = d?.data?.is_free_tier ?? true;
+          const usage = d?.data?.usage || 0;
+          const limit = d?.data?.limit;
+          let tierText = isFree ? 'Free Tier' : 'Paid Tier';
+          if (limit !== null && limit !== undefined) {
+            tierText += ` ($${usage.toFixed(2)} / $${limit.toFixed(2)})`;
+          } else {
+            tierText += ` ($${usage.toFixed(2)} used)`;
+          }
+          return { ok: true, message: `✅ OpenRouter connected! (${label} - ${tierText})` };
+        } catch {
+          return { ok: true, message: '✅ OpenRouter connected!' };
+        }
+      }
       if (r.status === 401) return { ok: false, message: '🔑 Invalid OpenRouter key. Check at openrouter.ai/keys' };
       if (r.status === 429) return { ok: false, message: '⏳ OpenRouter rate limited. Wait a moment.' };
-      return { ok: false, message: `❌ OpenRouter error ${r.status}: ${errMsg || 'Connection failed'}` };
+      return { ok: false, message: `❌ OpenRouter error ${r.status}: Connection failed` };
     } else if (provider === 'groq') {
       const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
@@ -1270,7 +1281,7 @@ function parseInsightsResponse(textContent: string, groundingMeta?: Record<strin
   };
 }
 
-async function fetchWithGemini(apiKey: string, prompt: string): Promise<GeminiEnhancedData | null> {
+async function fetchWithGemini(apiKey: string, prompt: string, onProgress?: (msg: string) => void): Promise<GeminiEnhancedData | null> {
   async function callGemini(useGrounding: boolean): Promise<Response> {
     const body: Record<string, unknown> = {
       contents: [{ parts: [{ text: prompt }] }],
@@ -1285,6 +1296,7 @@ async function fetchWithGemini(apiKey: string, prompt: string): Promise<GeminiEn
   let response: Response;
 
   if (groundingSupported) {
+    if (onProgress) onProgress('Contacting Gemini (gemini-2.0-flash) with Google Search grounding...');
     response = await callGemini(true);
     if (!response.ok) {
       let errorMsg = '';
@@ -1305,16 +1317,19 @@ async function fetchWithGemini(apiKey: string, prompt: string): Promise<GeminiEn
 
       // Otherwise, assume it might be a grounding/tools error and try without grounding
       if (response.status === 400) {
+        if (onProgress) onProgress('⚠️ Search grounding failed. Retrying standard Gemini...');
         localStorage.setItem('gemini_grounding_supported', 'false');
         response = await callGemini(false);
       }
     }
   } else {
+    if (onProgress) onProgress('Contacting standard Gemini (gemini-2.0-flash)...');
     response = await callGemini(false);
   }
 
   if (response.status === 429) {
     for (let retry = 0; retry < 2; retry++) {
+      if (onProgress) onProgress(`⏳ Gemini rate limited. Retrying in ${(retry + 1) * 3}s...`);
       await new Promise(resolve => setTimeout(resolve, (retry + 1) * 3000));
       response = await callGemini(false);
       if (response.status !== 429) break;
@@ -1345,10 +1360,12 @@ async function fetchWithGemini(apiKey: string, prompt: string): Promise<GeminiEn
     ?.filter((p: { text?: string }) => p.text)
     ?.map((p: { text: string }) => p.text)
     ?.join('') || '';
+  if (onProgress) onProgress('✅ Gemini response received. Parsing...');
   return parseInsightsResponse(textParts, data.candidates?.[0]?.groundingMetadata);
 }
 
-async function fetchWithGroq(apiKey: string, prompt: string): Promise<GeminiEnhancedData | null> {
+async function fetchWithGroq(apiKey: string, prompt: string, onProgress?: (msg: string) => void): Promise<GeminiEnhancedData | null> {
+  if (onProgress) onProgress('Contacting Groq (llama-3.3-70b-versatile)...');
   const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -1382,6 +1399,7 @@ async function fetchWithGroq(apiKey: string, prompt: string): Promise<GeminiEnha
 
   const data = await response.json();
   const textContent = data.choices?.[0]?.message?.content || '';
+  if (onProgress) onProgress('✅ Groq response received. Parsing...');
   return parseInsightsResponse(textContent);
 }
 
@@ -1441,7 +1459,11 @@ async function callOpenRouterModel(
   });
 }
 
-async function fetchWithOpenRouter(apiKey: string, prompt: string): Promise<GeminiEnhancedData | null> {
+async function fetchWithOpenRouter(
+  apiKey: string,
+  prompt: string,
+  onProgress?: (msg: string) => void
+): Promise<GeminiEnhancedData | null> {
   const primaryModel = getValidOpenRouterModel();
   const messages = [
     { role: 'system', content: 'You are a career research assistant. Always respond with valid JSON only.' },
@@ -1461,12 +1483,20 @@ async function fetchWithOpenRouter(apiKey: string, prompt: string): Promise<Gemi
 
   for (const model of modelsToTry) {
     try {
+      const modelName = model.split('/').pop()?.replace(':free', '') || model;
+      if (onProgress) onProgress(`Trying OpenRouter model: ${modelName}...`);
       const response = await callOpenRouterModel(apiKey, model, messages);
 
       if (response.ok) {
         const data = await response.json();
         const textContent = data.choices?.[0]?.message?.content || '';
-        return parseInsightsResponse(textContent);
+        const parsed = parseInsightsResponse(textContent);
+        if (parsed) {
+          parsed.modelUsed = model; // stamp which model responded
+          parsed.providerUsed = 'openrouter';
+        }
+        if (onProgress) onProgress(`✅ Succeeded using model: ${modelName}`);
+        return parsed;
       }
 
       // Parse error
@@ -1484,6 +1514,7 @@ async function fetchWithOpenRouter(apiKey: string, prompt: string): Promise<Gemi
 
       if (response.status === 429 || errorCode === 429) {
         // Rate limited on this model — try next in fallback chain
+        if (onProgress) onProgress(`⚠️ Model ${modelName} rate-limited. Trying fallback...`);
         console.warn(`[OpenRouter] Model ${model} rate-limited (429), trying next fallback...`);
         lastError = new Error(`Model ${model} rate-limited`);
         continue;
@@ -1509,17 +1540,31 @@ export async function fetchGeminiInsights(
   role: string,
   seniority: string,
   provider: AiProvider = 'gemini',
+  onProgress?: (msg: string) => void,
 ): Promise<GeminiEnhancedData | null> {
   const prompt = buildInsightsPrompt(company, role, seniority);
 
   try {
+    let result: GeminiEnhancedData | null = null;
     if (provider === 'groq') {
-      return await fetchWithGroq(apiKey, prompt);
+      result = await fetchWithGroq(apiKey, prompt, onProgress);
+      if (result) {
+        result.providerUsed = 'groq';
+        result.modelUsed = 'llama-3.3-70b-versatile';
+      }
     } else if (provider === 'openrouter') {
-      return await fetchWithOpenRouter(apiKey, prompt);
+      result = await fetchWithOpenRouter(apiKey, prompt, onProgress);
+      if (result) {
+        result.providerUsed = 'openrouter';
+      }
     } else {
-      return await fetchWithGemini(apiKey, prompt);
+      result = await fetchWithGemini(apiKey, prompt, onProgress);
+      if (result) {
+        result.providerUsed = 'gemini';
+        result.modelUsed = 'gemini-2.0-flash';
+      }
     }
+    return result;
   } catch (err) {
     console.error(`${provider} fetch error:`, err);
     throw err;

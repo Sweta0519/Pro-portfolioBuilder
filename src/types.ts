@@ -213,6 +213,8 @@ export interface GeminiEnhancedData {
     source: string;
   }[];
   searchSources: string[];
+  modelUsed?: string;   // Which AI model actually responded (e.g. "google/gemma-4-31b-it:free")
+  providerUsed?: string; // Which provider (groq | openrouter | gemini)
 }
 
 export interface RecruiterPersona {

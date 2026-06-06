@@ -622,6 +622,7 @@ export default function App() {
     initialActiveSession ? (initialActiveSession.geminiData || null) : null
   );
   const [isFetchingGemini, setIsFetchingGemini] = useState<boolean>(false);
+  const [aiProgress, setAiProgress] = useState<string>('');
   const [geminiError, setGeminiError] = useState<string>('');
   const [showApiKeyInput, setShowApiKeyInput] = useState<boolean>(false);
   const [aiProvider, setAiProvider] = useState<AiProvider>(() => (localStorage.getItem('ai_provider') as AiProvider) || 'groq');
@@ -3995,7 +3996,7 @@ export default function Portfolio() {
               <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500">
                 <span className="hidden sm:inline">AI Provider:</span>
                 <span className="text-[11px] px-2 py-0.5 rounded bg-slate-900 border border-slate-800 text-violet-400">
-                  {aiProvider === 'groq' ? 'Groq (Llama 3)' : aiProvider === 'openrouter' ? 'OpenRouter' : 'Gemini'}
+                  {aiProvider === 'groq' ? 'Groq (Llama 3)' : aiProvider === 'openrouter' ? `OpenRouter (${openRouterModel.split('/').pop()?.replace(':free', '')})` : 'Gemini'}
                 </span>
               </div>
             )}
@@ -4732,6 +4733,7 @@ export default function Portfolio() {
                                 <p className="text-[9px] text-slate-600">If a free model is rate-limited, the app automatically retries the next one. Top 3 (✅) had the highest success rate in live testing.</p>
                               </div>
                             )}
+
                             <div className="flex gap-2">
                               <input
                                 type="password"
@@ -4756,41 +4758,35 @@ export default function Portfolio() {
                             {/* Test Connection Button */}
                             {geminiApiKey && (
                               <div className="space-y-1.5">
-                                {aiProvider === 'openrouter' ? (
-                                  <div className="flex items-start gap-2 p-2 rounded-lg bg-yellow-950/40 border border-yellow-800/50">
-                                    <span className="text-yellow-400 text-[11px] mt-0.5">⚠️</span>
-                                    <p className="text-[10px] text-yellow-300/80 leading-relaxed">
-                                      <strong>Skip the test button for OpenRouter.</strong> Even a single test ping can trigger a false 429 rate-limit on new accounts. Just paste your key and go straight to <strong>Interview Prep</strong> → enter a company → click the AI insights button to try it for real.
-                                    </p>
-                                  </div>
-                                ) : (
-                                  <div className="flex items-center gap-2">
-                                    <button
-                                      onClick={async () => {
-                                        setConnectionTest({ testing: true, result: null });
-                                        const result = await testApiConnection(geminiApiKey, aiProvider);
-                                        setConnectionTest({ testing: false, result });
-                                      }}
-                                      disabled={connectionTest.testing}
-                                      className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-[10px] font-bold text-slate-300 transition-all flex items-center gap-1.5"
-                                    >
-                                      {connectionTest.testing ? (
-                                        <><span className="w-3 h-3 border-2 border-slate-500 border-t-violet-400 rounded-full animate-spin" /> Testing...</>
-                                      ) : (
-                                        <>🔌 Test Connection</>
-                                      )}
-                                    </button>
-                                    {connectionTest.result && (
-                                      <span className={`text-[10px] font-semibold ${connectionTest.result.ok ? 'text-green-400' : 'text-rose-400'}`}>
-                                        {connectionTest.result.message}
-                                      </span>
+                                <div className="flex items-center gap-2">
+                                  <button
+                                    onClick={async () => {
+                                      setConnectionTest({ testing: true, result: null });
+                                      const result = await testApiConnection(geminiApiKey, aiProvider);
+                                      setConnectionTest({ testing: false, result });
+                                    }}
+                                    disabled={connectionTest.testing}
+                                    className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-[10px] font-bold text-slate-300 transition-all flex items-center gap-1.5"
+                                  >
+                                    {connectionTest.testing ? (
+                                      <><span className="w-3 h-3 border-2 border-slate-500 border-t-violet-400 rounded-full animate-spin" /> Testing...</>
+                                    ) : (
+                                      <>🔌 Test Connection</>
                                     )}
-                                  </div>
+                                  </button>
+                                  {connectionTest.result && (
+                                    <span className={`text-[10px] font-semibold ${connectionTest.result.ok ? 'text-green-400' : 'text-rose-400'}`}>
+                                      {connectionTest.result.message}
+                                    </span>
+                                  )}
+                                </div>
+                                {aiProvider === 'openrouter' && (
+                                  <p className="text-[9px] text-slate-500 leading-relaxed mt-1">
+                                    💡 Verification query checks key metadata/credits directly. It doesn't consume model tokens or trigger fallback rate-limits.
+                                  </p>
                                 )}
                               </div>
                             )}
-
-
                           </div>
                         )}
                       </div>
@@ -4898,6 +4894,7 @@ export default function Portfolio() {
                           // Step 2: If API key exists, fetch Gemini enhanced data in parallel
                           if (geminiApiKey.trim()) {
                             setIsFetchingGemini(true);
+                            setAiProgress('Connecting...');
                             try {
                               const companyForSearch = interviewCompanyName.trim() || plan.context.company;
                               const enhanced = await fetchGeminiInsights(
@@ -4906,6 +4903,7 @@ export default function Portfolio() {
                                 plan.context.role,
                                 plan.context.seniority,
                                 aiProvider,
+                                (msg) => setAiProgress(msg)
                               );
                               if (enhanced) {
                                 setGeminiData(enhanced);
@@ -5066,9 +5064,12 @@ export default function Portfolio() {
 
                           {/* Gemini Loading Indicator */}
                           {isFetchingGemini && (
-                            <div className="flex items-center gap-2 p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 animate-pulse">
-                              <span className="animate-spin text-sm">{aiProvider === 'groq' ? '⚡' : aiProvider === 'openrouter' ? '🟣' : '🌐'}</span>
-                              <p className="text-[11px] text-blue-300 font-semibold">Fetching real data about this role at {interviewPlan.context.company} via {aiProvider === 'groq' ? 'Groq' : aiProvider === 'openrouter' ? 'OpenRouter' : 'Gemini'}...</p>
+                            <div className="flex items-start gap-2.5 p-3 rounded-xl bg-blue-500/10 border border-blue-500/20">
+                              <span className="animate-spin text-sm flex-shrink-0 mt-0.5">{aiProvider === 'groq' ? '⚡' : aiProvider === 'openrouter' ? '🟣' : '🌐'}</span>
+                              <div className="space-y-0.5">
+                                <p className="text-[11px] text-blue-300 font-semibold">Fetching real data about this role at {interviewPlan.context.company} via {aiProvider === 'groq' ? 'Groq' : aiProvider === 'openrouter' ? 'OpenRouter' : 'Gemini'}...</p>
+                                <p className="text-[10px] text-slate-400 font-mono">{aiProgress || 'Initializing connection...'}</p>
+                              </div>
                             </div>
                           )}
                           {geminiError && (
@@ -5084,9 +5085,25 @@ export default function Portfolio() {
                             return (
                               <div className={`rounded-xl border overflow-hidden ${isGemini ? 'border-blue-500/30 bg-blue-500/5' : 'border-violet-500/25 bg-violet-500/5'}`}>
                                 <div className={`px-4 py-3 border-b ${isGemini ? 'bg-blue-500/10 border-blue-500/20' : 'bg-violet-500/10 border-violet-500/20'}`}>
-                                  <div className="flex items-center justify-between">
+                                  <div className="flex items-center justify-between flex-wrap gap-2">
                                     <p className={`text-[10px] font-black uppercase tracking-wider ${isGemini ? 'text-blue-400' : 'text-violet-400'}`}>🔍 What People Do In This Role</p>
-                                    {isGemini && <span className="text-[9px] font-bold bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded-full">🌐 Live Google Search</span>}
+                                    <div className="flex items-center gap-1.5">
+                                      {geminiData?.providerUsed && (
+                                        <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
+                                          geminiData.providerUsed === 'openrouter' ? 'bg-purple-500/20 text-purple-300' :
+                                          geminiData.providerUsed === 'groq' ? 'bg-green-500/20 text-green-300' :
+                                          'bg-blue-500/20 text-blue-300'
+                                        }`}>
+                                          🤖 {geminiData.providerUsed === 'openrouter' ? 'OpenRouter' : geminiData.providerUsed === 'groq' ? 'Groq' : 'Gemini'}
+                                          {geminiData.modelUsed && ` (${geminiData.modelUsed.split('/').pop()?.replace(':free', '')})`}
+                                        </span>
+                                      )}
+                                      {isGemini && geminiData?.searchSources && geminiData.searchSources.length > 0 && (
+                                        <span className="text-[9px] font-bold bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+                                          <span>🌐</span> Live Google Search
+                                        </span>
+                                      )}
+                                    </div>
                                   </div>
                                   <p className="text-xs text-slate-200 font-semibold mt-0.5">{insights.glance}</p>
                                 </div>
