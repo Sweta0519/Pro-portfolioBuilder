@@ -94,18 +94,13 @@ export default function LandingPage() {
                 </div>
                 <div className="flex-1 text-center text-xs text-slate-400 font-mono">pro-portfolio-builder.vercel.app/app</div>
               </div>
-              {/* Autoplay looping video of the real dashboard */}
-              <video
-                autoPlay
-                loop
-                muted
-                playsInline
+              {/* Autoplay looping animation of the real dashboard */}
+              <img
+                src="/dashboard-demo.webp"
+                alt="ProPortfolio dashboard showing resume import, AI coach, and portfolio generation"
                 className="w-full h-auto"
-                poster=""
-              >
-                <source src="/dashboard-demo.webp" type="video/webp" />
-                Your browser does not support the video tag.
-              </video>
+                loading="lazy"
+              />
             </div>
           </div>
         </div>
