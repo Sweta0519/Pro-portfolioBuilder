@@ -1080,7 +1080,7 @@ export function scoreAnswer(question: string, answer: string, round: InterviewRo
 
 // ─── AI-Powered Interview Insights (Gemini / Groq) ──────────────────────────
 
-export type AiProvider = 'gemini' | 'groq';
+export type AiProvider = 'gemini' | 'groq' | 'openrouter';
 
 
 async function geminiApiFetch(
@@ -1104,19 +1104,42 @@ async function geminiApiFetch(
 export async function testApiConnection(apiKey: string, provider: AiProvider): Promise<{ ok: boolean; message: string }> {
   if (!apiKey.trim()) return { ok: false, message: 'No API key provided.' };
 
-  // ── Basic sanity checks (no hard format rules — Google changes key formats)
+  // ── Basic sanity checks
   if (provider === 'gemini' && apiKey.length < 20) {
     return { ok: false, message: '🔑 Key too short — make sure you copied the full key from aistudio.google.com/apikey.' };
   }
   if (provider === 'groq' && !apiKey.startsWith('gsk_')) {
     return {
       ok: false,
-      message: `🔑 Wrong key format — Groq API keys must start with "gsk_". You pasted "${apiKey.slice(0, 8)}...". Go to console.groq.com/keys and copy the correct key.`,
+      message: `🔑 Wrong key format — Groq keys start with "gsk_". Get one free at console.groq.com/keys.`,
+    };
+  }
+  if (provider === 'openrouter' && !apiKey.startsWith('sk-or-')) {
+    return {
+      ok: false,
+      message: `🔑 Wrong key format — OpenRouter keys start with "sk-or-". Get one free at openrouter.ai/keys.`,
     };
   }
 
   try {
-    if (provider === 'groq') {
+    if (provider === 'openrouter') {
+      const r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+          'HTTP-Referer': 'https://pro-portfolio-builder.vercel.app',
+          'X-Title': 'Pro Portfolio Builder',
+        },
+        body: JSON.stringify({ model: 'meta-llama/llama-3.3-70b-instruct:free', messages: [{ role: 'user', content: 'Hi' }], max_tokens: 5 }),
+      });
+      if (r.ok) return { ok: true, message: '✅ OpenRouter connected! Llama 3.3 70B (free) ready.' };
+      let errMsg = '';
+      try { const d = await r.json(); errMsg = d?.error?.message || ''; } catch {}
+      if (r.status === 401) return { ok: false, message: '🔑 Invalid OpenRouter key. Check at openrouter.ai/keys' };
+      if (r.status === 429) return { ok: false, message: '⏳ OpenRouter rate limited. Wait a moment.' };
+      return { ok: false, message: `❌ OpenRouter error ${r.status}: ${errMsg || 'Connection failed'}` };
+    } else if (provider === 'groq') {
       const r = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
@@ -1362,6 +1385,39 @@ async function fetchWithGroq(apiKey: string, prompt: string): Promise<GeminiEnha
   return parseInsightsResponse(textContent);
 }
 
+async function fetchWithOpenRouter(apiKey: string, prompt: string): Promise<GeminiEnhancedData | null> {
+  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`,
+      'HTTP-Referer': 'https://pro-portfolio-builder.vercel.app',
+      'X-Title': 'Pro Portfolio Builder',
+    },
+    body: JSON.stringify({
+      model: 'meta-llama/llama-3.3-70b-instruct:free',
+      messages: [
+        { role: 'system', content: 'You are a career research assistant. Always respond with valid JSON only.' },
+        { role: 'user', content: prompt },
+      ],
+      temperature: 0.3,
+      max_tokens: 4096,
+    }),
+  });
+
+  if (!response.ok) {
+    let errorMsg = '';
+    try { const errJson = await response.json(); errorMsg = errJson?.error?.message || ''; } catch {}
+    if (response.status === 429) throw new Error('⏳ OpenRouter rate limit — wait a moment and try again.');
+    if (response.status === 401) throw new Error('🔑 Invalid OpenRouter API key. Get one free at openrouter.ai/keys');
+    throw new Error(`OpenRouter API error ${response.status}${errorMsg ? `: ${errorMsg}` : ''}`);
+  }
+
+  const data = await response.json();
+  const textContent = data.choices?.[0]?.message?.content || '';
+  return parseInsightsResponse(textContent);
+}
+
 export async function fetchGeminiInsights(
   apiKey: string,
   company: string,
@@ -1374,6 +1430,8 @@ export async function fetchGeminiInsights(
   try {
     if (provider === 'groq') {
       return await fetchWithGroq(apiKey, prompt);
+    } else if (provider === 'openrouter') {
+      return await fetchWithOpenRouter(apiKey, prompt);
     } else {
       return await fetchWithGemini(apiKey, prompt);
     }
@@ -1390,15 +1448,19 @@ async function callAiChat(
   systemPrompt: string,
   userPrompt: string
 ): Promise<string> {
-  if (provider === 'groq') {
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+  if (provider === 'groq' || provider === 'openrouter') {
+    const url = provider === 'groq'
+      ? 'https://api.groq.com/openai/v1/chat/completions'
+      : 'https://openrouter.ai/api/v1/chat/completions';
+    const model = provider === 'groq' ? 'llama-3.3-70b-versatile' : 'meta-llama/llama-3.3-70b-instruct:free';
+    const extraHeaders = provider === 'openrouter'
+      ? { 'HTTP-Referer': 'https://pro-portfolio-builder.vercel.app', 'X-Title': 'Pro Portfolio Builder' }
+      : {};
+    const response = await fetch(url, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}`, ...extraHeaders },
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
+        model,
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt },
@@ -1409,7 +1471,7 @@ async function callAiChat(
     });
     if (!response.ok) {
       const errText = await response.text();
-      throw new Error(`Groq API error ${response.status}: ${errText}`);
+      throw new Error(`${provider === 'groq' ? 'Groq' : 'OpenRouter'} API error ${response.status}: ${errText}`);
     }
     const data = await response.json();
     return data.choices?.[0]?.message?.content || '';

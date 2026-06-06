@@ -4649,7 +4649,7 @@ export default function Portfolio() {
                           className="w-full flex items-center justify-between px-3 py-2 text-[10px] font-bold text-slate-400 hover:text-slate-300 transition-colors"
                         >
                           <span className="flex items-center gap-1.5">
-                            {geminiApiKey ? '🟢' : '⚪'} {aiProvider === 'groq' ? 'Groq' : 'Gemini'} API Key {geminiApiKey ? '(Connected)' : '(Optional — Enables AI-Powered Insights)'}
+                            {geminiApiKey ? '🟢' : '⚪'} {aiProvider === 'groq' ? 'Groq' : aiProvider === 'openrouter' ? 'OpenRouter' : 'Gemini'} API Key {geminiApiKey ? '(Connected)' : '(Optional — Enables AI-Powered Insights)'}
                           </span>
                           <span className="text-slate-600">{showApiKeyInput ? '▲' : '▼'}</span>
                         </button>
@@ -4660,7 +4660,11 @@ export default function Portfolio() {
                               <button
                                 onClick={() => { setAiProvider('groq'); localStorage.setItem('ai_provider', 'groq'); setGeminiApiKey(''); localStorage.removeItem('gemini-api-key'); setConnectionTest({ testing: false, result: null }); }}
                                 className={`px-3 py-1 rounded-md text-[10px] font-bold transition-all ${aiProvider === 'groq' ? 'bg-green-600 text-white' : 'text-slate-500 hover:text-slate-300'}`}
-                              >🟢 Groq (Recommended)</button>
+                              >🟢 Groq</button>
+                              <button
+                                onClick={() => { setAiProvider('openrouter'); localStorage.setItem('ai_provider', 'openrouter'); setGeminiApiKey(''); localStorage.removeItem('gemini-api-key'); setConnectionTest({ testing: false, result: null }); }}
+                                className={`px-3 py-1 rounded-md text-[10px] font-bold transition-all ${aiProvider === 'openrouter' ? 'bg-purple-600 text-white' : 'text-slate-500 hover:text-slate-300'}`}
+                              >🟣 OpenRouter</button>
                               <button
                                 onClick={() => { setAiProvider('gemini'); localStorage.setItem('ai_provider', 'gemini'); setGeminiApiKey(''); localStorage.removeItem('gemini-api-key'); setConnectionTest({ testing: false, result: null }); }}
                                 className={`px-3 py-1 rounded-md text-[10px] font-bold transition-all ${aiProvider === 'gemini' ? 'bg-blue-600 text-white' : 'text-slate-500 hover:text-slate-300'}`}
@@ -4669,7 +4673,9 @@ export default function Portfolio() {
 
                             <p className="text-[10px] text-slate-500 leading-relaxed">
                               {aiProvider === 'groq' ? (
-                                <>Groq is <strong className="text-green-400">free with generous limits</strong> (30 req/min). Uses Llama 3.3 70B for high-quality results. <a href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer" className="text-green-400 hover:text-green-300 underline">Get a free Groq key →</a></>
+                                <>Groq is <strong className="text-green-400">free with generous limits</strong> (30 req/min). Uses Llama 3.3 70B. <a href="https://console.groq.com/keys" target="_blank" rel="noopener noreferrer" className="text-green-400 hover:text-green-300 underline">Get a free Groq key →</a></>
+                              ) : aiProvider === 'openrouter' ? (
+                                <>OpenRouter gives access to <strong className="text-purple-400">100+ free models</strong> under one key. Uses Llama 3.3 70B (free). No region locks. <a href="https://openrouter.ai/keys" target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300 underline">Get a free OpenRouter key (sk-or-...) →</a></>
                               ) : (
                                 <>Gemini free tier: 15 req/min. Get your key from <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" className="text-violet-400 hover:text-violet-300 underline">aistudio.google.com/apikey →</a>. Keys may start with <strong className="text-yellow-400">AIza...</strong> or <strong className="text-yellow-400">AQ.</strong> — both are supported.</>
                               )}
@@ -4684,7 +4690,7 @@ export default function Portfolio() {
                                   localStorage.setItem('gemini-api-key', v);
                                   setConnectionTest({ testing: false, result: null });
                                 }}
-                                placeholder={aiProvider === 'groq' ? 'Paste your Groq API key (gsk_...)' : 'Paste your Gemini API key (AIza... or AQ....)'}
+                                placeholder={aiProvider === 'groq' ? 'Paste your Groq key (gsk_...)' : aiProvider === 'openrouter' ? 'Paste your OpenRouter key (sk-or-...)' : 'Paste your Gemini key (AIza... or AQ....)'}
                                 className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-[10px] text-slate-300 placeholder-slate-600 focus:outline-none focus:border-violet-500 transition-colors font-mono"
                               />
                               {geminiApiKey && (
