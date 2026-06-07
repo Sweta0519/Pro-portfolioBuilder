@@ -91,11 +91,19 @@ graph TD
     *   The 100+ inline `setX = (v) => setStore({ x: ... })` wrapper functions have been deleted; call sites use stable store actions directly.
     *   The `AuthModal` has been extracted into `src/AuthModal.tsx` as a working proof that the selector pattern scopes re-renders: typing in the email/password fields now only re-renders the modal subtree, not the entire dashboard tree.
 
-#### 5. Auth State LocalStorage Synchronization Race Conditions
+#### 5. Auth State LocalStorage Synchronization Race Conditions [COMPLETED]
 *   **Problem:** Local state and Supabase remote database synchronization is performed dynamically on login/logout (see `syncOnLogin` and `handleSignOut` inside [Dashboard.tsx](file:///c:/Users/abhij/Downloads/build-portfolio-from-resume/src/Dashboard.tsx)).
 *   **Impact:** If a user logs in, closes the tab immediately during sync, or logs out while sync is writing, local changes can overwrite server state, or vice versa, causing data desynchronization.
 *   **Recommended Fix:** Implement a transaction-based versioning scheme or a "sync lock" state variable to prevent user navigation or actions until synchronization is fully confirmed.
 *   **Effort Estimate:** 2 - 3 hours.
+*   **Resolution:** Implemented a lane-based AbortController + generation-counter sync controller plus per-resource phase state.
+    *   `src/syncController.ts` exposes `startLane` / `finishLane` / `abortLane` / `abortAllLanes` / `waitForIdle` / `isSyncInFlight`. Every sync is registered on a lane (`login`, `resumePush`, `sessionPush`); starting a new sync on the same lane cancels the previous one and returns a captured generation that the caller validates at completion. Writes that finish after a generation bump are dropped, so a stale `setSavedResumes` / `setSavedSessions` cannot clobber newer state.
+    *   `authStore` extended with `SyncPhase`, `resumeSyncPhase`, `sessionSyncPhase`, `syncGeneration`, `isSigningOut`, and matching field setters + `bumpSyncGeneration()`. The global `syncStatus` field is preserved for the existing UI badge; per-resource phases are the source of truth.
+    *   `syncOnLogin`, `syncResumes`, and `syncSessions` were rewritten to use the controller. Each `await` is followed by a `signal.aborted` check; results are only committed when `finishLane` confirms the generation still matches.
+    *   `handleSignOut` now soft-confirms when a sync is in flight, sets `isSigningOut` for UI gating, calls `waitForIdle(3000)`, and on timeout force-aborts all lanes + bumps the generation so any in-flight write cannot race past the sign-out.
+    *   A `beforeunload` listener warns the user when navigating away mid-sync; a separate effect calls `abortAllLanes()` whenever `user` becomes null.
+    *   The Sign Out button is disabled (`isSigningOut` → `disabled` + `aria-busy`, label "Signing Out…") during the flush window, and a per-resource top banner ("⏳ Loading your resumes from cloud…" / "⏳ Saving resume edits to cloud…" / etc.) appears at `z-[50]` while a per-resource phase is `pulling` or `pushing`.
+    *   Typecheck clean (4 pre-existing unrelated errors), `npx eslint` 0 errors / 13 pre-existing warnings, `npm run build` produces the singlefile bundle (1.62 MB / 400 KB gzip).
 
 ---
 

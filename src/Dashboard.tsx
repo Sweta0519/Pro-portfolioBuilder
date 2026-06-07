@@ -52,6 +52,14 @@ import { ResumeInteractivePreview } from './ResumeInteractivePreview';
 import { extractTextFromFile } from './fileParser';
 import { AuthModal } from './AuthModal';
 import {
+  startLane,
+  finishLane,
+  abortLane,
+  abortAllLanes,
+  waitForIdle,
+  isSyncInFlight,
+} from './syncController';
+import {
   Sparkles,
   User,
   Briefcase,
@@ -86,11 +94,18 @@ export default function Dashboard() {
   const user = useAuthStore((s) => s.user);
   const showAuthModal = useAuthStore((s) => s.showAuthModal);
   const syncStatus = useAuthStore((s) => s.syncStatus);
+  const resumeSyncPhase = useAuthStore((s) => s.resumeSyncPhase);
+  const sessionSyncPhase = useAuthStore((s) => s.sessionSyncPhase);
+  const isSigningOut = useAuthStore((s) => s.isSigningOut);
   const setUser = useAuthStore((s) => s.setUser);
   const setShowAuthModal = useAuthStore((s) => s.setShowAuthModal);
   const setAuthMode = useAuthStore((s) => s.setAuthMode);
   const setAuthError = useAuthStore((s) => s.setAuthError);
   const setSyncStatus = useAuthStore((s) => s.setSyncStatus);
+  const setResumeSyncPhase = useAuthStore((s) => s.setResumeSyncPhase);
+  const setSessionSyncPhase = useAuthStore((s) => s.setSessionSyncPhase);
+  const setIsSigningOut = useAuthStore((s) => s.setIsSigningOut);
+  const bumpSyncGeneration = useAuthStore((s) => s.bumpSyncGeneration);
 
   const savedResumes = useResumeStore((s) => s.savedResumes);
   const resumeData = useResumeStore((s) => s.resumeData);
@@ -312,13 +327,28 @@ export default function Dashboard() {
 
   // Supabase Auth Helpers & Synchronization Logic
   const handleSignOut = async () => {
-    if (
-      confirm(
-        'Are you sure you want to sign out? Your current session remains in your browser storage.'
-      )
-    ) {
+    const hasInFlightSync = isSyncInFlight();
+    const prompt = hasInFlightSync
+      ? 'A sync is still in progress. Signing out now will abort the in-flight write and may leave your last edit unsynced to the cloud. Sign out anyway?'
+      : 'Are you sure you want to sign out? Your current session remains in your browser storage.';
+    if (!confirm(prompt)) return;
+
+    setIsSigningOut(true);
+    try {
+      // Flush or abort in-flight syncs before tearing down the session.
+      // This closes the race window flagged in Issue 5: the auth session is
+      // not revoked while a write for that session is still pending.
+      const flushed = await waitForIdle(3000);
+      if (!flushed) {
+        abortAllLanes();
+      }
+      // Bump the generation so any write that races past the abort is
+      // invalidated at completion (the result never reaches the store).
+      bumpSyncGeneration();
       await supabase.auth.signOut();
       setUser(null);
+    } finally {
+      setIsSigningOut(false);
     }
   };
 
@@ -339,17 +369,43 @@ export default function Dashboard() {
     };
   }, []);
 
+  // Warn the user before navigating away while a sync is still in flight.
+  // Modern browsers ignore the message string and show their own copy, but
+  // `returnValue` must be set for the dialog to appear at all.
+  useEffect(() => {
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (isSyncInFlight()) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', onBeforeUnload);
+    return () => window.removeEventListener('beforeunload', onBeforeUnload);
+  }, []);
+
+  // When the user signs out (or switches accounts), tear down any in-flight
+  // sync so its results cannot clobber the local store.
+  useEffect(() => {
+    if (user === null) {
+      abortAllLanes();
+    }
+  }, [user]);
+
   // Load / Sync User Data from/to Supabase on Login
   useEffect(() => {
     if (!user) return;
 
     const syncOnLogin = async () => {
+      const { signal, generation } = startLane('login');
       setSyncStatus('syncing');
       try {
         // 1. Sync Resumes (Bidirectional Merge)
+        if (signal.aborted) return;
+        setResumeSyncPhase('pulling');
         const { data: dbResumes, error: resError } = await supabase.from('resumes').select('*');
 
         if (resError) throw resError;
+        if (signal.aborted) return;
 
         const parsedDbResumes = (dbResumes || []).map((r) => ({
           id: r.id,
@@ -375,6 +431,7 @@ export default function Dashboard() {
         const localResumesToUpload = [];
         const localResList = Array.isArray(savedResumes) ? savedResumes : [];
         for (let k = 0; k < localResList.length; k++) {
+          if (signal.aborted) return;
           const localRes = localResList[k];
           const isUuid = localRes.id.includes('-') && localRes.id.length === 36;
           let matchedDbResume = null;
@@ -411,6 +468,7 @@ export default function Dashboard() {
             }
           } else {
             // New local resume, upload it and get its generated UUID
+            if (signal.aborted) return;
             const { data: uploadData, error: uploadErr } = await supabase
               .from('resumes')
               .upsert({
@@ -443,19 +501,28 @@ export default function Dashboard() {
         }
 
         // Upload any updated local resumes
+        if (signal.aborted) return;
         if (localResumesToUpload.length > 0) {
+          setResumeSyncPhase('pushing');
           await supabase.from('resumes').upsert(localResumesToUpload);
         }
 
+        // Generation check: if user signed out / switched / aborted while we
+        // were writing, discard the result instead of clobbering the store.
+        if (!finishLane('login', generation)) return;
         const finalResumes = Array.from(mergedResumesMap.values());
         setSavedResumes(finalResumes);
+        setResumeSyncPhase('idle');
 
         // 2. Sync Interview Sessions (Bidirectional Merge)
+        if (signal.aborted) return;
+        setSessionSyncPhase('pulling');
         const { data: dbSessions, error: sessError } = await supabase
           .from('interview_sessions')
           .select('*');
 
         if (sessError) throw sessError;
+        if (signal.aborted) return;
 
         const parsedDbSessions: InterviewSession[] = (dbSessions || []).map((s) => ({
           id: s.id,
@@ -489,6 +556,7 @@ export default function Dashboard() {
         const localSessionsToUpload = [];
         const localSessList = Array.isArray(savedSessions) ? savedSessions : [];
         for (let k = 0; k < localSessList.length; k++) {
+          if (signal.aborted) return;
           const localSess = localSessList[k];
           const matchedDbSess = mergedSessionsMap.get(localSess.id);
 
@@ -551,32 +619,54 @@ export default function Dashboard() {
           }
         }
 
+        if (signal.aborted) return;
         if (localSessionsToUpload.length > 0) {
+          setSessionSyncPhase('pushing');
           await supabase.from('interview_sessions').upsert(localSessionsToUpload);
         }
 
+        // Generation check again before committing session results.
+        if (!finishLane('login', generation)) return;
         const finalSessions = Array.from(mergedSessionsMap.values());
         setSavedSessions(finalSessions);
+        setSessionSyncPhase('idle');
 
         setSyncStatus('synced');
       } catch (err) {
+        if ((err as any)?.name === 'AbortError') return;
         console.error('Initial sync failed:', err);
         setSyncStatus('error');
+        if (resumeSyncPhase === 'pulling' || resumeSyncPhase === 'pushing') {
+          setResumeSyncPhase('error');
+        }
+        if (sessionSyncPhase === 'pulling' || sessionSyncPhase === 'pushing') {
+          setSessionSyncPhase('error');
+        }
       }
     };
 
     syncOnLogin();
+    return () => abortLane('login');
+    // We intentionally exclude `resumeSyncPhase` / `sessionSyncPhase` from the
+    // dependency list: this effect must run exactly once per user change. The
+    // phase setters are stable references from the store.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   // Auto-sync Resumes to Supabase
   useEffect(() => {
-    if (!user || syncStatus === 'syncing') return;
+    if (!user || resumeSyncPhase !== 'idle' || sessionSyncPhase === 'pulling' || sessionSyncPhase === 'pushing') {
+      return;
+    }
 
     const syncResumes = async () => {
+      const { signal, generation } = startLane('resumePush');
       setSyncStatus('syncing');
+      setResumeSyncPhase('pushing');
       try {
         const resList = Array.isArray(savedResumes) ? savedResumes : [];
         for (let k = 0; k < resList.length; k++) {
+          if (signal.aborted) return;
           const res = resList[k];
           const isUuid = res.id.includes('-') && res.id.length === 36;
           await supabase.from('resumes').upsert({
@@ -587,26 +677,43 @@ export default function Dashboard() {
             theme_settings: res.theme,
           });
         }
+        if (!finishLane('resumePush', generation)) return;
+        setResumeSyncPhase('idle');
         setSyncStatus('synced');
       } catch (e) {
+        if ((e as any)?.name === 'AbortError') return;
         console.error('Failed to sync resumes to Supabase:', e);
+        setResumeSyncPhase('error');
         setSyncStatus('error');
       }
     };
 
     const timer = setTimeout(syncResumes, 1500);
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      // We do not abort the lane on cleanup. The sync was scheduled by user
+      // state; if the debounce is cancelled (e.g. another edit) we let the
+      // existing write finish so we don't lose the edit.
+    };
+    // Phase is a coordination primitive, not a trigger; depending on it
+    // would cause an infinite re-push loop when phase returns to 'idle'.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [savedResumes, user]);
 
   // Auto-sync Interview Sessions to Supabase
   useEffect(() => {
-    if (!user || syncStatus === 'syncing') return;
+    if (!user || sessionSyncPhase !== 'idle' || resumeSyncPhase === 'pulling' || resumeSyncPhase === 'pushing') {
+      return;
+    }
 
     const syncSessions = async () => {
+      const { signal, generation } = startLane('sessionPush');
       setSyncStatus('syncing');
+      setSessionSyncPhase('pushing');
       try {
         const sessList = Array.isArray(savedSessions) ? savedSessions : [];
         for (let k = 0; k < sessList.length; k++) {
+          if (signal.aborted) return;
           const s = sessList[k];
           await supabase.from('interview_sessions').upsert({
             id: s.id,
@@ -631,15 +738,24 @@ export default function Dashboard() {
             mock_mode: s.mockMode,
           });
         }
+        if (!finishLane('sessionPush', generation)) return;
+        setSessionSyncPhase('idle');
         setSyncStatus('synced');
       } catch (e) {
+        if ((e as any)?.name === 'AbortError') return;
         console.error('Failed to sync sessions to Supabase:', e);
+        setSessionSyncPhase('error');
         setSyncStatus('error');
       }
     };
 
     const timer = setTimeout(syncSessions, 1500);
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+    };
+    // Phase is a coordination primitive, not a trigger; depending on it
+    // would cause an infinite re-push loop when phase returns to 'idle'.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [savedSessions, user]);
 
   // Listen to browser network connectivity status changes
@@ -2299,6 +2415,27 @@ export default function Portfolio() {
           <span>⚠️ Sync Degraded — We are having trouble saving edits to Supabase. Drafts are safe in local storage.</span>
         </div>
       )}
+      {isOnline &&
+        (resumeSyncPhase === 'pulling' ||
+          resumeSyncPhase === 'pushing' ||
+          sessionSyncPhase === 'pulling' ||
+          sessionSyncPhase === 'pushing') && (
+          <div className="bg-blue-955/20 border-b border-blue-900/40 px-4 py-2 text-center text-xs font-bold text-blue-300 flex items-center justify-center gap-2 animate-fadeIn shrink-0 z-[50]">
+            <span className="flex h-2 w-2 relative shrink-0">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+            </span>
+            <span>
+              {resumeSyncPhase === 'pulling'
+                ? '⏳ Loading your resumes from cloud…'
+                : resumeSyncPhase === 'pushing'
+                  ? '⏳ Saving resume edits to cloud…'
+                  : sessionSyncPhase === 'pulling'
+                    ? '⏳ Loading your interview sessions from cloud…'
+                    : '⏳ Saving interview sessions to cloud…'}
+            </span>
+          </div>
+        )}
 
       {/* TOP HEADER */}
       <header className="flex flex-shrink-0 items-center justify-between px-4 sm:px-6 h-16 bg-slate-950/80 backdrop-blur-md border-b border-slate-800 relative z-40">
@@ -2361,13 +2498,19 @@ export default function Portfolio() {
                   <button
                     type="button"
                     onClick={handleSignOut}
-                    className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition duration-200 ease-out cursor-pointer active:scale-[0.97] border ${
-                      appTheme === 'nord-light' 
-                        ? 'bg-white text-rose-500 border-rose-200 hover:bg-rose-50' 
+                    disabled={isSigningOut}
+                    aria-busy={isSigningOut}
+                    className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition duration-200 ease-out border ${
+                      isSigningOut
+                        ? 'cursor-not-allowed opacity-50'
+                        : 'cursor-pointer active:scale-[0.97]'
+                    } ${
+                      appTheme === 'nord-light'
+                        ? 'bg-white text-rose-500 border-rose-200 hover:bg-rose-50'
                         : 'bg-slate-900 text-rose-400 border-slate-800 hover:bg-rose-950/30'
                     }`}
                   >
-                    Sign Out
+                    {isSigningOut ? 'Signing Out…' : 'Sign Out'}
                   </button>
                 </div>
               </div>
