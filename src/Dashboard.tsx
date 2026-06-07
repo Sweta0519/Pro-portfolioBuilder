@@ -4747,7 +4747,7 @@ export default function Portfolio() {
                     { id: 'ats', label: '🎯 Target Matcher' },
                     { id: 'cover-letter', label: '✉️ Cover Letter' },
                     { id: 'linkedin', label: '🔗 LinkedIn Check' },
-                    { id: 'plaintext', label: '📄 Plaintext Exporter' },
+                    { id: 'plaintext', label: '📑 Export Resume' },
                   ].map((tab) => (
                     <button
                       key={tab.id}
@@ -5298,125 +5298,130 @@ export default function Portfolio() {
                   </div>
                 )}
 
-                {/* SUB-TAB 5: ATS PLAIN-TEXT EXPORTER */}
+                {/* SUB-TAB 5: EXPORT RESUME — PDF / WORD / PLAINTEXT */}
                 {coachSubTab === 'plaintext' && (
                   <div className="space-y-5 animate-fadeIn">
-                    <div className="p-3.5 rounded-xl bg-slate-950/30 border border-slate-850 text-xs leading-relaxed space-y-2">
-                      <span className="font-bold text-white block">
-                        Taleo & Greenhouse Parseable Plaintext
-                      </span>
-                      <p className="text-[10px] text-slate-300">
-                        Jobscan Pro validates that legacy ATS parses (such as Taleo or Workday) can
-                        read your details when converted to simple raw plain text. View and copy
-                        your optimized plain text below:
+                    <div>
+                      <h3 className="text-base font-bold text-white">Export Your Resume</h3>
+                      <p className="text-xs text-slate-300 mt-1 leading-relaxed">
+                        Download your resume in the format recruiters and ATS systems expect. PDF
+                        preserves visual fidelity, Word stays editable, and plaintext is parsed
+                        correctly by legacy systems like Taleo and Workday.
                       </p>
                     </div>
 
-                    {/* Plaintext preview container */}
-                    <div className="p-3 rounded-xl bg-slate-950 border border-slate-850 font-mono text-[10px] text-slate-300 leading-normal h-64 overflow-y-auto select-text scrollbar-thin">
-                      <div className="border-b border-slate-900 pb-2 mb-3 text-slate-200">
-                        <div className="font-bold text-xs">
-                          {activeData.personal.name.toUpperCase()}
-                        </div>
-                        <div>
-                          {activeData.personal.title} | {activeData.personal.subtitle}
-                        </div>
-                        <div>
-                          Email: {activeData.personal.email} | Phone: {activeData.personal.phone}
-                        </div>
-                        <div>Location: {activeData.personal.location}</div>
-                      </div>
-
-                      <div className="mb-3">
-                        <div className="text-slate-200 font-bold border-b border-slate-900 pb-0.5 mb-1.5">
-                          PROFESSIONAL EXPERIENCES
-                        </div>
-                        {activeData.experience.map((exp) => (
-                          <div key={exp.id} className="mb-2.5">
-                            <div className="font-bold text-slate-200">
-                              {exp.position} - {exp.company} | {exp.period}
-                            </div>
-                            <div className="text-[10px] text-slate-500">
-                              Location: {exp.location}
-                            </div>
-                            <ul className="list-disc pl-4 mt-0.5 space-y-0.5">
-                              {exp.description.map((bullet, i) => (
-                                <li key={i}>{bullet}</li>
-                              ))}
-                            </ul>
-                            <div className="text-[10px] text-slate-500 mt-0.5">
-                              Technologies: {exp.technologies.join(', ')}
-                            </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      {/* PDF Card */}
+                      <div className="bg-slate-950/30 border border-slate-850 rounded-2xl p-4 flex flex-col gap-3">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
+                            <Download className="w-4 h-4 text-emerald-400" />
                           </div>
-                        ))}
-                      </div>
-
-                      <div className="mb-3">
-                        <div className="text-slate-200 font-bold border-b border-slate-900 pb-0.5 mb-1.5">
-                          CORE TECH FRAMEWORK SKILLS
-                        </div>
-                        <div className="leading-relaxed">
-                          {resumeData.skills.map((s) => `${s.name} (${s.level}%)`).join(', ')}
-                        </div>
-                      </div>
-
-                      <div className="mb-2">
-                        <div className="text-slate-200 font-bold border-b border-slate-900 pb-0.5 mb-1.5">
-                          ACADEMICS & EDUCATION
-                        </div>
-                        {resumeData.education.map((edu) => (
-                          <div key={edu.id}>
-                            <div className="font-bold text-slate-200">
-                              {edu.degree} in {edu.fieldOfStudy}
-                            </div>
-                            <div className="text-[10px] text-slate-500">
-                              {edu.institution} | Grade: {edu.grade || 'Not specified'}
-                            </div>
+                          <div className="min-w-0">
+                            <div className="text-xs font-bold text-white">PDF Document</div>
+                            <div className="text-[10px] text-slate-500">Print-ready with layout</div>
                           </div>
-                        ))}
+                        </div>
+                        <p className="text-[10px] text-slate-400 leading-relaxed">
+                          Choose Classic, Modern, or Stellar layouts and page size (Letter / A4)
+                          before exporting.
+                        </p>
+                        <button
+                          onClick={handlePdfPrint}
+                          className="mt-auto w-full py-2 bg-slate-900 hover:bg-slate-850 border border-slate-800 rounded-lg text-xs font-bold text-slate-200 transition duration-200 ease-out cursor-pointer active:scale-[0.97] flex items-center justify-center gap-1.5"
+                        >
+                          <Download className="w-3.5 h-3.5 text-emerald-400" />
+                          <span>Open Export Dialog</span>
+                        </button>
+                      </div>
+
+                      {/* Word Card */}
+                      <div className="bg-slate-950/30 border border-slate-850 rounded-2xl p-4 flex flex-col gap-3">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
+                            <FileText className="w-4 h-4 text-blue-400" />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="text-xs font-bold text-white">Word Document</div>
+                            <div className="text-[10px] text-slate-500">Editable .docx file</div>
+                          </div>
+                        </div>
+                        <p className="text-[10px] text-slate-400 leading-relaxed">
+                          Fully editable Microsoft Word format. Recruiters can comment, edit, and
+                          import into their systems.
+                        </p>
+                        <button
+                          onClick={() => handleWordDownload()}
+                          className="mt-auto w-full py-2 bg-slate-900 hover:bg-slate-850 border border-slate-800 rounded-lg text-xs font-bold text-slate-200 transition duration-200 ease-out cursor-pointer active:scale-[0.97] flex items-center justify-center gap-1.5"
+                        >
+                          <FileText className="w-3.5 h-3.5 text-blue-400" />
+                          <span>Download .doc</span>
+                        </button>
+                      </div>
+
+                      {/* Plaintext Card */}
+                      <div className="bg-slate-950/30 border border-slate-850 rounded-2xl p-4 flex flex-col gap-3">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-9 h-9 rounded-xl bg-slate-500/10 border border-slate-500/20 flex items-center justify-center shrink-0">
+                            <Copy className="w-4 h-4 text-slate-300" />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="text-xs font-bold text-white">Plaintext</div>
+                            <div className="text-[10px] text-slate-500">Taleo / Workday ATS</div>
+                          </div>
+                        </div>
+                        <p className="text-[10px] text-slate-400 leading-relaxed">
+                          Raw text format. Parsed correctly by legacy applicant tracking systems
+                          and safe to paste into web forms.
+                        </p>
+                        <button
+                          onClick={() => {
+                            const textBlob =
+                              `${resumeData.personal.name.toUpperCase()}\n${resumeData.personal.title} | ${resumeData.personal.subtitle}\nEmail: ${resumeData.personal.email} | Phone: ${resumeData.personal.phone}\nLocation: ${resumeData.personal.location}\n\nPROFESSIONAL EXPERIENCES\n` +
+                              resumeData.experience
+                                .map(
+                                  (exp) =>
+                                    `${exp.position} - ${exp.company} | ${exp.period}\n` +
+                                    exp.description.map((b) => `• ${b}`).join('\n') +
+                                    `\nTech: ${exp.technologies.join(', ')}`
+                                )
+                                .join('\n\n') +
+                              `\n\nCORE TECHNICAL SKILLS\n` +
+                              resumeData.skills.map((s) => `${s.name} (${s.level}%)`).join(', ') +
+                              `\n\nEDUCATION\n` +
+                              resumeData.education
+                                .map(
+                                  (edu) =>
+                                    `${edu.degree} in ${edu.fieldOfStudy} | ${edu.institution}`
+                                )
+                                .join('\n');
+
+                            setCopiedPlaintext(true);
+                            navigator.clipboard.writeText(textBlob);
+                            setTimeout(() => setCopiedPlaintext(false), 2500);
+                          }}
+                          className="mt-auto w-full py-2 bg-slate-900 hover:bg-slate-850 border border-slate-800 rounded-lg text-xs font-bold text-slate-200 transition duration-200 ease-out cursor-pointer active:scale-[0.97] flex items-center justify-center gap-1.5"
+                        >
+                          {copiedPlaintext ? (
+                            <>
+                              <Check className="w-3.5 h-3.5 text-emerald-400" />
+                              <span>Copied to Clipboard!</span>
+                            </>
+                          ) : (
+                            <>
+                              <Copy className="w-3.5 h-3.5" />
+                              <span>Copy to Clipboard</span>
+                            </>
+                          )}
+                        </button>
                       </div>
                     </div>
 
-                    {/* Copy to clipboard trigger */}
-                    <button
-                      onClick={() => {
-                        const textBlob =
-                          `${resumeData.personal.name.toUpperCase()}\n${resumeData.personal.title} | ${resumeData.personal.subtitle}\nEmail: ${resumeData.personal.email} | Phone: ${resumeData.personal.phone}\nLocation: ${resumeData.personal.location}\n\nPROFESSIONAL EXPERIENCES\n` +
-                          resumeData.experience
-                            .map(
-                              (exp) =>
-                                `${exp.position} - ${exp.company} | ${exp.period}\n` +
-                                exp.description.map((b) => `• ${b}`).join('\n') +
-                                `\nTech: ${exp.technologies.join(', ')}`
-                            )
-                            .join('\n\n') +
-                          `\n\nCORE TECHNICAL SKILLS\n` +
-                          resumeData.skills.map((s) => `${s.name} (${s.level}%)`).join(', ') +
-                          `\n\nEDUCATION\n` +
-                          resumeData.education
-                            .map(
-                              (edu) => `${edu.degree} in ${edu.fieldOfStudy} | ${edu.institution}`
-                            )
-                            .join('\n');
-
-                        setCopiedPlaintext(true);
-                        navigator.clipboard.writeText(textBlob);
-                        setTimeout(() => setCopiedPlaintext(false), 2500);
-                      }}
-                      className="w-full bg-slate-800 hover:bg-slate-750 text-white text-xs font-bold py-2.5 rounded-xl transition duration-200 ease-out flex items-center justify-center gap-2"
-                    >
-                      {copiedPlaintext ? (
-                        <>
-                          <Check className="w-4 h-4 text-emerald-400" />
-                          <span>Copied Plaintext Resume!</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-4 h-4" />
-                          <span>Copy Plaintext to Clipboard</span>
-                        </>
-                      )}
-                    </button>
+                    <div className="text-[10px] text-slate-500 leading-relaxed border-t border-slate-800 pt-3">
+                      <strong className="text-slate-400">Tip:</strong> Use PDF for final
+                      submissions to maintain your chosen design. Use Word when the recruiter
+                      needs to edit or annotate. Use Plaintext when pasting into online forms.
+                    </div>
                   </div>
                 )}
 
@@ -8836,22 +8841,6 @@ export default function Portfolio() {
                 >
                   {copiedCode ? <Check className="w-4 h-4 text-emerald-400" /> : <FileCode className="w-4 h-4" />}
                   <span>{copiedCode ? 'Copied!' : 'React Code'}</span>
-                </button>
-
-                <button
-                  onClick={() => handleWordDownload()}
-                  className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-4 py-2 rounded-xl text-sm font-semibold transition duration-200 ease-out cursor-pointer active:scale-[0.97]"
-                >
-                  <FileText className="w-4 h-4 text-slate-200" />
-                  <span>Word (.doc)</span>
-                </button>
-
-                <button
-                  onClick={handlePdfPrint}
-                  className="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 px-4 py-2 rounded-xl text-sm font-semibold transition duration-200 ease-out cursor-pointer active:scale-[0.97]"
-                >
-                  <Download className="w-4 h-4 text-emerald-400" />
-                  <span>PDF Document</span>
                 </button>
               </div>
 
