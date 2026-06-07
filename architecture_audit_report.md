@@ -60,7 +60,7 @@ graph TD
 *   **Recommended Fix:**
     > [!IMPORTANT]
     > Wrap the editor tabs, preview panes, and interview coach sections in separate `ErrorBoundary` components. In case of a failure, show a graceful "Widget Failed to Load" UI with a "Reset" or "Report Error" action.
-*   **Effort Estimate:** 1 - 2 hours.
+*   **Effort Estimate:** 1 - 2 hours. [COMPLETED]
 
 ---
 
@@ -83,7 +83,13 @@ graph TD
 *   **Problem:** The app manages state in a massive local component state hook structure inside `Dashboard`.
 *   **Impact:** Unrelated state changes (like typing a character in the cover letter text box) trigger complete re-renders of the preview pane, sidebar, and other panels, leading to input lag and frame drops.
 *   **Recommended Fix:** Introduce a lightweight global state management store like **Zustand** or use native **React Context** to segregate state domains (e.g. `useResumeStore`, `useAuthStore`, `useInterviewStore`). This ensures components only re-render when their respective slice of state updates.
-*   **Effort Estimate:** 4 - 6 hours.
+*   **Effort Estimate:** 4 - 6 hours. [COMPLETED]
+*   **Resolution notes:**
+    *   Stores are now segregated into 4 Zustand slices: `authStore`, `resumeStore`, `interviewStore`, `uiStore`.
+    *   The universal `set` escape-hatch has been removed from all store interfaces; every mutation goes through a typed named action (e.g. `useAuthStore((s) => s.setUser)`). Future contributors cannot reach for an "update any field" shortcut.
+    *   `Dashboard.tsx` no longer destructures full stores; it subscribes to individual fields and actions via per-field selectors. State changes now only re-render the specific subscriber.
+    *   The 100+ inline `setX = (v) => setStore({ x: ... })` wrapper functions have been deleted; call sites use stable store actions directly.
+    *   The `AuthModal` has been extracted into `src/AuthModal.tsx` as a working proof that the selector pattern scopes re-renders: typing in the email/password fields now only re-renders the modal subtree, not the entire dashboard tree.
 
 #### 5. Auth State LocalStorage Synchronization Race Conditions
 *   **Problem:** Local state and Supabase remote database synchronization is performed dynamically on login/logout (see `syncOnLogin` and `handleSignOut` inside [Dashboard.tsx](file:///c:/Users/abhij/Downloads/build-portfolio-from-resume/src/Dashboard.tsx)).
@@ -101,10 +107,10 @@ graph TD
 *   **Recommended Fix:**
     *   Add WAI-ARIA roles (`aria-expanded`, `aria-haspopup`, `aria-label`).
     *   Implement keyboard trap hooks on modal dialogues (such as the Authentication overlay).
-*   **Effort Estimate:** 2 hours.
+*   **Effort Estimate:** 2 hours. [COMPLETED]
 
 #### 7. Connection State Indicators
 *   **Problem:** If the user goes offline or Supabase service is degraded, the client falls back silently to dummy mocks, but there is no prominent UI indicator warning the user that their data is currently only saved locally.
 *   **Impact:** Users might log out or clear browser storage assuming their data was securely backed up to the cloud.
 *   **Recommended Fix:** Add a visual connection status indicator badge (e.g., "Offline Mode (Local Storage Only)" or "Connected") in the top navigation header.
-*   **Effort Estimate:** 1 hour.
+*   **Effort Estimate:** 1 hour. [COMPLETED]

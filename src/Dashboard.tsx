@@ -7,8 +7,6 @@ import { useUIStore } from './stores/uiStore';
 import { useFocusTrap } from './hooks/useFocusTrap';
 import { loadScript } from './utils/cdnLoader';
 import { supabase } from './supabaseClient';
-import type { User as SupabaseUser } from '@supabase/supabase-js';
-import { defaultResumeData, defaultThemeSettings } from './sampleData';
 import {
   ResumeData,
   ThemeSettings,
@@ -36,14 +34,9 @@ import {
   generateRecruiterRoundQuestions,
   isNonStarQuestion,
 } from './interviewCoach';
-import type { AiProvider, RecruiterQuestion } from './interviewCoach';
 import {
-  InterviewPlan,
   InterviewRound,
-  AnswerScore,
-  GeminiEnhancedData,
   InterviewSession,
-  RecruiterPersona,
 } from './types';
 import {
   analyzeATSCompliance,
@@ -57,6 +50,7 @@ import { generatePortfolioZip, getPortfolioFiles } from './zipExporter';
 import { generateWordDocument } from './wordExporter';
 import { ResumeInteractivePreview } from './ResumeInteractivePreview';
 import { extractTextFromFile } from './fileParser';
+import { AuthModal } from './AuthModal';
 import {
   Sparkles,
   User,
@@ -85,127 +79,221 @@ import {
 } from 'lucide-react';
 
 export default function Dashboard() {
-  // Zustand hook selections
-  const {
-    user,
-    showAuthModal,
-    authMode,
-    authEmail,
-    authPassword,
-    authLoading,
-    authError,
-    syncStatus,
-    set: setAuthStore,
-  } = useAuthStore();
+  // Zustand state: per-field selectors. Each subscription only triggers a re-render
+  // for the specific field's identity change, instead of the full-store subscription
+  // we had before. Actions are stable references inside the store so they are safe
+  // to bind here without re-render cost.
+  const user = useAuthStore((s) => s.user);
+  const showAuthModal = useAuthStore((s) => s.showAuthModal);
+  const syncStatus = useAuthStore((s) => s.syncStatus);
+  const setUser = useAuthStore((s) => s.setUser);
+  const setShowAuthModal = useAuthStore((s) => s.setShowAuthModal);
+  const setAuthMode = useAuthStore((s) => s.setAuthMode);
+  const setAuthError = useAuthStore((s) => s.setAuthError);
+  const setSyncStatus = useAuthStore((s) => s.setSyncStatus);
 
-  const {
-    savedResumes,
-    resumeData,
-    themeSettings,
-    revisedResumeData,
-    showRevisedPreview,
-    highlightChanges,
-    appliedFixes,
-    set: setResumeStore,
-  } = useResumeStore();
+  const savedResumes = useResumeStore((s) => s.savedResumes);
+  const resumeData = useResumeStore((s) => s.resumeData);
+  const themeSettings = useResumeStore((s) => s.themeSettings);
+  const revisedResumeData = useResumeStore((s) => s.revisedResumeData);
+  const showRevisedPreview = useResumeStore((s) => s.showRevisedPreview);
+  const highlightChanges = useResumeStore((s) => s.highlightChanges);
+  const appliedFixes = useResumeStore((s) => s.appliedFixes);
+  const setSavedResumes = useResumeStore((s) => s.setSavedResumes);
+  const setResumeData = useResumeStore((s) => s.setResumeData);
+  const setThemeSettings = useResumeStore((s) => s.setThemeSettings);
+  const setRevisedResumeData = useResumeStore((s) => s.setRevisedResumeData);
+  const setShowRevisedPreview = useResumeStore((s) => s.setShowRevisedPreview);
+  const setHighlightChanges = useResumeStore((s) => s.setHighlightChanges);
+  const setAppliedFixes = useResumeStore((s) => s.setAppliedFixes);
 
-  const {
-    savedSessions,
-    currentSessionId,
-    interviewPlan,
-    interviewJD,
-    interviewPositionName,
-    interviewCompanyName,
-    interviewSubTab,
-    activeRound,
-    isGeneratingPlan,
-    mockAnswers,
-    mockScores,
-    mockQuestionIdx,
-    mockRound,
-    mockMode,
-    mockTimerSec,
-    hintVisible,
-    sampleVisible,
-    mockInterfaceMode,
-    selectedRecruiter,
-    recruiterReplies,
-    isRecruiterSpeaking,
-    isRecruiterTyping,
-    isSessionCompleted,
-    autoPlayVoice,
-    autoActivateMic,
-    sessionSummaryFeedback,
-    isLoadingSummary,
-    geminiApiKey,
-    geminiData,
-    isFetchingGemini,
-    aiProgress,
-    geminiError,
-    showApiKeyInput,
-    aiProvider,
-    openRouterModel,
-    connectionTest,
-    isRecording,
-    audioUrl,
-    starMode,
-    isStarSplitting,
-    starSituation,
-    starTask,
-    starAction,
-    starResult,
-    loadingIdealAnswer,
-    idealAnswers,
-    loadingOptimization,
-    optimizedResults,
-    showIdealAnswer,
-    reportIdealLoadingMap,
-    reportShowIdealMap,
-    recruiterQuestions,
-    isLoadingRecruiterQuestions,
-    set: setInterviewStore,
-  } = useInterviewStore();
+  const savedSessions = useInterviewStore((s) => s.savedSessions);
+  const currentSessionId = useInterviewStore((s) => s.currentSessionId);
+  const interviewPlan = useInterviewStore((s) => s.interviewPlan);
+  const interviewJD = useInterviewStore((s) => s.interviewJD);
+  const interviewPositionName = useInterviewStore((s) => s.interviewPositionName);
+  const interviewCompanyName = useInterviewStore((s) => s.interviewCompanyName);
+  const interviewSubTab = useInterviewStore((s) => s.interviewSubTab);
+  const activeRound = useInterviewStore((s) => s.activeRound);
+  const isGeneratingPlan = useInterviewStore((s) => s.isGeneratingPlan);
+  const mockAnswers = useInterviewStore((s) => s.mockAnswers);
+  const mockScores = useInterviewStore((s) => s.mockScores);
+  const mockQuestionIdx = useInterviewStore((s) => s.mockQuestionIdx);
+  const mockRound = useInterviewStore((s) => s.mockRound);
+  const mockMode = useInterviewStore((s) => s.mockMode);
+  const mockTimerSec = useInterviewStore((s) => s.mockTimerSec);
+  const hintVisible = useInterviewStore((s) => s.hintVisible);
+  const sampleVisible = useInterviewStore((s) => s.sampleVisible);
+  const mockInterfaceMode = useInterviewStore((s) => s.mockInterfaceMode);
+  const selectedRecruiter = useInterviewStore((s) => s.selectedRecruiter);
+  const recruiterReplies = useInterviewStore((s) => s.recruiterReplies);
+  const isRecruiterSpeaking = useInterviewStore((s) => s.isRecruiterSpeaking);
+  const isRecruiterTyping = useInterviewStore((s) => s.isRecruiterTyping);
+  const isSessionCompleted = useInterviewStore((s) => s.isSessionCompleted);
+  const autoPlayVoice = useInterviewStore((s) => s.autoPlayVoice);
+  const autoActivateMic = useInterviewStore((s) => s.autoActivateMic);
+  const sessionSummaryFeedback = useInterviewStore((s) => s.sessionSummaryFeedback);
+  const isLoadingSummary = useInterviewStore((s) => s.isLoadingSummary);
+  const geminiApiKey = useInterviewStore((s) => s.geminiApiKey);
+  const geminiData = useInterviewStore((s) => s.geminiData);
+  const isFetchingGemini = useInterviewStore((s) => s.isFetchingGemini);
+  const aiProgress = useInterviewStore((s) => s.aiProgress);
+  const geminiError = useInterviewStore((s) => s.geminiError);
+  const showApiKeyInput = useInterviewStore((s) => s.showApiKeyInput);
+  const aiProvider = useInterviewStore((s) => s.aiProvider);
+  const openRouterModel = useInterviewStore((s) => s.openRouterModel);
+  const connectionTest = useInterviewStore((s) => s.connectionTest);
+  const isRecording = useInterviewStore((s) => s.isRecording);
+  const audioUrl = useInterviewStore((s) => s.audioUrl);
+  const starMode = useInterviewStore((s) => s.starMode);
+  const isStarSplitting = useInterviewStore((s) => s.isStarSplitting);
+  const starSituation = useInterviewStore((s) => s.starSituation);
+  const starTask = useInterviewStore((s) => s.starTask);
+  const starAction = useInterviewStore((s) => s.starAction);
+  const starResult = useInterviewStore((s) => s.starResult);
+  const loadingIdealAnswer = useInterviewStore((s) => s.loadingIdealAnswer);
+  const idealAnswers = useInterviewStore((s) => s.idealAnswers);
+  const loadingOptimization = useInterviewStore((s) => s.loadingOptimization);
+  const optimizedResults = useInterviewStore((s) => s.optimizedResults);
+  const showIdealAnswer = useInterviewStore((s) => s.showIdealAnswer);
+  const reportIdealLoadingMap = useInterviewStore((s) => s.reportIdealLoadingMap);
+  const reportShowIdealMap = useInterviewStore((s) => s.reportShowIdealMap);
+  const recruiterQuestions = useInterviewStore((s) => s.recruiterQuestions);
+  const isLoadingRecruiterQuestions = useInterviewStore((s) => s.isLoadingRecruiterQuestions);
+  const setSavedSessions = useInterviewStore((s) => s.setSavedSessions);
+  const setCurrentSessionId = useInterviewStore((s) => s.setCurrentSessionId);
+  const setInterviewPlan = useInterviewStore((s) => s.setInterviewPlan);
+  const setInterviewJD = useInterviewStore((s) => s.setInterviewJD);
+  const setInterviewPositionName = useInterviewStore((s) => s.setInterviewPositionName);
+  const setInterviewCompanyName = useInterviewStore((s) => s.setInterviewCompanyName);
+  const setInterviewSubTab = useInterviewStore((s) => s.setInterviewSubTab);
+  const setActiveRound = useInterviewStore((s) => s.setActiveRound);
+  const setIsGeneratingPlan = useInterviewStore((s) => s.setIsGeneratingPlan);
+  const setMockAnswers = useInterviewStore((s) => s.setMockAnswers);
+  const setMockScores = useInterviewStore((s) => s.setMockScores);
+  const setMockQuestionIdx = useInterviewStore((s) => s.setMockQuestionIdx);
+  const setMockRound = useInterviewStore((s) => s.setMockRound);
+  const setMockMode = useInterviewStore((s) => s.setMockMode);
+  const setMockTimerSec = useInterviewStore((s) => s.setMockTimerSec);
+  const setHintVisible = useInterviewStore((s) => s.setHintVisible);
+  const setSampleVisible = useInterviewStore((s) => s.setSampleVisible);
+  const setMockInterfaceMode = useInterviewStore((s) => s.setMockInterfaceMode);
+  const setSelectedRecruiter = useInterviewStore((s) => s.setSelectedRecruiter);
+  const setRecruiterReplies = useInterviewStore((s) => s.setRecruiterReplies);
+  const setIsRecruiterSpeaking = useInterviewStore((s) => s.setIsRecruiterSpeaking);
+  const setIsRecruiterTyping = useInterviewStore((s) => s.setIsRecruiterTyping);
+  const setIsSessionCompleted = useInterviewStore((s) => s.setIsSessionCompleted);
+  const setAutoPlayVoice = useInterviewStore((s) => s.setAutoPlayVoice);
+  const setAutoActivateMic = useInterviewStore((s) => s.setAutoActivateMic);
+  const setSessionSummaryFeedback = useInterviewStore((s) => s.setSessionSummaryFeedback);
+  const setIsLoadingSummary = useInterviewStore((s) => s.setIsLoadingSummary);
+  const setGeminiApiKey = useInterviewStore((s) => s.setGeminiApiKey);
+  const setGeminiData = useInterviewStore((s) => s.setGeminiData);
+  const setIsFetchingGemini = useInterviewStore((s) => s.setIsFetchingGemini);
+  const setAiProgress = useInterviewStore((s) => s.setAiProgress);
+  const setGeminiError = useInterviewStore((s) => s.setGeminiError);
+  const setShowApiKeyInput = useInterviewStore((s) => s.setShowApiKeyInput);
+  const setAiProvider = useInterviewStore((s) => s.setAiProvider);
+  const setOpenRouterModel = useInterviewStore((s) => s.setOpenRouterModel);
+  const setConnectionTest = useInterviewStore((s) => s.setConnectionTest);
+  const setIsRecording = useInterviewStore((s) => s.setIsRecording);
+  const setAudioUrl = useInterviewStore((s) => s.setAudioUrl);
+  const setStarMode = useInterviewStore((s) => s.setStarMode);
+  const setIsStarSplitting = useInterviewStore((s) => s.setIsStarSplitting);
+  const setStarSituation = useInterviewStore((s) => s.setStarSituation);
+  const setStarTask = useInterviewStore((s) => s.setStarTask);
+  const setStarAction = useInterviewStore((s) => s.setStarAction);
+  const setStarResult = useInterviewStore((s) => s.setStarResult);
+  const setLoadingIdealAnswer = useInterviewStore((s) => s.setLoadingIdealAnswer);
+  const setIdealAnswers = useInterviewStore((s) => s.setIdealAnswers);
+  const setLoadingOptimization = useInterviewStore((s) => s.setLoadingOptimization);
+  const setOptimizedResults = useInterviewStore((s) => s.setOptimizedResults);
+  const setShowIdealAnswer = useInterviewStore((s) => s.setShowIdealAnswer);
+  const setReportIdealLoadingMap = useInterviewStore((s) => s.setReportIdealLoadingMap);
+  const setReportShowIdealMap = useInterviewStore((s) => s.setReportShowIdealMap);
+  const setRecruiterQuestions = useInterviewStore((s) => s.setRecruiterQuestions);
+  const setIsLoadingRecruiterQuestions = useInterviewStore((s) => s.setIsLoadingRecruiterQuestions);
 
-  const {
-    appTheme,
-    isThemeMenuOpen,
-    isMobileActionsMenuOpen,
-    leftTab,
-    rightTab,
-    previewDevice,
-    fullscreenPreview,
-    mobileActiveView,
-    rawTextImport,
-    isParsing,
-    importSuccess,
-    copiedCode,
-    uploadedFileName,
-    fileErrorMessage,
-    copiedZip,
-    isZipping,
-    showVercelModal,
-    vercelToken,
-    vercelProjectName,
-    vercelDeployState,
-    vercelDeployUrl,
-    vercelError,
-    vercelDeployProgress,
-    copiedVercelUrl,
-    contactMessages,
-    expandedJobs,
-    expandedProjects,
-    expandedEdu,
-    expandedCert,
-    bulletInput,
-    bulletStyle,
-    improvedBullets,
-    copiedBulletIdx,
-    jobDescription,
-    coachSubTab,
-    coverLetter,
-    copiedPlaintext,
-    set: setUIStore,
-  } = useUIStore();
+  const appTheme = useUIStore((s) => s.appTheme);
+  const isThemeMenuOpen = useUIStore((s) => s.isThemeMenuOpen);
+  const isMobileActionsMenuOpen = useUIStore((s) => s.isMobileActionsMenuOpen);
+  const leftTab = useUIStore((s) => s.leftTab);
+  const rightTab = useUIStore((s) => s.rightTab);
+  const previewDevice = useUIStore((s) => s.previewDevice);
+  const fullscreenPreview = useUIStore((s) => s.fullscreenPreview);
+  const mobileActiveView = useUIStore((s) => s.mobileActiveView);
+  const rawTextImport = useUIStore((s) => s.rawTextImport);
+  const isParsing = useUIStore((s) => s.isParsing);
+  const importSuccess = useUIStore((s) => s.importSuccess);
+  const copiedCode = useUIStore((s) => s.copiedCode);
+  const uploadedFileName = useUIStore((s) => s.uploadedFileName);
+  const fileErrorMessage = useUIStore((s) => s.fileErrorMessage);
+  const copiedZip = useUIStore((s) => s.copiedZip);
+  const isZipping = useUIStore((s) => s.isZipping);
+  const showVercelModal = useUIStore((s) => s.showVercelModal);
+  const vercelToken = useUIStore((s) => s.vercelToken);
+  const vercelProjectName = useUIStore((s) => s.vercelProjectName);
+  const vercelDeployState = useUIStore((s) => s.vercelDeployState);
+  const vercelDeployUrl = useUIStore((s) => s.vercelDeployUrl);
+  const vercelError = useUIStore((s) => s.vercelError);
+  const vercelDeployProgress = useUIStore((s) => s.vercelDeployProgress);
+  const copiedVercelUrl = useUIStore((s) => s.copiedVercelUrl);
+  const contactMessages = useUIStore((s) => s.contactMessages);
+  const expandedJobs = useUIStore((s) => s.expandedJobs);
+  const expandedProjects = useUIStore((s) => s.expandedProjects);
+  const expandedEdu = useUIStore((s) => s.expandedEdu);
+  const expandedCert = useUIStore((s) => s.expandedCert);
+  const bulletInput = useUIStore((s) => s.bulletInput);
+  const bulletStyle = useUIStore((s) => s.bulletStyle);
+  const improvedBullets = useUIStore((s) => s.improvedBullets);
+  const copiedBulletIdx = useUIStore((s) => s.copiedBulletIdx);
+  const jobDescription = useUIStore((s) => s.jobDescription);
+  const coachSubTab = useUIStore((s) => s.coachSubTab);
+  const coverLetter = useUIStore((s) => s.coverLetter);
+  const copiedPlaintext = useUIStore((s) => s.copiedPlaintext);
+  const isOnline = useUIStore((s) => s.isOnline);
+  const showPrintModal = useUIStore((s) => s.showPrintModal);
+  const showOptimizerModal = useUIStore((s) => s.showOptimizerModal);
+  const setAppTheme = useUIStore((s) => s.setAppTheme);
+  const setIsThemeMenuOpen = useUIStore((s) => s.setIsThemeMenuOpen);
+  const setIsMobileActionsMenuOpen = useUIStore((s) => s.setIsMobileActionsMenuOpen);
+  const setLeftTab = useUIStore((s) => s.setLeftTab);
+  const setRightTab = useUIStore((s) => s.setRightTab);
+  const setPreviewDevice = useUIStore((s) => s.setPreviewDevice);
+  const setFullscreenPreview = useUIStore((s) => s.setFullscreenPreview);
+  const setMobileActiveView = useUIStore((s) => s.setMobileActiveView);
+  const setRawTextImport = useUIStore((s) => s.setRawTextImport);
+  const setIsParsing = useUIStore((s) => s.setIsParsing);
+  const setImportSuccess = useUIStore((s) => s.setImportSuccess);
+  const setCopiedCode = useUIStore((s) => s.setCopiedCode);
+  const setUploadedFileName = useUIStore((s) => s.setUploadedFileName);
+  const setFileErrorMessage = useUIStore((s) => s.setFileErrorMessage);
+  const setCopiedZip = useUIStore((s) => s.setCopiedZip);
+  const setIsZipping = useUIStore((s) => s.setIsZipping);
+  const setShowVercelModal = useUIStore((s) => s.setShowVercelModal);
+  const setVercelToken = useUIStore((s) => s.setVercelToken);
+  const setVercelProjectName = useUIStore((s) => s.setVercelProjectName);
+  const setVercelDeployState = useUIStore((s) => s.setVercelDeployState);
+  const setVercelDeployUrl = useUIStore((s) => s.setVercelDeployUrl);
+  const setVercelError = useUIStore((s) => s.setVercelError);
+  const setVercelDeployProgress = useUIStore((s) => s.setVercelDeployProgress);
+  const setCopiedVercelUrl = useUIStore((s) => s.setCopiedVercelUrl);
+  const setContactMessages = useUIStore((s) => s.setContactMessages);
+  const setExpandedJobs = useUIStore((s) => s.setExpandedJobs);
+  const setExpandedProjects = useUIStore((s) => s.setExpandedProjects);
+  const setExpandedEdu = useUIStore((s) => s.setExpandedEdu);
+  const setExpandedCert = useUIStore((s) => s.setExpandedCert);
+  const setBulletInput = useUIStore((s) => s.setBulletInput);
+  const setBulletStyle = useUIStore((s) => s.setBulletStyle);
+  const setImprovedBullets = useUIStore((s) => s.setImprovedBullets);
+  const setCopiedBulletIdx = useUIStore((s) => s.setCopiedBulletIdx);
+  const setJobDescription = useUIStore((s) => s.setJobDescription);
+  const setCoachSubTab = useUIStore((s) => s.setCoachSubTab);
+  const setCoverLetter = useUIStore((s) => s.setCoverLetter);
+  const setCopiedPlaintext = useUIStore((s) => s.setCopiedPlaintext);
+  const setIsOnline = useUIStore((s) => s.setIsOnline);
+  const setShowPrintModal = useUIStore((s) => s.setShowPrintModal);
+  const setShowOptimizerModal = useUIStore((s) => s.setShowOptimizerModal);
 
   // Refs for timers, speech recognition, and audio recording
   const mockTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -217,172 +305,12 @@ export default function Dashboard() {
   const [printTemplate, setPrintTemplate] = useState<string>('classic');
   const [paperSize, setPaperSize] = useState<'letter' | 'a4'>('letter');
   const [spacingDensity, setSpacingDensity] = useState<'normal' | 'compact' | 'tight'>('normal');
-  const [showPrintModal, setShowPrintModal] = useState<boolean>(false);
   const [isGeneratingPdf, setIsGeneratingPdf] = useState<boolean>(false);
   const [autoFitToPage, setAutoFitToPage] = useState<boolean>(true);
   const [printScaleFactor, setPrintScaleFactor] = useState<number>(1);
-  const [showOptimizerModal, setShowOptimizerModal] = useState<boolean>(false);
-  const setUser = (v: any) => setAuthStore({ user: typeof v === 'function' ? v(user) : v });
-  const setShowAuthModal = (v: any) => setAuthStore({ showAuthModal: typeof v === 'function' ? v(showAuthModal) : v });
-  const setAuthMode = (v: any) => setAuthStore({ authMode: typeof v === 'function' ? v(authMode) : v });
-  const setAuthEmail = (v: any) => setAuthStore({ authEmail: typeof v === 'function' ? v(authEmail) : v });
-  const setAuthPassword = (v: any) => setAuthStore({ authPassword: typeof v === 'function' ? v(authPassword) : v });
-  const setAuthLoading = (v: any) => setAuthStore({ authLoading: typeof v === 'function' ? v(authLoading) : v });
-  const setAuthError = (v: any) => setAuthStore({ authError: typeof v === 'function' ? v(authError) : v });
-  const setSyncStatus = (v: any) => setAuthStore({ syncStatus: typeof v === 'function' ? v(syncStatus) : v });
-
-  const setSavedResumes = (v: any[] | ((prev: any[]) => any[])) => setResumeStore({ savedResumes: typeof v === 'function' ? (v as any)(savedResumes) : v });
-  const setResumeData = (v: ResumeData | ((prev: ResumeData) => ResumeData)) => setResumeStore({ resumeData: typeof v === 'function' ? (v as any)(resumeData) : v });
-  const setThemeSettings = (v: ThemeSettings | ((prev: ThemeSettings) => ThemeSettings)) => setResumeStore({ themeSettings: typeof v === 'function' ? (v as any)(themeSettings) : v });
-  const setRevisedResumeData = (v: any) => setResumeStore({ revisedResumeData: typeof v === 'function' ? v(revisedResumeData) : v });
-  const setShowRevisedPreview = (v: any) => setResumeStore({ showRevisedPreview: typeof v === 'function' ? v(showRevisedPreview) : v });
-  const setHighlightChanges = (v: any) => setResumeStore({ highlightChanges: typeof v === 'function' ? v(highlightChanges) : v });
-  const setAppliedFixes = (v: any) => setResumeStore({ appliedFixes: typeof v === 'function' ? v(appliedFixes) : v });
-
-  const setSavedSessions = (v: InterviewSession[] | ((prev: InterviewSession[]) => InterviewSession[])) => setInterviewStore({ savedSessions: typeof v === 'function' ? (v as any)(savedSessions) : v });
-  const setCurrentSessionId = (v: any) => setInterviewStore({ currentSessionId: typeof v === 'function' ? v(currentSessionId) : v });
-  const setInterviewPlan = (v: any) => setInterviewStore({ interviewPlan: typeof v === 'function' ? v(interviewPlan) : v });
-  const setInterviewJD = (v: any) => setInterviewStore({ interviewJD: typeof v === 'function' ? v(interviewJD) : v });
-  const setInterviewPositionName = (v: any) => setInterviewStore({ interviewPositionName: typeof v === 'function' ? v(interviewPositionName) : v });
-  const setInterviewCompanyName = (v: any) => setInterviewStore({ interviewCompanyName: typeof v === 'function' ? v(interviewCompanyName) : v });
-  const setInterviewSubTab = (v: any) => setInterviewStore({ interviewSubTab: typeof v === 'function' ? v(interviewSubTab) : v });
-  const setActiveRound = (v: any) => setInterviewStore({ activeRound: typeof v === 'function' ? v(activeRound) : v });
-  const setIsGeneratingPlan = (v: any) => setInterviewStore({ isGeneratingPlan: typeof v === 'function' ? v(isGeneratingPlan) : v });
-  const setMockAnswers = (v: any) => setInterviewStore({ mockAnswers: typeof v === 'function' ? v(mockAnswers) : v });
-  const setMockScores = (v: any) => setInterviewStore({ mockScores: typeof v === 'function' ? v(mockScores) : v });
-  const setMockQuestionIdx = (v: any) => setInterviewStore({ mockQuestionIdx: typeof v === 'function' ? v(mockQuestionIdx) : v });
-  const setMockRound = (v: any) => setInterviewStore({ mockRound: typeof v === 'function' ? v(mockRound) : v });
-  const setMockMode = (v: any) => setInterviewStore({ mockMode: typeof v === 'function' ? v(mockMode) : v });
-  const setMockTimerSec = (v: number | ((prev: number) => number)) => setInterviewStore({ mockTimerSec: typeof v === 'function' ? (v as any)(mockTimerSec) : v });
-  const setHintVisible = (v: any) => setInterviewStore({ hintVisible: typeof v === 'function' ? v(hintVisible) : v });
-  const setSampleVisible = (v: any) => setInterviewStore({ sampleVisible: typeof v === 'function' ? v(sampleVisible) : v });
-  const setMockInterfaceMode = (v: any) => setInterviewStore({ mockInterfaceMode: typeof v === 'function' ? v(mockInterfaceMode) : v });
-  const setSelectedRecruiter = (v: any) => setInterviewStore({ selectedRecruiter: typeof v === 'function' ? v(selectedRecruiter) : v });
-  const setRecruiterReplies = (v: any) => setInterviewStore({ recruiterReplies: typeof v === 'function' ? v(recruiterReplies) : v });
-  const setIsRecruiterSpeaking = (v: any) => setInterviewStore({ isRecruiterSpeaking: typeof v === 'function' ? v(isRecruiterSpeaking) : v });
-  const setIsRecruiterTyping = (v: any) => setInterviewStore({ isRecruiterTyping: typeof v === 'function' ? v(isRecruiterTyping) : v });
-  const setIsSessionCompleted = (v: any) => setInterviewStore({ isSessionCompleted: typeof v === 'function' ? v(isSessionCompleted) : v });
-  const setAutoPlayVoice = (v: any) => setInterviewStore({ autoPlayVoice: typeof v === 'function' ? v(autoPlayVoice) : v });
-  const setAutoActivateMic = (v: any) => setInterviewStore({ autoActivateMic: typeof v === 'function' ? v(autoActivateMic) : v });
-  const setSessionSummaryFeedback = (v: any) => setInterviewStore({ sessionSummaryFeedback: typeof v === 'function' ? v(sessionSummaryFeedback) : v });
-  const setIsLoadingSummary = (v: any) => setInterviewStore({ isLoadingSummary: typeof v === 'function' ? v(isLoadingSummary) : v });
-  const setGeminiApiKey = (v: any) => setInterviewStore({ geminiApiKey: typeof v === 'function' ? v(geminiApiKey) : v });
-  const setGeminiData = (v: any) => setInterviewStore({ geminiData: typeof v === 'function' ? v(geminiData) : v });
-  const setIsFetchingGemini = (v: any) => setInterviewStore({ isFetchingGemini: typeof v === 'function' ? v(isFetchingGemini) : v });
-  const setAiProgress = (v: any) => setInterviewStore({ aiProgress: typeof v === 'function' ? v(aiProgress) : v });
-  const setGeminiError = (v: any) => setInterviewStore({ geminiError: typeof v === 'function' ? v(geminiError) : v });
-  const setShowApiKeyInput = (v: any) => setInterviewStore({ showApiKeyInput: typeof v === 'function' ? v(showApiKeyInput) : v });
-  const setAiProvider = (v: any) => setInterviewStore({ aiProvider: typeof v === 'function' ? v(aiProvider) : v });
-  const setOpenRouterModel = (v: any) => setInterviewStore({ openRouterModel: typeof v === 'function' ? v(openRouterModel) : v });
-  const setConnectionTest = (v: any) => setInterviewStore({ connectionTest: typeof v === 'function' ? v(connectionTest) : v });
-  const setIsRecording = (v: any) => setInterviewStore({ isRecording: typeof v === 'function' ? v(isRecording) : v });
-  const setAudioUrl = (v: any) => setInterviewStore({ audioUrl: typeof v === 'function' ? v(audioUrl) : v });
-  const setStarMode = (v: any) => setInterviewStore({ starMode: typeof v === 'function' ? v(starMode) : v });
-  const setIsStarSplitting = (v: any) => setInterviewStore({ isStarSplitting: typeof v === 'function' ? v(isStarSplitting) : v });
-  const setStarSituation = (v: any) => setInterviewStore({ starSituation: typeof v === 'function' ? v(starSituation) : v });
-  const setStarTask = (v: any) => setInterviewStore({ starTask: typeof v === 'function' ? v(starTask) : v });
-  const setStarAction = (v: any) => setInterviewStore({ starAction: typeof v === 'function' ? v(starAction) : v });
-  const setStarResult = (v: any) => setInterviewStore({ starResult: typeof v === 'function' ? v(starResult) : v });
-  const setLoadingIdealAnswer = (v: any) => setInterviewStore({ loadingIdealAnswer: typeof v === 'function' ? v(loadingIdealAnswer) : v });
-  const setIdealAnswers = (v: any) => setInterviewStore({ idealAnswers: typeof v === 'function' ? v(idealAnswers) : v });
-  const setLoadingOptimization = (v: any) => setInterviewStore({ loadingOptimization: typeof v === 'function' ? v(loadingOptimization) : v });
-  const setOptimizedResults = (v: any) => setInterviewStore({ optimizedResults: typeof v === 'function' ? v(optimizedResults) : v });
-  const setShowIdealAnswer = (v: any) => setInterviewStore({ showIdealAnswer: typeof v === 'function' ? v(showIdealAnswer) : v });
-  const setReportIdealLoadingMap = (v: any) => setInterviewStore({ reportIdealLoadingMap: typeof v === 'function' ? v(reportIdealLoadingMap) : v });
-  const setReportShowIdealMap = (v: any) => setInterviewStore({ reportShowIdealMap: typeof v === 'function' ? v(reportShowIdealMap) : v });
-  const setRecruiterQuestions = (v: any) => setInterviewStore({ recruiterQuestions: typeof v === 'function' ? v(recruiterQuestions) : v });
-  const setIsLoadingRecruiterQuestions = (v: any) => setInterviewStore({ isLoadingRecruiterQuestions: typeof v === 'function' ? v(isLoadingRecruiterQuestions) : v });
-
-  const setAppTheme = (v: any) => setUIStore({ appTheme: typeof v === 'function' ? v(appTheme) : v });
-  const setIsThemeMenuOpen = (v: any) => setUIStore({ isThemeMenuOpen: typeof v === 'function' ? v(isThemeMenuOpen) : v });
-  const setIsMobileActionsMenuOpen = (v: any) => setUIStore({ isMobileActionsMenuOpen: typeof v === 'function' ? v(isMobileActionsMenuOpen) : v });
-  const setLeftTab = (v: any) => setUIStore({ leftTab: typeof v === 'function' ? v(leftTab) : v });
-  const setRightTab = (v: any) => setUIStore({ rightTab: typeof v === 'function' ? v(rightTab) : v });
-  const setPreviewDevice = (v: any) => setUIStore({ previewDevice: typeof v === 'function' ? v(previewDevice) : v });
-  const setFullscreenPreview = (v: any) => setUIStore({ fullscreenPreview: typeof v === 'function' ? v(fullscreenPreview) : v });
-  const setMobileActiveView = (v: any) => setUIStore({ mobileActiveView: typeof v === 'function' ? v(mobileActiveView) : v });
-  const setRawTextImport = (v: any) => setUIStore({ rawTextImport: typeof v === 'function' ? v(rawTextImport) : v });
-  const setIsParsing = (v: any) => setUIStore({ isParsing: typeof v === 'function' ? v(isParsing) : v });
-  const setImportSuccess = (v: any) => setUIStore({ importSuccess: typeof v === 'function' ? v(importSuccess) : v });
-  const setCopiedCode = (v: any) => setUIStore({ copiedCode: typeof v === 'function' ? v(copiedCode) : v });
-  const setUploadedFileName = (v: any) => setUIStore({ uploadedFileName: typeof v === 'function' ? v(uploadedFileName) : v });
-  const setFileErrorMessage = (v: any) => setUIStore({ fileErrorMessage: typeof v === 'function' ? v(fileErrorMessage) : v });
-  const setCopiedZip = (v: any) => setUIStore({ copiedZip: typeof v === 'function' ? v(copiedZip) : v });
-  const setIsZipping = (v: any) => setUIStore({ isZipping: typeof v === 'function' ? v(isZipping) : v });
-  const setShowVercelModal = (v: any) => setUIStore({ showVercelModal: typeof v === 'function' ? v(showVercelModal) : v });
-  const setVercelToken = (v: any) => setUIStore({ vercelToken: typeof v === 'function' ? v(vercelToken) : v });
-  const setVercelProjectName = (v: any) => setUIStore({ vercelProjectName: typeof v === 'function' ? v(vercelProjectName) : v });
-  const setVercelDeployState = (v: any) => setUIStore({ vercelDeployState: typeof v === 'function' ? v(vercelDeployState) : v });
-  const setVercelDeployUrl = (v: any) => setUIStore({ vercelDeployUrl: typeof v === 'function' ? v(vercelDeployUrl) : v });
-  const setVercelError = (v: any) => setUIStore({ vercelError: typeof v === 'function' ? v(vercelError) : v });
-  const setVercelDeployProgress = (v: any) => setUIStore({ vercelDeployProgress: typeof v === 'function' ? v(vercelDeployProgress) : v });
-  const setCopiedVercelUrl = (v: any) => setUIStore({ copiedVercelUrl: typeof v === 'function' ? v(copiedVercelUrl) : v });
-  const setContactMessages = (v: ContactMessage[] | ((prev: ContactMessage[]) => ContactMessage[])) => setUIStore({ contactMessages: typeof v === 'function' ? (v as any)(contactMessages) : v });
-  const setExpandedJobs = (v: Record<string, boolean> | ((prev: Record<string, boolean>) => Record<string, boolean>)) => setUIStore({ expandedJobs: typeof v === 'function' ? (v as any)(expandedJobs) : v });
-  const setExpandedProjects = (v: Record<string, boolean> | ((prev: Record<string, boolean>) => Record<string, boolean>)) => setUIStore({ expandedProjects: typeof v === 'function' ? (v as any)(expandedProjects) : v });
-  const setExpandedEdu = (v: Record<string, boolean> | ((prev: Record<string, boolean>) => Record<string, boolean>)) => setUIStore({ expandedEdu: typeof v === 'function' ? (v as any)(expandedEdu) : v });
-  const setExpandedCert = (v: Record<string, boolean> | ((prev: Record<string, boolean>) => Record<string, boolean>)) => setUIStore({ expandedCert: typeof v === 'function' ? (v as any)(expandedCert) : v });
-  const setBulletInput = (v: any) => setUIStore({ bulletInput: typeof v === 'function' ? v(bulletInput) : v });
-  const setBulletStyle = (v: any) => setUIStore({ bulletStyle: typeof v === 'function' ? v(bulletStyle) : v });
-  const setImprovedBullets = (v: any) => setUIStore({ improvedBullets: typeof v === 'function' ? v(improvedBullets) : v });
-  const setCopiedBulletIdx = (v: any) => setUIStore({ copiedBulletIdx: typeof v === 'function' ? v(copiedBulletIdx) : v });
-  const setJobDescription = (v: any) => setUIStore({ jobDescription: typeof v === 'function' ? v(jobDescription) : v });
-  const setCoachSubTab = (v: any) => setUIStore({ coachSubTab: typeof v === 'function' ? v(coachSubTab) : v });
-  const setCoverLetter = (v: any) => setUIStore({ coverLetter: typeof v === 'function' ? v(coverLetter) : v });
-  const setCopiedPlaintext = (v: any) => setUIStore({ copiedPlaintext: typeof v === 'function' ? v(copiedPlaintext) : v });
 
 
   // Supabase Auth Helpers & Synchronization Logic
-  const handleEmailAuth = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!authEmail.trim() || !authPassword.trim()) {
-      setAuthError('Please enter both email and password.');
-      return;
-    }
-    setAuthLoading(true);
-    setAuthError('');
-    try {
-      if (authMode === 'login') {
-        const { error } = await supabase.auth.signInWithPassword({
-          email: authEmail.trim(),
-          password: authPassword.trim(),
-        });
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.auth.signUp({
-          email: authEmail.trim(),
-          password: authPassword.trim(),
-        });
-        if (error) throw error;
-        alert('Verification email sent! Check your inbox to complete sign up.');
-      }
-      setShowAuthModal(false);
-      setAuthEmail('');
-      setAuthPassword('');
-    } catch (err: any) {
-      setAuthError(err.message || 'Authentication failed.');
-    } finally {
-      setAuthLoading(false);
-    }
-  };
-
-  const handleGoogleAuth = async () => {
-    setAuthLoading(true);
-    setAuthError('');
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: window.location.origin,
-        },
-      });
-      if (error) throw error;
-    } catch (err: any) {
-      setAuthError(err.message || 'Google Authentication failed.');
-      setAuthLoading(false);
-    }
-  };
-
   const handleSignOut = async () => {
     if (
       confirm(
@@ -714,6 +642,20 @@ export default function Dashboard() {
     return () => clearTimeout(timer);
   }, [savedSessions, user]);
 
+  // Listen to browser network connectivity status changes
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
+
   // Keyboard accessibility: Escape key listener for dropdowns & modals
   useEffect(() => {
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
@@ -723,7 +665,7 @@ export default function Dashboard() {
         if (showPrintModal) setShowPrintModal(false);
         if (showAuthModal) setShowAuthModal(false);
         if (showVercelModal) setShowVercelModal(false);
-        if (showOptimizerModal) closeOptimizerModal();
+        if (showOptimizerModal) setShowOptimizerModal(false);
       }
     };
     window.addEventListener('keydown', handleGlobalKeyDown);
@@ -1657,15 +1599,15 @@ export default function Dashboard() {
 
   // Focus trap hooks for active modal overlays
   const printModalRef = useFocusTrap(showPrintModal, () => setShowPrintModal(false));
-  const authModalRef = useFocusTrap(showAuthModal, () => {
-    if (!authLoading) setShowAuthModal(false);
-  });
   const vercelModalRef = useFocusTrap(showVercelModal, () => {
     if (vercelDeployState === 'idle' || vercelDeployState === 'success' || vercelDeployState === 'error') {
       setShowVercelModal(false);
     }
   });
-  const optimizerModalRef = useFocusTrap(!!(showOptimizerModal && revisedResumeData), closeOptimizerModal);
+  const optimizerModalRef = useFocusTrap(
+    !!(showOptimizerModal && revisedResumeData),
+    closeOptimizerModal
+  );
 
   // ZIP Export Trigger for complete local development packages
   const handleZipDownload = async () => {
@@ -2338,6 +2280,26 @@ export default function Portfolio() {
       id="app-root-container"
       className={`flex flex-col h-screen bg-slate-900 text-slate-100 select-none font-sans antialiased overflow-hidden theme-${appTheme}`}
     >
+      {/* Connection State Alert Banners */}
+      {!isOnline && (
+        <div className="bg-amber-955/20 border-b border-amber-900/40 px-4 py-2 text-center text-xs font-bold text-amber-400 flex items-center justify-center gap-2 animate-fadeIn shrink-0 z-[50]">
+          <span className="flex h-2 w-2 relative shrink-0">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+          </span>
+          <span>⚠️ Working Offline — Changes are currently saved only to local storage. Cloud syncing is paused.</span>
+        </div>
+      )}
+      {isOnline && syncStatus === 'error' && (
+        <div className="bg-rose-955/20 border-b border-rose-900/40 px-4 py-2 text-center text-xs font-bold text-rose-400 flex items-center justify-center gap-2 animate-fadeIn shrink-0 z-[50]">
+          <span className="flex h-2 w-2 relative shrink-0">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+          </span>
+          <span>⚠️ Sync Degraded — We are having trouble saving edits to Supabase. Drafts are safe in local storage.</span>
+        </div>
+      )}
+
       {/* TOP HEADER */}
       <header className="flex flex-shrink-0 items-center justify-between px-4 sm:px-6 h-16 bg-slate-950/80 backdrop-blur-md border-b border-slate-800 relative z-40">
         <div className="flex items-center gap-3">
@@ -2410,17 +2372,25 @@ export default function Portfolio() {
                 </div>
               </div>
             ) : (
-              <button
-                type="button"
-                onClick={() => {
-                  setAuthMode('login');
-                  setAuthError('');
-                  setShowAuthModal(true);
-                }}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-slate-700 text-white transition duration-200 ease-out shadow-lg shadow-black/10 active:scale-[0.97] cursor-pointer active:scale-[0.97]"
-              >
-                🔒 Sign In
-              </button>
+              <div className="flex items-center gap-2">
+                <span
+                  title="Your data is safely stored in your browser's local storage. Sign in to sync with the cloud."
+                  className="text-[9px] px-2 py-0.5 rounded-full font-bold border bg-slate-900 border-slate-800 text-slate-500 cursor-help shrink-0"
+                >
+                  ☁ Local
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthMode('login');
+                    setAuthError('');
+                    setShowAuthModal(true);
+                  }}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-slate-700 text-white transition duration-200 ease-out shadow-lg shadow-black/10 active:scale-[0.97] cursor-pointer"
+                >
+                  🔒 Sign In
+                </button>
+              </div>
             )}
           </div>
           {/* App Theme Selector Dropdown */}
@@ -9224,152 +9194,7 @@ export default function Portfolio() {
       )}
 
       {/* Supabase Authentication Modal Overlay */}
-      {showAuthModal && (
-        <div
-          ref={authModalRef}
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="auth-modal-title"
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-955/85 backdrop-blur-md animate-fadeIn"
-        >
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden flex flex-col relative animate-scaleUp">
-            {/* Close Button */}
-            {!authLoading && (
-              <button
-                onClick={() => setShowAuthModal(false)}
-                aria-label="Close authentication dialog"
-                className="absolute top-4 right-4 text-slate-300 hover:text-white hover:bg-slate-800/50 p-1.5 rounded-lg transition duration-200 ease-out cursor-pointer active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            )}
-
-            {/* Header */}
-            <div className="p-6 border-b border-slate-800 bg-slate-950/40">
-              <div className="flex items-center gap-3">
-                <div className="bg-indigo-650 text-white p-2 rounded-xl flex items-center justify-center shadow-lg">
-                  <span className="text-xl font-bold">🔒</span>
-                </div>
-                <div>
-                  <h3 id="auth-modal-title" className="text-base font-extrabold text-white">
-                    {authMode === 'login' ? 'Welcome Back' : 'Create Account'}
-                  </h3>
-                  <p className="text-[11px] text-slate-550 font-semibold">
-                    {authMode === 'login'
-                      ? 'Sign in to sync your data'
-                      : 'Register to save your progress'}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Body */}
-            <div className="p-6 flex-1 flex flex-col overflow-y-auto">
-              <form onSubmit={handleEmailAuth} className="space-y-4">
-                {authError && (
-                  <div className="flex items-start gap-2.5 bg-rose-955/20 border border-rose-900/50 p-3 rounded-xl text-[11px] text-rose-350">
-                    <AlertCircle className="w-4 h-4 text-rose-450 shrink-0 mt-0.5" />
-                    <span>{authError}</span>
-                  </div>
-                )}
-
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-slate-450 uppercase tracking-wider">
-                    Email Address
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    value={authEmail}
-                    onChange={(e) => setAuthEmail(e.target.value)}
-                    placeholder="e.g. you@example.com"
-                    className="w-full bg-slate-950 border border-slate-800 focus:border-slate-600 rounded-xl px-3.5 py-2 text-xs text-slate-100 placeholder-slate-650 focus:outline-none transition duration-200 ease-out"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-slate-450 uppercase tracking-wider">
-                    Password
-                  </label>
-                  <input
-                    type="password"
-                    required
-                    value={authPassword}
-                    onChange={(e) => setAuthPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full bg-slate-955 border border-slate-800 focus:border-slate-600 rounded-xl px-3.5 py-2 text-xs text-slate-100 placeholder-slate-655 focus:outline-none transition duration-200 ease-out"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={authLoading}
-                  className="w-full bg-indigo-650 hover:bg-indigo-550 text-white font-extrabold py-2.5 rounded-xl text-xs transition duration-200 ease-out shadow-md disabled:opacity-50 cursor-pointer active:scale-[0.97] flex items-center justify-center gap-2"
-                >
-                  {authLoading ? (
-                    <>
-                      <span className="animate-spin text-slate-200">⏳</span> Processing...
-                    </>
-                  ) : (
-                    <span>{authMode === 'login' ? '🔑 Sign In' : '📝 Register'}</span>
-                  )}
-                </button>
-              </form>
-
-              {/* Divider */}
-              <div className="relative my-5 text-center">
-                <hr className="border-slate-800" />
-                <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-900 px-3 text-[9px] font-bold text-slate-500 uppercase tracking-widest">
-                  Or
-                </span>
-              </div>
-
-              {/* Google OAuth Button */}
-              <button
-                type="button"
-                onClick={handleGoogleAuth}
-                disabled={authLoading}
-                className="w-full bg-slate-950 border border-slate-800 hover:bg-slate-900 text-slate-200 font-extrabold py-2.5 rounded-xl text-xs transition duration-200 ease-out flex items-center justify-center gap-2 cursor-pointer active:scale-[0.97] disabled:opacity-50"
-              >
-                <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
-                  <path
-                    fill="#EA4335"
-                    d="M12 5.04c1.65 0 3.14.57 4.3 1.68l3.22-3.22C17.56 1.7 15.01 1 12 1 7.37 1 3.42 3.66 1.48 7.55l3.86 3C6.26 7.6 8.9 5.04 12 5.04z"
-                  />
-                  <path
-                    fill="#4285F4"
-                    d="M23.49 12.27c0-.81-.07-1.59-.2-2.34H12v4.43h6.44c-.28 1.47-1.11 2.71-2.36 3.55l3.66 2.84c2.14-1.97 3.75-4.88 3.75-8.48z"
-                  />
-                  <path
-                    fill="#FBBC05"
-                    d="M5.34 14.55c-.24-.72-.38-1.5-.38-2.3 0-.8.14-1.58.38-2.3l-3.86-3C.53 8.89 0 10.39 0 12.01s.53 3.12 1.48 5.06l3.86-3z"
-                  />
-                  <path
-                    fill="#34A853"
-                    d="M12 23c3.24 0 5.97-1.07 7.96-2.91l-3.66-2.84c-1.01.68-2.32 1.09-4.3 1.09-3.1 0-5.74-2.56-6.68-5.51l-3.86 3C3.42 20.34 7.37 23 12 23z"
-                  />
-                </svg>
-                <span>Continue with Google</span>
-              </button>
-
-              {/* Mode Switcher */}
-              <p className="text-[10px] text-slate-500 font-medium text-center mt-5">
-                {authMode === 'login' ? "Don't have an account?" : 'Already have an account?'}{' '}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setAuthMode(authMode === 'login' ? 'signup' : 'login');
-                    setAuthError('');
-                  }}
-                  className="text-slate-200 hover:text-slate-300 font-bold underline transition duration-200 ease-out cursor-pointer active:scale-[0.97]"
-                >
-                  {authMode === 'login' ? 'Sign Up Free' : 'Sign In Here'}
-                </button>
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
+      <AuthModal />
 
       {/* Vercel Deployment Modal Overlay */}
       {showVercelModal && (
