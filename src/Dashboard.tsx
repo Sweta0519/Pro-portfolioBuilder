@@ -63,6 +63,8 @@ import {
 import {
   Sparkles,
   User,
+  LogOut,
+  LogIn,
   Briefcase,
   Layers,
   Sliders,
@@ -2441,15 +2443,15 @@ export default function Portfolio() {
         )}
 
       {/* TOP HEADER */}
-      <header className={`flex flex-shrink-0 items-center justify-between px-4 sm:px-6 h-16 bg-slate-950/80 backdrop-blur-md border-b border-slate-800 relative ${Z.PRIMARY_HEADER}`}>
-        <div className="flex items-center gap-3">
+      <header className={`flex flex-shrink-0 items-center justify-between gap-2 px-3 sm:px-6 h-16 bg-slate-950/80 backdrop-blur-md border-b border-slate-800 relative ${Z.PRIMARY_HEADER}`}>
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <img
             src="/logo.png"
             alt="ProPortfolio Logo"
-            className="h-9 w-9 rounded-xl shadow border border-slate-850 object-cover shrink-0"
+            className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl shadow border border-slate-850 object-cover shrink-0"
           />
-          <div>
-            <h1 className="text-xs sm:text-sm font-bold tracking-tight text-white">
+          <div className="hidden sm:block min-w-0">
+            <h1 className="text-xs sm:text-sm font-bold tracking-tight text-white whitespace-nowrap">
               ProPortfolio Builder
             </h1>
             <p className="text-[10px] text-slate-500 font-medium hidden md:block">
@@ -2458,14 +2460,23 @@ export default function Portfolio() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1 sm:gap-2 shrink-0">
           {/* Supabase Auth & Sync Status */}
           <div className="flex items-center gap-2">
             {user ? (
               <div className="flex items-center gap-2">
                 {/* Sync status indicator */}
                 <span
-                  className={`text-[10px] px-2 py-0.5 rounded-full font-bold border transition duration-200 ease-out ${
+                  title={
+                    syncStatus === 'syncing'
+                      ? 'Syncing changes to cloud'
+                      : syncStatus === 'synced'
+                        ? 'Saved to cloud'
+                        : syncStatus === 'error'
+                          ? 'Sync error — drafts are in local storage'
+                          : 'Working locally — sign in to sync'
+                  }
+                  className={`text-[10px] px-1.5 sm:px-2 py-0.5 rounded-full font-bold border transition duration-200 ease-out flex items-center gap-1 ${
                     syncStatus === 'syncing'
                       ? 'bg-blue-955/20 border-blue-900/50 text-blue-400 animate-pulse'
                       : syncStatus === 'synced'
@@ -2475,19 +2486,33 @@ export default function Portfolio() {
                           : 'bg-slate-900 border-slate-800 text-slate-500'
                   }`}
                 >
-                  {syncStatus === 'syncing'
-                    ? '⏳ Syncing'
-                    : syncStatus === 'synced'
-                      ? '☁ Saved'
-                      : syncStatus === 'error'
-                        ? '⚠ Sync Error'
-                        : '☁ Local'}
+                  <span
+                    aria-hidden="true"
+                    className={`inline-block w-1.5 h-1.5 rounded-full ${
+                      syncStatus === 'syncing'
+                        ? 'bg-blue-400'
+                        : syncStatus === 'synced'
+                          ? 'bg-emerald-400'
+                          : syncStatus === 'error'
+                            ? 'bg-rose-400'
+                            : 'bg-slate-500'
+                    }`}
+                  />
+                  <span className="hidden sm:inline">
+                    {syncStatus === 'syncing'
+                      ? '⏳ Syncing'
+                      : syncStatus === 'synced'
+                        ? '☁ Saved'
+                        : syncStatus === 'error'
+                          ? '⚠ Sync Error'
+                          : '☁ Local'}
+                  </span>
                 </span>
 
                 {/* User Info & Sign Out */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 sm:gap-2">
                   <div
-                    className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition duration-200 ease-out ${
+                    className={`flex items-center gap-1.5 p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg text-xs font-semibold border transition duration-200 ease-out ${
                       appTheme === 'nord-light'
                         ? 'bg-slate-100 border-slate-250 text-slate-705'
                         : 'bg-slate-900 border-slate-800 text-slate-200'
@@ -2503,7 +2528,9 @@ export default function Portfolio() {
                     onClick={handleSignOut}
                     disabled={isSigningOut}
                     aria-busy={isSigningOut}
-                    className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition duration-200 ease-out border ${
+                    title={isSigningOut ? 'Signing Out…' : 'Sign Out'}
+                    aria-label={isSigningOut ? 'Signing Out' : 'Sign Out'}
+                    className={`p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg text-xs font-bold transition duration-200 ease-out border ${
                       isSigningOut
                         ? 'cursor-not-allowed opacity-50'
                         : 'cursor-pointer active:scale-[0.97]'
@@ -2513,17 +2540,19 @@ export default function Portfolio() {
                         : 'bg-slate-900 text-rose-400 border-slate-800 hover:bg-rose-950/30'
                     }`}
                   >
-                    {isSigningOut ? 'Signing Out…' : 'Sign Out'}
+                    <LogOut className="w-3.5 h-3.5 sm:hidden" />
+                    <span className="hidden sm:inline">{isSigningOut ? 'Signing Out…' : 'Sign Out'}</span>
                   </button>
                 </div>
               </div>
             ) : (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 sm:gap-2">
                 <span
                   title="Your data is safely stored in your browser's local storage. Sign in to sync with the cloud."
-                  className="text-[10px] px-2 py-0.5 rounded-full font-bold border bg-slate-900 border-slate-800 text-slate-500 cursor-help shrink-0"
+                  className="text-[10px] px-1.5 sm:px-2 py-0.5 rounded-full font-bold border bg-slate-900 border-slate-800 text-slate-500 cursor-help shrink-0"
                 >
-                  ☁ Local
+                  <span className="sm:hidden">☁</span>
+                  <span className="hidden sm:inline">☁ Local</span>
                 </span>
                 <button
                   type="button"
@@ -2532,9 +2561,12 @@ export default function Portfolio() {
                     setAuthError('');
                     setShowAuthModal(true);
                   }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-slate-700 text-white transition duration-200 ease-out shadow-lg shadow-black/10 active:scale-[0.97] cursor-pointer"
+                  title="Sign In"
+                  aria-label="Sign In"
+                  className="flex items-center gap-1.5 p-1.5 sm:px-3 sm:py-1.5 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-slate-700 text-white transition duration-200 ease-out shadow-lg shadow-black/10 active:scale-[0.97] cursor-pointer"
                 >
-                  🔒 Sign In
+                  <LogIn className="w-3.5 h-3.5 sm:hidden" />
+                  <span className="hidden sm:inline">🔒 Sign In</span>
                 </button>
               </div>
             )}
@@ -2547,7 +2579,7 @@ export default function Portfolio() {
               aria-haspopup="menu"
               aria-expanded={isThemeMenuOpen}
               aria-label="Select app theme"
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition duration-200 ease-out cursor-pointer active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
+              className={`flex items-center gap-1 sm:gap-1.5 p-1.5 sm:px-3 sm:py-1.5 rounded-lg text-xs font-semibold border transition duration-200 ease-out cursor-pointer active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
                 appTheme === 'nord-light'
                   ? 'bg-slate-100 hover:bg-slate-200 border-slate-250 text-slate-700 hover:text-slate-955'
                   : appTheme === 'indigo-midnight'
@@ -2562,15 +2594,15 @@ export default function Portfolio() {
               ) : (
                 <Moon className="w-3.5 h-3.5 text-slate-200" />
               )}
-              <span>
-                <span className="hidden sm:inline">Theme: </span>
+              <span className="hidden sm:inline">
+                <span>Theme: </span>
                 {appTheme === 'slate-dark'
                   ? 'Slate'
                   : appTheme === 'indigo-midnight'
                     ? 'Indigo'
                     : 'Nord'}
               </span>
-              <ChevronDown className="w-3 h-3 text-slate-500" />
+              <ChevronDown className="w-3 h-3 text-slate-500 hidden sm:inline" />
             </button>
             {isThemeMenuOpen && (
               <div
@@ -2637,7 +2669,7 @@ export default function Portfolio() {
               aria-haspopup="menu"
               aria-expanded={isMobileActionsMenuOpen}
               aria-label="Toggle export and deployment actions"
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition duration-200 ease-out cursor-pointer active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
+              className={`flex items-center gap-1 sm:gap-1.5 p-1.5 sm:px-3 sm:py-1.5 rounded-lg text-xs font-semibold border transition duration-200 ease-out cursor-pointer active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
                 appTheme === 'nord-light'
                   ? 'bg-slate-100 hover:bg-slate-200 border-slate-250 text-slate-700 hover:text-slate-955 shadow-sm'
                   : appTheme === 'indigo-midnight'
@@ -2646,8 +2678,8 @@ export default function Portfolio() {
               }`}
             >
               <Download className="w-3.5 h-3.5" />
-              <span>Actions</span>
-              <ChevronDown className="w-3 h-3 text-slate-500" />
+              <span className="hidden sm:inline">Actions</span>
+              <ChevronDown className="w-3 h-3 text-slate-500 hidden sm:inline" />
             </button>
             {isMobileActionsMenuOpen && (
               <div
@@ -2733,6 +2765,22 @@ export default function Portfolio() {
               >
                 <Download className="w-3.5 h-3.5 text-emerald-400" />
                 <span>Export PDF/Document</span>
+              </button>
+
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => setFullscreenPreview(!fullscreenPreview)}
+                className={`w-full text-left px-2.5 py-2 rounded-lg text-xs font-semibold transition duration-200 ease-out flex items-center gap-2 cursor-pointer active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
+                  appTheme === 'nord-light'
+                    ? 'text-slate-700 hover:bg-slate-100'
+                    : appTheme === 'indigo-midnight'
+                      ? 'text-slate-300 hover:bg-slate-800/40'
+                      : 'text-slate-200 hover:bg-slate-900'
+                }`}
+              >
+                <Laptop className="w-3.5 h-3.5 text-slate-200" />
+                <span>{fullscreenPreview ? 'Exit Fullscreen' : 'Fullscreen Preview'}</span>
               </button>
 
               <button
