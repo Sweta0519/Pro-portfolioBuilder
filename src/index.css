@@ -633,17 +633,43 @@ html {
 }
 
 /* 2. INDIGO MIDNIGHT THEME OVERRIDES */
+/* === Indigo-Midnight Theme Tokens ===
+ * Custom properties scoped to the theme so every override block
+ * below references var(--indigo-*) instead of hard-coded hex.
+ * Change a palette stop here and every dependent selector updates.
+ *   --indigo-bg-*   : surface backgrounds (root → card → panel → elevated)
+ *   --indigo-border : hairlines around cards/panels/inputs
+ *   --indigo-text-* : text color stops mirroring the slate-100…500 scale
+ */
 #app-root-container[data-theme="indigo-midnight"] {
-  background-color: #0d0b26 !important;
-  color: #c7d2fe !important;
+  --indigo-bg-root: #0d0b26;
+  --indigo-bg-header: #120e34;
+  --indigo-bg-card: #16123e;
+  --indigo-bg-panel: #1e1952;
+  --indigo-bg-elevated: #231d5c;
+  --indigo-bg-elevated-hover: #2e2677;
+  --indigo-border-soft: #35317e;
+  --indigo-border-strong: #3d3795;
+  --indigo-text-white: #ffffff;
+  --indigo-text-100: #e0e7ff;
+  --indigo-text-200: #c7d2fe;
+  --indigo-text-300: #a5b4fc;
+  --indigo-text-400: #818cf8;
+  --indigo-text-500: #6366f1;
+  --indigo-placeholder: rgba(129, 140, 248, 0.4);
+  --indigo-scrollbar: rgba(99, 102, 241, 0.3);
+  --indigo-scrollbar-hover: rgba(99, 102, 241, 0.5);
+
+  background-color: var(--indigo-bg-root) !important;
+  color: var(--indigo-text-200) !important;
 }
 #app-root-container[data-theme="indigo-midnight"] > header {
-  background-color: #120e34 !important;
-  border-color: #35317e !important;
+  background-color: var(--indigo-bg-header) !important;
+  border-color: var(--indigo-border-soft) !important;
 }
 #app-root-container[data-theme="indigo-midnight"] .w-\[520px\] {
-  background-color: #16123e !important;
-  border-color: #35317e !important;
+  background-color: var(--indigo-bg-card) !important;
+  border-color: var(--indigo-border-soft) !important;
 }
 #app-root-container[data-theme="indigo-midnight"] .w-\[520px\] .bg-slate-900,
 #app-root-container[data-theme="indigo-midnight"] .w-\[520px\] .bg-slate-955,
@@ -655,81 +681,81 @@ html {
 #app-root-container[data-theme="indigo-midnight"] .w-\[520px\] .bg-slate-950\/20,
 #app-root-container[data-theme="indigo-midnight"] .w-\[520px\] .bg-slate-900\/80,
 #app-root-container[data-theme="indigo-midnight"] .w-\[520px\] .bg-slate-900\/60 {
-  background-color: #1e1952 !important;
-  border-color: #3d3795 !important;
+  background-color: var(--indigo-bg-panel) !important;
+  border-color: var(--indigo-border-strong) !important;
 }
 #app-root-container[data-theme="indigo-midnight"] .w-\[520px\] .bg-slate-800,
 #app-root-container[data-theme="indigo-midnight"] .w-\[520px\] .bg-slate-850 {
-  background-color: #231d5c !important;
-  border-color: #3d3795 !important;
+  background-color: var(--indigo-bg-elevated) !important;
+  border-color: var(--indigo-border-strong) !important;
 }
 #app-root-container[data-theme="indigo-midnight"] .w-\[520px\] .bg-slate-800:hover,
 #app-root-container[data-theme="indigo-midnight"] .w-\[520px\] .bg-slate-850:hover,
 #app-root-container[data-theme="indigo-midnight"] .w-\[520px\] .hover\:bg-slate-750:hover,
 #app-root-container[data-theme="indigo-midnight"] .w-\[520px\] .hover\:bg-slate-800:hover,
 #app-root-container[data-theme="indigo-midnight"] .w-\[520px\] .hover\:bg-slate-700:hover {
-  background-color: #2e2677 !important;
+  background-color: var(--indigo-bg-elevated-hover) !important;
 }
 #app-root-container[data-theme="indigo-midnight"] .w-\[520px\] .border-slate-800,
 #app-root-container[data-theme="indigo-midnight"] .w-\[520px\] .border-slate-700,
 #app-root-container[data-theme="indigo-midnight"] .w-\[520px\] .border-slate-850,
 #app-root-container[data-theme="indigo-midnight"] header .border-slate-800 {
-  border-color: #35317e !important;
+  border-color: var(--indigo-border-soft) !important;
 }
 #app-root-container[data-theme="indigo-midnight"] .w-\[520px\] input,
 #app-root-container[data-theme="indigo-midnight"] .w-\[520px\] textarea,
 #app-root-container[data-theme="indigo-midnight"] .w-\[520px\] select {
-  background-color: #120e34 !important;
-  border-color: #3d3795 !important;
-  color: #e0e7ff !important;
+  background-color: var(--indigo-bg-header) !important;
+  border-color: var(--indigo-border-strong) !important;
+  color: var(--indigo-text-100) !important;
 }
 #app-root-container[data-theme="indigo-midnight"] .w-\[520px\] input::placeholder,
 #app-root-container[data-theme="indigo-midnight"] .w-\[520px\] textarea::placeholder {
-  color: rgba(129, 140, 248, 0.4) !important;
+  color: var(--indigo-placeholder) !important;
 }
 #app-root-container[data-theme="indigo-midnight"] .text-white,
 #app-root-container[data-theme="indigo-midnight"] header .text-white {
-  color: #ffffff !important;
+  color: var(--indigo-text-white) !important;
 }
 #app-root-container[data-theme="indigo-midnight"] .text-slate-100 {
-  color: #e0e7ff !important;
+  color: var(--indigo-text-100) !important;
 }
 #app-root-container[data-theme="indigo-midnight"] .text-slate-200 {
-  color: #c7d2fe !important;
+  color: var(--indigo-text-200) !important;
 }
 #app-root-container[data-theme="indigo-midnight"] .text-slate-300 {
-  color: #a5b4fc !important;
+  color: var(--indigo-text-300) !important;
 }
 #app-root-container[data-theme="indigo-midnight"] .text-slate-400 {
-  color: #818cf8 !important;
+  color: var(--indigo-text-400) !important;
 }
 #app-root-container[data-theme="indigo-midnight"] .text-slate-500 {
-  color: #6366f1 !important;
+  color: var(--indigo-text-500) !important;
 }
 #app-root-container[data-theme="indigo-midnight"] ::-webkit-scrollbar-thumb {
-  background: rgba(99, 102, 241, 0.3) !important;
+  background: var(--indigo-scrollbar) !important;
 }
 #app-root-container[data-theme="indigo-midnight"] ::-webkit-scrollbar-thumb:hover {
-  background: rgba(99, 102, 241, 0.5) !important;
+  background: var(--indigo-scrollbar-hover) !important;
 }
 
 /* Modals & Overlays overrides for Indigo Midnight */
 #app-root-container[data-theme="indigo-midnight"] .fixed .bg-slate-900:not(.inset-0),
 #app-root-container[data-theme="indigo-midnight"] .fixed .bg-slate-955:not(.inset-0),
 #app-root-container[data-theme="indigo-midnight"] .fixed .bg-slate-950:not(.inset-0) {
-  background-color: #16123e !important;
-  border-color: #35317e !important;
+  background-color: var(--indigo-bg-card) !important;
+  border-color: var(--indigo-border-soft) !important;
 }
 #app-root-container[data-theme="indigo-midnight"] .fixed .bg-slate-800,
 #app-root-container[data-theme="indigo-midnight"] .fixed .bg-slate-850 {
-  background-color: #231d5c !important;
-  border-color: #3d3795 !important;
+  background-color: var(--indigo-bg-elevated) !important;
+  border-color: var(--indigo-border-strong) !important;
 }
 #app-root-container[data-theme="indigo-midnight"] .fixed .bg-slate-800:hover,
 #app-root-container[data-theme="indigo-midnight"] .fixed .bg-slate-850:hover,
 #app-root-container[data-theme="indigo-midnight"] .fixed .hover\:bg-slate-750:hover,
 #app-root-container[data-theme="indigo-midnight"] .fixed .hover\:bg-slate-700:hover {
-  background-color: #2e2677 !important;
+  background-color: var(--indigo-bg-elevated-hover) !important;
 }
 #app-root-container[data-theme="indigo-midnight"] .fixed .bg-slate-900\/50,
 #app-root-container[data-theme="indigo-midnight"] .fixed .bg-slate-955\/50,
@@ -740,28 +766,28 @@ html {
 #app-root-container[data-theme="indigo-midnight"] .fixed .bg-slate-950\/20,
 #app-root-container[data-theme="indigo-midnight"] .fixed .bg-slate-900\/80,
 #app-root-container[data-theme="indigo-midnight"] .fixed .bg-slate-900\/60 {
-  background-color: #1e1952 !important;
-  border-color: #3d3795 !important;
+  background-color: var(--indigo-bg-panel) !important;
+  border-color: var(--indigo-border-strong) !important;
 }
 #app-root-container[data-theme="indigo-midnight"] .fixed .border-slate-800,
 #app-root-container[data-theme="indigo-midnight"] .fixed .border-slate-750,
 #app-root-container[data-theme="indigo-midnight"] .fixed .border-slate-700,
 #app-root-container[data-theme="indigo-midnight"] .fixed .border-slate-850 {
-  border-color: #35317e !important;
+  border-color: var(--indigo-border-soft) !important;
 }
 #app-root-container[data-theme="indigo-midnight"] .fixed input,
 #app-root-container[data-theme="indigo-midnight"] .fixed textarea,
 #app-root-container[data-theme="indigo-midnight"] .fixed select {
-  background-color: #120e34 !important;
-  border-color: #3d3795 !important;
-  color: #e0e7ff !important;
+  background-color: var(--indigo-bg-header) !important;
+  border-color: var(--indigo-border-strong) !important;
+  color: var(--indigo-text-100) !important;
 }
 #app-root-container[data-theme="indigo-midnight"] .fixed input::placeholder,
 #app-root-container[data-theme="indigo-midnight"] .fixed textarea::placeholder {
-  color: rgba(129, 140, 248, 0.4) !important;
+  color: var(--indigo-placeholder) !important;
 }
 #app-root-container[data-theme="indigo-midnight"] .fixed .text-white {
-  color: #ffffff !important;
+  color: var(--indigo-text-white) !important;
 }
 
 /* 3. GLOBAL HIGH-CONTRAST OVERRIDES FOR NORD LIGHT THEME */
