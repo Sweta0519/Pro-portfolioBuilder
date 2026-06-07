@@ -4,6 +4,7 @@ import { useAuthStore } from './stores/authStore';
 import { useResumeStore } from './stores/resumeStore';
 import { useInterviewStore } from './stores/interviewStore';
 import { useUIStore } from './stores/uiStore';
+import { useFocusTrap } from './hooks/useFocusTrap';
 import { loadScript } from './utils/cdnLoader';
 import { supabase } from './supabaseClient';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
@@ -212,7 +213,15 @@ export default function Dashboard() {
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
 
-  // Compatibility state-updater wrappers
+  // Local state variables declared up top to prevent initialization-order issues
+  const [printTemplate, setPrintTemplate] = useState<string>('classic');
+  const [paperSize, setPaperSize] = useState<'letter' | 'a4'>('letter');
+  const [spacingDensity, setSpacingDensity] = useState<'normal' | 'compact' | 'tight'>('normal');
+  const [showPrintModal, setShowPrintModal] = useState<boolean>(false);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState<boolean>(false);
+  const [autoFitToPage, setAutoFitToPage] = useState<boolean>(true);
+  const [printScaleFactor, setPrintScaleFactor] = useState<number>(1);
+  const [showOptimizerModal, setShowOptimizerModal] = useState<boolean>(false);
   const setUser = (v: any) => setAuthStore({ user: typeof v === 'function' ? v(user) : v });
   const setShowAuthModal = (v: any) => setAuthStore({ showAuthModal: typeof v === 'function' ? v(showAuthModal) : v });
   const setAuthMode = (v: any) => setAuthStore({ authMode: typeof v === 'function' ? v(authMode) : v });
@@ -321,6 +330,412 @@ export default function Dashboard() {
   const setCoachSubTab = (v: any) => setUIStore({ coachSubTab: typeof v === 'function' ? v(coachSubTab) : v });
   const setCoverLetter = (v: any) => setUIStore({ coverLetter: typeof v === 'function' ? v(coverLetter) : v });
   const setCopiedPlaintext = (v: any) => setUIStore({ copiedPlaintext: typeof v === 'function' ? v(copiedPlaintext) : v });
+
+
+  // Supabase Auth Helpers & Synchronization Logic
+  const handleEmailAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!authEmail.trim() || !authPassword.trim()) {
+      setAuthError('Please enter both email and password.');
+      return;
+    }
+    setAuthLoading(true);
+    setAuthError('');
+    try {
+      if (authMode === 'login') {
+        const { error } = await supabase.auth.signInWithPassword({
+          email: authEmail.trim(),
+          password: authPassword.trim(),
+        });
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.auth.signUp({
+          email: authEmail.trim(),
+          password: authPassword.trim(),
+        });
+        if (error) throw error;
+        alert('Verification email sent! Check your inbox to complete sign up.');
+      }
+      setShowAuthModal(false);
+      setAuthEmail('');
+      setAuthPassword('');
+    } catch (err: any) {
+      setAuthError(err.message || 'Authentication failed.');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleGoogleAuth = async () => {
+    setAuthLoading(true);
+    setAuthError('');
+    try {
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin,
+        },
+      });
+      if (error) throw error;
+    } catch (err: any) {
+      setAuthError(err.message || 'Google Authentication failed.');
+      setAuthLoading(false);
+    }
+  };
+
+  const handleSignOut = async () => {
+    if (
+      confirm(
+        'Are you sure you want to sign out? Your current session remains in your browser storage.'
+      )
+    ) {
+      await supabase.auth.signOut();
+      setUser(null);
+    }
+  };
+
+  // Supabase Auth Session listener
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  // Load / Sync User Data from/to Supabase on Login
+  useEffect(() => {
+    if (!user) return;
+
+    const syncOnLogin = async () => {
+      setSyncStatus('syncing');
+      try {
+        // 1. Sync Resumes (Bidirectional Merge)
+        const { data: dbResumes, error: resError } = await supabase.from('resumes').select('*');
+
+        if (resError) throw resError;
+
+        const parsedDbResumes = (dbResumes || []).map((r) => ({
+          id: r.id,
+          name: r.name,
+          title: r.resume_json.personal?.title || '',
+          date:
+            new Date(r.updated_at).toLocaleDateString() +
+            ' ' +
+            new Date(r.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          data: r.resume_json,
+          theme: r.theme_settings,
+          updatedAt: r.updated_at,
+        }));
+
+        const mergedResumesMap = new Map<string, any>();
+
+        // Seed with DB resumes
+        parsedDbResumes.forEach((r) => {
+          mergedResumesMap.set(r.id, r);
+        });
+
+        // Merge local resumes
+        const localResumesToUpload = [];
+        const localResList = Array.isArray(savedResumes) ? savedResumes : [];
+        for (let k = 0; k < localResList.length; k++) {
+          const localRes = localResList[k];
+          const isUuid = localRes.id.includes('-') && localRes.id.length === 36;
+          let matchedDbResume = null;
+
+          if (isUuid) {
+            matchedDbResume = parsedDbResumes.find((r) => r.id === localRes.id);
+          } else {
+            matchedDbResume = parsedDbResumes.find(
+              (r) => r.name === localRes.name && r.title === (localRes.data?.personal?.title || '')
+            );
+          }
+
+          if (matchedDbResume) {
+            const localTime = localRes.date ? new Date(localRes.date).getTime() : 0;
+            const dbTime = matchedDbResume.updatedAt
+              ? new Date(matchedDbResume.updatedAt).getTime()
+              : 0;
+
+            if (localTime > dbTime) {
+              const updatedRes = {
+                ...matchedDbResume,
+                data: localRes.data,
+                theme: localRes.theme,
+                name: localRes.name,
+              };
+              mergedResumesMap.set(matchedDbResume.id, updatedRes);
+              localResumesToUpload.push({
+                id: matchedDbResume.id,
+                user_id: user.id,
+                name: localRes.name,
+                resume_json: localRes.data,
+                theme_settings: localRes.theme,
+              });
+            }
+          } else {
+            // New local resume, upload it and get its generated UUID
+            const { data: uploadData, error: uploadErr } = await supabase
+              .from('resumes')
+              .upsert({
+                id: isUuid ? localRes.id : undefined,
+                user_id: user.id,
+                name: localRes.name,
+                resume_json: localRes.data,
+                theme_settings: localRes.theme,
+              })
+              .select();
+
+            if (!uploadErr && uploadData && uploadData.length > 0) {
+              const uploaded = uploadData[0];
+              mergedResumesMap.set(uploaded.id, {
+                id: uploaded.id,
+                name: uploaded.name,
+                title: uploaded.resume_json.personal?.title || '',
+                date:
+                  new Date(uploaded.updated_at).toLocaleDateString() +
+                  ' ' +
+                  new Date(uploaded.updated_at).toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  }),
+                data: uploaded.resume_json,
+                theme: uploaded.theme_settings,
+              });
+            }
+          }
+        }
+
+        // Upload any updated local resumes
+        if (localResumesToUpload.length > 0) {
+          await supabase.from('resumes').upsert(localResumesToUpload);
+        }
+
+        const finalResumes = Array.from(mergedResumesMap.values());
+        setSavedResumes(finalResumes);
+
+        // 2. Sync Interview Sessions (Bidirectional Merge)
+        const { data: dbSessions, error: sessError } = await supabase
+          .from('interview_sessions')
+          .select('*');
+
+        if (sessError) throw sessError;
+
+        const parsedDbSessions: InterviewSession[] = (dbSessions || []).map((s) => ({
+          id: s.id,
+          companyName: s.company_name,
+          positionName: s.position_name,
+          jobDescription: s.job_description,
+          generatedAt: s.generated_at,
+          plan: s.plan,
+          geminiData: s.gemini_data,
+          mockAnswers: s.mock_answers,
+          mockScores: s.mock_scores,
+          idealAnswers: s.ideal_answers,
+          recruiterPersonaId: s.recruiter_persona_id,
+          recruiterReplies: s.recruiter_replies,
+          sessionSummaryFeedback: s.session_summary_feedback,
+          recruiterQuestions: s.recruiter_questions,
+          interfaceMode: s.interface_mode,
+          isCompleted: s.is_completed,
+          mockRound: s.mock_round,
+          mockQuestionIdx: s.mock_question_idx,
+          mockMode: s.mock_mode,
+        }));
+
+        const mergedSessionsMap = new Map<string, InterviewSession>();
+
+        // Seed with DB sessions
+        parsedDbSessions.forEach((s) => {
+          mergedSessionsMap.set(s.id, s);
+        });
+
+        const localSessionsToUpload = [];
+        const localSessList = Array.isArray(savedSessions) ? savedSessions : [];
+        for (let k = 0; k < localSessList.length; k++) {
+          const localSess = localSessList[k];
+          const matchedDbSess = mergedSessionsMap.get(localSess.id);
+
+          if (matchedDbSess) {
+            const localAnswersCount = Object.keys(localSess.mockAnswers || {}).length;
+            const dbAnswersCount = Object.keys(matchedDbSess.mockAnswers || {}).length;
+
+            if (
+              localAnswersCount > dbAnswersCount ||
+              (localSess.isCompleted && !matchedDbSess.isCompleted)
+            ) {
+              mergedSessionsMap.set(localSess.id, localSess);
+              localSessionsToUpload.push({
+                id: localSess.id,
+                user_id: user.id,
+                company_name: localSess.companyName,
+                position_name: localSess.positionName,
+                job_description: localSess.jobDescription,
+                generated_at: localSess.generatedAt,
+                plan: localSess.plan,
+                gemini_data: localSess.geminiData,
+                mock_answers: localSess.mockAnswers,
+                mock_scores: localSess.mockScores,
+                ideal_answers: localSess.idealAnswers || {},
+                recruiter_persona_id: localSess.recruiterPersonaId,
+                recruiter_replies: localSess.recruiterReplies || {},
+                session_summary_feedback: localSess.sessionSummaryFeedback,
+                recruiter_questions: localSess.recruiterQuestions,
+                interface_mode: localSess.interfaceMode || 'standard',
+                is_completed: localSess.isCompleted || false,
+                mock_round: localSess.mockRound,
+                mock_question_idx: localSess.mockQuestionIdx,
+                mock_mode: localSess.mockMode,
+              });
+            }
+          } else {
+            mergedSessionsMap.set(localSess.id, localSess);
+            localSessionsToUpload.push({
+              id: localSess.id,
+              user_id: user.id,
+              company_name: localSess.companyName,
+              position_name: localSess.positionName,
+              job_description: localSess.jobDescription,
+              generated_at: localSess.generatedAt,
+              plan: localSess.plan,
+              gemini_data: localSess.geminiData,
+              mock_answers: localSess.mockAnswers,
+              mock_scores: localSess.mockScores,
+              ideal_answers: localSess.idealAnswers || {},
+              recruiter_persona_id: localSess.recruiterPersonaId,
+              recruiter_replies: localSess.recruiterReplies || {},
+              session_summary_feedback: localSess.sessionSummaryFeedback,
+              recruiter_questions: localSess.recruiterQuestions,
+              interface_mode: localSess.interfaceMode || 'standard',
+              is_completed: localSess.isCompleted || false,
+              mock_round: localSess.mockRound,
+              mock_question_idx: localSess.mockQuestionIdx,
+              mock_mode: localSess.mockMode,
+            });
+          }
+        }
+
+        if (localSessionsToUpload.length > 0) {
+          await supabase.from('interview_sessions').upsert(localSessionsToUpload);
+        }
+
+        const finalSessions = Array.from(mergedSessionsMap.values());
+        setSavedSessions(finalSessions);
+
+        setSyncStatus('synced');
+      } catch (err) {
+        console.error('Initial sync failed:', err);
+        setSyncStatus('error');
+      }
+    };
+
+    syncOnLogin();
+  }, [user]);
+
+  // Auto-sync Resumes to Supabase
+  useEffect(() => {
+    if (!user || syncStatus === 'syncing') return;
+
+    const syncResumes = async () => {
+      setSyncStatus('syncing');
+      try {
+        const resList = Array.isArray(savedResumes) ? savedResumes : [];
+        for (let k = 0; k < resList.length; k++) {
+          const res = resList[k];
+          const isUuid = res.id.includes('-') && res.id.length === 36;
+          await supabase.from('resumes').upsert({
+            id: isUuid ? res.id : undefined,
+            user_id: user.id,
+            name: res.name,
+            resume_json: res.data,
+            theme_settings: res.theme,
+          });
+        }
+        setSyncStatus('synced');
+      } catch (e) {
+        console.error('Failed to sync resumes to Supabase:', e);
+        setSyncStatus('error');
+      }
+    };
+
+    const timer = setTimeout(syncResumes, 1500);
+    return () => clearTimeout(timer);
+  }, [savedResumes, user]);
+
+  // Auto-sync Interview Sessions to Supabase
+  useEffect(() => {
+    if (!user || syncStatus === 'syncing') return;
+
+    const syncSessions = async () => {
+      setSyncStatus('syncing');
+      try {
+        const sessList = Array.isArray(savedSessions) ? savedSessions : [];
+        for (let k = 0; k < sessList.length; k++) {
+          const s = sessList[k];
+          await supabase.from('interview_sessions').upsert({
+            id: s.id,
+            user_id: user.id,
+            company_name: s.companyName,
+            position_name: s.positionName,
+            job_description: s.jobDescription,
+            generated_at: s.generatedAt,
+            plan: s.plan,
+            gemini_data: s.geminiData,
+            mock_answers: s.mockAnswers,
+            mock_scores: s.mockScores,
+            ideal_answers: s.idealAnswers || {},
+            recruiter_persona_id: s.recruiterPersonaId,
+            recruiter_replies: s.recruiterReplies || {},
+            session_summary_feedback: s.sessionSummaryFeedback,
+            recruiter_questions: s.recruiterQuestions,
+            interface_mode: s.interfaceMode || 'standard',
+            is_completed: s.isCompleted || false,
+            mock_round: s.mockRound,
+            mock_question_idx: s.mockQuestionIdx,
+            mock_mode: s.mockMode,
+          });
+        }
+        setSyncStatus('synced');
+      } catch (e) {
+        console.error('Failed to sync sessions to Supabase:', e);
+        setSyncStatus('error');
+      }
+    };
+
+    const timer = setTimeout(syncSessions, 1500);
+    return () => clearTimeout(timer);
+  }, [savedSessions, user]);
+
+  // Keyboard accessibility: Escape key listener for dropdowns & modals
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (isThemeMenuOpen) setIsThemeMenuOpen(false);
+        if (isMobileActionsMenuOpen) setIsMobileActionsMenuOpen(false);
+        if (showPrintModal) setShowPrintModal(false);
+        if (showAuthModal) setShowAuthModal(false);
+        if (showVercelModal) setShowVercelModal(false);
+        if (showOptimizerModal) closeOptimizerModal();
+      }
+    };
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown);
+  }, [
+    isThemeMenuOpen,
+    isMobileActionsMenuOpen,
+    showPrintModal,
+    showAuthModal,
+    showVercelModal,
+    showOptimizerModal,
+  ]);
 
   // Sync current active session state changes back to savedSessions list
   useEffect(() => {
@@ -1085,16 +1500,7 @@ export default function Dashboard() {
   const handlePdfPrint = () => {
     setShowPrintModal(true);
   };
-
-  const [printTemplate, setPrintTemplate] = useState<string>('classic');
-  const [paperSize, setPaperSize] = useState<'letter' | 'a4'>('letter');
-  const [spacingDensity, setSpacingDensity] = useState<'normal' | 'compact' | 'tight'>('normal');
-  const [showPrintModal, setShowPrintModal] = useState<boolean>(false);
-  const [isGeneratingPdf, setIsGeneratingPdf] = useState<boolean>(false);
-
   // Dynamic Page-Fit Auto-scaling for Perfect Single-Page Export
-  const [autoFitToPage, setAutoFitToPage] = useState<boolean>(true);
-  const [printScaleFactor, setPrintScaleFactor] = useState<number>(1);
   const previewContainerRef = useRef<HTMLDivElement>(null);
 
   const calculatePageFitScale = () => {
@@ -1205,8 +1611,6 @@ export default function Dashboard() {
   }, [showPrintModal, autoFitToPage, printTemplate, paperSize, spacingDensity, activeData]);
 
   // Auto-Fix & Optimize ATS Score (Jobscan Pro Auto-optimizer)
-  const [showOptimizerModal, setShowOptimizerModal] = useState<boolean>(false);
-
   const triggerAIOptimization = () => {
     if (!jobDescription.trim()) {
       alert(
@@ -1250,6 +1654,18 @@ export default function Dashboard() {
   const closeOptimizerModal = () => {
     setShowOptimizerModal(false);
   };
+
+  // Focus trap hooks for active modal overlays
+  const printModalRef = useFocusTrap(showPrintModal, () => setShowPrintModal(false));
+  const authModalRef = useFocusTrap(showAuthModal, () => {
+    if (!authLoading) setShowAuthModal(false);
+  });
+  const vercelModalRef = useFocusTrap(showVercelModal, () => {
+    if (vercelDeployState === 'idle' || vercelDeployState === 'success' || vercelDeployState === 'error') {
+      setShowVercelModal(false);
+    }
+  });
+  const optimizerModalRef = useFocusTrap(!!(showOptimizerModal && revisedResumeData), closeOptimizerModal);
 
   // ZIP Export Trigger for complete local development packages
   const handleZipDownload = async () => {
@@ -2008,11 +2424,14 @@ export default function Portfolio() {
             )}
           </div>
           {/* App Theme Selector Dropdown */}
-          {/* App Theme Selector Dropdown */}
           <div className="relative">
             <button
+              id="theme-menu-button"
               onClick={() => { setIsThemeMenuOpen(!isThemeMenuOpen); setIsMobileActionsMenuOpen(false); }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition duration-200 ease-out cursor-pointer active:scale-[0.97] ${
+              aria-haspopup="menu"
+              aria-expanded={isThemeMenuOpen}
+              aria-label="Select app theme"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition duration-200 ease-out cursor-pointer active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
                 appTheme === 'nord-light'
                   ? 'bg-slate-100 hover:bg-slate-200 border-slate-250 text-slate-700 hover:text-slate-955'
                   : appTheme === 'indigo-midnight'
@@ -2039,6 +2458,8 @@ export default function Portfolio() {
             </button>
             {isThemeMenuOpen && (
               <div
+                role="menu"
+                aria-labelledby="theme-menu-button"
                 className={`absolute right-0 mt-1 w-40 rounded-xl border p-1 shadow-xl transition duration-200 z-50 animate-fadeIn ${
                   appTheme === 'nord-light'
                     ? 'bg-white border-slate-200 shadow-slate-200/50'
@@ -2049,8 +2470,9 @@ export default function Portfolio() {
               >
                 <button
                   type="button"
+                  role="menuitem"
                   onClick={() => { setAppTheme('slate-dark'); setIsThemeMenuOpen(false); }}
-                  className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold transition duration-200 ease-out cursor-pointer active:scale-[0.97] ${
+                  className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold transition duration-200 ease-out cursor-pointer active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
                     appTheme === 'slate-dark'
                       ? 'bg-indigo-650 text-white'
                       : appTheme === 'nord-light'
@@ -2062,8 +2484,9 @@ export default function Portfolio() {
                 </button>
                 <button
                   type="button"
+                  role="menuitem"
                   onClick={() => { setAppTheme('indigo-midnight'); setIsThemeMenuOpen(false); }}
-                  className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold transition duration-200 ease-out cursor-pointer active:scale-[0.97] ${
+                  className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold transition duration-200 ease-out cursor-pointer active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
                     appTheme === 'indigo-midnight'
                       ? 'bg-indigo-650 text-white'
                       : appTheme === 'nord-light'
@@ -2075,8 +2498,9 @@ export default function Portfolio() {
                 </button>
                 <button
                   type="button"
+                  role="menuitem"
                   onClick={() => { setAppTheme('nord-light'); setIsThemeMenuOpen(false); }}
-                  className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold transition duration-200 ease-out cursor-pointer active:scale-[0.97] ${
+                  className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-semibold transition duration-200 ease-out cursor-pointer active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
                     appTheme === 'nord-light'
                       ? 'bg-indigo-650 text-white'
                       : 'text-slate-300 hover:bg-slate-900/60 hover:text-white'
@@ -2092,8 +2516,12 @@ export default function Portfolio() {
           {/* Mobile Actions Dropdown */}
           <div className="relative lg:hidden">
             <button
+              id="mobile-actions-menu-button"
               onClick={() => { setIsMobileActionsMenuOpen(!isMobileActionsMenuOpen); setIsThemeMenuOpen(false); }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition duration-200 ease-out cursor-pointer active:scale-[0.97] ${
+              aria-haspopup="menu"
+              aria-expanded={isMobileActionsMenuOpen}
+              aria-label="Toggle export and deployment actions"
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border transition duration-200 ease-out cursor-pointer active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
                 appTheme === 'nord-light'
                   ? 'bg-slate-100 hover:bg-slate-200 border-slate-250 text-slate-700 hover:text-slate-955 shadow-sm'
                   : appTheme === 'indigo-midnight'
@@ -2107,6 +2535,8 @@ export default function Portfolio() {
             </button>
             {isMobileActionsMenuOpen && (
               <div
+                role="menu"
+                aria-labelledby="mobile-actions-menu-button"
                 className={`absolute right-0 mt-1 w-56 rounded-xl border p-1.5 shadow-xl transition duration-200 z-50 flex flex-col gap-1 animate-fadeIn ${
                   appTheme === 'nord-light'
                     ? 'bg-white border-slate-200 shadow-slate-200/50'
@@ -2117,12 +2547,13 @@ export default function Portfolio() {
               >
               <button
                 type="button"
+                role="menuitem"
                 onClick={() => {
                   setVercelDeployState('idle');
                   setVercelError('');
                   setShowVercelModal(true);
                 }}
-                className={`w-full text-left px-2.5 py-2 rounded-lg text-xs font-semibold transition duration-200 ease-out flex items-center gap-2 cursor-pointer active:scale-[0.97] ${
+                className={`w-full text-left px-2.5 py-2 rounded-lg text-xs font-semibold transition duration-200 ease-out flex items-center gap-2 cursor-pointer active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
                   appTheme === 'nord-light'
                     ? 'text-slate-700 hover:bg-slate-100'
                     : appTheme === 'indigo-midnight'
@@ -2141,9 +2572,10 @@ export default function Portfolio() {
 
               <button
                 type="button"
+                role="menuitem"
                 onClick={handleZipDownload}
                 disabled={isZipping}
-                className={`w-full text-left px-2.5 py-2 rounded-lg text-xs font-semibold transition duration-200 ease-out flex items-center gap-2 cursor-pointer active:scale-[0.97] ${
+                className={`w-full text-left px-2.5 py-2 rounded-lg text-xs font-semibold transition duration-200 ease-out flex items-center gap-2 cursor-pointer active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
                   appTheme === 'nord-light'
                     ? 'text-slate-700 hover:bg-slate-100'
                     : appTheme === 'indigo-midnight'
@@ -2157,8 +2589,9 @@ export default function Portfolio() {
 
               <button
                 type="button"
+                role="menuitem"
                 onClick={() => handleWordDownload()}
-                className={`w-full text-left px-2.5 py-2 rounded-lg text-xs font-semibold transition duration-200 ease-out flex items-center gap-2 cursor-pointer active:scale-[0.97] ${
+                className={`w-full text-left px-2.5 py-2 rounded-lg text-xs font-semibold transition duration-200 ease-out flex items-center gap-2 cursor-pointer active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
                   appTheme === 'nord-light'
                     ? 'text-slate-700 hover:bg-slate-100'
                     : appTheme === 'indigo-midnight'
@@ -2172,8 +2605,9 @@ export default function Portfolio() {
 
               <button
                 type="button"
+                role="menuitem"
                 onClick={handlePdfPrint}
-                className={`w-full text-left px-2.5 py-2 rounded-lg text-xs font-semibold transition duration-200 ease-out flex items-center gap-2 cursor-pointer active:scale-[0.97] ${
+                className={`w-full text-left px-2.5 py-2 rounded-lg text-xs font-semibold transition duration-200 ease-out flex items-center gap-2 cursor-pointer active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
                   appTheme === 'nord-light'
                     ? 'text-slate-700 hover:bg-slate-100'
                     : appTheme === 'indigo-midnight'
@@ -2187,8 +2621,9 @@ export default function Portfolio() {
 
               <button
                 type="button"
+                role="menuitem"
                 onClick={() => copyToClipboard(getExportCode(), 'code')}
-                className={`w-full text-left px-2.5 py-2 rounded-lg text-xs font-semibold transition duration-200 ease-out flex items-center gap-2 cursor-pointer active:scale-[0.97] ${
+                className={`w-full text-left px-2.5 py-2 rounded-lg text-xs font-semibold transition duration-200 ease-out flex items-center gap-2 cursor-pointer active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
                   appTheme === 'nord-light'
                     ? 'text-slate-700 hover:bg-slate-100'
                     : appTheme === 'indigo-midnight'
@@ -2236,10 +2671,12 @@ export default function Portfolio() {
             <ErrorBoundary name="Resume Builder Sidebar">
             {/* TAB SELECTOR NAVBAR — scroll fade on mobile */}
             <div className="relative">
-            <div className="flex flex-nowrap lg:flex-wrap border-b border-slate-800 overflow-x-auto lg:overflow-x-visible scrollbar-none bg-slate-955/30 text-[10px] sm:text-xs font-semibold">
+            <div role="tablist" aria-label="Editor Sidebar Sections" className="flex flex-nowrap lg:flex-wrap border-b border-slate-800 overflow-x-auto lg:overflow-x-visible scrollbar-none bg-slate-955/30 text-[10px] sm:text-xs font-semibold">
               <button
+                role="tab"
+                aria-selected={leftTab === 'import'}
                 onClick={() => setLeftTab('import')}
-                className={`flex-grow shrink-0 px-2 py-3.5 text-center border-b-2 transition duration-200 ease-out whitespace-nowrap flex items-center justify-center gap-1 ${
+                className={`flex-grow shrink-0 px-2 py-3.5 text-center border-b-2 transition duration-200 ease-out whitespace-nowrap flex items-center justify-center gap-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
                   leftTab === 'import'
                     ? 'border-slate-600 text-slate-200'
                     : 'border-transparent text-slate-500 hover:text-slate-200'
@@ -2249,8 +2686,10 @@ export default function Portfolio() {
                 <span>Import</span>
               </button>
               <button
+                role="tab"
+                aria-selected={leftTab === 'profile'}
                 onClick={() => setLeftTab('profile')}
-                className={`flex-grow shrink-0 px-2 py-3.5 text-center border-b-2 transition duration-200 ease-out whitespace-nowrap flex items-center justify-center gap-1 ${
+                className={`flex-grow shrink-0 px-2 py-3.5 text-center border-b-2 transition duration-200 ease-out whitespace-nowrap flex items-center justify-center gap-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
                   leftTab === 'profile'
                     ? 'border-slate-600 text-slate-200'
                     : 'border-transparent text-slate-500 hover:text-slate-200'
@@ -2260,8 +2699,10 @@ export default function Portfolio() {
                 <span>Profile</span>
               </button>
               <button
+                role="tab"
+                aria-selected={leftTab === 'experience'}
                 onClick={() => setLeftTab('experience')}
-                className={`flex-grow shrink-0 px-2 py-3.5 text-center border-b-2 transition duration-200 ease-out whitespace-nowrap flex items-center justify-center gap-1 ${
+                className={`flex-grow shrink-0 px-2 py-3.5 text-center border-b-2 transition duration-200 ease-out whitespace-nowrap flex items-center justify-center gap-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
                   leftTab === 'experience'
                     ? 'border-slate-600 text-slate-200'
                     : 'border-transparent text-slate-500 hover:text-slate-200'
@@ -2271,8 +2712,10 @@ export default function Portfolio() {
                 <span>Jobs</span>
               </button>
               <button
+                role="tab"
+                aria-selected={leftTab === 'projects'}
                 onClick={() => setLeftTab('projects')}
-                className={`flex-grow shrink-0 px-2 py-3.5 text-center border-b-2 transition duration-200 ease-out whitespace-nowrap flex items-center justify-center gap-1 ${
+                className={`flex-grow shrink-0 px-2 py-3.5 text-center border-b-2 transition duration-200 ease-out whitespace-nowrap flex items-center justify-center gap-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
                   leftTab === 'projects'
                     ? 'border-slate-600 text-slate-200'
                     : 'border-transparent text-slate-500 hover:text-slate-200'
@@ -2282,8 +2725,10 @@ export default function Portfolio() {
                 <span>Work</span>
               </button>
               <button
+                role="tab"
+                aria-selected={leftTab === 'design'}
                 onClick={() => setLeftTab('design')}
-                className={`flex-grow shrink-0 px-2 py-3.5 text-center border-b-2 transition duration-200 ease-out whitespace-nowrap flex items-center justify-center gap-1 ${
+                className={`flex-grow shrink-0 px-2 py-3.5 text-center border-b-2 transition duration-200 ease-out whitespace-nowrap flex items-center justify-center gap-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
                   leftTab === 'design'
                     ? 'border-slate-600 text-slate-200'
                     : 'border-transparent text-slate-500 hover:text-slate-200'
@@ -2739,10 +3184,13 @@ export default function Portfolio() {
                         className="border border-slate-800 rounded-xl overflow-hidden bg-slate-950/20"
                       >
                         <button
+                          id={`job-button-${exp.id}`}
                           onClick={() =>
                             setExpandedJobs((prev) => ({ ...prev, [exp.id]: !prev[exp.id] }))
                           }
-                          className="w-full px-4 py-3 bg-slate-950/40 hover:bg-slate-950/60 transition duration-200 ease-out flex items-center justify-between text-left text-xs"
+                          aria-expanded={!!expandedJobs[exp.id]}
+                          aria-controls={`job-panel-${exp.id}`}
+                          className="w-full px-4 py-3 bg-slate-950/40 hover:bg-slate-950/60 transition duration-200 ease-out flex items-center justify-between text-left text-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
                         >
                           <div>
                             <span className="font-bold text-white">{exp.position}</span>
@@ -2762,7 +3210,12 @@ export default function Portfolio() {
                         </button>
 
                         {expandedJobs[exp.id] && (
-                          <div className="p-4 border-t border-slate-800/50 space-y-4">
+                          <div
+                            id={`job-panel-${exp.id}`}
+                            role="region"
+                            aria-labelledby={`job-button-${exp.id}`}
+                            className="p-4 border-t border-slate-800/50 space-y-4"
+                          >
                             <div className="grid grid-cols-2 gap-3">
                               <div className="space-y-1">
                                 <label className="text-[10px] uppercase font-bold text-slate-500">
@@ -2984,13 +3437,16 @@ export default function Portfolio() {
                           className="border border-slate-800 rounded-xl overflow-hidden bg-slate-950/20"
                         >
                           <button
+                            id={`proj-button-${proj.id}`}
                             onClick={() =>
                               setExpandedProjects((prev) => ({
                                 ...prev,
                                 [proj.id]: !prev[proj.id],
                               }))
                             }
-                            className="w-full px-4 py-3 bg-slate-950/40 hover:bg-slate-950/60 transition duration-200 ease-out flex items-center justify-between text-left text-xs"
+                            aria-expanded={!!expandedProjects[proj.id]}
+                            aria-controls={`proj-panel-${proj.id}`}
+                            className="w-full px-4 py-3 bg-slate-950/40 hover:bg-slate-950/60 transition duration-200 ease-out flex items-center justify-between text-left text-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
                           >
                             <div className="flex items-center gap-2">
                               <span className="font-bold text-white">{proj.title}</span>
@@ -3006,7 +3462,12 @@ export default function Portfolio() {
                           </button>
 
                           {expandedProjects[proj.id] && (
-                            <div className="p-4 border-t border-slate-800/50 space-y-4">
+                            <div
+                              id={`proj-panel-${proj.id}`}
+                              role="region"
+                              aria-labelledby={`proj-button-${proj.id}`}
+                              className="p-4 border-t border-slate-800/50 space-y-4"
+                            >
                               <div className="grid grid-cols-2 gap-3">
                                 <div className="space-y-1">
                                   <label className="text-[10px] uppercase font-bold text-slate-500">
@@ -3321,10 +3782,13 @@ export default function Portfolio() {
                             className="border border-slate-800 rounded-xl overflow-hidden bg-slate-950/20"
                           >
                             <button
+                              id={`edu-button-${edu.id}`}
                               onClick={() =>
                                 setExpandedEdu((prev) => ({ ...prev, [edu.id]: !prev[edu.id] }))
                               }
-                              className="w-full px-4 py-3 bg-slate-950/40 hover:bg-slate-950/60 transition duration-200 ease-out flex items-center justify-between text-left text-xs"
+                              aria-expanded={!!expandedEdu[edu.id]}
+                              aria-controls={`edu-panel-${edu.id}`}
+                              className="w-full px-4 py-3 bg-slate-950/40 hover:bg-slate-950/60 transition duration-200 ease-out flex items-center justify-between text-left text-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
                             >
                               <div className="flex flex-col gap-0.5">
                                 <span className="font-bold text-white">
@@ -3347,7 +3811,12 @@ export default function Portfolio() {
                             </button>
 
                             {expandedEdu[edu.id] && (
-                              <div className="p-4 border-t border-slate-800/50 space-y-4">
+                              <div
+                                id={`edu-panel-${edu.id}`}
+                                role="region"
+                                aria-labelledby={`edu-button-${edu.id}`}
+                                className="p-4 border-t border-slate-800/50 space-y-4"
+                              >
                                 <div className="grid grid-cols-2 gap-3">
                                   <div className="space-y-1">
                                     <label className="text-[10px] uppercase font-bold text-slate-500">
@@ -3548,10 +4017,13 @@ export default function Portfolio() {
                             className="border border-slate-800 rounded-xl overflow-hidden bg-slate-950/20"
                           >
                             <button
+                              id={`cert-button-${cert.id}`}
                               onClick={() =>
                                 setExpandedCert((prev) => ({ ...prev, [cert.id]: !prev[cert.id] }))
                               }
-                              className="w-full px-4 py-3 bg-slate-950/40 hover:bg-slate-950/60 transition duration-200 ease-out flex items-center justify-between text-left text-xs"
+                              aria-expanded={!!expandedCert[cert.id]}
+                              aria-controls={`cert-panel-${cert.id}`}
+                              className="w-full px-4 py-3 bg-slate-950/40 hover:bg-slate-950/60 transition duration-200 ease-out flex items-center justify-between text-left text-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
                             >
                               <div className="flex flex-col gap-0.5">
                                 <span className="font-bold text-white">
@@ -3574,7 +4046,12 @@ export default function Portfolio() {
                             </button>
 
                             {expandedCert[cert.id] && (
-                              <div className="p-4 border-t border-slate-800/50 space-y-4">
+                              <div
+                                id={`cert-panel-${cert.id}`}
+                                role="region"
+                                aria-labelledby={`cert-button-${cert.id}`}
+                                className="p-4 border-t border-slate-800/50 space-y-4"
+                              >
                                 <div className="grid grid-cols-2 gap-3">
                                   <div className="space-y-1">
                                     <label className="text-[10px] uppercase font-bold text-slate-500">
@@ -3723,7 +4200,7 @@ export default function Portfolio() {
                     <label className="text-xs font-bold text-slate-300 uppercase tracking-wider block">
                       Theme Engine
                     </label>
-                    <div className="grid grid-cols-2 gap-2.5">
+                    <div role="radiogroup" aria-label="Theme Engine Preset" className="grid grid-cols-2 gap-2.5">
                       {[
                         { id: 'minimal', label: 'Minimal Slate', desc: 'Ultra-clean grid' },
                         { id: 'creative', label: 'Creative Morph', desc: 'Gradients & blobs' },
@@ -3733,13 +4210,15 @@ export default function Portfolio() {
                       ].map((t) => (
                         <button
                           key={t.id}
+                          role="radio"
+                          aria-checked={themeSettings.id === t.id}
                           onClick={() =>
                             setThemeSettings((prev) => ({
                               ...prev,
                               id: t.id as ThemeSettings['id'],
                             }))
                           }
-                          className={`p-3 text-left rounded-xl border transition duration-200 ease-out cursor-pointer active:scale-[0.97] ${
+                          className={`p-3 text-left rounded-xl border transition duration-200 ease-out cursor-pointer active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
                             themeSettings.id === t.id
                               ? appTheme === 'nord-light'
                                 ? 'bg-indigo-600 border-slate-600 text-white shadow-sm'
@@ -3761,7 +4240,7 @@ export default function Portfolio() {
                     <label className="text-xs font-bold text-slate-300 uppercase tracking-wider block">
                       Primary Accent Color
                     </label>
-                    <div className="flex items-center gap-3.5 py-2 bg-slate-950/30 rounded-xl border border-slate-850 px-4">
+                    <div role="radiogroup" aria-label="Primary Accent Color" className="flex items-center gap-3.5 py-2 bg-slate-950/30 rounded-xl border border-slate-850 px-4">
                       {[
                         { id: 'violet', color: 'bg-violet-500', border: 'border-violet-600' },
                         { id: 'emerald', color: 'bg-emerald-500', border: 'border-emerald-600' },
@@ -3772,13 +4251,15 @@ export default function Portfolio() {
                       ].map((color) => (
                         <button
                           key={color.id}
+                          role="radio"
+                          aria-checked={themeSettings.primaryColor === color.id}
                           onClick={() =>
                             setThemeSettings((prev) => ({
                               ...prev,
                               primaryColor: color.id as ThemeSettings['primaryColor'],
                             }))
                           }
-                          className={`w-7 h-7 rounded-full ${color.color} cursor-pointer active:scale-[0.97] relative transition duration-200 hover:scale-110 ${
+                          className={`w-7 h-7 rounded-full ${color.color} cursor-pointer active:scale-[0.97] relative transition duration-200 hover:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 ${
                             themeSettings.primaryColor === color.id
                               ? 'ring-2 ring-white ring-offset-2 ring-offset-slate-900'
                               : ''
@@ -3980,7 +4461,7 @@ export default function Portfolio() {
           {/* RIGHT PANEL HEADER / TAB SELECTOR */}
           <div className="flex-shrink-0 h-12 border-b border-slate-900 bg-slate-950/80 flex items-center justify-between px-4 sm:px-6 z-20">
             {/* Right Panel Tabs */}
-            <div className="flex gap-1 bg-slate-900 p-0.5 rounded-lg text-xs border border-slate-850">
+            <div role="tablist" aria-label="Preview and Assistant Tabs" className="flex gap-1 bg-slate-900 p-0.5 rounded-lg text-xs border border-slate-850">
               {(
                 [
                   { id: 'coach', label: 'AI Coach', icon: Sparkles },
@@ -3996,8 +4477,10 @@ export default function Portfolio() {
               ).map((tab) => (
                 <button
                   key={tab.id}
+                  role="tab"
+                  aria-selected={rightTab === tab.id}
                   onClick={() => setRightTab(tab.id as any)}
-                  className={`p-1.5 px-3 rounded-md transition duration-200 ease-out flex items-center gap-1.5 font-bold text-[10px] sm:text-xs cursor-pointer active:scale-[0.97] ${
+                  className={`p-1.5 px-3 rounded-md transition duration-200 ease-out flex items-center gap-1.5 font-bold text-[10px] sm:text-xs cursor-pointer active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
                     rightTab === tab.id
                       ? 'bg-indigo-600 text-white shadow-md'
                       : 'text-slate-500 hover:text-slate-350'
@@ -4021,7 +4504,7 @@ export default function Portfolio() {
             {rightTab === 'sandbox' && (
               <div className="flex items-center gap-4">
                 {/* Device switches */}
-                <div className="flex gap-1 bg-slate-900 p-0.5 rounded-lg text-xs border border-slate-850">
+                <div role="group" aria-label="Device preview selector" className="flex gap-1 bg-slate-900 p-0.5 rounded-lg text-xs border border-slate-850">
                   {[
                     { id: 'desktop', icon: Laptop, label: 'Desktop view' },
                     { id: 'tablet', icon: Tablet, label: 'Tablet size' },
@@ -4030,7 +4513,9 @@ export default function Portfolio() {
                     <button
                       key={device.id}
                       onClick={() => setPreviewDevice(device.id as any)}
-                      className={`p-1 px-2.5 rounded-md transition duration-200 ease-out flex items-center gap-1 cursor-pointer active:scale-[0.97] ${
+                      aria-label={device.label}
+                      aria-pressed={previewDevice === device.id}
+                      className={`p-1 px-2.5 rounded-md transition duration-200 ease-out flex items-center gap-1 cursor-pointer active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
                         previewDevice === device.id
                           ? 'bg-slate-850 text-white'
                           : 'text-slate-550 hover:text-slate-350'
@@ -8278,18 +8763,25 @@ export default function Portfolio() {
 
       {/* PDF Export Layout Preview Modal */}
       {showPrintModal && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 md:p-8 bg-slate-900/90 backdrop-blur-md animate-fadeIn print:hidden">
+        <div
+          ref={printModalRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="print-modal-title"
+          className="fixed inset-0 z-[120] flex items-center justify-center p-4 md:p-8 bg-slate-900/90 backdrop-blur-md animate-fadeIn print:hidden"
+        >
           <div className="w-full max-w-7xl h-full flex flex-col md:flex-row gap-6">
             {/* Sidebar Controls */}
             <div className="w-full md:w-80 bg-slate-950 border border-slate-800 rounded-2xl flex flex-col overflow-hidden shrink-0">
               <div className="p-5 border-b border-slate-800 flex justify-between items-center">
-                <h2 className="text-lg font-bold text-white flex items-center gap-2">
+                <h2 id="print-modal-title" className="text-lg font-bold text-white flex items-center gap-2">
                   <Download className="w-5 h-5 text-emerald-400" />
                   Document Export
                 </h2>
                 <button
                   onClick={() => setShowPrintModal(false)}
-                  className="text-slate-500 hover:text-white transition duration-200 ease-out"
+                  aria-label="Close export dialog"
+                  className="text-slate-500 hover:text-white transition duration-200 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded-lg p-1"
                 >
                   <X className="w-5 h-5" />
                 </button>
@@ -8733,13 +9225,20 @@ export default function Portfolio() {
 
       {/* Supabase Authentication Modal Overlay */}
       {showAuthModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-955/85 backdrop-blur-md animate-fadeIn">
+        <div
+          ref={authModalRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="auth-modal-title"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-955/85 backdrop-blur-md animate-fadeIn"
+        >
           <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden flex flex-col relative animate-scaleUp">
             {/* Close Button */}
             {!authLoading && (
               <button
                 onClick={() => setShowAuthModal(false)}
-                className="absolute top-4 right-4 text-slate-300 hover:text-white hover:bg-slate-800/50 p-1.5 rounded-lg transition duration-200 ease-out cursor-pointer active:scale-[0.97]"
+                aria-label="Close authentication dialog"
+                className="absolute top-4 right-4 text-slate-300 hover:text-white hover:bg-slate-800/50 p-1.5 rounded-lg transition duration-200 ease-out cursor-pointer active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -8752,7 +9251,7 @@ export default function Portfolio() {
                   <span className="text-xl font-bold">🔒</span>
                 </div>
                 <div>
-                  <h3 className="text-base font-extrabold text-white">
+                  <h3 id="auth-modal-title" className="text-base font-extrabold text-white">
                     {authMode === 'login' ? 'Welcome Back' : 'Create Account'}
                   </h3>
                   <p className="text-[11px] text-slate-550 font-semibold">
@@ -8874,7 +9373,13 @@ export default function Portfolio() {
 
       {/* Vercel Deployment Modal Overlay */}
       {showVercelModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-fadeIn">
+        <div
+          ref={vercelModalRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="vercel-modal-title"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-fadeIn"
+        >
           <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col relative animate-scaleUp">
             {/* Close Button */}
             {(vercelDeployState === 'idle' ||
@@ -8882,7 +9387,8 @@ export default function Portfolio() {
               vercelDeployState === 'error') && (
               <button
                 onClick={() => setShowVercelModal(false)}
-                className="absolute top-4 right-4 text-slate-300 hover:text-white hover:bg-slate-800/50 p-1.5 rounded-lg transition duration-200 ease-out"
+                aria-label="Close deployment dialog"
+                className="absolute top-4 right-4 text-slate-300 hover:text-white hover:bg-slate-800/50 p-1.5 rounded-lg transition duration-200 ease-out focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -8897,7 +9403,7 @@ export default function Portfolio() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-base font-extrabold text-white">One-Click Vercel Deploy</h3>
+                  <h3 id="vercel-modal-title" className="text-base font-extrabold text-white">One-Click Vercel Deploy</h3>
                   <p className="text-[11px] text-slate-500 font-semibold">
                     Instant Production Serverless Hosting
                   </p>
@@ -9207,11 +9713,18 @@ export default function Portfolio() {
 
       {/* AI Interactive Review Modal Overlay */}
       {showOptimizerModal && revisedResumeData && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8 bg-slate-900/90 backdrop-blur-md animate-fadeIn">
+        <div
+          ref={optimizerModalRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label="AI Resume Optimization Review"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8 bg-slate-900/90 backdrop-blur-md animate-fadeIn"
+        >
           <div className="w-full max-w-6xl h-full max-h-[90vh] flex flex-col relative">
             <button
               onClick={closeOptimizerModal}
-              className="absolute -top-4 -right-4 bg-slate-800 hover:bg-slate-700 text-white p-2 rounded-full shadow-xl transition duration-200 ease-out z-[110]"
+              aria-label="Close optimizer dialog"
+              className="absolute -top-4 -right-4 bg-slate-800 hover:bg-slate-700 text-white p-2 rounded-full shadow-xl transition duration-200 ease-out z-[110] focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
             >
               <X className="w-5 h-5" />
             </button>
