@@ -231,15 +231,15 @@ export default function Dashboard() {
   const setAuthError = (v: any) => setAuthStore({ authError: typeof v === 'function' ? v(authError) : v });
   const setSyncStatus = (v: any) => setAuthStore({ syncStatus: typeof v === 'function' ? v(syncStatus) : v });
 
-  const setSavedResumes = (v: any) => setResumeStore({ savedResumes: typeof v === 'function' ? v(savedResumes) : v });
-  const setResumeData = (v: any) => setResumeStore({ resumeData: typeof v === 'function' ? v(resumeData) : v });
-  const setThemeSettings = (v: any) => setResumeStore({ themeSettings: typeof v === 'function' ? v(themeSettings) : v });
+  const setSavedResumes = (v: any[] | ((prev: any[]) => any[])) => setResumeStore({ savedResumes: typeof v === 'function' ? (v as any)(savedResumes) : v });
+  const setResumeData = (v: ResumeData | ((prev: ResumeData) => ResumeData)) => setResumeStore({ resumeData: typeof v === 'function' ? (v as any)(resumeData) : v });
+  const setThemeSettings = (v: ThemeSettings | ((prev: ThemeSettings) => ThemeSettings)) => setResumeStore({ themeSettings: typeof v === 'function' ? (v as any)(themeSettings) : v });
   const setRevisedResumeData = (v: any) => setResumeStore({ revisedResumeData: typeof v === 'function' ? v(revisedResumeData) : v });
   const setShowRevisedPreview = (v: any) => setResumeStore({ showRevisedPreview: typeof v === 'function' ? v(showRevisedPreview) : v });
   const setHighlightChanges = (v: any) => setResumeStore({ highlightChanges: typeof v === 'function' ? v(highlightChanges) : v });
   const setAppliedFixes = (v: any) => setResumeStore({ appliedFixes: typeof v === 'function' ? v(appliedFixes) : v });
 
-  const setSavedSessions = (v: any) => setInterviewStore({ savedSessions: typeof v === 'function' ? v(savedSessions) : v });
+  const setSavedSessions = (v: InterviewSession[] | ((prev: InterviewSession[]) => InterviewSession[])) => setInterviewStore({ savedSessions: typeof v === 'function' ? (v as any)(savedSessions) : v });
   const setCurrentSessionId = (v: any) => setInterviewStore({ currentSessionId: typeof v === 'function' ? v(currentSessionId) : v });
   const setInterviewPlan = (v: any) => setInterviewStore({ interviewPlan: typeof v === 'function' ? v(interviewPlan) : v });
   const setInterviewJD = (v: any) => setInterviewStore({ interviewJD: typeof v === 'function' ? v(interviewJD) : v });
@@ -253,7 +253,7 @@ export default function Dashboard() {
   const setMockQuestionIdx = (v: any) => setInterviewStore({ mockQuestionIdx: typeof v === 'function' ? v(mockQuestionIdx) : v });
   const setMockRound = (v: any) => setInterviewStore({ mockRound: typeof v === 'function' ? v(mockRound) : v });
   const setMockMode = (v: any) => setInterviewStore({ mockMode: typeof v === 'function' ? v(mockMode) : v });
-  const setMockTimerSec = (v: any) => setInterviewStore({ mockTimerSec: typeof v === 'function' ? v(mockTimerSec) : v });
+  const setMockTimerSec = (v: number | ((prev: number) => number)) => setInterviewStore({ mockTimerSec: typeof v === 'function' ? (v as any)(mockTimerSec) : v });
   const setHintVisible = (v: any) => setInterviewStore({ hintVisible: typeof v === 'function' ? v(hintVisible) : v });
   const setSampleVisible = (v: any) => setInterviewStore({ sampleVisible: typeof v === 'function' ? v(sampleVisible) : v });
   const setMockInterfaceMode = (v: any) => setInterviewStore({ mockInterfaceMode: typeof v === 'function' ? v(mockInterfaceMode) : v });
@@ -317,11 +317,11 @@ export default function Dashboard() {
   const setVercelError = (v: any) => setUIStore({ vercelError: typeof v === 'function' ? v(vercelError) : v });
   const setVercelDeployProgress = (v: any) => setUIStore({ vercelDeployProgress: typeof v === 'function' ? v(vercelDeployProgress) : v });
   const setCopiedVercelUrl = (v: any) => setUIStore({ copiedVercelUrl: typeof v === 'function' ? v(copiedVercelUrl) : v });
-  const setContactMessages = (v: any) => setUIStore({ contactMessages: typeof v === 'function' ? v(contactMessages) : v });
-  const setExpandedJobs = (v: any) => setUIStore({ expandedJobs: typeof v === 'function' ? v(expandedJobs) : v });
-  const setExpandedProjects = (v: any) => setUIStore({ expandedProjects: typeof v === 'function' ? v(expandedProjects) : v });
-  const setExpandedEdu = (v: any) => setUIStore({ expandedEdu: typeof v === 'function' ? v(expandedEdu) : v });
-  const setExpandedCert = (v: any) => setUIStore({ expandedCert: typeof v === 'function' ? v(expandedCert) : v });
+  const setContactMessages = (v: ContactMessage[] | ((prev: ContactMessage[]) => ContactMessage[])) => setUIStore({ contactMessages: typeof v === 'function' ? (v as any)(contactMessages) : v });
+  const setExpandedJobs = (v: Record<string, boolean> | ((prev: Record<string, boolean>) => Record<string, boolean>)) => setUIStore({ expandedJobs: typeof v === 'function' ? (v as any)(expandedJobs) : v });
+  const setExpandedProjects = (v: Record<string, boolean> | ((prev: Record<string, boolean>) => Record<string, boolean>)) => setUIStore({ expandedProjects: typeof v === 'function' ? (v as any)(expandedProjects) : v });
+  const setExpandedEdu = (v: Record<string, boolean> | ((prev: Record<string, boolean>) => Record<string, boolean>)) => setUIStore({ expandedEdu: typeof v === 'function' ? (v as any)(expandedEdu) : v });
+  const setExpandedCert = (v: Record<string, boolean> | ((prev: Record<string, boolean>) => Record<string, boolean>)) => setUIStore({ expandedCert: typeof v === 'function' ? (v as any)(expandedCert) : v });
   const setBulletInput = (v: any) => setUIStore({ bulletInput: typeof v === 'function' ? v(bulletInput) : v });
   const setBulletStyle = (v: any) => setUIStore({ bulletStyle: typeof v === 'function' ? v(bulletStyle) : v });
   const setImprovedBullets = (v: any) => setUIStore({ improvedBullets: typeof v === 'function' ? v(improvedBullets) : v });
