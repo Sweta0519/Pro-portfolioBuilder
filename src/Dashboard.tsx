@@ -7495,8 +7495,9 @@ export default function Portfolio() {
                                           type="button"
                                           onClick={() => navigateToQuestion(mockQuestionIdx - 1)}
                                           disabled={mockQuestionIdx <= 0}
-                                          className="w-7 h-7 rounded-lg border border-slate-700 flex items-center justify-center text-[11px] text-slate-300 hover:text-white hover:border-violet-500 disabled:opacity-30 disabled:cursor-not-allowed transition duration-200 ease-out"
+                                          className="touch-target w-7 h-7 rounded-lg border border-slate-700 flex items-center justify-center text-[11px] text-slate-300 hover:text-white hover:border-violet-500 disabled:opacity-30 disabled:cursor-not-allowed transition duration-200 ease-out"
                                           title="Previous question"
+                                          aria-label="Previous question"
                                         >
                                           ←
                                         </button>
@@ -7516,6 +7517,7 @@ export default function Portfolio() {
                                                       : 'bg-slate-700 hover:bg-slate-500'
                                               }`}
                                               title={`Q${i + 1}: ${q.question.slice(0, 60)}${q.question.length > 60 ? '...' : ''}${mockScores[q.id] ? ` (${mockScores[q.id].grade})` : mockAnswers[q.id]?.trim() ? ' (draft)' : ''}`}
+                                              aria-label={`Go to question ${i + 1}`}
                                             />
                                           ))}
                                         </div>
@@ -7523,8 +7525,9 @@ export default function Portfolio() {
                                           type="button"
                                           onClick={() => navigateToQuestion(mockQuestionIdx + 1)}
                                           disabled={mockQuestionIdx >= totalQ - 1}
-                                          className="w-7 h-7 rounded-lg border border-slate-700 flex items-center justify-center text-[11px] text-slate-300 hover:text-white hover:border-violet-500 disabled:opacity-30 disabled:cursor-not-allowed transition duration-200 ease-out"
+                                          className="touch-target w-7 h-7 rounded-lg border border-slate-700 flex items-center justify-center text-[11px] text-slate-300 hover:text-white hover:border-violet-500 disabled:opacity-30 disabled:cursor-not-allowed transition duration-200 ease-out"
                                           title="Next question"
+                                          aria-label="Next question"
                                         >
                                           →
                                         </button>
@@ -7791,7 +7794,7 @@ export default function Portfolio() {
                                                       startListening(currentQ.id);
                                                     }
                                                   }}
-                                                  className={`absolute right-3 top-3 w-8 h-8 rounded-full flex items-center justify-center transition duration-200 ease-out ${
+                                                  className={`touch-target absolute right-3 top-3 w-8 h-8 rounded-full flex items-center justify-center transition duration-200 ease-out ${
                                                     isRecording
                                                       ? 'bg-red-650 text-white animate-pulse shadow-md shadow-red-555/40'
                                                       : 'bg-slate-800 text-slate-300 hover:bg-slate-800 hover:text-white'
@@ -7799,6 +7802,11 @@ export default function Portfolio() {
                                                   title={
                                                     isRecording
                                                       ? 'Stop recording'
+                                                      : 'Start voice recording'
+                                                  }
+                                                  aria-label={
+                                                    isRecording
+                                                      ? 'Stop voice recording'
                                                       : 'Start voice recording'
                                                   }
                                                 >
@@ -7915,7 +7923,7 @@ export default function Portfolio() {
                                               onClick={() =>
                                                 toggleSpeakQuestion(currentQ.id, currentQ.question)
                                               }
-                                              className={`p-2 rounded-xl border flex items-center justify-center transition duration-200 ease-out ${
+                                              className={`touch-target p-2 rounded-xl border flex items-center justify-center transition duration-200 ease-out ${
                                                 speakingQId === currentQ.id
                                                   ? 'bg-rose-955/40 border-rose-900/50 text-rose-455 animate-pulse shadow-md shadow-rose-950/40'
                                                   : 'bg-slate-900 border-slate-800 text-slate-300 hover:text-violet-450 hover:border-violet-500/50 hover:bg-slate-900/10'
@@ -7923,6 +7931,11 @@ export default function Portfolio() {
                                               title={
                                                 speakingQId === currentQ.id
                                                   ? 'Stop reading'
+                                                  : 'Read question aloud'
+                                              }
+                                              aria-label={
+                                                speakingQId === currentQ.id
+                                                  ? 'Stop reading question aloud'
                                                   : 'Read question aloud'
                                               }
                                             >
@@ -8363,7 +8376,7 @@ export default function Portfolio() {
                                                         setAudioUrl(null);
                                                       }
                                                     }}
-                                                    className={`absolute right-2 top-2 w-8 h-8 rounded-full flex items-center justify-center transition duration-200 ease-out ${
+                                                    className={`touch-target absolute right-2 top-2 w-8 h-8 rounded-full flex items-center justify-center transition duration-200 ease-out ${
                                                       isRecording
                                                         ? 'bg-red-500 text-white animate-pulse shadow-lg shadow-red-500/40'
                                                         : 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white'
@@ -8371,6 +8384,11 @@ export default function Portfolio() {
                                                     title={
                                                       isRecording
                                                         ? 'Stop recording'
+                                                        : 'Start voice recording'
+                                                    }
+                                                    aria-label={
+                                                      isRecording
+                                                        ? 'Stop voice recording'
                                                         : 'Start voice recording'
                                                     }
                                                   >
