@@ -265,6 +265,7 @@ export default function Dashboard() {
   const bulletStyle = useUIStore((s) => s.bulletStyle);
   const improvedBullets = useUIStore((s) => s.improvedBullets);
   const copiedBulletIdx = useUIStore((s) => s.copiedBulletIdx);
+const copiedQuestionId = useUIStore((s) => s.copiedQuestionId);
   const jobDescription = useUIStore((s) => s.jobDescription);
   const coachSubTab = useUIStore((s) => s.coachSubTab);
   const coverLetter = useUIStore((s) => s.coverLetter);
@@ -305,6 +306,7 @@ export default function Dashboard() {
   const setBulletStyle = useUIStore((s) => s.setBulletStyle);
   const setImprovedBullets = useUIStore((s) => s.setImprovedBullets);
   const setCopiedBulletIdx = useUIStore((s) => s.setCopiedBulletIdx);
+const setCopiedQuestionId = useUIStore((s) => s.setCopiedQuestionId);
   const setJobDescription = useUIStore((s) => s.setJobDescription);
   const setCoachSubTab = useUIStore((s) => s.setCoachSubTab);
   const setCoverLetter = useUIStore((s) => s.setCoverLetter);
@@ -1953,7 +1955,11 @@ export default function Dashboard() {
   };
 
   // Copy to clipboard helpers + direct file download
-  const copyToClipboard = (text: string, type: 'code' | 'bullet', idx?: number) => {
+  const copyToClipboard = (
+    text: string,
+    type: 'code' | 'bullet' | 'question',
+    idx?: number | string
+  ) => {
     navigator.clipboard.writeText(text).then(() => {
       if (type === 'code') {
         setCopiedCode(true);
@@ -1961,8 +1967,11 @@ export default function Dashboard() {
         downloadFile(text, 'Portfolio.tsx', 'text/plain');
         setTimeout(() => setCopiedCode(false), 2000);
       } else if (type === 'bullet' && idx !== undefined) {
-        setCopiedBulletIdx(idx);
+        setCopiedBulletIdx(idx as number);
         setTimeout(() => setCopiedBulletIdx(null), 2000);
+      } else if (type === 'question' && idx !== undefined) {
+        setCopiedQuestionId(idx as string);
+        setTimeout(() => setCopiedQuestionId(null), 2000);
       }
     });
   };
@@ -6457,6 +6466,16 @@ export default function Portfolio() {
                                         >
                                           {speakingQId === `reported-${i}` ? '⏹ Stop' : '🔊 Listen'}
                                         </button>
+                                        <button
+                                          onClick={() =>
+                                            copyToClipboard(q.question, 'question', `reported-${i}`)
+                                          }
+                                          className="text-[10px] text-slate-300 hover:text-emerald-400 font-bold transition duration-200 ease-out"
+                                          title="Copy question"
+                                          aria-label="Copy question"
+                                        >
+                                          {copiedQuestionId === `reported-${i}` ? '✓ Copied' : '📋 Copy'}
+                                        </button>
                                       </div>
                                     </div>
                                   </div>
@@ -6570,6 +6589,14 @@ export default function Portfolio() {
                                       }`}
                                     >
                                       {speakingQId === q.id ? '⏹ Stop' : '🔊 Listen'}
+                                    </button>
+                                    <button
+                                      onClick={() => copyToClipboard(q.question, 'question', q.id)}
+                                      className="text-[10px] text-slate-300 hover:text-emerald-400 font-bold transition duration-200 ease-out"
+                                      title="Copy question"
+                                      aria-label="Copy question"
+                                    >
+                                      {copiedQuestionId === q.id ? '✓ Copied' : '📋 Copy'}
                                     </button>
                                   </div>
                                   {hintVisible[q.id] && q.hint && (
@@ -7093,6 +7120,24 @@ export default function Portfolio() {
                                             <p className="text-xs font-medium text-slate-200 truncate">
                                               {q.question}
                                             </p>
+                                            <button
+                                              onClick={() =>
+                                                copyToClipboard(
+                                                  q.question,
+                                                  'question',
+                                                  `summary-${q.id}`
+                                                )
+                                              }
+                                              className="touch-target p-1 rounded hover:bg-slate-800 text-slate-500 hover:text-emerald-400 flex-shrink-0 transition duration-200 ease-out"
+                                              title="Copy question"
+                                              aria-label="Copy question"
+                                            >
+                                              {copiedQuestionId === `summary-${q.id}` ? (
+                                                <Check className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+                                              ) : (
+                                                <Copy className="w-3.5 h-3.5" />
+                                              )}
+                                            </button>
                                           </div>
                                           <div className="flex items-center gap-2 shrink-0">
                                             {score ? (
@@ -7112,9 +7157,29 @@ export default function Portfolio() {
                                         <div className="p-3.5 space-y-3">
                                           {/* Question row */}
                                           <div className="space-y-1">
-                                            <p className="text-[10px] font-bold text-slate-500 uppercase">
-                                              Question asked by {selectedRecruiter.name}:
-                                            </p>
+                                            <div className="flex items-center justify-between gap-2">
+                                              <p className="text-[10px] font-bold text-slate-500 uppercase">
+                                                Question asked by {selectedRecruiter.name}:
+                                              </p>
+                                              <button
+                                                onClick={() =>
+                                                  copyToClipboard(
+                                                    q.question,
+                                                    'question',
+                                                    `summary-detail-${q.id}`
+                                                  )
+                                                }
+                                                className="touch-target p-1 rounded hover:bg-slate-800 text-slate-500 hover:text-emerald-400 flex-shrink-0 transition duration-200 ease-out"
+                                                title="Copy question"
+                                                aria-label="Copy question"
+                                              >
+                                                {copiedQuestionId === `summary-detail-${q.id}` ? (
+                                                  <Check className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+                                                ) : (
+                                                  <Copy className="w-3.5 h-3.5" />
+                                                )}
+                                              </button>
+                                            </div>
                                             <p className="text-xs text-slate-350">{q.question}</p>
                                           </div>
 
@@ -7592,6 +7657,24 @@ export default function Portfolio() {
                                                 >
                                                   🔊 Replay Voice
                                                 </button>
+                                                <button
+                                                  type="button"
+                                                  onClick={() =>
+                                                    copyToClipboard(
+                                                      currentQ.question,
+                                                      'question',
+                                                      `recruiter-live-${currentQ.id}`
+                                                    )
+                                                  }
+                                                  className="text-[10px] text-slate-500 hover:text-emerald-400 flex items-center gap-1 font-semibold transition duration-200 ease-out"
+                                                  title="Copy question"
+                                                  aria-label="Copy question"
+                                                >
+                                                  {copiedQuestionId ===
+                                                  `recruiter-live-${currentQ.id}`
+                                                    ? '✓ Copied'
+                                                    : '📋 Copy'}
+                                                </button>
                                                 {currentQ.hint && (
                                                   <button
                                                     type="button"
@@ -7945,6 +8028,25 @@ export default function Portfolio() {
                                                 <span className="text-xs font-bold flex items-center gap-1">
                                                   🔊 Listen
                                                 </span>
+                                              )}
+                                            </button>
+                                            <button
+                                              type="button"
+                                              onClick={() =>
+                                                copyToClipboard(
+                                                  currentQ.question,
+                                                  'question',
+                                                  `mock-${currentQ.id}`
+                                                )
+                                              }
+                                              className="touch-target p-2 rounded-xl border border-slate-800 bg-slate-900 text-slate-300 hover:text-emerald-400 hover:border-emerald-500/50 flex items-center justify-center transition duration-200 ease-out"
+                                              title="Copy question"
+                                              aria-label="Copy question"
+                                            >
+                                              {copiedQuestionId === `mock-${currentQ.id}` ? (
+                                                <Check className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+                                              ) : (
+                                                <Copy className="w-3.5 h-3.5" />
                                               )}
                                             </button>
                                           </div>

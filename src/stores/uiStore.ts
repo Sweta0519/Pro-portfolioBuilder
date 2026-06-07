@@ -46,6 +46,7 @@ export interface UIState {
   bulletStyle: BulletStyle;
   improvedBullets: string[];
   copiedBulletIdx: number | null;
+  copiedQuestionId: string | null;
   jobDescription: string;
   coachSubTab: CoachSubTab;
   coverLetter: string;
@@ -87,6 +88,7 @@ export interface UIState {
   setBulletStyle: FieldSetter<BulletStyle>;
   setImprovedBullets: FieldSetter<string[]>;
   setCopiedBulletIdx: FieldSetter<number | null>;
+  setCopiedQuestionId: FieldSetter<string | null>;
   setJobDescription: FieldSetter<string>;
   setCoachSubTab: FieldSetter<CoachSubTab>;
   setCoverLetter: FieldSetter<string>;
@@ -151,6 +153,7 @@ export const useUIStore = create<UIState>((set) => {
     bulletStyle: 'impact',
     improvedBullets: [],
     copiedBulletIdx: null,
+    copiedQuestionId: null,
     jobDescription: '',
     coachSubTab: 'checklist',
     coverLetter: '',
@@ -192,6 +195,7 @@ export const useUIStore = create<UIState>((set) => {
     setBulletStyle: setter('bulletStyle'),
     setImprovedBullets: setter('improvedBullets'),
     setCopiedBulletIdx: setter('copiedBulletIdx'),
+    setCopiedQuestionId: setter('copiedQuestionId'),
     setJobDescription: setter('jobDescription'),
     setCoachSubTab: setter('coachSubTab'),
     setCoverLetter: setter('coverLetter'),
