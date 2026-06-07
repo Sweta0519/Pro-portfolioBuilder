@@ -128,7 +128,16 @@ const getInitialSessions = (): InterviewSession[] => {
     const local = localStorage.getItem('pro_portfolio_interview_sessions');
     if (local) {
       const parsed = JSON.parse(local);
-      if (Array.isArray(parsed)) return parsed as InterviewSession[];
+      if (Array.isArray(parsed)) {
+        // Migrate legacy IDs to UUIDs so they don't crash Supabase
+        const migrated = parsed.map((sess: any) => {
+          if (sess.id && !sess.id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+            return { ...sess, id: crypto.randomUUID() };
+          }
+          return sess;
+        });
+        return migrated as InterviewSession[];
+      }
     }
   } catch (e) {
     console.error('Failed to read saved interview sessions:', e);
@@ -153,12 +162,17 @@ const getInitialActiveSession = (
 export const useInterviewStore = create<InterviewState>((set) => {
   const setter = <K extends keyof InterviewState>(key: K) =>
     (value: Updater<InterviewState[K]>) =>
-      set((state) => ({
-        [key]:
-          typeof value === 'function'
+      set((state) => {
+        const nextValue = typeof value === 'function'
             ? (value as (prev: InterviewState[K]) => InterviewState[K])(state[key])
-            : (value as InterviewState[K]),
-      } as Partial<InterviewState>));
+            : (value as InterviewState[K]);
+            
+        if (key === 'savedSessions') {
+          localStorage.setItem('pro_portfolio_interview_sessions', JSON.stringify(nextValue));
+        }
+        
+        return { [key]: nextValue } as Partial<InterviewState>;
+      });
 
   const sessions = getInitialSessions();
   const activeSession = getInitialActiveSession(sessions);

@@ -37,14 +37,23 @@ const getInitialSavedResumes = (): SavedResume[] => {
     const local = localStorage.getItem('pro_portfolio_saved_resumes');
     if (local) {
       const parsed = JSON.parse(local);
-      if (Array.isArray(parsed)) return parsed as SavedResume[];
+      if (Array.isArray(parsed)) {
+        // Migrate legacy IDs to UUIDs so they don't crash Supabase
+        const migrated = parsed.map((res: any) => {
+          if (res.id && !res.id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+            return { ...res, id: crypto.randomUUID() };
+          }
+          return res;
+        });
+        return migrated as SavedResume[];
+      }
     }
   } catch (e) {
     console.error('Failed to read saved resumes:', e);
   }
   return [
     {
-      id: 'default-rivera',
+      id: crypto.randomUUID(),
       name: defaultResumeData.personal.name,
       title: defaultResumeData.personal.title,
       date: new Date().toLocaleDateString(),
@@ -57,12 +66,17 @@ const getInitialSavedResumes = (): SavedResume[] => {
 export const useResumeStore = create<ResumeState>((set) => {
   const setter = <K extends keyof ResumeState>(key: K) =>
     (value: Updater<ResumeState[K]>) =>
-      set((state) => ({
-        [key]:
-          typeof value === 'function'
+      set((state) => {
+        const nextValue = typeof value === 'function'
             ? (value as (prev: ResumeState[K]) => ResumeState[K])(state[key])
-            : (value as ResumeState[K]),
-      } as Partial<ResumeState>));
+            : (value as ResumeState[K]);
+            
+        if (key === 'savedResumes') {
+          localStorage.setItem('pro_portfolio_saved_resumes', JSON.stringify(nextValue));
+        }
+        
+        return { [key]: nextValue } as Partial<ResumeState>;
+      });
 
   return {
     savedResumes: getInitialSavedResumes(),

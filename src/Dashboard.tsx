@@ -1476,7 +1476,7 @@ const setCopiedQuestionId = useUIStore((s) => s.setCopiedQuestionId);
   // Save current resume state into local history
   const saveResumeToHistory = (data: ResumeData, theme: ThemeSettings) => {
     const newHistoryItem = {
-      id: `res-${Date.now()}`,
+      id: crypto.randomUUID(),
       name: data.personal.name || 'Professional Candidate',
       title: data.personal.title || 'Senior Software Engineer',
       date:
@@ -5894,7 +5894,7 @@ export default function Portfolio() {
                           );
                           setSelectedRecruiter(recruiter);
 
-                          const sessionId = 'session-' + Date.now();
+                          const sessionId = crypto.randomUUID();
                           const newSession: InterviewSession = {
                             id: sessionId,
                             companyName: interviewCompanyName.trim() || plan.context.company,
