@@ -4623,9 +4623,9 @@ export default function Portfolio() {
           }`}
         >
           {/* RIGHT PANEL HEADER / TAB SELECTOR */}
-          <div className={`flex-shrink-0 h-12 border-b border-slate-900 bg-slate-950/80 flex items-center justify-between px-4 sm:px-6 ${Z.STICKY_PANEL}`}>
+          <div className={`flex-shrink-0 h-12 border-b border-slate-900 bg-slate-950/80 flex items-center justify-between gap-2 px-3 sm:px-6 ${Z.STICKY_PANEL}`}>
             {/* Right Panel Tabs */}
-            <div role="tablist" aria-label="Preview and Assistant Tabs" className="flex gap-1 bg-slate-900 p-0.5 rounded-lg text-xs border border-slate-850">
+            <div role="tablist" aria-label="Preview and Assistant Tabs" className="flex gap-1 bg-slate-900 p-0.5 rounded-lg text-xs border border-slate-850 min-w-0">
               {(
                 [
                   { id: 'coach', label: 'AI Coach', icon: Sparkles },
@@ -4644,7 +4644,9 @@ export default function Portfolio() {
                   role="tab"
                   aria-selected={rightTab === tab.id}
                   onClick={() => setRightTab(tab.id as any)}
-                  className={`p-1.5 px-3 rounded-md transition duration-200 ease-out flex items-center gap-1.5 font-bold text-[10px] sm:text-xs cursor-pointer active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
+                  title={tab.label}
+                  aria-label={tab.label}
+                  className={`p-1.5 sm:px-3 rounded-md transition duration-200 ease-out flex items-center gap-1.5 font-bold text-[10px] sm:text-xs cursor-pointer active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
                     rightTab === tab.id
                       ? 'bg-indigo-600 text-white shadow-md'
                       : 'text-slate-500 hover:text-slate-350'
@@ -4652,9 +4654,6 @@ export default function Portfolio() {
                 >
                   <tab.icon className="w-3.5 h-3.5" />
                   <span className="hidden sm:inline">{tab.label}</span>
-                  <span className="sm:hidden">
-                    {tab.id === 'interview' ? 'Interview' : tab.label.split(' ')[0]}
-                  </span>
                   {tab.badge !== undefined && tab.badge > 0 && (
                     <span className="bg-rose-500 text-white text-[10px] px-1 rounded-full">
                       {tab.badge}
@@ -4666,7 +4665,7 @@ export default function Portfolio() {
 
             {/* Context-Aware Right Side Controls */}
             {rightTab === 'sandbox' && (
-              <div className="flex items-center gap-4">
+              <div className="hidden sm:flex items-center gap-4 shrink-0">
                 {/* Device switches */}
                 <div role="group" aria-label="Device preview selector" className="flex gap-1 bg-slate-900 p-0.5 rounded-lg text-xs border border-slate-850">
                   {[
@@ -8804,7 +8803,7 @@ export default function Portfolio() {
 
           {rightTab === 'sandbox' && (
             <ErrorBoundary name="Live Sandbox Exporter">
-              <div className="flex-grow p-6 md:p-8 overflow-y-auto flex flex-col items-center justify-center gap-4">
+              <div className="flex-grow min-h-0 p-4 md:p-8 overflow-y-auto flex flex-col items-center sm:justify-center gap-4 sm:pt-6 pt-4">
               
               {/* EXPORT TOOLKIT MOVED TO SANDBOX */}
               <div className="sandbox-control-bar w-full max-w-4xl bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-wrap gap-3 items-center justify-center shadow-xl mb-4">
