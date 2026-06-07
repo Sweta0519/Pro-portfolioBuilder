@@ -2514,7 +2514,7 @@ export default function Portfolio() {
                   <div
                     className={`flex items-center gap-1.5 p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg text-xs font-semibold border transition duration-200 ease-out ${
                       appTheme === 'nord-light'
-                        ? 'bg-slate-100 border-slate-250 text-slate-705'
+                        ? 'bg-slate-100 border-slate-200 text-slate-700'
                         : 'bg-slate-900 border-slate-800 text-slate-200'
                     }`}
                   >
@@ -7337,7 +7337,7 @@ export default function Portfolio() {
                                               {selectedRecruiter.company}
                                             </span>
                                           </div>
-                                          <p className="text-[10px] text-slate-505 font-semibold">
+                                          <p className="text-[10px] text-slate-500 font-semibold">
                                             {selectedRecruiter.title} • Voice:{' '}
                                             {selectedRecruiter.voiceGender === 'female'
                                               ? 'Female'
@@ -7593,7 +7593,7 @@ export default function Portfolio() {
                                                         [currentQ.id]: !p[currentQ.id],
                                                       }))
                                                     }
-                                                    className="text-[10px] text-slate-505 hover:text-slate-350 flex items-center gap-1 font-semibold"
+                                                    className="text-[10px] text-slate-500 hover:text-slate-350 flex items-center gap-1 font-semibold"
                                                   >
                                                     💡{' '}
                                                     {hintVisible[currentQ.id]

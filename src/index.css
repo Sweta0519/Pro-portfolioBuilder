@@ -1,9 +1,87 @@
 @import '@fontsource-variable/geist';
 @import 'tailwindcss';
 
+/* ──────────────────────────────────────────────────────────────────────────
+   Custom design tokens — intermediate color stops used throughout the app.
+   These are interpolated steps between the standard Tailwind palette (e.g.
+   slate-150 sits between slate-100 and slate-200). Adding them as @theme
+   tokens lets Tailwind generate valid utility classes (.bg-slate-850, etc.)
+   that previously produced empty rules, so dark-theme panels/borders now
+   render their intended backgrounds. The Nord-Light and Indigo-Midnight
+   override blocks below still take precedence via !important + higher
+   attribute-selector specificity.
+   ────────────────────────────────────────────────────────────────────────── */
+@theme {
+  /* Slate intermediates */
+  --color-slate-150: #eaeff5;
+  --color-slate-250: #d7dfe9;
+  --color-slate-350: #b0bccd;
+  --color-slate-450: #7c8ca2;
+  --color-slate-550: #56657a;
+  --color-slate-650: #3d4b5f;
+  --color-slate-750: #293548;
+  --color-slate-850: #172033;
+  --color-slate-955: #060a14;
+
+  /* Blue intermediates */
+  --color-blue-450: #4e94f8;
+  --color-blue-550: #3073f1;
+  --color-blue-650: #2159e2;
+  --color-blue-955: #0c132a;
+
+  /* Indigo intermediates */
+  --color-indigo-405: #7279f5;
+  --color-indigo-650: #493fd8;
+  --color-indigo-850: #342f92;
+
+  /* Violet intermediates */
+  --color-violet-450: #9974f8;
+  --color-violet-850: #541fa6;
+
+  /* Emerald intermediates */
+  --color-emerald-450: #22c68d;
+  --color-emerald-555: #0ba875;
+  --color-emerald-650: #058760;
+  --color-emerald-955: #011611;
+
+  /* Amber intermediates */
+  --color-amber-450: #f8af18;
+  --color-amber-455: #f7ae17;
+  --color-amber-550: #e78b09;
+  --color-amber-650: #c76508;
+  --color-amber-955: #230d02;
+
+  /* Rose intermediates */
+  --color-rose-450: #f85872;
+  --color-rose-455: #f7556e;
+  --color-rose-555: #eb2e53;
+  --color-rose-650: #d01842;
+  --color-rose-955: #26030d;
+
+  /* Red intermediates */
+  --color-red-650: #cb2121;
+  --color-red-955: #230505;
+
+  /* Green intermediates */
+  --color-green-450: #36d26f;
+}
+
 @custom-variant dark (&:where(.dark, .dark *));
 @custom-variant nord (&:where(#app-root-container[data-theme="nord-light"] *));
 @custom-variant indigo (&:where(#app-root-container[data-theme="indigo-midnight"] *));
+
+/* ──────────────────────────────────────────────────────────────────────────
+   P0 A11y fix — WCAG AA contrast for muted body text in dark themes.
+   Tailwind's text-slate-500 (#64748b) on bg-slate-900 = 3.68:1 (FAIL).
+   Promoting to slate-400 (#94a3b8) lifts to 6.29:1 on bg-slate-900 and
+   4.53:1 on bg-slate-800 — passes AA for body text everywhere in the dark
+   themes. Scoped to data-theme attributes so the Nord-Light override
+   (which keeps slate-500 muted) is untouched.
+   ────────────────────────────────────────────────────────────────────────── */
+#app-root-container[data-theme="slate-dark"] .text-slate-500,
+#app-root-container[data-theme="indigo-midnight"] .text-slate-500 {
+  color: #94a3b8;
+}
 
 body {
   font-family: 'Geist Variable', 'Geist', system-ui, -apple-system, sans-serif;
