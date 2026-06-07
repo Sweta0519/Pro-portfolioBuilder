@@ -2450,8 +2450,8 @@ export default function Portfolio() {
             alt="ProPortfolio Logo"
             className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl shadow border border-slate-850 object-cover shrink-0"
           />
-          <div className="hidden sm:block min-w-0">
-            <h1 className="text-xs sm:text-sm font-bold tracking-tight text-white whitespace-nowrap">
+          <div className="min-w-0 flex-1 sm:flex-initial">
+            <h1 className="text-[11px] sm:text-sm font-bold tracking-tight text-white whitespace-nowrap truncate">
               ProPortfolio Builder
             </h1>
             <p className="text-[10px] text-slate-500 font-medium hidden md:block">
