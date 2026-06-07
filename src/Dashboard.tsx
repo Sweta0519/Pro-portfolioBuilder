@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
+import { ErrorBoundary } from './ErrorBoundary';
 import { loadScript } from './utils/cdnLoader';
 import { supabase } from './supabaseClient';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
@@ -2684,6 +2685,7 @@ export default function Portfolio() {
               mobileActiveView === 'editor' ? 'flex' : 'hidden lg:flex'
             }`}
           >
+            <ErrorBoundary name="Resume Builder Sidebar">
             {/* TAB SELECTOR NAVBAR — scroll fade on mobile */}
             <div className="relative">
             <div className="flex flex-nowrap lg:flex-wrap border-b border-slate-800 overflow-x-auto lg:overflow-x-visible scrollbar-none bg-slate-955/30 text-[10px] sm:text-xs font-semibold">
@@ -4417,6 +4419,7 @@ export default function Portfolio() {
                 <span className="text-slate-300 font-semibold">Swetaprangya Sahoo</span>
               </span>
             </div>
+            </ErrorBoundary>
           </div>
         )}
 
@@ -4531,7 +4534,8 @@ export default function Portfolio() {
           <div className="flex-grow overflow-y-auto p-6 space-y-6 scrollbar-thin">
             {/* TAB 6: RESUME ANALYZER COACH */}
             {rightTab === 'coach' && (
-              <div className="space-y-6 animate-fadeIn">
+              <ErrorBoundary name="AI Coach Panel">
+                <div className="space-y-6 animate-fadeIn">
                 <div>
                   <h2 className="text-base font-bold text-white">AI Coach & ATS Keyword Scanner</h2>
                   <p className="text-xs text-slate-300 mt-1 leading-relaxed">
@@ -5329,12 +5333,14 @@ export default function Portfolio() {
                   )}
                 </div>
               </div>
+            </ErrorBoundary>
             )}
 
             {/* TAB 7: MOCK INBOX */}
             {/* INTERVIEW PREP COACH TAB */}
             {rightTab === 'interview' && (
-              <div className="space-y-5 animate-fadeIn">
+              <ErrorBoundary name="Interview Prep Panel">
+                <div className="space-y-5 animate-fadeIn">
                 <div>
                   <h2 className="text-base font-bold text-white flex items-center gap-2">
                     🎯 Interview Prep Coach
@@ -8542,10 +8548,12 @@ export default function Portfolio() {
                   </>
                 )}
               </div>
+            </ErrorBoundary>
             )}
 
             {rightTab === 'inbox' && (
-              <div className="space-y-6 animate-fadeIn">
+              <ErrorBoundary name="Inbound Leads Inbox">
+                <div className="space-y-6 animate-fadeIn">
                 <div>
                   <h2 className="text-base font-bold text-white">Mock Inbound Leads</h2>
                   <p className="text-xs text-slate-300 mt-1">
@@ -8593,11 +8601,13 @@ export default function Portfolio() {
                   )}
                 </div>
               </div>
+            </ErrorBoundary>
             )}
           </div>
 
           {rightTab === 'sandbox' && (
-            <div className="flex-grow p-6 md:p-8 overflow-y-auto flex flex-col items-center justify-center gap-4">
+            <ErrorBoundary name="Live Sandbox Exporter">
+              <div className="flex-grow p-6 md:p-8 overflow-y-auto flex flex-col items-center justify-center gap-4">
               
               {/* EXPORT TOOLKIT MOVED TO SANDBOX */}
               <div className="sandbox-control-bar w-full max-w-4xl bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-wrap gap-3 items-center justify-center shadow-xl mb-4">
@@ -8713,6 +8723,7 @@ export default function Portfolio() {
                 />
               </div>
             </div>
+            </ErrorBoundary>
           )}
         </div>
       </div>
