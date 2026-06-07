@@ -671,46 +671,74 @@ html {
   background-color: var(--indigo-bg-card) !important;
   border-color: var(--indigo-border-soft) !important;
 }
-#app-root-container[data-theme="indigo-midnight"] .w-\[520px\] .bg-slate-900,
-#app-root-container[data-theme="indigo-midnight"] .w-\[520px\] .bg-slate-955,
-#app-root-container[data-theme="indigo-midnight"] .w-\[520px\] .bg-slate-950,
-#app-root-container[data-theme="indigo-midnight"] .w-\[520px\] .bg-slate-950\/40,
-#app-root-container[data-theme="indigo-midnight"] .w-\[520px\] .bg-slate-955\/40,
-#app-root-container[data-theme="indigo-midnight"] .w-\[520px\] .bg-slate-950\/50,
-#app-root-container[data-theme="indigo-midnight"] .w-\[520px\] .bg-slate-950\/30,
-#app-root-container[data-theme="indigo-midnight"] .w-\[520px\] .bg-slate-950\/20,
-#app-root-container[data-theme="indigo-midnight"] .w-\[520px\] .bg-slate-900\/80,
-#app-root-container[data-theme="indigo-midnight"] .w-\[520px\] .bg-slate-900\/60 {
-  background-color: var(--indigo-bg-panel) !important;
-  border-color: var(--indigo-border-strong) !important;
+
+/* === Global panel / border / input overrides (broadened) ===
+ * Previous scope: only `.w-[520px]` (AuthModal) and `.fixed`
+ * (modals, mobile bottom bar). Now applies to every slate-tinted
+ * surface in the dashboard — sidebar tabs, history list, theme
+ * picker cards, etc. — so the whole app tints indigo when this
+ * theme is active.
+ *
+ * Excludes `.resume-preview-container` descendants: the output
+ * portfolio templates have their own dark-mode styling and
+ * shouldn't be re-tinted by the app theme.
+ *
+ * Subtle vs elevated:
+ *   .bg-slate-9XX  (solid, no opacity) → bg-card  (deeper)
+ *   .bg-slate-9XX/NN (with /30..80)   → bg-panel (subtle)
+ *   .bg-slate-8XX                     → bg-elevated (one notch lighter than card)
+ * :not(.inset-0) on the solid variants preserves full-screen
+ * backdrop overlays as semi-transparent slate.
+ */
+#app-root-container[data-theme="indigo-midnight"] .bg-slate-900:not(.inset-0):not(.resume-preview-container *),
+#app-root-container[data-theme="indigo-midnight"] .bg-slate-955:not(.inset-0):not(.resume-preview-container *),
+#app-root-container[data-theme="indigo-midnight"] .bg-slate-950:not(.inset-0):not(.resume-preview-container *) {
+  background-color: var(--indigo-bg-card) !important;
+  border-color: var(--indigo-border-soft) !important;
 }
-#app-root-container[data-theme="indigo-midnight"] .w-\[520px\] .bg-slate-800,
-#app-root-container[data-theme="indigo-midnight"] .w-\[520px\] .bg-slate-850 {
+#app-root-container[data-theme="indigo-midnight"] .bg-slate-800:not(.resume-preview-container *),
+#app-root-container[data-theme="indigo-midnight"] .bg-slate-850:not(.resume-preview-container *) {
   background-color: var(--indigo-bg-elevated) !important;
   border-color: var(--indigo-border-strong) !important;
 }
-#app-root-container[data-theme="indigo-midnight"] .w-\[520px\] .bg-slate-800:hover,
-#app-root-container[data-theme="indigo-midnight"] .w-\[520px\] .bg-slate-850:hover,
-#app-root-container[data-theme="indigo-midnight"] .w-\[520px\] .hover\:bg-slate-750:hover,
-#app-root-container[data-theme="indigo-midnight"] .w-\[520px\] .hover\:bg-slate-800:hover,
-#app-root-container[data-theme="indigo-midnight"] .w-\[520px\] .hover\:bg-slate-700:hover {
+#app-root-container[data-theme="indigo-midnight"] .bg-slate-800:hover:not(.resume-preview-container *),
+#app-root-container[data-theme="indigo-midnight"] .bg-slate-850:hover:not(.resume-preview-container *),
+#app-root-container[data-theme="indigo-midnight"] .hover\:bg-slate-750:hover:not(.resume-preview-container *),
+#app-root-container[data-theme="indigo-midnight"] .hover\:bg-slate-800:hover:not(.resume-preview-container *),
+#app-root-container[data-theme="indigo-midnight"] .hover\:bg-slate-700:hover:not(.resume-preview-container *) {
   background-color: var(--indigo-bg-elevated-hover) !important;
 }
-#app-root-container[data-theme="indigo-midnight"] .w-\[520px\] .border-slate-800,
-#app-root-container[data-theme="indigo-midnight"] .w-\[520px\] .border-slate-700,
-#app-root-container[data-theme="indigo-midnight"] .w-\[520px\] .border-slate-850,
-#app-root-container[data-theme="indigo-midnight"] header .border-slate-800 {
+#app-root-container[data-theme="indigo-midnight"] .bg-slate-900\/20:not(.resume-preview-container *),
+#app-root-container[data-theme="indigo-midnight"] .bg-slate-950\/20:not(.resume-preview-container *),
+#app-root-container[data-theme="indigo-midnight"] .bg-slate-900\/30:not(.resume-preview-container *),
+#app-root-container[data-theme="indigo-midnight"] .bg-slate-955\/30:not(.resume-preview-container *),
+#app-root-container[data-theme="indigo-midnight"] .bg-slate-950\/30:not(.resume-preview-container *),
+#app-root-container[data-theme="indigo-midnight"] .bg-slate-900\/40:not(.resume-preview-container *),
+#app-root-container[data-theme="indigo-midnight"] .bg-slate-955\/40:not(.resume-preview-container *),
+#app-root-container[data-theme="indigo-midnight"] .bg-slate-950\/40:not(.resume-preview-container *),
+#app-root-container[data-theme="indigo-midnight"] .bg-slate-900\/50:not(.resume-preview-container *),
+#app-root-container[data-theme="indigo-midnight"] .bg-slate-955\/50:not(.resume-preview-container *),
+#app-root-container[data-theme="indigo-midnight"] .bg-slate-950\/50:not(.resume-preview-container *),
+#app-root-container[data-theme="indigo-midnight"] .bg-slate-900\/60:not(.resume-preview-container *),
+#app-root-container[data-theme="indigo-midnight"] .bg-slate-900\/80:not(.resume-preview-container *) {
+  background-color: var(--indigo-bg-panel) !important;
+  border-color: var(--indigo-border-strong) !important;
+}
+#app-root-container[data-theme="indigo-midnight"] .border-slate-700:not(.resume-preview-container *),
+#app-root-container[data-theme="indigo-midnight"] .border-slate-750:not(.resume-preview-container *),
+#app-root-container[data-theme="indigo-midnight"] .border-slate-800:not(.resume-preview-container *),
+#app-root-container[data-theme="indigo-midnight"] .border-slate-850:not(.resume-preview-container *) {
   border-color: var(--indigo-border-soft) !important;
 }
-#app-root-container[data-theme="indigo-midnight"] .w-\[520px\] input,
-#app-root-container[data-theme="indigo-midnight"] .w-\[520px\] textarea,
-#app-root-container[data-theme="indigo-midnight"] .w-\[520px\] select {
+#app-root-container[data-theme="indigo-midnight"] input:not(.resume-preview-container *),
+#app-root-container[data-theme="indigo-midnight"] textarea:not(.resume-preview-container *),
+#app-root-container[data-theme="indigo-midnight"] select:not(.resume-preview-container *) {
   background-color: var(--indigo-bg-header) !important;
   border-color: var(--indigo-border-strong) !important;
   color: var(--indigo-text-100) !important;
 }
-#app-root-container[data-theme="indigo-midnight"] .w-\[520px\] input::placeholder,
-#app-root-container[data-theme="indigo-midnight"] .w-\[520px\] textarea::placeholder {
+#app-root-container[data-theme="indigo-midnight"] input::placeholder:not(.resume-preview-container *),
+#app-root-container[data-theme="indigo-midnight"] textarea::placeholder:not(.resume-preview-container *) {
   color: var(--indigo-placeholder) !important;
 }
 #app-root-container[data-theme="indigo-midnight"] .text-white,
@@ -737,57 +765,6 @@ html {
 }
 #app-root-container[data-theme="indigo-midnight"] ::-webkit-scrollbar-thumb:hover {
   background: var(--indigo-scrollbar-hover) !important;
-}
-
-/* Modals & Overlays overrides for Indigo Midnight */
-#app-root-container[data-theme="indigo-midnight"] .fixed .bg-slate-900:not(.inset-0),
-#app-root-container[data-theme="indigo-midnight"] .fixed .bg-slate-955:not(.inset-0),
-#app-root-container[data-theme="indigo-midnight"] .fixed .bg-slate-950:not(.inset-0) {
-  background-color: var(--indigo-bg-card) !important;
-  border-color: var(--indigo-border-soft) !important;
-}
-#app-root-container[data-theme="indigo-midnight"] .fixed .bg-slate-800,
-#app-root-container[data-theme="indigo-midnight"] .fixed .bg-slate-850 {
-  background-color: var(--indigo-bg-elevated) !important;
-  border-color: var(--indigo-border-strong) !important;
-}
-#app-root-container[data-theme="indigo-midnight"] .fixed .bg-slate-800:hover,
-#app-root-container[data-theme="indigo-midnight"] .fixed .bg-slate-850:hover,
-#app-root-container[data-theme="indigo-midnight"] .fixed .hover\:bg-slate-750:hover,
-#app-root-container[data-theme="indigo-midnight"] .fixed .hover\:bg-slate-700:hover {
-  background-color: var(--indigo-bg-elevated-hover) !important;
-}
-#app-root-container[data-theme="indigo-midnight"] .fixed .bg-slate-900\/50,
-#app-root-container[data-theme="indigo-midnight"] .fixed .bg-slate-955\/50,
-#app-root-container[data-theme="indigo-midnight"] .fixed .bg-slate-950\/50,
-#app-root-container[data-theme="indigo-midnight"] .fixed .bg-slate-955\/40,
-#app-root-container[data-theme="indigo-midnight"] .fixed .bg-slate-950\/40,
-#app-root-container[data-theme="indigo-midnight"] .fixed .bg-slate-950\/30,
-#app-root-container[data-theme="indigo-midnight"] .fixed .bg-slate-950\/20,
-#app-root-container[data-theme="indigo-midnight"] .fixed .bg-slate-900\/80,
-#app-root-container[data-theme="indigo-midnight"] .fixed .bg-slate-900\/60 {
-  background-color: var(--indigo-bg-panel) !important;
-  border-color: var(--indigo-border-strong) !important;
-}
-#app-root-container[data-theme="indigo-midnight"] .fixed .border-slate-800,
-#app-root-container[data-theme="indigo-midnight"] .fixed .border-slate-750,
-#app-root-container[data-theme="indigo-midnight"] .fixed .border-slate-700,
-#app-root-container[data-theme="indigo-midnight"] .fixed .border-slate-850 {
-  border-color: var(--indigo-border-soft) !important;
-}
-#app-root-container[data-theme="indigo-midnight"] .fixed input,
-#app-root-container[data-theme="indigo-midnight"] .fixed textarea,
-#app-root-container[data-theme="indigo-midnight"] .fixed select {
-  background-color: var(--indigo-bg-header) !important;
-  border-color: var(--indigo-border-strong) !important;
-  color: var(--indigo-text-100) !important;
-}
-#app-root-container[data-theme="indigo-midnight"] .fixed input::placeholder,
-#app-root-container[data-theme="indigo-midnight"] .fixed textarea::placeholder {
-  color: var(--indigo-placeholder) !important;
-}
-#app-root-container[data-theme="indigo-midnight"] .fixed .text-white {
-  color: var(--indigo-text-white) !important;
 }
 
 /* 3. GLOBAL HIGH-CONTRAST OVERRIDES FOR NORD LIGHT THEME */
