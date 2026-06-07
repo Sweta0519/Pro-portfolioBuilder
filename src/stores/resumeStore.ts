@@ -38,13 +38,18 @@ const getInitialSavedResumes = (): SavedResume[] => {
     if (local) {
       const parsed = JSON.parse(local);
       if (Array.isArray(parsed)) {
+        let migratedAny = false;
         // Migrate legacy IDs to UUIDs so they don't crash Supabase
         const migrated = parsed.map((res: any) => {
           if (res.id && !res.id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+            migratedAny = true;
             return { ...res, id: crypto.randomUUID() };
           }
           return res;
         });
+        if (migratedAny) {
+          localStorage.setItem('pro_portfolio_saved_resumes', JSON.stringify(migrated));
+        }
         return migrated as SavedResume[];
       }
     }

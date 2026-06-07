@@ -21,6 +21,7 @@ export interface AuthState {
   syncStatus: 'idle' | 'syncing' | 'synced' | 'error';
   resumeSyncPhase: SyncPhase;
   sessionSyncPhase: SyncPhase;
+  syncErrorDetails: string;
   // Monotonically increasing token. Every sync captures the value at start and
   // bails out at completion if the value has changed (user signed out, user
   // switched, manual abort). Prevents stale writes from clobbering the store.
@@ -39,6 +40,7 @@ export interface AuthState {
   setSyncStatus: FieldSetter<'idle' | 'syncing' | 'synced' | 'error'>;
   setResumeSyncPhase: FieldSetter<SyncPhase>;
   setSessionSyncPhase: FieldSetter<SyncPhase>;
+  setSyncErrorDetails: FieldSetter<string>;
   setSyncGeneration: FieldSetter<number>;
   setIsSigningOut: FieldSetter<boolean>;
 
@@ -72,6 +74,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   syncStatus: 'idle',
   resumeSyncPhase: 'idle',
   sessionSyncPhase: 'idle',
+  syncErrorDetails: '',
   syncGeneration: 0,
   isSigningOut: false,
 
@@ -85,6 +88,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   setSyncStatus: fieldSetter<AuthState['syncStatus']>(set, 'syncStatus'),
   setResumeSyncPhase: fieldSetter<AuthState['resumeSyncPhase']>(set, 'resumeSyncPhase'),
   setSessionSyncPhase: fieldSetter<AuthState['sessionSyncPhase']>(set, 'sessionSyncPhase'),
+  setSyncErrorDetails: fieldSetter<string>(set, 'syncErrorDetails'),
   setSyncGeneration: fieldSetter<AuthState['syncGeneration']>(set, 'syncGeneration'),
   setIsSigningOut: fieldSetter<AuthState['isSigningOut']>(set, 'isSigningOut'),
 

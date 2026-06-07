@@ -129,13 +129,18 @@ const getInitialSessions = (): InterviewSession[] => {
     if (local) {
       const parsed = JSON.parse(local);
       if (Array.isArray(parsed)) {
+        let migratedAny = false;
         // Migrate legacy IDs to UUIDs so they don't crash Supabase
         const migrated = parsed.map((sess: any) => {
           if (sess.id && !sess.id.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)) {
+            migratedAny = true;
             return { ...sess, id: crypto.randomUUID() };
           }
           return sess;
         });
+        if (migratedAny) {
+          localStorage.setItem('pro_portfolio_interview_sessions', JSON.stringify(migrated));
+        }
         return migrated as InterviewSession[];
       }
     }

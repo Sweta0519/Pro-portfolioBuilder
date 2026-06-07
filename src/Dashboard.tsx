@@ -97,8 +97,14 @@ export default function Dashboard() {
   const user = useAuthStore((s) => s.user);
   const showAuthModal = useAuthStore((s) => s.showAuthModal);
   const syncStatus = useAuthStore((s) => s.syncStatus);
+  const authMode = useAuthStore((s) => s.authMode);
+  const authEmail = useAuthStore((s) => s.authEmail);
+  const authPassword = useAuthStore((s) => s.authPassword);
+  const authLoading = useAuthStore((s) => s.authLoading);
+  const authError = useAuthStore((s) => s.authError);
   const resumeSyncPhase = useAuthStore((s) => s.resumeSyncPhase);
   const sessionSyncPhase = useAuthStore((s) => s.sessionSyncPhase);
+  const syncErrorDetails = useAuthStore((s) => s.syncErrorDetails);
   const isSigningOut = useAuthStore((s) => s.isSigningOut);
   const setUser = useAuthStore((s) => s.setUser);
   const setShowAuthModal = useAuthStore((s) => s.setShowAuthModal);
@@ -107,6 +113,7 @@ export default function Dashboard() {
   const setSyncStatus = useAuthStore((s) => s.setSyncStatus);
   const setResumeSyncPhase = useAuthStore((s) => s.setResumeSyncPhase);
   const setSessionSyncPhase = useAuthStore((s) => s.setSessionSyncPhase);
+  const setSyncErrorDetails = useAuthStore((s) => s.setSyncErrorDetails);
   const setIsSigningOut = useAuthStore((s) => s.setIsSigningOut);
   const bumpSyncGeneration = useAuthStore((s) => s.bumpSyncGeneration);
 
@@ -637,9 +644,10 @@ const setCopiedQuestionId = useUIStore((s) => s.setCopiedQuestionId);
         setSessionSyncPhase('idle');
 
         setSyncStatus('synced');
-      } catch (err) {
+      } catch (err: any) {
         if ((err as any)?.name === 'AbortError') return;
         console.error('Initial sync failed:', err);
+        setSyncErrorDetails(err?.message || String(err));
         setSyncStatus('error');
         if (resumeSyncPhase === 'pulling' || resumeSyncPhase === 'pushing') {
           setResumeSyncPhase('error');
@@ -685,9 +693,10 @@ const setCopiedQuestionId = useUIStore((s) => s.setCopiedQuestionId);
         if (!finishLane('resumePush', generation)) return;
         setResumeSyncPhase('idle');
         setSyncStatus('synced');
-      } catch (e) {
+      } catch (e: any) {
         if ((e as any)?.name === 'AbortError') return;
         console.error('Failed to sync resumes to Supabase:', e);
+        setSyncErrorDetails(e?.message || String(e));
         setResumeSyncPhase('error');
         setSyncStatus('error');
       }
@@ -746,9 +755,10 @@ const setCopiedQuestionId = useUIStore((s) => s.setCopiedQuestionId);
         if (!finishLane('sessionPush', generation)) return;
         setSessionSyncPhase('idle');
         setSyncStatus('synced');
-      } catch (e) {
+      } catch (e: any) {
         if ((e as any)?.name === 'AbortError') return;
         console.error('Failed to sync sessions to Supabase:', e);
+        setSyncErrorDetails(e?.message || String(e));
         setSessionSyncPhase('error');
         setSyncStatus('error');
       }
@@ -2411,7 +2421,16 @@ export default function Portfolio() {
       className="flex flex-col h-screen bg-slate-900 text-slate-100 select-none font-sans antialiased overflow-hidden"
     >
       {/* Connection State Alert Banners */}
-      {!isOnline && (
+      {!isConfigured && (
+        <div className={`bg-amber-955/20 border-b border-amber-900/40 px-4 py-2 text-center text-xs font-bold text-amber-400 flex items-center justify-center gap-2 animate-fadeIn shrink-0 ${Z.DROPDOWN}`}>
+          <span className="flex h-2 w-2 relative shrink-0">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+          </span>
+          <span>⚠️ Supabase is not configured (missing env variables). Running in offline mode. Changes are saved locally.</span>
+        </div>
+      )}
+      {isConfigured && !isOnline && (
         <div className={`bg-amber-955/20 border-b border-amber-900/40 px-4 py-2 text-center text-xs font-bold text-amber-400 flex items-center justify-center gap-2 animate-fadeIn shrink-0 ${Z.DROPDOWN}`}>
           <span className="flex h-2 w-2 relative shrink-0">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
@@ -2420,13 +2439,13 @@ export default function Portfolio() {
           <span>⚠️ Working Offline — Changes are currently saved only to local storage. Cloud syncing is paused.</span>
         </div>
       )}
-      {isOnline && syncStatus === 'error' && (
+      {isConfigured && isOnline && syncStatus === 'error' && (
         <div className={`bg-rose-955/20 border-b border-rose-900/40 px-4 py-2 text-center text-xs font-bold text-rose-400 flex items-center justify-center gap-2 animate-fadeIn shrink-0 ${Z.DROPDOWN}`}>
           <span className="flex h-2 w-2 relative shrink-0">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
           </span>
-          <span>⚠️ Sync Degraded — We are having trouble saving edits to Supabase. Drafts are safe in local storage.</span>
+          <span>⚠️ Sync Degraded — {syncErrorDetails || 'We are having trouble saving edits to Supabase.'} Drafts are safe in local storage.</span>
         </div>
       )}
       {isOnline &&
