@@ -3132,6 +3132,7 @@ export default function Portfolio() {
                                   onClick={(e) => deleteResumeFromHistory(item.id, e)}
                                   className="touch-target text-slate-500 hover:text-rose-400 p-1.5 rounded hover:bg-slate-900 transition duration-200 ease-out"
                                   title="Remove from history"
+                                  aria-label="Remove from history"
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
                                 </button>
@@ -3468,6 +3469,7 @@ export default function Portfolio() {
                                     <button
                                       onClick={() => handleRemoveBullet(exp.id, bulletIdx)}
                                       className="touch-target text-slate-600 hover:text-rose-400 p-1 rounded hover:bg-slate-900 transition duration-200 ease-out flex-shrink-0"
+                                      aria-label="Remove bullet point"
                                     >
                                       <Trash2 className="w-3.5 h-3.5" />
                                     </button>
@@ -3920,6 +3922,7 @@ export default function Portfolio() {
                           <button
                             onClick={() => handleRemoveSkill(skill.name)}
                             className="touch-target text-slate-600 hover:text-rose-400 p-1 rounded hover:bg-slate-950"
+                            aria-label={`Remove skill ${skill.name}`}
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -5520,6 +5523,7 @@ export default function Portfolio() {
                               onClick={() => copyToClipboard(bullet, 'bullet', idx)}
                               className="touch-target p-1 rounded hover:bg-slate-800 text-slate-500 hover:text-slate-200 flex-shrink-0 transition duration-200 ease-out"
                               title="Copy Bullet Point"
+                              aria-label="Copy Bullet Point"
                             >
                               {copiedBulletIdx === idx ? (
                                 <Check className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
@@ -6085,6 +6089,7 @@ export default function Portfolio() {
                                     }}
                                     className="touch-target p-1.5 rounded-lg border border-slate-800 text-slate-500 hover:text-rose-400 hover:border-rose-900/50 transition duration-200 ease-out"
                                     title="Delete Session"
+                                    aria-label="Delete Session"
                                   >
                                     <Trash2 className="w-3.5 h-3.5" />
                                   </button>
@@ -9648,6 +9653,7 @@ export default function Portfolio() {
                           }}
                           className="touch-target text-slate-300 hover:text-white p-1 rounded transition duration-200 ease-out shrink-0 cursor-pointer active:scale-[0.97]"
                           title="Copy Link"
+                          aria-label="Copy deployment URL"
                         >
                           {copiedVercelUrl ? (
                             <Check className="w-4 h-4 text-emerald-400 animate-pulse" />
