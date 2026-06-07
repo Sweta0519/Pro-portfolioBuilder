@@ -2530,7 +2530,7 @@ export default function Portfolio() {
                     aria-busy={isSigningOut}
                     title={isSigningOut ? 'Signing Out…' : 'Sign Out'}
                     aria-label={isSigningOut ? 'Signing Out' : 'Sign Out'}
-                    className={`p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg text-xs font-bold transition duration-200 ease-out border ${
+                    className={`touch-target p-1.5 sm:px-2.5 sm:py-1.5 rounded-lg text-xs font-bold transition duration-200 ease-out border ${
                       isSigningOut
                         ? 'cursor-not-allowed opacity-50'
                         : 'cursor-pointer active:scale-[0.97]'
@@ -2563,7 +2563,7 @@ export default function Portfolio() {
                   }}
                   title="Sign In"
                   aria-label="Sign In"
-                  className="flex items-center gap-1.5 p-1.5 sm:px-3 sm:py-1.5 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-slate-700 text-white transition duration-200 ease-out shadow-lg shadow-black/10 active:scale-[0.97] cursor-pointer"
+                  className="touch-target flex items-center gap-1.5 p-1.5 sm:px-3 sm:py-1.5 rounded-lg text-xs font-bold bg-indigo-600 hover:bg-slate-700 text-white transition duration-200 ease-out shadow-lg shadow-black/10 active:scale-[0.97] cursor-pointer"
                 >
                   <LogIn className="w-3.5 h-3.5 sm:hidden" />
                   <span className="hidden sm:inline">🔒 Sign In</span>
@@ -2579,7 +2579,7 @@ export default function Portfolio() {
               aria-haspopup="menu"
               aria-expanded={isThemeMenuOpen}
               aria-label="Select app theme"
-              className={`flex items-center gap-1 sm:gap-1.5 p-1.5 sm:px-3 sm:py-1.5 rounded-lg text-xs font-semibold border transition duration-200 ease-out cursor-pointer active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
+              className={`touch-target flex items-center gap-1 sm:gap-1.5 p-1.5 sm:px-3 sm:py-1.5 rounded-lg text-xs font-semibold border transition duration-200 ease-out cursor-pointer active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
                 appTheme === 'nord-light'
                   ? 'bg-slate-100 hover:bg-slate-200 border-slate-250 text-slate-700 hover:text-slate-955'
                   : appTheme === 'indigo-midnight'
@@ -2669,7 +2669,7 @@ export default function Portfolio() {
               aria-haspopup="menu"
               aria-expanded={isMobileActionsMenuOpen}
               aria-label="Toggle export and deployment actions"
-              className={`flex items-center gap-1 sm:gap-1.5 p-1.5 sm:px-3 sm:py-1.5 rounded-lg text-xs font-semibold border transition duration-200 ease-out cursor-pointer active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
+              className={`touch-target flex items-center gap-1 sm:gap-1.5 p-1.5 sm:px-3 sm:py-1.5 rounded-lg text-xs font-semibold border transition duration-200 ease-out cursor-pointer active:scale-[0.97] focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
                 appTheme === 'nord-light'
                   ? 'bg-slate-100 hover:bg-slate-200 border-slate-250 text-slate-700 hover:text-slate-955 shadow-sm'
                   : appTheme === 'indigo-midnight'
@@ -3130,7 +3130,7 @@ export default function Portfolio() {
                               <div className="flex items-center gap-2 flex-shrink-0">
                                 <button
                                   onClick={(e) => deleteResumeFromHistory(item.id, e)}
-                                  className="text-slate-500 hover:text-rose-400 p-1.5 rounded hover:bg-slate-900 transition duration-200 ease-out"
+                                  className="touch-target text-slate-500 hover:text-rose-400 p-1.5 rounded hover:bg-slate-900 transition duration-200 ease-out"
                                   title="Remove from history"
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
@@ -3467,7 +3467,7 @@ export default function Portfolio() {
                                     />
                                     <button
                                       onClick={() => handleRemoveBullet(exp.id, bulletIdx)}
-                                      className="text-slate-600 hover:text-rose-400 p-1 rounded hover:bg-slate-900 transition duration-200 ease-out flex-shrink-0"
+                                      className="touch-target text-slate-600 hover:text-rose-400 p-1 rounded hover:bg-slate-900 transition duration-200 ease-out flex-shrink-0"
                                     >
                                       <Trash2 className="w-3.5 h-3.5" />
                                     </button>
@@ -3919,7 +3919,7 @@ export default function Portfolio() {
 
                           <button
                             onClick={() => handleRemoveSkill(skill.name)}
-                            className="text-slate-600 hover:text-rose-400 p-1 rounded hover:bg-slate-950"
+                            className="touch-target text-slate-600 hover:text-rose-400 p-1 rounded hover:bg-slate-950"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -5518,7 +5518,7 @@ export default function Portfolio() {
                             <p className="text-slate-200 leading-relaxed pr-4">{bullet}</p>
                             <button
                               onClick={() => copyToClipboard(bullet, 'bullet', idx)}
-                              className="p-1 rounded hover:bg-slate-800 text-slate-500 hover:text-slate-200 flex-shrink-0 transition duration-200 ease-out"
+                              className="touch-target p-1 rounded hover:bg-slate-800 text-slate-500 hover:text-slate-200 flex-shrink-0 transition duration-200 ease-out"
                               title="Copy Bullet Point"
                             >
                               {copiedBulletIdx === idx ? (
@@ -6083,7 +6083,7 @@ export default function Portfolio() {
                                         }
                                       }
                                     }}
-                                    className="p-1.5 rounded-lg border border-slate-800 text-slate-500 hover:text-rose-400 hover:border-rose-900/50 transition duration-200 ease-out"
+                                    className="touch-target p-1.5 rounded-lg border border-slate-800 text-slate-500 hover:text-rose-400 hover:border-rose-900/50 transition duration-200 ease-out"
                                     title="Delete Session"
                                   >
                                     <Trash2 className="w-3.5 h-3.5" />
@@ -9646,7 +9646,7 @@ export default function Portfolio() {
                             setCopiedVercelUrl(true);
                             setTimeout(() => setCopiedVercelUrl(false), 2000);
                           }}
-                          className="text-slate-300 hover:text-white p-1 rounded transition duration-200 ease-out shrink-0 cursor-pointer active:scale-[0.97]"
+                          className="touch-target text-slate-300 hover:text-white p-1 rounded transition duration-200 ease-out shrink-0 cursor-pointer active:scale-[0.97]"
                           title="Copy Link"
                         >
                           {copiedVercelUrl ? (

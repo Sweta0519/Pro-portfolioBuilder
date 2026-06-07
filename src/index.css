@@ -355,6 +355,21 @@ html {
   .z-modal-close { z-index: 110; }
   .z-drawer { z-index: 120; }
   .z-page-wipe { z-index: 9999; }
+
+  /* A11y: ≥44×44 touch target for icon-only buttons on mobile (WCAG 2.5.5
+     AAA / Apple HIG). Visual icon size is unchanged — the button's natural
+     padding centers the icon within the 44×44 box. Resets on sm:+ where
+     buttons grow naturally with text labels. */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  @media (min-width: 640px) {
+    .touch-target {
+      min-height: 0;
+      min-width: 0;
+    }
+  }
 }
 
 /* ──────────────────────────────────────────────────────────────────────────
