@@ -7,7 +7,7 @@ import { useUIStore } from './stores/uiStore';
 import { useFocusTrap } from './hooks/useFocusTrap';
 import { Z } from './utils/zIndex';
 import { loadScript } from './utils/cdnLoader';
-import { supabase } from './supabaseClient';
+import { supabase, isConfigured } from './supabaseClient';
 import {
   ResumeData,
   ThemeSettings,
