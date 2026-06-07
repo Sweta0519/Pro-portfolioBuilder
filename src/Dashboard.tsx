@@ -1,5 +1,9 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { ErrorBoundary } from './ErrorBoundary';
+import { useAuthStore } from './stores/authStore';
+import { useResumeStore } from './stores/resumeStore';
+import { useInterviewStore } from './stores/interviewStore';
+import { useUIStore } from './stores/uiStore';
 import { loadScript } from './utils/cdnLoader';
 import { supabase } from './supabaseClient';
 import type { User as SupabaseUser } from '@supabase/supabase-js';
@@ -80,699 +84,243 @@ import {
 } from 'lucide-react';
 
 export default function Dashboard() {
-  // Saved Uploaded Resumes History (Jobscan Pro features clone)
-  const [savedResumes, setSavedResumes] = useState<
-    Array<{
-      id: string;
-      name: string;
-      title: string;
-      date: string;
-      data: ResumeData;
-      theme: ThemeSettings;
-    }>
-  >(() => {
-    try {
-      const local = localStorage.getItem('pro_portfolio_saved_resumes');
-      if (local) {
-        const parsed = JSON.parse(local);
-        if (Array.isArray(parsed)) return parsed;
-      }
-    } catch (e) {
-      console.error('Failed to read saved resumes:', e);
-    }
-    return [
-      {
-        id: 'default-rivera',
-        name: defaultResumeData.personal.name,
-        title: defaultResumeData.personal.title,
-        date: new Date().toLocaleDateString(),
-        data: defaultResumeData,
-        theme: defaultThemeSettings,
-      },
-    ];
-  });
+  // Zustand hook selections
+  const {
+    user,
+    showAuthModal,
+    authMode,
+    authEmail,
+    authPassword,
+    authLoading,
+    authError,
+    syncStatus,
+    set: setAuthStore,
+  } = useAuthStore();
 
-  // Sync Saved Resumes to localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem('pro_portfolio_saved_resumes', JSON.stringify(savedResumes));
-    } catch (e) {
-      console.error('Failed to save resumes:', e);
-    }
-  }, [savedResumes]);
+  const {
+    savedResumes,
+    resumeData,
+    themeSettings,
+    revisedResumeData,
+    showRevisedPreview,
+    highlightChanges,
+    appliedFixes,
+    set: setResumeStore,
+  } = useResumeStore();
 
-  // Saved Interview Sessions History
-  const [savedSessions, setSavedSessions] = useState<InterviewSession[]>(() => {
-    try {
-      const local = localStorage.getItem('pro_portfolio_interview_sessions');
-      if (local) {
-        const parsed = JSON.parse(local);
-        if (Array.isArray(parsed)) return parsed;
-      }
-    } catch (e) {
-      console.error('Failed to read saved interview sessions:', e);
-    }
-    return [];
-  });
+  const {
+    savedSessions,
+    currentSessionId,
+    interviewPlan,
+    interviewJD,
+    interviewPositionName,
+    interviewCompanyName,
+    interviewSubTab,
+    activeRound,
+    isGeneratingPlan,
+    mockAnswers,
+    mockScores,
+    mockQuestionIdx,
+    mockRound,
+    mockMode,
+    mockTimerSec,
+    hintVisible,
+    sampleVisible,
+    mockInterfaceMode,
+    selectedRecruiter,
+    recruiterReplies,
+    isRecruiterSpeaking,
+    isRecruiterTyping,
+    isSessionCompleted,
+    autoPlayVoice,
+    autoActivateMic,
+    sessionSummaryFeedback,
+    isLoadingSummary,
+    geminiApiKey,
+    geminiData,
+    isFetchingGemini,
+    aiProgress,
+    geminiError,
+    showApiKeyInput,
+    aiProvider,
+    openRouterModel,
+    connectionTest,
+    isRecording,
+    audioUrl,
+    starMode,
+    isStarSplitting,
+    starSituation,
+    starTask,
+    starAction,
+    starResult,
+    loadingIdealAnswer,
+    idealAnswers,
+    loadingOptimization,
+    optimizedResults,
+    showIdealAnswer,
+    reportIdealLoadingMap,
+    reportShowIdealMap,
+    recruiterQuestions,
+    isLoadingRecruiterQuestions,
+    set: setInterviewStore,
+  } = useInterviewStore();
 
-  // Sync Interview Sessions to localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem('pro_portfolio_interview_sessions', JSON.stringify(savedSessions));
-    } catch (e) {
-      console.error('Failed to save interview sessions:', e);
-    }
-  }, [savedSessions]);
+  const {
+    appTheme,
+    isThemeMenuOpen,
+    isMobileActionsMenuOpen,
+    leftTab,
+    rightTab,
+    previewDevice,
+    fullscreenPreview,
+    mobileActiveView,
+    rawTextImport,
+    isParsing,
+    importSuccess,
+    copiedCode,
+    uploadedFileName,
+    fileErrorMessage,
+    copiedZip,
+    isZipping,
+    showVercelModal,
+    vercelToken,
+    vercelProjectName,
+    vercelDeployState,
+    vercelDeployUrl,
+    vercelError,
+    vercelDeployProgress,
+    copiedVercelUrl,
+    contactMessages,
+    expandedJobs,
+    expandedProjects,
+    expandedEdu,
+    expandedCert,
+    bulletInput,
+    bulletStyle,
+    improvedBullets,
+    copiedBulletIdx,
+    jobDescription,
+    coachSubTab,
+    coverLetter,
+    copiedPlaintext,
+    set: setUIStore,
+  } = useUIStore();
 
-  // Load active session from localStorage if exists
-  const initialActiveSession = (() => {
-    try {
-      const activeId = localStorage.getItem('pro_portfolio_active_session_id');
-      if (activeId) {
-        const sessionsStr = localStorage.getItem('pro_portfolio_interview_sessions');
-        if (sessionsStr) {
-          const sessions: InterviewSession[] = JSON.parse(sessionsStr);
-          return sessions.find((s) => s.id === activeId) || null;
-        }
-      }
-    } catch (e) {
-      console.error('Failed to load active session:', e);
-    }
-    return null;
-  })();
-
-  const [currentSessionId, setCurrentSessionId] = useState<string | null>(
-    initialActiveSession ? initialActiveSession.id : null
-  );
-
-  // Core states
-  const [resumeData, setResumeData] = useState<ResumeData>(defaultResumeData);
-  const [themeSettings, setThemeSettings] = useState<ThemeSettings>(defaultThemeSettings);
-  const [appTheme, setAppTheme] = useState<'slate-dark' | 'indigo-midnight' | 'nord-light'>(
-    () => (localStorage.getItem('app_theme') as any) || 'slate-dark'
-  );
-  const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false);
-  const [isMobileActionsMenuOpen, setIsMobileActionsMenuOpen] = useState(false);
-  const [leftTab, setLeftTab] = useState<string>('import');
-  const [rightTab, setRightTab] = useState<'coach' | 'interview' | 'inbox' | 'sandbox'>('coach');
-  const [previewDevice, setPreviewDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
-  const [fullscreenPreview, setFullscreenPreview] = useState<boolean>(false);
-  const [mobileActiveView, setMobileActiveView] = useState<'editor' | 'preview'>('editor');
-
-  // Auth & Sync states
-  const [user, setUser] = useState<SupabaseUser | null>(null);
-  const [showAuthModal, setShowAuthModal] = useState<boolean>(false);
-  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
-  const [authEmail, setAuthEmail] = useState<string>('');
-  const [authPassword, setAuthPassword] = useState<string>('');
-  const [authLoading, setAuthLoading] = useState<boolean>(false);
-  const [authError, setAuthError] = useState<string>('');
-  const [syncStatus, setSyncStatus] = useState<'idle' | 'syncing' | 'synced' | 'error'>('idle');
-
-  // Sync App Theme to localStorage
-  useEffect(() => {
-    localStorage.setItem('app_theme', appTheme);
-  }, [appTheme]);
-
-  // Listen to Auth State Changes
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  const handleEmailAuth = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!authEmail.trim() || !authPassword.trim()) {
-      setAuthError('Please enter both email and password.');
-      return;
-    }
-    setAuthLoading(true);
-    setAuthError('');
-    try {
-      if (authMode === 'login') {
-        const { error } = await supabase.auth.signInWithPassword({
-          email: authEmail.trim(),
-          password: authPassword.trim(),
-        });
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.auth.signUp({
-          email: authEmail.trim(),
-          password: authPassword.trim(),
-        });
-        if (error) throw error;
-        alert('Verification email sent! Check your inbox to complete sign up.');
-      }
-      setShowAuthModal(false);
-      setAuthEmail('');
-      setAuthPassword('');
-    } catch (err: any) {
-      setAuthError(err.message || 'Authentication failed.');
-    } finally {
-      setAuthLoading(false);
-    }
-  };
-
-  const handleGoogleAuth = async () => {
-    setAuthLoading(true);
-    setAuthError('');
-    try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: window.location.origin,
-        },
-      });
-      if (error) throw error;
-    } catch (err: any) {
-      setAuthError(err.message || 'Google Authentication failed.');
-      setAuthLoading(false);
-    }
-  };
-
-  const handleSignOut = async () => {
-    if (
-      confirm(
-        'Are you sure you want to sign out? Your current session remains in your browser storage.'
-      )
-    ) {
-      await supabase.auth.signOut();
-      setUser(null);
-    }
-  };
-
-  // Load / Sync User Data from/to Supabase on Login
-  useEffect(() => {
-    if (!user) return;
-
-    const syncOnLogin = async () => {
-      setSyncStatus('syncing');
-      try {
-        // 1. Sync Resumes (Bidirectional Merge)
-        const { data: dbResumes, error: resError } = await supabase.from('resumes').select('*');
-
-        if (resError) throw resError;
-
-        const parsedDbResumes = (dbResumes || []).map((r) => ({
-          id: r.id,
-          name: r.name,
-          title: r.resume_json.personal?.title || '',
-          date:
-            new Date(r.updated_at).toLocaleDateString() +
-            ' ' +
-            new Date(r.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          data: r.resume_json,
-          theme: r.theme_settings,
-          updatedAt: r.updated_at,
-        }));
-
-        const mergedResumesMap = new Map<string, any>();
-
-        // Seed with DB resumes
-        parsedDbResumes.forEach((r) => {
-          mergedResumesMap.set(r.id, r);
-        });
-
-        // Merge local resumes
-        const localResumesToUpload = [];
-        const localResList = Array.isArray(savedResumes) ? savedResumes : [];
-        for (let k = 0; k < localResList.length; k++) {
-          const localRes = localResList[k];
-          const isUuid = localRes.id.includes('-') && localRes.id.length === 36;
-          let matchedDbResume = null;
-
-          if (isUuid) {
-            matchedDbResume = parsedDbResumes.find((r) => r.id === localRes.id);
-          } else {
-            matchedDbResume = parsedDbResumes.find(
-              (r) => r.name === localRes.name && r.title === (localRes.data?.personal?.title || '')
-            );
-          }
-
-          if (matchedDbResume) {
-            const localTime = localRes.date ? new Date(localRes.date).getTime() : 0;
-            const dbTime = matchedDbResume.updatedAt
-              ? new Date(matchedDbResume.updatedAt).getTime()
-              : 0;
-
-            if (localTime > dbTime) {
-              const updatedRes = {
-                ...matchedDbResume,
-                data: localRes.data,
-                theme: localRes.theme,
-                name: localRes.name,
-              };
-              mergedResumesMap.set(matchedDbResume.id, updatedRes);
-              localResumesToUpload.push({
-                id: matchedDbResume.id,
-                user_id: user.id,
-                name: localRes.name,
-                resume_json: localRes.data,
-                theme_settings: localRes.theme,
-              });
-            }
-          } else {
-            // New local resume, upload it and get its generated UUID
-            const { data: uploadData, error: uploadErr } = await supabase
-              .from('resumes')
-              .upsert({
-                id: isUuid ? localRes.id : undefined,
-                user_id: user.id,
-                name: localRes.name,
-                resume_json: localRes.data,
-                theme_settings: localRes.theme,
-              })
-              .select();
-
-            if (!uploadErr && uploadData && uploadData.length > 0) {
-              const uploaded = uploadData[0];
-              mergedResumesMap.set(uploaded.id, {
-                id: uploaded.id,
-                name: uploaded.name,
-                title: uploaded.resume_json.personal?.title || '',
-                date:
-                  new Date(uploaded.updated_at).toLocaleDateString() +
-                  ' ' +
-                  new Date(uploaded.updated_at).toLocaleTimeString([], {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  }),
-                data: uploaded.resume_json,
-                theme: uploaded.theme_settings,
-              });
-            }
-          }
-        }
-
-        // Upload any updated local resumes
-        if (localResumesToUpload.length > 0) {
-          await supabase.from('resumes').upsert(localResumesToUpload);
-        }
-
-        const finalResumes = Array.from(mergedResumesMap.values());
-        setSavedResumes(finalResumes);
-
-        // 2. Sync Interview Sessions (Bidirectional Merge)
-        const { data: dbSessions, error: sessError } = await supabase
-          .from('interview_sessions')
-          .select('*');
-
-        if (sessError) throw sessError;
-
-        const parsedDbSessions: InterviewSession[] = (dbSessions || []).map((s) => ({
-          id: s.id,
-          companyName: s.company_name,
-          positionName: s.position_name,
-          jobDescription: s.job_description,
-          generatedAt: s.generated_at,
-          plan: s.plan,
-          geminiData: s.gemini_data,
-          mockAnswers: s.mock_answers,
-          mockScores: s.mock_scores,
-          idealAnswers: s.ideal_answers,
-          recruiterPersonaId: s.recruiter_persona_id,
-          recruiterReplies: s.recruiter_replies,
-          sessionSummaryFeedback: s.session_summary_feedback,
-          recruiterQuestions: s.recruiter_questions,
-          interfaceMode: s.interface_mode,
-          isCompleted: s.is_completed,
-          mockRound: s.mock_round,
-          mockQuestionIdx: s.mock_question_idx,
-          mockMode: s.mock_mode,
-        }));
-
-        const mergedSessionsMap = new Map<string, InterviewSession>();
-
-        // Seed with DB sessions
-        parsedDbSessions.forEach((s) => {
-          mergedSessionsMap.set(s.id, s);
-        });
-
-        const localSessionsToUpload = [];
-        const localSessList = Array.isArray(savedSessions) ? savedSessions : [];
-        for (let k = 0; k < localSessList.length; k++) {
-          const localSess = localSessList[k];
-          const matchedDbSess = mergedSessionsMap.get(localSess.id);
-
-          if (matchedDbSess) {
-            const localAnswersCount = Object.keys(localSess.mockAnswers || {}).length;
-            const dbAnswersCount = Object.keys(matchedDbSess.mockAnswers || {}).length;
-
-            if (
-              localAnswersCount > dbAnswersCount ||
-              (localSess.isCompleted && !matchedDbSess.isCompleted)
-            ) {
-              mergedSessionsMap.set(localSess.id, localSess);
-              localSessionsToUpload.push({
-                id: localSess.id,
-                user_id: user.id,
-                company_name: localSess.companyName,
-                position_name: localSess.positionName,
-                job_description: localSess.jobDescription,
-                generated_at: localSess.generatedAt,
-                plan: localSess.plan,
-                gemini_data: localSess.geminiData,
-                mock_answers: localSess.mockAnswers,
-                mock_scores: localSess.mockScores,
-                ideal_answers: localSess.idealAnswers || {},
-                recruiter_persona_id: localSess.recruiterPersonaId,
-                recruiter_replies: localSess.recruiterReplies || {},
-                session_summary_feedback: localSess.sessionSummaryFeedback,
-                recruiter_questions: localSess.recruiterQuestions,
-                interface_mode: localSess.interfaceMode || 'standard',
-                is_completed: localSess.isCompleted || false,
-                mock_round: localSess.mockRound,
-                mock_question_idx: localSess.mockQuestionIdx,
-                mock_mode: localSess.mockMode,
-              });
-            }
-          } else {
-            mergedSessionsMap.set(localSess.id, localSess);
-            localSessionsToUpload.push({
-              id: localSess.id,
-              user_id: user.id,
-              company_name: localSess.companyName,
-              position_name: localSess.positionName,
-              job_description: localSess.jobDescription,
-              generated_at: localSess.generatedAt,
-              plan: localSess.plan,
-              gemini_data: localSess.geminiData,
-              mock_answers: localSess.mockAnswers,
-              mock_scores: localSess.mockScores,
-              ideal_answers: localSess.idealAnswers || {},
-              recruiter_persona_id: localSess.recruiterPersonaId,
-              recruiter_replies: localSess.recruiterReplies || {},
-              session_summary_feedback: localSess.sessionSummaryFeedback,
-              recruiter_questions: localSess.recruiterQuestions,
-              interface_mode: localSess.interfaceMode || 'standard',
-              is_completed: localSess.isCompleted || false,
-              mock_round: localSess.mockRound,
-              mock_question_idx: localSess.mockQuestionIdx,
-              mock_mode: localSess.mockMode,
-            });
-          }
-        }
-
-        if (localSessionsToUpload.length > 0) {
-          await supabase.from('interview_sessions').upsert(localSessionsToUpload);
-        }
-
-        const finalSessions = Array.from(mergedSessionsMap.values());
-        setSavedSessions(finalSessions);
-
-        setSyncStatus('synced');
-      } catch (err) {
-        console.error('Initial sync failed:', err);
-        setSyncStatus('error');
-      }
-    };
-
-    syncOnLogin();
-  }, [user]);
-
-  // Auto-sync Resumes to Supabase
-  useEffect(() => {
-    if (!user || syncStatus === 'syncing') return;
-
-    const syncResumes = async () => {
-      setSyncStatus('syncing');
-      try {
-        const resList = Array.isArray(savedResumes) ? savedResumes : [];
-        for (let k = 0; k < resList.length; k++) {
-          const res = resList[k];
-          const isUuid = res.id.includes('-') && res.id.length === 36;
-          await supabase.from('resumes').upsert({
-            id: isUuid ? res.id : undefined,
-            user_id: user.id,
-            name: res.name,
-            resume_json: res.data,
-            theme_settings: res.theme,
-          });
-        }
-        setSyncStatus('synced');
-      } catch (e) {
-        console.error('Failed to sync resumes to Supabase:', e);
-        setSyncStatus('error');
-      }
-    };
-
-    const timer = setTimeout(syncResumes, 1500);
-    return () => clearTimeout(timer);
-  }, [savedResumes, user]);
-
-  // Auto-sync Interview Sessions to Supabase
-  useEffect(() => {
-    if (!user || syncStatus === 'syncing') return;
-
-    const syncSessions = async () => {
-      setSyncStatus('syncing');
-      try {
-        const sessList = Array.isArray(savedSessions) ? savedSessions : [];
-        for (let k = 0; k < sessList.length; k++) {
-          const s = sessList[k];
-          await supabase.from('interview_sessions').upsert({
-            id: s.id,
-            user_id: user.id,
-            company_name: s.companyName,
-            position_name: s.positionName,
-            job_description: s.jobDescription,
-            generated_at: s.generatedAt,
-            plan: s.plan,
-            gemini_data: s.geminiData,
-            mock_answers: s.mockAnswers,
-            mock_scores: s.mockScores,
-            ideal_answers: s.idealAnswers || {},
-            recruiter_persona_id: s.recruiterPersonaId,
-            recruiter_replies: s.recruiterReplies || {},
-            session_summary_feedback: s.sessionSummaryFeedback,
-            recruiter_questions: s.recruiterQuestions,
-            interface_mode: s.interfaceMode || 'standard',
-            is_completed: s.isCompleted || false,
-            mock_round: s.mockRound,
-            mock_question_idx: s.mockQuestionIdx,
-            mock_mode: s.mockMode,
-          });
-        }
-        setSyncStatus('synced');
-      } catch (e) {
-        console.error('Failed to sync sessions to Supabase:', e);
-        setSyncStatus('error');
-      }
-    };
-
-    const timer = setTimeout(syncSessions, 1500);
-    return () => clearTimeout(timer);
-  }, [savedSessions, user]);
-
-  // Form & helper states
-  const [rawTextImport, setRawTextImport] = useState<string>('');
-  const [isParsing, setIsParsing] = useState<boolean>(false);
-  const [importSuccess, setImportSuccess] = useState<boolean>(false);
-  const [copiedCode, setCopiedCode] = useState<boolean>(false);
-  const [uploadedFileName, setUploadedFileName] = useState<string>('');
-  const [fileErrorMessage, setFileErrorMessage] = useState<string>('');
-  const [copiedZip, setCopiedZip] = useState<boolean>(false);
-  const [isZipping, setIsZipping] = useState<boolean>(false);
-
-  // Vercel Deployment states
-  const [showVercelModal, setShowVercelModal] = useState<boolean>(false);
-  const [vercelToken, setVercelToken] = useState<string>(
-    () => localStorage.getItem('vercel_deploy_token') || ''
-  );
-  const [vercelProjectName, setVercelProjectName] = useState<string>('');
-  const [vercelDeployState, setVercelDeployState] = useState<
-    'idle' | 'preparing' | 'deploying' | 'polling' | 'success' | 'error'
-  >('idle');
-  const [vercelDeployUrl, setVercelDeployUrl] = useState<string>('');
-  const [vercelError, setVercelError] = useState<string>('');
-  const [vercelDeployProgress, setVercelDeployProgress] = useState<string>('');
-  const [copiedVercelUrl, setCopiedVercelUrl] = useState<boolean>(false);
-
-  // Mock Inbox state
-  const [contactMessages, setContactMessages] = useState<ContactMessage[]>([
-    {
-      id: 'msg-1',
-      name: 'Sarah Jenkins',
-      email: 's.jenkins@talentagency.com',
-      subject: 'Lead Frontend Opportunity - Linear Tech partner',
-      message:
-        "Hi Alex, absolutely loved reading through your portfolio! The Zenith Task Orchestrator case study is spectacular. Let's connect for an introductory call next Tuesday at 10 AM PST. - Sarah",
-      date: new Date().toLocaleDateString(),
-      unread: true,
-    },
-  ]);
-
-  // Accordion expanded items tracker
-  const [expandedJobs, setExpandedJobs] = useState<{ [key: string]: boolean }>({ 'exp-1': true });
-  const [expandedProjects, setExpandedProjects] = useState<{ [key: string]: boolean }>({
-    'proj-1': true,
-  });
-  const [expandedEdu, setExpandedEdu] = useState<{ [key: string]: boolean }>({});
-  const [expandedCert, setExpandedCert] = useState<{ [key: string]: boolean }>({});
-
-  // AI Bullet Improver state
-  const [bulletInput, setBulletInput] = useState<string>('');
-  const [bulletStyle, setBulletStyle] = useState<'impact' | 'verbs' | 'technical'>('impact');
-  const [improvedBullets, setImprovedBullets] = useState<string[]>([]);
-  const [copiedBulletIdx, setCopiedBulletIdx] = useState<number | null>(null);
-
-  // ─── Interview Prep Coach states ─────────────────────────────────────────
-  const [interviewPlan, setInterviewPlan] = useState<InterviewPlan | null>(
-    initialActiveSession ? initialActiveSession.plan : null
-  );
-  const [interviewJD, setInterviewJD] = useState<string>(
-    initialActiveSession ? initialActiveSession.jobDescription : ''
-  );
-  const [interviewPositionName, setInterviewPositionName] = useState<string>(
-    initialActiveSession ? initialActiveSession.positionName : ''
-  );
-  const [interviewCompanyName, setInterviewCompanyName] = useState<string>(
-    initialActiveSession ? initialActiveSession.companyName : ''
-  );
-  const [interviewSubTab, setInterviewSubTab] = useState<
-    'overview' | 'questions' | 'study-plan' | 'mock'
-  >(initialActiveSession ? (initialActiveSession.isCompleted ? 'mock' : 'overview') : 'overview');
-  const [activeRound, setActiveRound] = useState<InterviewRound>('hr');
-  const [isGeneratingPlan, setIsGeneratingPlan] = useState<boolean>(false);
-  const [mockAnswers, setMockAnswers] = useState<Record<string, string>>(
-    initialActiveSession ? initialActiveSession.mockAnswers : {}
-  );
-  const [mockScores, setMockScores] = useState<Record<string, AnswerScore>>(
-    initialActiveSession ? initialActiveSession.mockScores : {}
-  );
-  const [mockQuestionIdx, setMockQuestionIdx] = useState<number>(
-    initialActiveSession ? (initialActiveSession.mockQuestionIdx ?? 0) : 0
-  );
-  const [mockRound, setMockRound] = useState<InterviewRound>(
-    initialActiveSession ? (initialActiveSession.mockRound ?? 'hr') : 'hr'
-  );
-  const [mockMode, setMockMode] = useState<'idle' | 'answering' | 'reviewed'>(
-    initialActiveSession ? (initialActiveSession.mockMode ?? 'idle') : 'idle'
-  );
-  const [mockTimerSec, setMockTimerSec] = useState<number>(0);
-  const [hintVisible, setHintVisible] = useState<Record<string, boolean>>({});
-  const [sampleVisible, setSampleVisible] = useState<Record<string, boolean>>({});
+  // Refs for timers, speech recognition, and audio recording
   const mockTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  // ─── Interactive Voice Recruiter States ──────────────────────────────────
-  const [mockInterfaceMode, setMockInterfaceMode] = useState<'standard' | 'interactive'>(
-    initialActiveSession ? initialActiveSession.interfaceMode || 'standard' : 'standard'
-  );
-  const [selectedRecruiter, setSelectedRecruiter] = useState<RecruiterPersona>(
-    initialActiveSession && initialActiveSession.recruiterPersonaId
-      ? RECRUITER_PERSONAS.find((p) => p.id === initialActiveSession.recruiterPersonaId) ||
-          RECRUITER_PERSONAS[4]
-      : RECRUITER_PERSONAS[4]
-  );
-  const [recruiterReplies, setRecruiterReplies] = useState<Record<string, string>>(
-    initialActiveSession ? initialActiveSession.recruiterReplies || {} : {}
-  );
-  const [isRecruiterSpeaking, setIsRecruiterSpeaking] = useState<boolean>(false);
-  const [isRecruiterTyping, setIsRecruiterTyping] = useState<boolean>(false);
-  const [isSessionCompleted, setIsSessionCompleted] = useState<boolean>(
-    initialActiveSession ? initialActiveSession.isCompleted || false : false
-  );
-  const [autoPlayVoice, setAutoPlayVoice] = useState<boolean>(true);
-  const [autoActivateMic, setAutoActivateMic] = useState<boolean>(true);
-  const [sessionSummaryFeedback, setSessionSummaryFeedback] = useState<string>(
-    initialActiveSession ? initialActiveSession.sessionSummaryFeedback || '' : ''
-  );
-  const [isLoadingSummary, setIsLoadingSummary] = useState<boolean>(false);
-
-  // ─── Gemini Google Search Enhancement ────────────────────────────────────
-  const [geminiApiKey, setGeminiApiKey] = useState<string>(
-    () => localStorage.getItem('gemini-api-key') || ''
-  );
-  const [geminiData, setGeminiData] = useState<GeminiEnhancedData | null>(
-    initialActiveSession ? initialActiveSession.geminiData || null : null
-  );
-  const [isFetchingGemini, setIsFetchingGemini] = useState<boolean>(false);
-  const [aiProgress, setAiProgress] = useState<string>('');
-  const [geminiError, setGeminiError] = useState<string>('');
-  const [showApiKeyInput, setShowApiKeyInput] = useState<boolean>(false);
-  const [aiProvider, setAiProvider] = useState<AiProvider>(
-    () => (localStorage.getItem('ai_provider') as AiProvider) || 'groq'
-  );
-  const [openRouterModel, setOpenRouterModel] = useState<string>(() => {
-    const stored = localStorage.getItem('openrouter_model');
-    const VALID = [
-      'google/gemma-4-31b-it:free',
-      'moonshotai/kimi-k2.6:free',
-      'google/gemma-4-26b-a4b-it:free',
-      'meta-llama/llama-3.3-70b-instruct:free',
-      'qwen/qwen3-next-80b-a3b-instruct:free',
-      'qwen/qwen3-coder:free',
-      'meta-llama/llama-3.2-3b-instruct:free',
-      'nousresearch/hermes-3-llama-3.1-405b:free',
-      'anthropic/claude-sonnet-4.6',
-      'openai/gpt-4o',
-      'google/gemini-2.5-flash',
-      'meta-llama/llama-3.3-70b-instruct',
-    ];
-    return stored && VALID.includes(stored) ? stored : 'google/gemma-4-31b-it:free';
-  });
-  const [connectionTest, setConnectionTest] = useState<{
-    testing: boolean;
-    result: { ok: boolean; message: string } | null;
-  }>({ testing: false, result: null });
-
-  // ─── Voice Recording for Mock Interview ─────────────────────────────────────
-  const [isRecording, setIsRecording] = useState<boolean>(false);
-  const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const recognitionRef = useRef<any>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
 
-  // STAR Guided Answer Builder states
-  const [starMode, setStarMode] = useState<boolean>(false);
-  const [isStarSplitting, setIsStarSplitting] = useState<boolean>(false);
-  const [starSituation, setStarSituation] = useState<string>('');
-  const [starTask, setStarTask] = useState<string>('');
-  const [starAction, setStarAction] = useState<string>('');
-  const [starResult, setStarResult] = useState<string>('');
+  // Compatibility state-updater wrappers
+  const setUser = (v: any) => setAuthStore({ user: typeof v === 'function' ? v(user) : v });
+  const setShowAuthModal = (v: any) => setAuthStore({ showAuthModal: typeof v === 'function' ? v(showAuthModal) : v });
+  const setAuthMode = (v: any) => setAuthStore({ authMode: typeof v === 'function' ? v(authMode) : v });
+  const setAuthEmail = (v: any) => setAuthStore({ authEmail: typeof v === 'function' ? v(authEmail) : v });
+  const setAuthPassword = (v: any) => setAuthStore({ authPassword: typeof v === 'function' ? v(authPassword) : v });
+  const setAuthLoading = (v: any) => setAuthStore({ authLoading: typeof v === 'function' ? v(authLoading) : v });
+  const setAuthError = (v: any) => setAuthStore({ authError: typeof v === 'function' ? v(authError) : v });
+  const setSyncStatus = (v: any) => setAuthStore({ syncStatus: typeof v === 'function' ? v(syncStatus) : v });
 
-  // AI Mock Coaching States
-  const [loadingIdealAnswer, setLoadingIdealAnswer] = useState<boolean>(false);
-  const [idealAnswers, setIdealAnswers] = useState<Record<string, string>>(
-    initialActiveSession ? initialActiveSession.idealAnswers || {} : {}
-  );
-  const [loadingOptimization, setLoadingOptimization] = useState<boolean>(false);
-  const [optimizedResults, setOptimizedResults] = useState<
-    Record<string, { optimizedAnswer: string; feedback: string }>
-  >(initialActiveSession ? initialActiveSession.optimizedResults || {} : {});
-  const [showIdealAnswer, setShowIdealAnswer] = useState<Record<string, boolean>>({});
-  const [reportIdealLoadingMap, setReportIdealLoadingMap] = useState<Record<string, boolean>>({});
-  const [reportShowIdealMap, setReportShowIdealMap] = useState<Record<string, boolean>>({});
-  // Company-specific recruiter round questions
-  const [recruiterQuestions, setRecruiterQuestions] = useState<RecruiterQuestion[] | null>(
-    initialActiveSession ? initialActiveSession.recruiterQuestions || null : null
-  );
-  const [isLoadingRecruiterQuestions, setIsLoadingRecruiterQuestions] = useState<boolean>(false);
+  const setSavedResumes = (v: any) => setResumeStore({ savedResumes: typeof v === 'function' ? v(savedResumes) : v });
+  const setResumeData = (v: any) => setResumeStore({ resumeData: typeof v === 'function' ? v(resumeData) : v });
+  const setThemeSettings = (v: any) => setResumeStore({ themeSettings: typeof v === 'function' ? v(themeSettings) : v });
+  const setRevisedResumeData = (v: any) => setResumeStore({ revisedResumeData: typeof v === 'function' ? v(revisedResumeData) : v });
+  const setShowRevisedPreview = (v: any) => setResumeStore({ showRevisedPreview: typeof v === 'function' ? v(showRevisedPreview) : v });
+  const setHighlightChanges = (v: any) => setResumeStore({ highlightChanges: typeof v === 'function' ? v(highlightChanges) : v });
+  const setAppliedFixes = (v: any) => setResumeStore({ appliedFixes: typeof v === 'function' ? v(appliedFixes) : v });
 
-  // ATS Scanner states
-  const [jobDescription, setJobDescription] = useState<string>('');
-  const [coachSubTab, setCoachSubTab] = useState<
-    'checklist' | 'ats' | 'cover-letter' | 'linkedin' | 'plaintext'
-  >('checklist');
-  const [coverLetter, setCoverLetter] = useState<string>('');
-  const [copiedPlaintext, setCopiedPlaintext] = useState<boolean>(false);
+  const setSavedSessions = (v: any) => setInterviewStore({ savedSessions: typeof v === 'function' ? v(savedSessions) : v });
+  const setCurrentSessionId = (v: any) => setInterviewStore({ currentSessionId: typeof v === 'function' ? v(currentSessionId) : v });
+  const setInterviewPlan = (v: any) => setInterviewStore({ interviewPlan: typeof v === 'function' ? v(interviewPlan) : v });
+  const setInterviewJD = (v: any) => setInterviewStore({ interviewJD: typeof v === 'function' ? v(interviewJD) : v });
+  const setInterviewPositionName = (v: any) => setInterviewStore({ interviewPositionName: typeof v === 'function' ? v(interviewPositionName) : v });
+  const setInterviewCompanyName = (v: any) => setInterviewStore({ interviewCompanyName: typeof v === 'function' ? v(interviewCompanyName) : v });
+  const setInterviewSubTab = (v: any) => setInterviewStore({ interviewSubTab: typeof v === 'function' ? v(interviewSubTab) : v });
+  const setActiveRound = (v: any) => setInterviewStore({ activeRound: typeof v === 'function' ? v(activeRound) : v });
+  const setIsGeneratingPlan = (v: any) => setInterviewStore({ isGeneratingPlan: typeof v === 'function' ? v(isGeneratingPlan) : v });
+  const setMockAnswers = (v: any) => setInterviewStore({ mockAnswers: typeof v === 'function' ? v(mockAnswers) : v });
+  const setMockScores = (v: any) => setInterviewStore({ mockScores: typeof v === 'function' ? v(mockScores) : v });
+  const setMockQuestionIdx = (v: any) => setInterviewStore({ mockQuestionIdx: typeof v === 'function' ? v(mockQuestionIdx) : v });
+  const setMockRound = (v: any) => setInterviewStore({ mockRound: typeof v === 'function' ? v(mockRound) : v });
+  const setMockMode = (v: any) => setInterviewStore({ mockMode: typeof v === 'function' ? v(mockMode) : v });
+  const setMockTimerSec = (v: any) => setInterviewStore({ mockTimerSec: typeof v === 'function' ? v(mockTimerSec) : v });
+  const setHintVisible = (v: any) => setInterviewStore({ hintVisible: typeof v === 'function' ? v(hintVisible) : v });
+  const setSampleVisible = (v: any) => setInterviewStore({ sampleVisible: typeof v === 'function' ? v(sampleVisible) : v });
+  const setMockInterfaceMode = (v: any) => setInterviewStore({ mockInterfaceMode: typeof v === 'function' ? v(mockInterfaceMode) : v });
+  const setSelectedRecruiter = (v: any) => setInterviewStore({ selectedRecruiter: typeof v === 'function' ? v(selectedRecruiter) : v });
+  const setRecruiterReplies = (v: any) => setInterviewStore({ recruiterReplies: typeof v === 'function' ? v(recruiterReplies) : v });
+  const setIsRecruiterSpeaking = (v: any) => setInterviewStore({ isRecruiterSpeaking: typeof v === 'function' ? v(isRecruiterSpeaking) : v });
+  const setIsRecruiterTyping = (v: any) => setInterviewStore({ isRecruiterTyping: typeof v === 'function' ? v(isRecruiterTyping) : v });
+  const setIsSessionCompleted = (v: any) => setInterviewStore({ isSessionCompleted: typeof v === 'function' ? v(isSessionCompleted) : v });
+  const setAutoPlayVoice = (v: any) => setInterviewStore({ autoPlayVoice: typeof v === 'function' ? v(autoPlayVoice) : v });
+  const setAutoActivateMic = (v: any) => setInterviewStore({ autoActivateMic: typeof v === 'function' ? v(autoActivateMic) : v });
+  const setSessionSummaryFeedback = (v: any) => setInterviewStore({ sessionSummaryFeedback: typeof v === 'function' ? v(sessionSummaryFeedback) : v });
+  const setIsLoadingSummary = (v: any) => setInterviewStore({ isLoadingSummary: typeof v === 'function' ? v(isLoadingSummary) : v });
+  const setGeminiApiKey = (v: any) => setInterviewStore({ geminiApiKey: typeof v === 'function' ? v(geminiApiKey) : v });
+  const setGeminiData = (v: any) => setInterviewStore({ geminiData: typeof v === 'function' ? v(geminiData) : v });
+  const setIsFetchingGemini = (v: any) => setInterviewStore({ isFetchingGemini: typeof v === 'function' ? v(isFetchingGemini) : v });
+  const setAiProgress = (v: any) => setInterviewStore({ aiProgress: typeof v === 'function' ? v(aiProgress) : v });
+  const setGeminiError = (v: any) => setInterviewStore({ geminiError: typeof v === 'function' ? v(geminiError) : v });
+  const setShowApiKeyInput = (v: any) => setInterviewStore({ showApiKeyInput: typeof v === 'function' ? v(showApiKeyInput) : v });
+  const setAiProvider = (v: any) => setInterviewStore({ aiProvider: typeof v === 'function' ? v(aiProvider) : v });
+  const setOpenRouterModel = (v: any) => setInterviewStore({ openRouterModel: typeof v === 'function' ? v(openRouterModel) : v });
+  const setConnectionTest = (v: any) => setInterviewStore({ connectionTest: typeof v === 'function' ? v(connectionTest) : v });
+  const setIsRecording = (v: any) => setInterviewStore({ isRecording: typeof v === 'function' ? v(isRecording) : v });
+  const setAudioUrl = (v: any) => setInterviewStore({ audioUrl: typeof v === 'function' ? v(audioUrl) : v });
+  const setStarMode = (v: any) => setInterviewStore({ starMode: typeof v === 'function' ? v(starMode) : v });
+  const setIsStarSplitting = (v: any) => setInterviewStore({ isStarSplitting: typeof v === 'function' ? v(isStarSplitting) : v });
+  const setStarSituation = (v: any) => setInterviewStore({ starSituation: typeof v === 'function' ? v(starSituation) : v });
+  const setStarTask = (v: any) => setInterviewStore({ starTask: typeof v === 'function' ? v(starTask) : v });
+  const setStarAction = (v: any) => setInterviewStore({ starAction: typeof v === 'function' ? v(starAction) : v });
+  const setStarResult = (v: any) => setInterviewStore({ starResult: typeof v === 'function' ? v(starResult) : v });
+  const setLoadingIdealAnswer = (v: any) => setInterviewStore({ loadingIdealAnswer: typeof v === 'function' ? v(loadingIdealAnswer) : v });
+  const setIdealAnswers = (v: any) => setInterviewStore({ idealAnswers: typeof v === 'function' ? v(idealAnswers) : v });
+  const setLoadingOptimization = (v: any) => setInterviewStore({ loadingOptimization: typeof v === 'function' ? v(loadingOptimization) : v });
+  const setOptimizedResults = (v: any) => setInterviewStore({ optimizedResults: typeof v === 'function' ? v(optimizedResults) : v });
+  const setShowIdealAnswer = (v: any) => setInterviewStore({ showIdealAnswer: typeof v === 'function' ? v(showIdealAnswer) : v });
+  const setReportIdealLoadingMap = (v: any) => setInterviewStore({ reportIdealLoadingMap: typeof v === 'function' ? v(reportIdealLoadingMap) : v });
+  const setReportShowIdealMap = (v: any) => setInterviewStore({ reportShowIdealMap: typeof v === 'function' ? v(reportShowIdealMap) : v });
+  const setRecruiterQuestions = (v: any) => setInterviewStore({ recruiterQuestions: typeof v === 'function' ? v(recruiterQuestions) : v });
+  const setIsLoadingRecruiterQuestions = (v: any) => setInterviewStore({ isLoadingRecruiterQuestions: typeof v === 'function' ? v(isLoadingRecruiterQuestions) : v });
 
-  // Revised Optimizer states (Premium Jobscan clone features)
-  const [revisedResumeData, setRevisedResumeData] = useState<ResumeData | null>(null);
-  const [showRevisedPreview, setShowRevisedPreview] = useState<boolean>(false);
-  const [highlightChanges, setHighlightChanges] = useState<boolean>(true);
-  const [appliedFixes, setAppliedFixes] = useState<string[]>([]);
+  const setAppTheme = (v: any) => setUIStore({ appTheme: typeof v === 'function' ? v(appTheme) : v });
+  const setIsThemeMenuOpen = (v: any) => setUIStore({ isThemeMenuOpen: typeof v === 'function' ? v(isThemeMenuOpen) : v });
+  const setIsMobileActionsMenuOpen = (v: any) => setUIStore({ isMobileActionsMenuOpen: typeof v === 'function' ? v(isMobileActionsMenuOpen) : v });
+  const setLeftTab = (v: any) => setUIStore({ leftTab: typeof v === 'function' ? v(leftTab) : v });
+  const setRightTab = (v: any) => setUIStore({ rightTab: typeof v === 'function' ? v(rightTab) : v });
+  const setPreviewDevice = (v: any) => setUIStore({ previewDevice: typeof v === 'function' ? v(previewDevice) : v });
+  const setFullscreenPreview = (v: any) => setUIStore({ fullscreenPreview: typeof v === 'function' ? v(fullscreenPreview) : v });
+  const setMobileActiveView = (v: any) => setUIStore({ mobileActiveView: typeof v === 'function' ? v(mobileActiveView) : v });
+  const setRawTextImport = (v: any) => setUIStore({ rawTextImport: typeof v === 'function' ? v(rawTextImport) : v });
+  const setIsParsing = (v: any) => setUIStore({ isParsing: typeof v === 'function' ? v(isParsing) : v });
+  const setImportSuccess = (v: any) => setUIStore({ importSuccess: typeof v === 'function' ? v(importSuccess) : v });
+  const setCopiedCode = (v: any) => setUIStore({ copiedCode: typeof v === 'function' ? v(copiedCode) : v });
+  const setUploadedFileName = (v: any) => setUIStore({ uploadedFileName: typeof v === 'function' ? v(uploadedFileName) : v });
+  const setFileErrorMessage = (v: any) => setUIStore({ fileErrorMessage: typeof v === 'function' ? v(fileErrorMessage) : v });
+  const setCopiedZip = (v: any) => setUIStore({ copiedZip: typeof v === 'function' ? v(copiedZip) : v });
+  const setIsZipping = (v: any) => setUIStore({ isZipping: typeof v === 'function' ? v(isZipping) : v });
+  const setShowVercelModal = (v: any) => setUIStore({ showVercelModal: typeof v === 'function' ? v(showVercelModal) : v });
+  const setVercelToken = (v: any) => setUIStore({ vercelToken: typeof v === 'function' ? v(vercelToken) : v });
+  const setVercelProjectName = (v: any) => setUIStore({ vercelProjectName: typeof v === 'function' ? v(vercelProjectName) : v });
+  const setVercelDeployState = (v: any) => setUIStore({ vercelDeployState: typeof v === 'function' ? v(vercelDeployState) : v });
+  const setVercelDeployUrl = (v: any) => setUIStore({ vercelDeployUrl: typeof v === 'function' ? v(vercelDeployUrl) : v });
+  const setVercelError = (v: any) => setUIStore({ vercelError: typeof v === 'function' ? v(vercelError) : v });
+  const setVercelDeployProgress = (v: any) => setUIStore({ vercelDeployProgress: typeof v === 'function' ? v(vercelDeployProgress) : v });
+  const setCopiedVercelUrl = (v: any) => setUIStore({ copiedVercelUrl: typeof v === 'function' ? v(copiedVercelUrl) : v });
+  const setContactMessages = (v: any) => setUIStore({ contactMessages: typeof v === 'function' ? v(contactMessages) : v });
+  const setExpandedJobs = (v: any) => setUIStore({ expandedJobs: typeof v === 'function' ? v(expandedJobs) : v });
+  const setExpandedProjects = (v: any) => setUIStore({ expandedProjects: typeof v === 'function' ? v(expandedProjects) : v });
+  const setExpandedEdu = (v: any) => setUIStore({ expandedEdu: typeof v === 'function' ? v(expandedEdu) : v });
+  const setExpandedCert = (v: any) => setUIStore({ expandedCert: typeof v === 'function' ? v(expandedCert) : v });
+  const setBulletInput = (v: any) => setUIStore({ bulletInput: typeof v === 'function' ? v(bulletInput) : v });
+  const setBulletStyle = (v: any) => setUIStore({ bulletStyle: typeof v === 'function' ? v(bulletStyle) : v });
+  const setImprovedBullets = (v: any) => setUIStore({ improvedBullets: typeof v === 'function' ? v(improvedBullets) : v });
+  const setCopiedBulletIdx = (v: any) => setUIStore({ copiedBulletIdx: typeof v === 'function' ? v(copiedBulletIdx) : v });
+  const setJobDescription = (v: any) => setUIStore({ jobDescription: typeof v === 'function' ? v(jobDescription) : v });
+  const setCoachSubTab = (v: any) => setUIStore({ coachSubTab: typeof v === 'function' ? v(coachSubTab) : v });
+  const setCoverLetter = (v: any) => setUIStore({ coverLetter: typeof v === 'function' ? v(coverLetter) : v });
+  const setCopiedPlaintext = (v: any) => setUIStore({ copiedPlaintext: typeof v === 'function' ? v(copiedPlaintext) : v });
 
   // Sync current active session state changes back to savedSessions list
   useEffect(() => {
