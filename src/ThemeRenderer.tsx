@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { ResumeData, ThemeSettings } from './types';
+import { Z } from './utils/zIndex';
 import { Code, Mail, Phone, MapPin, Sparkles, Menu, X, Trophy } from 'lucide-react';
 
 const SocialIcon = ({ type, className = 'w-5 h-5' }: { type: string; className?: string }) => {
@@ -80,8 +81,8 @@ const DiffHighlight: React.FC<{
   return (
     <div className={`relative ${inline ? 'inline-block' : 'block'} group`}>
       <div className="absolute -inset-1 bg-amber-400/20 rounded-md ring-1 ring-amber-400/30 animate-pulse-subtle pointer-events-none ai-highlight"></div>
-      <div className="relative z-10">{children}</div>
-      <div className="absolute -top-6 left-0 bg-amber-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-lg flex items-center gap-1 ai-badge">
+      <div className={`relative ${Z.CONTENT}`}>{children}</div>
+      <div className="absolute -top-6 left-0 bg-amber-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-lg flex items-center gap-1 ai-badge">
         <Sparkles className="w-2.5 h-2.5" />
         AI ENHANCED
       </div>
@@ -324,7 +325,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
           ></div>
         </div>
 
-        <div className={rc('relative z-10 flex flex-col md:flex-row min-h-screen')}>
+        <div className={rc(`relative ${Z.CONTENT} flex flex-col md:flex-row min-h-screen`)}>
           {/* Sidebar */}
           <aside
             className={rc(
@@ -552,7 +553,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
                       {proj.techStack.map((tech) => (
                         <span
                           key={tech}
-                          className={`text-[9px] md:text-[10px] font-black uppercase tracking-widest ${pillBg} px-2.5 py-1.5 rounded-lg border`}
+                          className={`text-[10px] md:text-[10px] font-black uppercase tracking-widest ${pillBg} px-2.5 py-1.5 rounded-lg border`}
                         >
                           {tech}
                         </span>
@@ -620,7 +621,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
 
             <section id="contact" className="py-24 scroll-slide">
               <div className="p-10 rounded-[2.5rem] bg-gradient-to-br from-indigo-600 to-violet-700 text-white relative overflow-hidden shadow-2xl shadow-black/10">
-                <div className="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-12">
+                <div className={`relative ${Z.CONTENT} grid grid-cols-1 md:grid-cols-2 gap-12`}>
                   <div className="space-y-6">
                     <h3 className="text-4xl font-black tracking-tight leading-none">
                       Let's build <br /> something epic.
@@ -714,7 +715,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
 
         <div
           className={rc(
-            'container mx-auto px-4 py-16 md:py-32 relative z-10 max-w-4xl flex flex-col items-center'
+            `container mx-auto px-4 py-16 md:py-32 relative ${Z.CONTENT} max-w-4xl flex flex-col items-center`
           )}
         >
           <header
@@ -900,7 +901,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
                       {proj.techStack.map((tech) => (
                         <span
                           key={tech}
-                          className={`text-[9px] md:text-xs font-bold ${pillBg} border rounded-full px-3 py-1.5 md:px-5 md:py-2 uppercase tracking-wider`}
+                          className={`text-[10px] md:text-xs font-bold ${pillBg} border rounded-full px-3 py-1.5 md:px-5 md:py-2 uppercase tracking-wider`}
                         >
                           {tech}
                         </span>
@@ -1094,7 +1095,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
           <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none"></div>
           <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-indigo-900/20 via-transparent to-black pointer-events-none"></div>
 
-          <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
+          <div className={`relative ${Z.CONTENT} max-w-5xl mx-auto px-6 text-center`}>
             <div className="inline-block p-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 mb-6 backdrop-blur-sm">
               <span className="text-xs font-mono font-bold tracking-widest text-indigo-400 px-4 py-1 uppercase">
                 Initializing System...
@@ -1214,7 +1215,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
           <div className={rc('lg:col-span-2 relative')}>
             <div
               className={rc(
-                `aspect-square max-w-[280px] mx-auto lg:max-w-none rounded-[2rem] bg-gradient-to-br ${colors.gradient} shadow-2xl relative z-10 overflow-hidden group`
+                `aspect-square max-w-[280px] mx-auto lg:max-w-none rounded-[2rem] bg-gradient-to-br ${colors.gradient} shadow-2xl relative ${Z.CONTENT} overflow-hidden group`
               )}
             >
               <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition duration-200 ease-out"></div>
@@ -1247,7 +1248,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
     >
       {/* Dynamic Header */}
       {!isClassic && (
-        <header className={`sticky top-0 z-50 backdrop-blur-lg ${headerBg} px-6 py-4`}>
+        <header className={`sticky top-0 ${Z.DROPDOWN} backdrop-blur-lg ${headerBg} px-6 py-4`}>
           <div className="max-w-5xl mx-auto flex justify-between items-center">
             <div className="flex items-center gap-3">
               <div
@@ -1310,13 +1311,13 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
               <div
                 onClick={() => setIsMobileMenuOpen(false)}
                 className={rc(
-                  `md:hidden fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[110] transition-opacity duration-300 animate-fadeIn`
+                  `md:hidden fixed inset-0 bg-slate-950/60 backdrop-blur-sm ${Z.MODAL_CLOSE} transition-opacity duration-300 animate-fadeIn`
                 )}
               />
               {/* Drawer Container */}
               <div
                 className={rc(
-                  `md:hidden fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] ${isDark ? 'bg-slate-950 border-l border-white/10 text-white' : 'bg-white border-l border-slate-200 text-slate-900'} shadow-2xl z-[120] p-6 flex flex-col justify-between transform transition-transform duration-300 ease-out animate-slideInRight`
+                  `md:hidden fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] ${isDark ? 'bg-slate-950 border-l border-white/10 text-white' : 'bg-white border-l border-slate-200 text-slate-900'} shadow-2xl ${Z.DRAWER} p-6 flex flex-col justify-between transform transition-transform duration-300 ease-out animate-slideInRight`
                 )}
               >
                 <div className="space-y-8">
@@ -1634,7 +1635,7 @@ export const ThemeRenderer: React.FC<ThemeRendererProps> = ({
             >
               <div
                 className={rc(
-                  'relative z-10 flex flex-col items-center text-center space-y-4 md:space-y-8'
+                  `relative ${Z.CONTENT} flex flex-col items-center text-center space-y-4 md:space-y-8`
                 )}
               >
                 <h3 className="text-3xl md:text-4xl font-black tracking-tight">

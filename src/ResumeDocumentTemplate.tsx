@@ -1,4 +1,5 @@
 import { ResumeData } from './types';
+import { Z } from './utils/zIndex';
 
 interface ResumeDocumentTemplateProps {
   data: ResumeData;
@@ -643,7 +644,7 @@ export function ResumeDocumentTemplate({ data: d, template }: ResumeDocumentTemp
         <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/5 blur-[120px] rounded-full -mr-32 -mt-32"></div>
         <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-500/5 blur-[120px] rounded-full -ml-32 -mb-32"></div>
 
-        <div className="relative z-10">
+        <div className={`relative ${Z.CONTENT}`}>
           <div className="border border-indigo-500/30 p-8 mb-10 bg-slate-900/40 backdrop-blur-sm">
             <div className="flex justify-between items-start mb-6">
               <div>

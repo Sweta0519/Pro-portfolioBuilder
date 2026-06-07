@@ -5,6 +5,7 @@ import { useResumeStore } from './stores/resumeStore';
 import { useInterviewStore } from './stores/interviewStore';
 import { useUIStore } from './stores/uiStore';
 import { useFocusTrap } from './hooks/useFocusTrap';
+import { Z } from './utils/zIndex';
 import { loadScript } from './utils/cdnLoader';
 import { supabase } from './supabaseClient';
 import {
@@ -1720,6 +1721,7 @@ export default function Dashboard() {
       setShowVercelModal(false);
     }
   });
+
   const optimizerModalRef = useFocusTrap(
     !!(showOptimizerModal && revisedResumeData),
     closeOptimizerModal
@@ -2398,7 +2400,7 @@ export default function Portfolio() {
     >
       {/* Connection State Alert Banners */}
       {!isOnline && (
-        <div className="bg-amber-955/20 border-b border-amber-900/40 px-4 py-2 text-center text-xs font-bold text-amber-400 flex items-center justify-center gap-2 animate-fadeIn shrink-0 z-[50]">
+        <div className={`bg-amber-955/20 border-b border-amber-900/40 px-4 py-2 text-center text-xs font-bold text-amber-400 flex items-center justify-center gap-2 animate-fadeIn shrink-0 ${Z.DROPDOWN}`}>
           <span className="flex h-2 w-2 relative shrink-0">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
@@ -2407,7 +2409,7 @@ export default function Portfolio() {
         </div>
       )}
       {isOnline && syncStatus === 'error' && (
-        <div className="bg-rose-955/20 border-b border-rose-900/40 px-4 py-2 text-center text-xs font-bold text-rose-400 flex items-center justify-center gap-2 animate-fadeIn shrink-0 z-[50]">
+        <div className={`bg-rose-955/20 border-b border-rose-900/40 px-4 py-2 text-center text-xs font-bold text-rose-400 flex items-center justify-center gap-2 animate-fadeIn shrink-0 ${Z.DROPDOWN}`}>
           <span className="flex h-2 w-2 relative shrink-0">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
@@ -2420,7 +2422,7 @@ export default function Portfolio() {
           resumeSyncPhase === 'pushing' ||
           sessionSyncPhase === 'pulling' ||
           sessionSyncPhase === 'pushing') && (
-          <div className="bg-blue-955/20 border-b border-blue-900/40 px-4 py-2 text-center text-xs font-bold text-blue-300 flex items-center justify-center gap-2 animate-fadeIn shrink-0 z-[50]">
+          <div className={`bg-blue-955/20 border-b border-blue-900/40 px-4 py-2 text-center text-xs font-bold text-blue-300 flex items-center justify-center gap-2 animate-fadeIn shrink-0 ${Z.DROPDOWN}`}>
             <span className="flex h-2 w-2 relative shrink-0">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
@@ -2438,7 +2440,7 @@ export default function Portfolio() {
         )}
 
       {/* TOP HEADER */}
-      <header className="flex flex-shrink-0 items-center justify-between px-4 sm:px-6 h-16 bg-slate-950/80 backdrop-blur-md border-b border-slate-800 relative z-40">
+      <header className={`flex flex-shrink-0 items-center justify-between px-4 sm:px-6 h-16 bg-slate-950/80 backdrop-blur-md border-b border-slate-800 relative ${Z.PRIMARY_HEADER}`}>
         <div className="flex items-center gap-3">
           <img
             src="/logo.png"
@@ -2462,7 +2464,7 @@ export default function Portfolio() {
               <div className="flex items-center gap-2">
                 {/* Sync status indicator */}
                 <span
-                  className={`text-[9px] px-2 py-0.5 rounded-full font-bold border transition duration-200 ease-out ${
+                  className={`text-[10px] px-2 py-0.5 rounded-full font-bold border transition duration-200 ease-out ${
                     syncStatus === 'syncing'
                       ? 'bg-blue-955/20 border-blue-900/50 text-blue-400 animate-pulse'
                       : syncStatus === 'synced'
@@ -2518,7 +2520,7 @@ export default function Portfolio() {
               <div className="flex items-center gap-2">
                 <span
                   title="Your data is safely stored in your browser's local storage. Sign in to sync with the cloud."
-                  className="text-[9px] px-2 py-0.5 rounded-full font-bold border bg-slate-900 border-slate-800 text-slate-500 cursor-help shrink-0"
+                  className="text-[10px] px-2 py-0.5 rounded-full font-bold border bg-slate-900 border-slate-800 text-slate-500 cursor-help shrink-0"
                 >
                   ☁ Local
                 </span>
@@ -2573,7 +2575,7 @@ export default function Portfolio() {
               <div
                 role="menu"
                 aria-labelledby="theme-menu-button"
-                className={`absolute right-0 mt-1 w-40 rounded-xl border p-1 shadow-xl transition duration-200 z-50 animate-fadeIn ${
+                className={`absolute right-0 mt-1 w-40 rounded-xl border p-1 shadow-xl transition duration-200 ${Z.DROPDOWN} animate-fadeIn ${
                   appTheme === 'nord-light'
                     ? 'bg-white border-slate-200 shadow-slate-200/50'
                     : appTheme === 'indigo-midnight'
@@ -2650,7 +2652,7 @@ export default function Portfolio() {
               <div
                 role="menu"
                 aria-labelledby="mobile-actions-menu-button"
-                className={`absolute right-0 mt-1 w-56 rounded-xl border p-1.5 shadow-xl transition duration-200 z-50 flex flex-col gap-1 animate-fadeIn ${
+                className={`absolute right-0 mt-1 w-56 rounded-xl border p-1.5 shadow-xl transition duration-200 ${Z.DROPDOWN} flex flex-col gap-1 animate-fadeIn ${
                   appTheme === 'nord-light'
                     ? 'bg-white border-slate-200 shadow-slate-200/50'
                     : appTheme === 'indigo-midnight'
@@ -2937,7 +2939,7 @@ export default function Portfolio() {
                         >
                           Upload PDF, Word, or Text Resume
                         </label>
-                        <p className="text-[9px] text-slate-500 mt-0.5">
+                        <p className="text-[10px] text-slate-500 mt-0.5">
                           Supports PDF and Word documents for visual preview.
                         </p>
                       </div>
@@ -3041,7 +3043,7 @@ export default function Portfolio() {
                           <FileCode className="w-3.5 h-3.5 text-slate-200" />
                           <span>📂 Saved Resumes History ({savedResumes.length})</span>
                         </h3>
-                        <span className="text-[9px] text-slate-500 font-semibold lowercase">
+                        <span className="text-[10px] text-slate-500 font-semibold lowercase">
                           {user ? '☁ synced to cloud' : '💾 saved locally (sign in to sync)'}
                         </span>
                       </div>
@@ -3065,7 +3067,7 @@ export default function Portfolio() {
                                 <div className="flex items-center gap-1.5 font-bold text-slate-200 truncate">
                                   <span className="truncate">{item.name}</span>
                                   {isActive && (
-                                    <span className="text-[8px] bg-emerald-950 text-emerald-400 border border-emerald-900 px-1.5 py-0.2 rounded-md font-semibold flex-shrink-0 animate-pulse">
+                                    <span className="text-[10px] bg-emerald-950 text-emerald-400 border border-emerald-900 px-1.5 py-0.2 rounded-md font-semibold flex-shrink-0 animate-pulse">
                                       ACTIVE
                                     </span>
                                   )}
@@ -3073,7 +3075,7 @@ export default function Portfolio() {
                                 <div className="text-[10px] text-slate-300 truncate">
                                   {item.title}
                                 </div>
-                                <div className="text-[8px] text-slate-500">Parsed: {item.date}</div>
+                                <div className="text-[10px] text-slate-500">Parsed: {item.date}</div>
                               </div>
 
                               <div className="flex items-center gap-2 flex-shrink-0">
@@ -3844,7 +3846,7 @@ export default function Portfolio() {
                         >
                           <div className="w-32 truncate">
                             <span className="font-semibold text-slate-200 block">{skill.name}</span>
-                            <span className="text-[9px] text-slate-500 uppercase tracking-wider font-bold">
+                            <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">
                               {skill.category}
                             </span>
                           </div>
@@ -4342,7 +4344,7 @@ export default function Portfolio() {
                           }`}
                         >
                           <span className="text-xs font-bold block">{t.label}</span>
-                          <span className="text-[9px] text-slate-500 block mt-0.5">{t.desc}</span>
+                          <span className="text-[10px] text-slate-500 block mt-0.5">{t.desc}</span>
                         </button>
                       ))}
                     </div>
@@ -4480,7 +4482,7 @@ export default function Portfolio() {
                   >
                     <div>
                       <span className="text-xs font-bold text-white block">Preview Dark Mode</span>
-                      <span className="text-[9px] text-slate-500 mt-0.5 block">
+                      <span className="text-[10px] text-slate-500 mt-0.5 block">
                         Toggles dark styling of target portfolio
                       </span>
                     </div>
@@ -4494,7 +4496,7 @@ export default function Portfolio() {
                       }`}
                     >
                       <div
-                        className={`w-4.5 h-4.5 rounded-full bg-white absolute top-[3px] transition duration-200 ease-out flex items-center justify-center text-[8px] ${
+                        className={`w-4.5 h-4.5 rounded-full bg-white absolute top-[3px] transition duration-200 ease-out flex items-center justify-center text-[10px] ${
                           themeSettings.darkMode
                             ? 'left-[25px] text-slate-200'
                             : 'left-[4px] text-slate-500'
@@ -4517,7 +4519,7 @@ export default function Portfolio() {
                   >
                     <div className="flex flex-col">
                       <span className="text-xs font-bold text-white block">Workspace Theme</span>
-                      <span className="text-[9px] text-slate-500 mt-0.5 block">
+                      <span className="text-[10px] text-slate-500 mt-0.5 block">
                         Customize the look and feel of the builder workspace interface
                       </span>
                     </div>
@@ -4542,7 +4544,7 @@ export default function Portfolio() {
                           }`}
                         >
                           <span className="text-xs font-bold block">{t.label}</span>
-                          <span className="text-[9px] text-slate-500 block mt-0.5 leading-tight">
+                          <span className="text-[10px] text-slate-500 block mt-0.5 leading-tight">
                             {t.desc}
                           </span>
                         </button>
@@ -4572,7 +4574,7 @@ export default function Portfolio() {
           }`}
         >
           {/* RIGHT PANEL HEADER / TAB SELECTOR */}
-          <div className="flex-shrink-0 h-12 border-b border-slate-900 bg-slate-950/80 flex items-center justify-between px-4 sm:px-6 z-20">
+          <div className={`flex-shrink-0 h-12 border-b border-slate-900 bg-slate-950/80 flex items-center justify-between px-4 sm:px-6 ${Z.STICKY_PANEL}`}>
             {/* Right Panel Tabs */}
             <div role="tablist" aria-label="Preview and Assistant Tabs" className="flex gap-1 bg-slate-900 p-0.5 rounded-lg text-xs border border-slate-850">
               {(
@@ -4605,7 +4607,7 @@ export default function Portfolio() {
                     {tab.id === 'interview' ? 'Interview' : tab.label.split(' ')[0]}
                   </span>
                   {tab.badge !== undefined && tab.badge > 0 && (
-                    <span className="bg-rose-500 text-white text-[8px] px-1 rounded-full">
+                    <span className="bg-rose-500 text-white text-[10px] px-1 rounded-full">
                       {tab.badge}
                     </span>
                   )}
@@ -4771,7 +4773,7 @@ export default function Portfolio() {
                               <div className="space-y-0.5">
                                 <h4 className="font-bold text-slate-200 flex items-center gap-2">
                                   <span>{rec.title}</span>
-                                  <span className="text-[9px] text-amber-400 font-semibold bg-amber-950/40 px-1 py-0.2 rounded-md">
+                                  <span className="text-[10px] text-amber-400 font-semibold bg-amber-950/40 px-1 py-0.2 rounded-md">
                                     +{rec.scoreImpact} pts
                                   </span>
                                 </h4>
@@ -4799,7 +4801,7 @@ export default function Portfolio() {
                     {/* ATS Match Score Card */}
                     <div className="grid grid-cols-3 gap-4 bg-slate-950/30 border border-slate-850 p-4 rounded-2xl items-center">
                       <div className="col-span-1 flex flex-col items-center justify-center border-r border-slate-800 py-1">
-                        <span className="text-[9px] font-bold uppercase text-slate-500 tracking-wider text-center">
+                        <span className="text-[10px] font-bold uppercase text-slate-500 tracking-wider text-center">
                           Overall ATS Match
                         </span>
                         <span className="text-3xl font-extrabold mt-1.5 text-slate-200">
@@ -4825,7 +4827,7 @@ export default function Portfolio() {
                           </span>
                         </div>
 
-                        <p className="text-[9px] text-slate-500 leading-normal font-medium pt-1">
+                        <p className="text-[10px] text-slate-500 leading-normal font-medium pt-1">
                           Jobscan Pro tip: Raising your keyword matches above 75% secures top 10%
                           tier status.
                         </p>
@@ -4875,7 +4877,7 @@ export default function Portfolio() {
                             <p className="text-[10px] font-bold text-amber-400">
                               Placeholder Data Detected
                             </p>
-                            <p className="text-[9px] text-slate-300 leading-relaxed">
+                            <p className="text-[10px] text-slate-300 leading-relaxed">
                               You are currently viewing the default sample profile (Alex Rivera).
                               For best results, go to the <b>Import</b> tab to upload your own
                               resume first!
@@ -4889,7 +4891,7 @@ export default function Portfolio() {
                           {/* Side by side visual comparison */}
                           <div className="grid grid-cols-2 gap-4 text-center">
                             <div className="p-2.5 rounded-xl bg-slate-950/40 border border-slate-850">
-                              <span className="text-[9px] font-bold uppercase text-slate-500 block">
+                              <span className="text-[10px] font-bold uppercase text-slate-500 block">
                                 Current Score
                               </span>
                               <span className="text-xl font-extrabold text-slate-200 mt-1 block">
@@ -4897,7 +4899,7 @@ export default function Portfolio() {
                               </span>
                             </div>
                             <div className="p-2.5 rounded-xl bg-slate-800/40 border border-indigo-900/40 animate-pulse">
-                              <span className="text-[9px] font-bold uppercase text-slate-200 block">
+                              <span className="text-[10px] font-bold uppercase text-slate-200 block">
                                 Revised Score
                               </span>
                               <span className="text-xl font-extrabold text-emerald-400 mt-1 block">
@@ -4959,7 +4961,7 @@ export default function Portfolio() {
 
                           {/* List of fixes applied */}
                           <div className="space-y-1.5 bg-slate-950/40 p-3 rounded-xl text-[11px]">
-                            <span className="text-[9px] font-bold uppercase text-slate-500 block">
+                            <span className="text-[10px] font-bold uppercase text-slate-500 block">
                               AI Adjustments Applied:
                             </span>
                             <ul className="space-y-1 pl-4 list-disc text-slate-300 leading-relaxed">
@@ -5023,7 +5025,7 @@ export default function Portfolio() {
                         <span className="text-[10px] uppercase font-bold text-slate-300 tracking-wider">
                           Keyword Density Analysis
                         </span>
-                        <span className="text-[9px] text-slate-500">
+                        <span className="text-[10px] text-slate-500">
                           (Candidate Count vs Ideal Density)
                         </span>
                       </div>
@@ -5038,7 +5040,7 @@ export default function Portfolio() {
                               <span className="font-bold text-slate-200 block">
                                 {density.keyword}
                               </span>
-                              <span className="text-[9px] text-slate-500 uppercase tracking-wider font-bold">
+                              <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">
                                 {density.type} Skill
                               </span>
                             </div>
@@ -5047,7 +5049,7 @@ export default function Portfolio() {
                               <div className="text-slate-200 font-bold">
                                 {density.count} matches
                               </div>
-                              <div className="text-[9px] text-slate-500">
+                              <div className="text-[10px] text-slate-500">
                                 Recommended: {density.recommended}
                               </div>
                             </div>
@@ -5069,7 +5071,7 @@ export default function Portfolio() {
                           >
                             <div>
                               <span className="font-bold text-slate-200 block">{check.label}</span>
-                              <span className="text-[9px] text-slate-500 block leading-normal">
+                              <span className="text-[10px] text-slate-500 block leading-normal">
                                 {check.description}
                               </span>
                             </div>
@@ -5096,7 +5098,7 @@ export default function Portfolio() {
                   <div className="space-y-5 animate-fadeIn">
                     <div className="grid grid-cols-3 gap-4 bg-slate-950/30 border border-slate-850 p-4 rounded-2xl items-center">
                       <div className="col-span-1 flex flex-col items-center justify-center border-r border-slate-800 py-1">
-                        <span className="text-[9px] font-bold uppercase text-slate-500 tracking-wider text-center">
+                        <span className="text-[10px] font-bold uppercase text-slate-500 tracking-wider text-center">
                           Cover Letter Match
                         </span>
                         <span className="text-3xl font-extrabold mt-1.5 text-slate-200">
@@ -5117,7 +5119,7 @@ export default function Portfolio() {
                             {coverLetterAnalysis.matchedKeywords.length} matched
                           </span>
                         </div>
-                        <p className="text-[9px] text-slate-500 leading-normal font-medium pt-1">
+                        <p className="text-[10px] text-slate-500 leading-normal font-medium pt-1">
                           Pasting targeted keywords in cover letters raises human inspection rates
                           by 42%.
                         </p>
@@ -5160,10 +5162,10 @@ export default function Portfolio() {
                     {/* Matched vs Missing in Cover Letter */}
                     <div className="grid grid-cols-2 gap-3">
                       <div className="p-3 rounded-xl bg-slate-800/10 border border-indigo-900/35 space-y-1.5">
-                        <span className="text-[9px] font-bold text-slate-200 uppercase tracking-wider block">
+                        <span className="text-[10px] font-bold text-slate-200 uppercase tracking-wider block">
                           Matches ({coverLetterAnalysis.matchedKeywords.length})
                         </span>
-                        <div className="flex flex-wrap gap-1 text-[9px]">
+                        <div className="flex flex-wrap gap-1 text-[10px]">
                           {coverLetterAnalysis.matchedKeywords.map((kw) => (
                             <span key={kw} className="px-1 rounded bg-slate-800 text-slate-300">
                               {kw}
@@ -5172,10 +5174,10 @@ export default function Portfolio() {
                         </div>
                       </div>
                       <div className="p-3 rounded-xl bg-amber-950/10 border border-amber-900/35 space-y-1.5">
-                        <span className="text-[9px] font-bold text-amber-400 uppercase tracking-wider block">
+                        <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider block">
                           Missing ({coverLetterAnalysis.missingKeywords.length})
                         </span>
-                        <div className="flex flex-wrap gap-1 text-[9px]">
+                        <div className="flex flex-wrap gap-1 text-[10px]">
                           {coverLetterAnalysis.missingKeywords.map((kw) => (
                             <span key={kw} className="px-1 rounded bg-amber-950 text-amber-300">
                               + {kw}
@@ -5234,7 +5236,7 @@ export default function Portfolio() {
                             </span>
                           </div>
                           <span
-                            className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-full ${
+                            className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
                               item.status === 'Pass'
                                 ? 'bg-emerald-950 text-emerald-400 border border-emerald-900/45'
                                 : 'bg-amber-950 text-amber-400 border border-amber-900/45'
@@ -5286,7 +5288,7 @@ export default function Portfolio() {
                             <div className="font-bold text-slate-200">
                               {exp.position} - {exp.company} | {exp.period}
                             </div>
-                            <div className="text-[9px] text-slate-500">
+                            <div className="text-[10px] text-slate-500">
                               Location: {exp.location}
                             </div>
                             <ul className="list-disc pl-4 mt-0.5 space-y-0.5">
@@ -5294,7 +5296,7 @@ export default function Portfolio() {
                                 <li key={i}>{bullet}</li>
                               ))}
                             </ul>
-                            <div className="text-[9px] text-slate-500 mt-0.5">
+                            <div className="text-[10px] text-slate-500 mt-0.5">
                               Technologies: {exp.technologies.join(', ')}
                             </div>
                           </div>
@@ -5319,7 +5321,7 @@ export default function Portfolio() {
                             <div className="font-bold text-slate-200">
                               {edu.degree} in {edu.fieldOfStudy}
                             </div>
-                            <div className="text-[9px] text-slate-500">
+                            <div className="text-[10px] text-slate-500">
                               {edu.institution} | Grade: {edu.grade || 'Not specified'}
                             </div>
                           </div>
@@ -5391,7 +5393,7 @@ export default function Portfolio() {
                     />
 
                     {/* Presets */}
-                    <div className="flex flex-wrap gap-1.5 text-[9px] font-medium">
+                    <div className="flex flex-wrap gap-1.5 text-[10px] font-medium">
                       {[
                         {
                           label: 'React Speed Optimization',
@@ -5450,7 +5452,7 @@ export default function Portfolio() {
                   {/* Results list */}
                   {improvedBullets.length > 0 && (
                     <div className="space-y-2.5 bg-slate-950/40 border border-slate-850 p-3 rounded-xl animate-fadeIn">
-                      <span className="text-[9px] font-bold uppercase text-slate-500 block">
+                      <span className="text-[10px] font-bold uppercase text-slate-500 block">
                         Action Verb Improver Outputs
                       </span>
 
@@ -5667,7 +5669,7 @@ export default function Portfolio() {
                                     </option>
                                   </optgroup>
                                 </select>
-                                <p className="text-[9px] text-slate-600">
+                                <p className="text-[10px] text-slate-600">
                                   If a free model is rate-limited, the app automatically retries the
                                   next one. Top 3 (✅) had the highest success rate in live testing.
                                 </p>
@@ -5741,7 +5743,7 @@ export default function Portfolio() {
                                   )}
                                 </div>
                                 {aiProvider === 'openrouter' && (
-                                  <p className="text-[9px] text-slate-500 leading-relaxed mt-1">
+                                  <p className="text-[10px] text-slate-500 leading-relaxed mt-1">
                                     💡 Verification query checks key metadata/credits directly. It
                                     doesn't consume model tokens or trigger fallback rate-limits.
                                   </p>
@@ -5933,7 +5935,7 @@ export default function Portfolio() {
                               {savedSessions.length} session{savedSessions.length > 1 ? 's' : ''}
                             </span>
                           </div>
-                          <span className="text-[9px] text-slate-550 lowercase font-medium flex items-center gap-1">
+                          <span className="text-[10px] text-slate-550 lowercase font-medium flex items-center gap-1">
                             {user ? '☁ synced to cloud' : '💾 saved locally (sign in to sync)'}
                           </span>
                         </h3>
@@ -5957,7 +5959,7 @@ export default function Portfolio() {
                                     <h4 className="font-bold text-slate-200 truncate max-w-[150px]">
                                       {session.companyName}
                                     </h4>
-                                    <span className="text-[9px] bg-slate-900/40 border border-violet-900 text-slate-200 px-1.5 py-0.5 rounded-md font-semibold truncate max-w-[120px]">
+                                    <span className="text-[10px] bg-slate-900/40 border border-violet-900 text-slate-200 px-1.5 py-0.5 rounded-md font-semibold truncate max-w-[120px]">
                                       {session.positionName}
                                     </span>
                                   </div>
@@ -6152,7 +6154,7 @@ export default function Portfolio() {
                                   <div className="flex items-center gap-1.5">
                                     {geminiData?.providerUsed && (
                                       <span
-                                        className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
+                                        className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
                                           geminiData.providerUsed === 'openrouter'
                                             ? 'bg-purple-500/20 text-purple-300'
                                             : geminiData.providerUsed === 'groq'
@@ -6173,7 +6175,7 @@ export default function Portfolio() {
                                     {isGemini &&
                                       geminiData?.searchSources &&
                                       geminiData.searchSources.length > 0 && (
-                                        <span className="text-[9px] font-bold bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+                                        <span className="text-[10px] font-bold bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
                                           <span>🌐</span> Live Google Search
                                         </span>
                                       )}
@@ -6247,7 +6249,7 @@ export default function Portfolio() {
                                 {/* Gemini search sources */}
                                 {isGemini && geminiData!.searchSources.length > 0 && (
                                   <div className="pt-1 border-t border-slate-800">
-                                    <p className="text-[9px] text-slate-300 font-bold uppercase tracking-wider mb-1">
+                                    <p className="text-[10px] text-slate-300 font-bold uppercase tracking-wider mb-1">
                                       Sources
                                     </p>
                                     <div className="flex flex-wrap gap-1">
@@ -6260,14 +6262,14 @@ export default function Portfolio() {
                                               href={src}
                                               target="_blank"
                                               rel="noopener noreferrer"
-                                              className="text-[9px] text-blue-400/60 hover:text-blue-300 underline"
+                                              className="text-[10px] text-blue-400/60 hover:text-blue-300 underline"
                                             >
                                               {domain}
                                             </a>
                                           );
                                         } catch {
                                           return (
-                                            <span key={i} className="text-[9px] text-slate-450">
+                                            <span key={i} className="text-[10px] text-slate-450">
                                               {src}
                                             </span>
                                           );
@@ -6286,7 +6288,7 @@ export default function Portfolio() {
                           Expected Interview Process
                           {geminiData?.interviewProcess &&
                             geminiData.interviewProcess.length > 0 && (
-                              <span className="text-[9px] font-bold bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded-full">
+                              <span className="text-[10px] font-bold bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded-full">
                                 🌐 From Google
                               </span>
                             )}
@@ -6346,7 +6348,7 @@ export default function Portfolio() {
                                 <p className="text-[10px] font-black text-blue-400 uppercase tracking-wider">
                                   🌐 Real Interview Questions From Candidates
                                 </p>
-                                <span className="text-[9px] bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded-full font-bold">
+                                <span className="text-[10px] bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded-full font-bold">
                                   {geminiData.reportedQuestions.length} found
                                 </span>
                               </div>
@@ -6359,10 +6361,10 @@ export default function Portfolio() {
                                     <div className="flex-1">
                                       <p className="text-[11px] text-slate-200">{q.question}</p>
                                       <div className="flex items-center gap-2 mt-1">
-                                        <span className="text-[9px] bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded font-medium">
+                                        <span className="text-[10px] bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded font-medium">
                                           {q.round}
                                         </span>
-                                        <span className="text-[9px] text-slate-300">
+                                        <span className="text-[10px] text-slate-300">
                                           Source: {q.source}
                                         </span>
                                       </div>
@@ -6454,7 +6456,7 @@ export default function Portfolio() {
                                       {q.question}
                                     </p>
                                     <span
-                                      className={`text-[9px] font-black px-1.5 py-0.5 rounded flex-shrink-0 ${
+                                      className={`text-[10px] font-black px-1.5 py-0.5 rounded flex-shrink-0 ${
                                         q.difficulty === 'hard'
                                           ? 'bg-rose-900/60 text-rose-400'
                                           : q.difficulty === 'medium'
@@ -6544,7 +6546,7 @@ export default function Portfolio() {
                           >
                             <div className="flex items-center gap-2">
                               <span
-                                className={`text-[9px] font-black px-1.5 py-0.5 rounded ${
+                                className={`text-[10px] font-black px-1.5 py-0.5 rounded ${
                                   topic.priority === 'high'
                                     ? 'bg-rose-900/60 text-rose-400'
                                     : topic.priority === 'medium'
@@ -6992,7 +6994,7 @@ export default function Portfolio() {
                                   </div>
 
                                   <div className="p-3 bg-slate-955/60 rounded-xl border border-slate-850 text-[11px] text-slate-350 leading-relaxed">
-                                    <p className="font-bold text-[9px] text-slate-200 uppercase tracking-wider mb-1.5">
+                                    <p className="font-bold text-[10px] text-slate-200 uppercase tracking-wider mb-1.5">
                                       📢 Recruiter Executive Assessment
                                     </p>
                                     {isLoadingSummary ? (
@@ -7042,7 +7044,7 @@ export default function Portfolio() {
                                                 {score.grade} ({score.score} pts)
                                               </span>
                                             ) : (
-                                              <span className="text-[9px] bg-slate-800 text-slate-500 px-1.5 py-0.5 rounded">
+                                              <span className="text-[10px] bg-slate-800 text-slate-500 px-1.5 py-0.5 rounded">
                                                 Unscored
                                               </span>
                                             )}
@@ -7052,7 +7054,7 @@ export default function Portfolio() {
                                         <div className="p-3.5 space-y-3">
                                           {/* Question row */}
                                           <div className="space-y-1">
-                                            <p className="text-[9px] font-bold text-slate-500 uppercase">
+                                            <p className="text-[10px] font-bold text-slate-500 uppercase">
                                               Question asked by {selectedRecruiter.name}:
                                             </p>
                                             <p className="text-xs text-slate-350">{q.question}</p>
@@ -7060,7 +7062,7 @@ export default function Portfolio() {
 
                                           {/* Answer row */}
                                           <div className="space-y-1">
-                                            <p className="text-[9px] font-bold text-slate-200 uppercase">
+                                            <p className="text-[10px] font-bold text-slate-200 uppercase">
                                               Your Response:
                                             </p>
                                             <p className="text-xs text-slate-250 italic">
@@ -7071,7 +7073,7 @@ export default function Portfolio() {
                                           {/* Recruiter reply row */}
                                           {reply && (
                                             <div className="space-y-1">
-                                              <p className="text-[9px] font-bold text-blue-400 uppercase">
+                                              <p className="text-[10px] font-bold text-blue-400 uppercase">
                                                 Recruiter Reaction:
                                               </p>
                                               <p className="text-xs text-slate-200">"{reply}"</p>
@@ -7082,7 +7084,7 @@ export default function Portfolio() {
                                           {score && (
                                             <div className="border-t border-slate-850 pt-2.5 grid grid-cols-1 md:grid-cols-2 gap-3 text-[11px]">
                                               <div className="space-y-1 bg-emerald-950/10 border border-emerald-900/20 rounded-lg p-2">
-                                                <span className="text-[9px] text-emerald-450 font-bold uppercase tracking-wider block">
+                                                <span className="text-[10px] text-emerald-450 font-bold uppercase tracking-wider block">
                                                   ✓ Strengths
                                                 </span>
                                                 <ul className="list-disc pl-3 text-slate-200 space-y-0.5">
@@ -7095,7 +7097,7 @@ export default function Portfolio() {
                                                 </ul>
                                               </div>
                                               <div className="space-y-1 bg-amber-955/10 border border-amber-900/20 rounded-lg p-2">
-                                                <span className="text-[9px] text-amber-450 font-bold uppercase tracking-wider block">
+                                                <span className="text-[10px] text-amber-450 font-bold uppercase tracking-wider block">
                                                   ⚠ Improvements
                                                 </span>
                                                 <ul className="list-disc pl-3 text-slate-200 space-y-0.5">
@@ -7122,7 +7124,7 @@ export default function Portfolio() {
                                                       [q.id]: !p[q.id],
                                                     }))
                                                   }
-                                                  className="flex items-center gap-1.5 text-[9px] font-bold text-slate-200 uppercase tracking-wider hover:text-slate-300 transition duration-200 ease-out"
+                                                  className="flex items-center gap-1.5 text-[10px] font-bold text-slate-200 uppercase tracking-wider hover:text-slate-300 transition duration-200 ease-out"
                                                 >
                                                   <span className="text-xs">
                                                     {reportShowIdealMap[q.id] ? '▾' : '▸'}
@@ -7132,7 +7134,7 @@ export default function Portfolio() {
                                                 </button>
                                                 {reportShowIdealMap[q.id] && (
                                                   <div className="p-3 rounded-xl bg-slate-900/15 border border-violet-900/40 space-y-1.5 animate-fadeIn">
-                                                    <p className="text-[9px] font-bold text-slate-200 uppercase tracking-wider">
+                                                    <p className="text-[10px] font-bold text-slate-200 uppercase tracking-wider">
                                                       ✨ What a strong answer looks like:
                                                     </p>
                                                     <p className="text-[11px] text-slate-250 leading-relaxed whitespace-pre-line">
@@ -7203,7 +7205,7 @@ export default function Portfolio() {
                                                 )}
                                               </div>
                                             ) : (
-                                              <p className="text-[9px] text-slate-600 italic">
+                                              <p className="text-[10px] text-slate-600 italic">
                                                 Add a{' '}
                                                 {aiProvider === 'groq'
                                                   ? 'Groq'
@@ -7265,7 +7267,7 @@ export default function Portfolio() {
                                                 title={`${p.name} - ${p.title} (${p.company})`}
                                               >
                                                 <span className="text-base">{p.avatar}</span>
-                                                <span className="text-[8px] font-bold truncate max-w-full">
+                                                <span className="text-[10px] font-bold truncate max-w-full">
                                                   {p.name.split(' ')[0]}
                                                 </span>
                                               </button>
@@ -7278,11 +7280,11 @@ export default function Portfolio() {
                                             <span className="text-[11px] font-bold text-slate-200">
                                               {selectedRecruiter.name}
                                             </span>
-                                            <span className="text-[8px] px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300 font-bold uppercase tracking-wider">
+                                            <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300 font-bold uppercase tracking-wider">
                                               {selectedRecruiter.company}
                                             </span>
                                           </div>
-                                          <p className="text-[9px] text-slate-505 font-semibold">
+                                          <p className="text-[10px] text-slate-505 font-semibold">
                                             {selectedRecruiter.title} • Voice:{' '}
                                             {selectedRecruiter.voiceGender === 'female'
                                               ? 'Female'
@@ -7294,7 +7296,7 @@ export default function Portfolio() {
 
                                           {/* Audio settings */}
                                           <div className="pt-2 flex items-center justify-between border-t border-slate-850">
-                                            <label className="flex items-center gap-1.5 text-[9px] text-slate-300 cursor-pointer active:scale-[0.97]">
+                                            <label className="flex items-center gap-1.5 text-[10px] text-slate-300 cursor-pointer active:scale-[0.97]">
                                               <input
                                                 type="checkbox"
                                                 checked={autoPlayVoice}
@@ -7303,7 +7305,7 @@ export default function Portfolio() {
                                               />
                                               <span>Speak Questions (TTS)</span>
                                             </label>
-                                            <label className="flex items-center gap-1.5 text-[9px] text-slate-300 cursor-pointer active:scale-[0.97]">
+                                            <label className="flex items-center gap-1.5 text-[10px] text-slate-300 cursor-pointer active:scale-[0.97]">
                                               <input
                                                 type="checkbox"
                                                 checked={autoActivateMic}
@@ -7370,7 +7372,7 @@ export default function Portfolio() {
                                                 <p className="text-[11px] font-bold text-slate-200 group-hover:text-slate-300 transition duration-200 ease-out">
                                                   {r.label}
                                                 </p>
-                                                <p className="text-[9px] text-slate-500">
+                                                <p className="text-[10px] text-slate-500">
                                                   {r.questions.length} questions
                                                   {mockInterfaceMode === 'interactive' &&
                                                     r.round === 'hr' && (
@@ -7385,7 +7387,7 @@ export default function Portfolio() {
                                                 </p>
                                               </div>
                                             </div>
-                                            <span className="text-[9px] text-slate-200 font-bold opacity-0 group-hover:opacity-100 transition duration-200 ease-out transform translate-x-1 group-hover:translate-x-0">
+                                            <span className="text-[10px] text-slate-200 font-bold opacity-0 group-hover:opacity-100 transition duration-200 ease-out transform translate-x-1 group-hover:translate-x-0">
                                               {isLoadingRecruiterQuestions
                                                 ? '⏳ Loading…'
                                                 : 'Start Screen →'}
@@ -7416,7 +7418,7 @@ export default function Portfolio() {
                                             ⏱ {timerMins}:{timerSecs}
                                           </span>
                                           <span
-                                            className={`text-[8px] font-bold px-1.5 py-0.5 rounded ${
+                                            className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
                                               currentQ.difficulty === 'hard'
                                                 ? 'bg-rose-900/60 text-rose-400'
                                                 : currentQ.difficulty === 'medium'
@@ -7497,7 +7499,7 @@ export default function Portfolio() {
                                                 {/* Recruiter Speaking Bounce animation */}
                                                 {isRecruiterSpeaking && (
                                                   <div className="flex gap-0.5 items-center px-1.5 py-0.5 rounded bg-slate-900/45 border border-violet-900/50">
-                                                    <span className="text-[8px] text-slate-200 font-bold uppercase tracking-wider mr-1 animate-pulse">
+                                                    <span className="text-[10px] text-slate-200 font-bold uppercase tracking-wider mr-1 animate-pulse">
                                                       Speaking
                                                     </span>
                                                     <div
@@ -7525,7 +7527,7 @@ export default function Portfolio() {
                                                   onClick={() =>
                                                     speakRecruiterText(currentQ.question)
                                                   }
-                                                  className="text-[9px] text-slate-500 hover:text-slate-350 flex items-center gap-1 font-semibold"
+                                                  className="text-[10px] text-slate-500 hover:text-slate-350 flex items-center gap-1 font-semibold"
                                                 >
                                                   🔊 Replay Voice
                                                 </button>
@@ -7538,7 +7540,7 @@ export default function Portfolio() {
                                                         [currentQ.id]: !p[currentQ.id],
                                                       }))
                                                     }
-                                                    className="text-[9px] text-slate-505 hover:text-slate-350 flex items-center gap-1 font-semibold"
+                                                    className="text-[10px] text-slate-505 hover:text-slate-350 flex items-center gap-1 font-semibold"
                                                   >
                                                     💡{' '}
                                                     {hintVisible[currentQ.id]
@@ -7559,7 +7561,7 @@ export default function Portfolio() {
                                           {/* Typing/Thinking indicator */}
                                           {mockMode === 'reviewed' && isRecruiterTyping && (
                                             <div className="flex gap-2 items-center p-3 rounded-xl bg-slate-900/30 border border-slate-800/50 w-fit">
-                                              <span className="text-[9px] text-slate-500 font-bold uppercase">
+                                              <span className="text-[10px] text-slate-500 font-bold uppercase">
                                                 {selectedRecruiter.name} is typing
                                               </span>
                                               <div className="flex gap-1 items-center">
@@ -7587,7 +7589,7 @@ export default function Portfolio() {
                                                   {selectedRecruiter.avatar}
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                  <span className="text-[9px] font-black text-slate-200 uppercase tracking-wider block mb-0.5">
+                                                  <span className="text-[10px] font-black text-slate-200 uppercase tracking-wider block mb-0.5">
                                                     {selectedRecruiter.name} (Reaction)
                                                   </span>
                                                   <p className="text-[11px] text-slate-200 leading-relaxed text-justify">
@@ -7656,7 +7658,7 @@ export default function Portfolio() {
                                                       setLoadingIdealAnswer(false);
                                                     }
                                                   }}
-                                                  className="px-2.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-[9px] font-bold text-white transition duration-200 ease-out"
+                                                  className="px-2.5 py-0.5 rounded bg-slate-800 hover:bg-slate-700 text-[10px] font-bold text-white transition duration-200 ease-out"
                                                 >
                                                   {loadingIdealAnswer
                                                     ? '⏳ Generating...'
@@ -7676,13 +7678,13 @@ export default function Portfolio() {
                                               )}
 
                                             <div className="flex items-center justify-between">
-                                              <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">
+                                              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
                                                 Candidate Draft Answer
                                               </span>
 
                                               {isRecording && (
                                                 <div className="flex gap-1.5 items-center px-2 py-0.5 rounded bg-red-955/30 border border-red-900/40">
-                                                  <span className="text-[8px] text-red-400 font-bold uppercase tracking-wider animate-pulse">
+                                                  <span className="text-[10px] text-red-400 font-bold uppercase tracking-wider animate-pulse">
                                                     Mic Listening
                                                   </span>
                                                   <div className="flex gap-0.5 items-center">
@@ -7756,7 +7758,7 @@ export default function Portfolio() {
                                               !isRecording &&
                                               mockMode === 'answering' && (
                                                 <div className="flex items-center gap-2 p-1.5 px-2.5 rounded-xl bg-slate-900/60 border border-slate-850">
-                                                  <span className="text-[9px] text-slate-300 font-bold uppercase tracking-wider shrink-0">
+                                                  <span className="text-[10px] text-slate-300 font-bold uppercase tracking-wider shrink-0">
                                                     🔊 Playback Draft:
                                                   </span>
                                                   <audio
@@ -7938,7 +7940,7 @@ export default function Portfolio() {
                                                         setLoadingIdealAnswer(false);
                                                       }
                                                     }}
-                                                    className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-[9px] font-bold text-white transition duration-200 ease-out"
+                                                    className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-[10px] font-bold text-white transition duration-200 ease-out"
                                                   >
                                                     {loadingIdealAnswer
                                                       ? '⏳ Generating...'
@@ -7953,7 +7955,7 @@ export default function Portfolio() {
                                                 idealAnswers[currentQ.id] && (
                                                   <div className="mb-3 p-3 rounded-xl bg-violet-500/5 border border-violet-500/20 space-y-2 animate-fadeIn">
                                                     <div className="flex justify-between items-center">
-                                                      <span className="text-[9px] font-bold text-slate-200 uppercase">
+                                                      <span className="text-[10px] font-bold text-slate-200 uppercase">
                                                         💡 Model Ideal Answer (Customized to
                                                         Profile)
                                                       </span>
@@ -8051,7 +8053,7 @@ export default function Portfolio() {
                                                             }));
                                                           }
                                                         }}
-                                                        className="text-[9px] text-slate-200 hover:text-slate-300 font-bold transition duration-200 ease-out"
+                                                        className="text-[10px] text-slate-200 hover:text-slate-300 font-bold transition duration-200 ease-out"
                                                       >
                                                         📋 Copy to Draft
                                                       </button>
@@ -8072,7 +8074,7 @@ export default function Portfolio() {
                                                     <button
                                                       type="button"
                                                       onClick={() => setStarMode(false)}
-                                                      className={`px-2.5 py-1 rounded-md text-[9px] font-bold transition duration-200 ease-out ${!starMode ? 'bg-slate-700 text-white shadow-sm' : 'text-slate-500 hover:text-slate-200'}`}
+                                                      className={`px-2.5 py-1 rounded-md text-[10px] font-bold transition duration-200 ease-out ${!starMode ? 'bg-slate-700 text-white shadow-sm' : 'text-slate-500 hover:text-slate-200'}`}
                                                     >
                                                       ✍️ Freeform
                                                     </button>
@@ -8080,7 +8082,7 @@ export default function Portfolio() {
                                                       type="button"
                                                       onClick={enableStarMode}
                                                       disabled={isStarSplitting}
-                                                      className={`px-2.5 py-1 rounded-md text-[9px] font-bold transition duration-200 ease-out ${starMode ? 'bg-slate-700 text-white shadow-sm' : 'text-slate-500 hover:text-slate-355'} ${isStarSplitting ? 'opacity-70 cursor-wait' : ''}`}
+                                                      className={`px-2.5 py-1 rounded-md text-[10px] font-bold transition duration-200 ease-out ${starMode ? 'bg-slate-700 text-white shadow-sm' : 'text-slate-500 hover:text-slate-355'} ${isStarSplitting ? 'opacity-70 cursor-wait' : ''}`}
                                                     >
                                                       {isStarSplitting
                                                         ? '⏳ Analyzing...'
@@ -8096,12 +8098,12 @@ export default function Portfolio() {
                                                   <div className="space-y-1">
                                                     <div className="flex justify-between items-center">
                                                       <label className="text-[10px] font-bold text-slate-300 uppercase flex items-center gap-1">
-                                                        <span className="w-4 h-4 rounded-full bg-blue-550/20 text-blue-400 border border-blue-500/20 flex items-center justify-center text-[9px] font-black">
+                                                        <span className="w-4 h-4 rounded-full bg-blue-550/20 text-blue-400 border border-blue-500/20 flex items-center justify-center text-[10px] font-black">
                                                           S
                                                         </span>
                                                         Situation
                                                       </label>
-                                                      <span className="text-[9px] text-slate-500">
+                                                      <span className="text-[10px] text-slate-500">
                                                         Set the scene & context
                                                       </span>
                                                     </div>
@@ -8125,12 +8127,12 @@ export default function Portfolio() {
                                                   <div className="space-y-1">
                                                     <div className="flex justify-between items-center">
                                                       <label className="text-[10px] font-bold text-slate-300 uppercase flex items-center gap-1">
-                                                        <span className="w-4 h-4 rounded-full bg-amber-550/20 text-amber-400 border border-amber-500/20 flex items-center justify-center text-[9px] font-black">
+                                                        <span className="w-4 h-4 rounded-full bg-amber-550/20 text-amber-400 border border-amber-500/20 flex items-center justify-center text-[10px] font-black">
                                                           T
                                                         </span>
                                                         Task
                                                       </label>
-                                                      <span className="text-[9px] text-slate-500">
+                                                      <span className="text-[10px] text-slate-500">
                                                         What was your goal or challenge?
                                                       </span>
                                                     </div>
@@ -8154,12 +8156,12 @@ export default function Portfolio() {
                                                   <div className="space-y-1">
                                                     <div className="flex justify-between items-center">
                                                       <label className="text-[10px] font-bold text-slate-300 uppercase flex items-center gap-1">
-                                                        <span className="w-4 h-4 rounded-full bg-emerald-555/20 text-emerald-400 border border-emerald-500/20 flex items-center justify-center text-[9px] font-black">
+                                                        <span className="w-4 h-4 rounded-full bg-emerald-555/20 text-emerald-400 border border-emerald-500/20 flex items-center justify-center text-[10px] font-black">
                                                           A
                                                         </span>
                                                         Action
                                                       </label>
-                                                      <span className="text-[9px] font-semibold text-slate-200">
+                                                      <span className="text-[10px] font-semibold text-slate-200">
                                                         Most important (60% of answer)
                                                       </span>
                                                     </div>
@@ -8183,12 +8185,12 @@ export default function Portfolio() {
                                                   <div className="space-y-1">
                                                     <div className="flex justify-between items-center">
                                                       <label className="text-[10px] font-bold text-slate-300 uppercase flex items-center gap-1">
-                                                        <span className="w-4 h-4 rounded-full bg-rose-555/20 text-rose-455 border border-rose-500/20 flex items-center justify-center text-[9px] font-black">
+                                                        <span className="w-4 h-4 rounded-full bg-rose-555/20 text-rose-455 border border-rose-500/20 flex items-center justify-center text-[10px] font-black">
                                                           R
                                                         </span>
                                                         Result
                                                       </label>
-                                                      <span className="text-[9px] text-slate-500">
+                                                      <span className="text-[10px] text-slate-500">
                                                         Outcome with quantitative metrics
                                                       </span>
                                                     </div>
@@ -8594,7 +8596,7 @@ export default function Portfolio() {
                                                             setLoadingOptimization(false);
                                                           }
                                                         }}
-                                                        className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-[9px] font-bold text-white transition duration-200 ease-out"
+                                                        className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-[10px] font-bold text-white transition duration-200 ease-out"
                                                       >
                                                         {loadingOptimization
                                                           ? '⏳ Polishing...'
@@ -8619,7 +8621,7 @@ export default function Portfolio() {
                                                   <div className="space-y-3 animate-fadeIn">
                                                     {/* Feedback card */}
                                                     <div className="p-3.5 rounded-xl border border-violet-500/20 bg-violet-500/5 space-y-1.5">
-                                                      <p className="text-[9px] text-slate-200 font-bold uppercase">
+                                                      <p className="text-[10px] text-slate-200 font-bold uppercase">
                                                         💡 AI Coach Suggestions
                                                       </p>
                                                       <p className="text-[11px] text-slate-350 leading-relaxed text-justify">
@@ -8630,7 +8632,7 @@ export default function Portfolio() {
                                                     {/* Polished rewrite card */}
                                                     <div className="p-3.5 rounded-xl border border-blue-500/25 bg-blue-500/5 space-y-2 relative group">
                                                       <div className="flex justify-between items-center">
-                                                        <p className="text-[9px] text-blue-400 font-bold uppercase">
+                                                        <p className="text-[10px] text-blue-400 font-bold uppercase">
                                                           ✨ Your Response (Polished & Upgraded)
                                                         </p>
                                                         <button
@@ -8644,7 +8646,7 @@ export default function Portfolio() {
                                                               '📋 Copied optimized response to clipboard!'
                                                             );
                                                           }}
-                                                          className="text-[9px] text-blue-400 hover:text-blue-355 font-bold transition duration-200 ease-out"
+                                                          className="text-[10px] text-blue-400 hover:text-blue-355 font-bold transition duration-200 ease-out"
                                                         >
                                                           📋 Copy Answer
                                                         </button>
@@ -8724,7 +8726,7 @@ export default function Portfolio() {
                             <h4 className="font-bold text-slate-200">{msg.name}</h4>
                             <span className="text-[10px] text-slate-500">{msg.email}</span>
                           </div>
-                          <span className="text-[9px] text-slate-500 font-semibold">
+                          <span className="text-[10px] text-slate-500 font-semibold">
                             {msg.date}
                           </span>
                         </div>
@@ -8808,7 +8810,7 @@ export default function Portfolio() {
               {showRevisedPreview && revisedResumeData && (
                 <div className="w-full max-w-4xl bg-slate-800/95 border border-indigo-700 rounded-xl p-3 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-indigo-100 animate-fadeIn">
                   <div className="flex items-center gap-3">
-                    <span className="p-1 px-2 rounded bg-slate-800 text-slate-200 font-bold uppercase text-[9px]">
+                    <span className="p-1 px-2 rounded bg-slate-800 text-slate-200 font-bold uppercase text-[10px]">
                       AI ACTIVE PREVIEW
                     </span>
                     <div className="flex items-center gap-2">
@@ -8881,7 +8883,7 @@ export default function Portfolio() {
           role="dialog"
           aria-modal="true"
           aria-labelledby="print-modal-title"
-          className="fixed inset-0 z-[120] flex items-center justify-center p-4 md:p-8 bg-slate-900/90 backdrop-blur-md animate-fadeIn print:hidden"
+          className={`fixed inset-0 ${Z.MODAL_BACKDROP} flex items-center justify-center p-4 md:p-8 bg-slate-900/90 backdrop-blur-md animate-fadeIn print:hidden`}
         >
           <div className="w-full max-w-7xl h-full flex flex-col md:flex-row gap-6">
             {/* Sidebar Controls */}
@@ -9093,12 +9095,12 @@ export default function Portfolio() {
                             <div className="font-black text-[11px] text-slate-100 mb-0.5">
                               {t.label}
                             </div>
-                            <div className="text-[9px] text-slate-500 font-medium leading-tight mb-2">
+                            <div className="text-[10px] text-slate-500 font-medium leading-tight mb-2">
                               {t.desc}
                             </div>
                             <div className="flex items-center gap-1">
                               <span
-                                className={`text-[8px] font-black px-1.5 py-0.5 rounded-md ${
+                                className={`text-[10px] font-black px-1.5 py-0.5 rounded-md ${
                                   t.atsLevel === 'PERFECT'
                                     ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                                     : t.atsLevel === 'EXCELLENT'
@@ -9207,7 +9209,7 @@ export default function Portfolio() {
                       >
                         <div>
                           <div className="text-xs font-bold">{opt.label}</div>
-                          <div className="text-[9px] text-slate-500 mt-0.5">{opt.desc}</div>
+                          <div className="text-[10px] text-slate-500 mt-0.5">{opt.desc}</div>
                         </div>
                         {spacingDensity === opt.id && <Check className="w-4 h-4 text-slate-200" />}
                       </button>
@@ -9297,7 +9299,7 @@ export default function Portfolio() {
                       <div className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">
                         Optimized Copy Active
                       </div>
-                      <p className="text-[9px] text-emerald-500/80 leading-tight">
+                      <p className="text-[10px] text-emerald-500/80 leading-tight">
                         Your resume content is now perfectly aligned with the job requirements.
                       </p>
                     </div>
@@ -9346,7 +9348,7 @@ export default function Portfolio() {
           role="dialog"
           aria-modal="true"
           aria-labelledby="vercel-modal-title"
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-fadeIn"
+          className={`fixed inset-0 ${Z.MODAL_BACKDROP} flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md animate-fadeIn`}
         >
           <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col relative animate-scaleUp">
             {/* Close Button */}
@@ -9621,7 +9623,7 @@ export default function Portfolio() {
 
                     <div className="grid grid-cols-2 gap-4 text-left border-t border-slate-800/80 pt-4">
                       <div>
-                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
                           Hosting Platform
                         </span>
                         <span className="text-[11px] font-bold text-slate-200 mt-0.5 block font-semibold">
@@ -9629,7 +9631,7 @@ export default function Portfolio() {
                         </span>
                       </div>
                       <div>
-                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
                           Framework
                         </span>
                         <span className="text-[11px] font-bold text-slate-200 mt-0.5 block font-semibold">
@@ -9637,7 +9639,7 @@ export default function Portfolio() {
                         </span>
                       </div>
                       <div>
-                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
                           Project Name
                         </span>
                         <span className="text-[11px] font-bold text-slate-200 mt-0.5 block truncate font-semibold">
@@ -9645,7 +9647,7 @@ export default function Portfolio() {
                         </span>
                       </div>
                       <div>
-                        <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider block">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
                           SSL Certificate
                         </span>
                         <span className="text-[11px] font-bold text-emerald-400 mt-0.5 block flex items-center gap-1 font-semibold">
@@ -9686,13 +9688,13 @@ export default function Portfolio() {
           role="dialog"
           aria-modal="true"
           aria-label="AI Resume Optimization Review"
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-8 bg-slate-900/90 backdrop-blur-md animate-fadeIn"
+          className={`fixed inset-0 ${Z.MODAL_BACKDROP} flex items-center justify-center p-4 md:p-8 bg-slate-900/90 backdrop-blur-md animate-fadeIn`}
         >
           <div className="w-full max-w-6xl h-full max-h-[90vh] flex flex-col relative">
             <button
               onClick={closeOptimizerModal}
               aria-label="Close optimizer dialog"
-              className="absolute -top-4 -right-4 bg-slate-800 hover:bg-slate-700 text-white p-2 rounded-full shadow-xl transition duration-200 ease-out z-[110] focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+              className={`absolute -top-4 -right-4 bg-slate-800 hover:bg-slate-700 text-white p-2 rounded-full shadow-xl transition duration-200 ease-out ${Z.MODAL_CLOSE} focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500`}
             >
               <X className="w-5 h-5" />
             </button>
@@ -9840,7 +9842,7 @@ export default function Portfolio() {
         {/* Spacer for fixed bottom bar */}
         <div className="lg:hidden h-14 flex-shrink-0"></div>
         <div
-          className={`lg:hidden fixed bottom-0 left-0 right-0 h-14 border-t flex items-center justify-around px-4 z-50 ${
+          className={`lg:hidden fixed bottom-0 left-0 right-0 h-14 border-t flex items-center justify-around px-4 ${Z.DROPDOWN} ${
             appTheme === 'nord-light'
               ? 'bg-white border-slate-200 shadow-[0_-2px_10px_rgba(0,0,0,0.05)]'
               : appTheme === 'indigo-midnight'

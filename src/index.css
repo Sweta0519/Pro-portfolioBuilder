@@ -1,10 +1,10 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import '@fontsource-variable/geist';
 @import 'tailwindcss';
 
 @custom-variant dark (&:where(.dark, .dark *));
 
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Geist Variable', 'Geist', system-ui, -apple-system, sans-serif;
 }
 
 html {
@@ -36,7 +36,6 @@ html {
   position: fixed;
   inset: 0;
   background: var(--primary-bg, #6366f1);
-  z-index: 9999;
   pointer-events: none;
   transform: translateX(-100%);
 }
@@ -261,6 +260,40 @@ html {
 
 .animate-slideInRight {
   animation: slideInRight 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Z-Index Scale — see src/utils/zIndex.ts for the full system documentation
+   ────────────────────────────────────────────────────────────────────────── */
+@layer utilities {
+  .z-content { z-index: 10; }
+  .z-sticky-panel { z-index: 20; }
+  .z-secondary-header { z-index: 30; }
+  .z-primary-header { z-index: 40; }
+  .z-dropdown { z-index: 50; }
+  .z-modal-backdrop { z-index: 100; }
+  .z-modal-close { z-index: 110; }
+  .z-drawer { z-index: 120; }
+  .z-page-wipe { z-index: 9999; }
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   prefers-reduced-motion — non-negotiable per a11y (WCAG 2.3.3).
+   Strips every Tailwind animate-* utility + the @keyframes defined in this
+   file. Loops stop. Page transitions become instant. Designers can opt back
+   in for specific accents via `motion-safe:animate-spin` etc.
+   Short transition durations on hover/focus feedback are intentionally
+   preserved — those are user-action responses, not ambient motion.
+   ────────────────────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* ──────────────────────────────────────────────────────────────────────────

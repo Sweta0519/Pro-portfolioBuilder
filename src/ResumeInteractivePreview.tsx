@@ -1,5 +1,6 @@
 import React from 'react';
 import { ResumeData } from './types';
+import { Z } from './utils/zIndex';
 import { Check, AlertCircle, X, Sparkles, Wand2, Mail, Phone, MapPin } from 'lucide-react';
 
 interface ResumePreviewProps {
@@ -20,7 +21,7 @@ export const ResumeInteractivePreview: React.FC<ResumePreviewProps> = ({
   return (
     <div className="flex flex-col h-full bg-slate-200 text-slate-900 rounded-2xl overflow-hidden shadow-2xl border border-slate-300">
       {/* Tool Header */}
-      <div className="bg-indigo-700 p-5 text-white flex justify-between items-center shadow-lg relative z-10">
+      <div className={`bg-indigo-700 p-5 text-white flex justify-between items-center shadow-lg relative ${Z.CONTENT}`}>
         <div className="flex items-center gap-3">
           <div className="bg-white/20 p-2 rounded-lg backdrop-blur-sm">
             <Wand2 className="w-5 h-5 animate-pulse" />
@@ -68,7 +69,7 @@ export const ResumeInteractivePreview: React.FC<ResumePreviewProps> = ({
                 {revisedData.personal.title}
               </p>
               {originalData.personal.title !== revisedData.personal.title && (
-                <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-3 hidden group-hover:block w-72 p-4 bg-slate-900 text-white text-xs rounded-xl shadow-2xl z-50 normal-case font-sans italic leading-relaxed border border-amber-400/30">
+                <div className={`absolute left-1/2 -translate-x-1/2 bottom-full mb-3 hidden group-hover:block w-72 p-4 bg-slate-900 text-white text-xs rounded-xl shadow-2xl ${Z.DROPDOWN} normal-case font-sans italic leading-relaxed border border-amber-400/30`}>
                   <p className="font-bold text-amber-400 mb-1.5 flex items-center gap-1.5">
                     <Sparkles className="w-3.5 h-3.5" /> AI Alignment Insight:
                   </p>
@@ -110,7 +111,7 @@ export const ResumeInteractivePreview: React.FC<ResumePreviewProps> = ({
                   <div className="bg-amber-500 text-white p-1.5 rounded-full shadow-lg cursor-help border-2 border-white">
                     <AlertCircle className="w-4 h-4" />
                   </div>
-                  <div className="absolute left-full ml-4 top-0 hidden group-hover:block w-72 p-4 bg-slate-900 text-white text-xs rounded-2xl shadow-2xl z-50 font-sans normal-case leading-relaxed border border-amber-500/20">
+                  <div className={`absolute left-full ml-4 top-0 hidden group-hover:block w-72 p-4 bg-slate-900 text-white text-xs rounded-2xl shadow-2xl ${Z.DROPDOWN} font-sans normal-case leading-relaxed border border-amber-500/20`}>
                     <p className="font-bold text-amber-400 mb-2 flex items-center gap-1.5">
                       <Sparkles className="w-3.5 h-3.5" /> Content Enhancement:
                     </p>
@@ -157,7 +158,7 @@ export const ResumeInteractivePreview: React.FC<ResumePreviewProps> = ({
                             {isModified && (
                               <div className="absolute -left-12 top-0 bottom-0 flex items-center opacity-30 group-hover:opacity-100 transition-opacity">
                                 <Sparkles className="w-5 h-5 text-indigo-500" />
-                                <div className="absolute bottom-full left-0 mb-4 hidden group-hover:block w-80 p-5 bg-slate-900 text-white text-xs rounded-2xl shadow-2xl z-50 font-sans normal-case leading-normal border border-indigo-500/30">
+                                <div className={`absolute bottom-full left-0 mb-4 hidden group-hover:block w-80 p-5 bg-slate-900 text-white text-xs rounded-2xl shadow-2xl ${Z.DROPDOWN} font-sans normal-case leading-normal border border-indigo-500/30`}>
                                   <p className="font-bold text-indigo-400 mb-3 flex items-center gap-1.5">
                                     <Wand2 className="w-4 h-4" /> AI Optimized Bullet Point
                                   </p>
@@ -199,7 +200,7 @@ export const ResumeInteractivePreview: React.FC<ResumePreviewProps> = ({
                   >
                     {skill.name}
                     {isNew && (
-                      <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 hidden group-hover:block w-56 p-3 bg-slate-900 text-white text-[10px] rounded-xl shadow-2xl z-50 font-sans normal-case text-center border border-indigo-500/20">
+                      <div className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-3 hidden group-hover:block w-56 p-3 bg-slate-900 text-white text-[10px] rounded-xl shadow-2xl ${Z.DROPDOWN} font-sans normal-case text-center border border-indigo-500/20`}>
                         <Sparkles className="w-3 h-3 text-indigo-400 inline mb-1 mr-1" />
                         Keyword injected from high-relevance job description analysis.
                       </div>
@@ -216,7 +217,7 @@ export const ResumeInteractivePreview: React.FC<ResumePreviewProps> = ({
       <div className="bg-white border-t border-slate-300 p-5 flex items-center justify-between shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
         <div className="flex items-center gap-6">
           <div className="flex flex-col">
-            <span className="text-[9px] uppercase font-black text-slate-400 tracking-widest">
+            <span className="text-[10px] uppercase font-black text-slate-400 tracking-widest">
               Applied Logic
             </span>
             <span className="text-[11px] font-bold text-slate-900 uppercase">

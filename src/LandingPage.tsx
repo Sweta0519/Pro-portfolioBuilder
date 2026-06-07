@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Sparkles, CheckCircle, Briefcase, Zap, ShieldCheck, Menu, X, ArrowRight } from 'lucide-react';
+import { Z } from './utils/zIndex';
 
 export default function LandingPage() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 font-sans">
       {/* Navigation — h-16 = 64px, single line, within 80px cap */}
-      <nav className="fixed w-full bg-white/80 backdrop-blur-md border-b border-slate-200 z-50">
+      <nav className={`fixed w-full bg-white/80 backdrop-blur-md border-b border-slate-200 ${Z.DROPDOWN}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Sparkles className="w-6 h-6 text-emerald-600" />
@@ -61,7 +62,7 @@ export default function LandingPage() {
 
       {/* Hero Section — pt-24 (max per Taste), real product preview via iframe */}
       <section className="pt-24 pb-12 px-4 relative overflow-hidden">
-        <div className="max-w-7xl mx-auto relative z-10 grid lg:grid-cols-2 gap-12 items-center">
+          <div className={`max-w-7xl mx-auto relative ${Z.CONTENT} grid lg:grid-cols-2 gap-12 items-center`}>
           {/* Left: Copy */}
           <div>
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold text-slate-900 tracking-tight leading-tight mb-6">
@@ -182,7 +183,7 @@ export default function LandingPage() {
             </div>
 
             {/* Pro Tier — no AI-purple, using slate-900 + emerald accent instead */}
-            <div className="bg-slate-900 text-white rounded-2xl p-8 border border-slate-700 shadow-2xl shadow-black/20 relative overflow-hidden md:scale-105 z-10">
+            <div className={`bg-slate-900 text-white rounded-2xl p-8 border border-slate-700 shadow-2xl shadow-black/20 relative overflow-hidden md:scale-105 ${Z.CONTENT}`}>
               <div className="absolute top-0 right-0 bg-emerald-500 text-slate-900 text-xs font-bold px-4 py-1.5 rounded-bl-xl">MOST POPULAR</div>
               <h3 className="text-2xl font-bold mb-2">Pro</h3>
               <p className="text-slate-400 mb-6">For serious job seekers who want to stand out.</p>

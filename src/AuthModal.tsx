@@ -3,6 +3,7 @@ import { AlertCircle, X } from 'lucide-react';
 import { useAuthStore } from './stores/authStore';
 import { useFocusTrap } from './hooks/useFocusTrap';
 import { supabase } from './supabaseClient';
+import { Z } from './utils/zIndex';
 
 export function AuthModal() {
   const showAuthModal = useAuthStore((s) => s.showAuthModal);
@@ -88,7 +89,7 @@ export function AuthModal() {
       role="dialog"
       aria-modal="true"
       aria-labelledby="auth-modal-title"
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-955/85 backdrop-blur-md animate-fadeIn"
+      className={`fixed inset-0 ${Z.MODAL_BACKDROP} flex items-center justify-center p-4 bg-slate-955/85 backdrop-blur-md animate-fadeIn`}
     >
       <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden flex flex-col relative animate-scaleUp">
         {!authLoading && (
@@ -173,7 +174,7 @@ export function AuthModal() {
 
           <div className="relative my-5 text-center">
             <hr className="border-slate-800" />
-            <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-900 px-3 text-[9px] font-bold text-slate-500 uppercase tracking-widest">
+            <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-900 px-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
               Or
             </span>
           </div>
