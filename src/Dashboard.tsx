@@ -2396,7 +2396,8 @@ export default function Portfolio() {
   return (
     <div
       id="app-root-container"
-      className={`flex flex-col h-screen bg-slate-900 text-slate-100 select-none font-sans antialiased overflow-hidden theme-${appTheme}`}
+      data-theme={appTheme}
+      className="flex flex-col h-screen bg-slate-900 text-slate-100 select-none font-sans antialiased overflow-hidden"
     >
       {/* Connection State Alert Banners */}
       {!isOnline && (
