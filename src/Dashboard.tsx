@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
 import { ErrorBoundary } from './ErrorBoundary';
 import { useAuthStore } from './stores/authStore';
+import { defaultResumeData, defaultThemeSettings } from './sampleData';
 import { useResumeStore } from './stores/resumeStore';
 import { useInterviewStore } from './stores/interviewStore';
 import { useUIStore } from './stores/uiStore';
@@ -97,11 +98,6 @@ export default function Dashboard() {
   const user = useAuthStore((s) => s.user);
   const showAuthModal = useAuthStore((s) => s.showAuthModal);
   const syncStatus = useAuthStore((s) => s.syncStatus);
-  const authMode = useAuthStore((s) => s.authMode);
-  const authEmail = useAuthStore((s) => s.authEmail);
-  const authPassword = useAuthStore((s) => s.authPassword);
-  const authLoading = useAuthStore((s) => s.authLoading);
-  const authError = useAuthStore((s) => s.authError);
   const resumeSyncPhase = useAuthStore((s) => s.resumeSyncPhase);
   const sessionSyncPhase = useAuthStore((s) => s.sessionSyncPhase);
   const syncErrorDetails = useAuthStore((s) => s.syncErrorDetails);
@@ -337,12 +333,55 @@ const setCopiedQuestionId = useUIStore((s) => s.setCopiedQuestionId);
   const [printScaleFactor, setPrintScaleFactor] = useState<number>(1);
 
 
+  const clearLocalUserData = () => {
+    // Reset Zustand stores
+    setSavedResumes([
+      {
+        id: crypto.randomUUID(),
+        name: defaultResumeData.personal.name,
+        title: defaultResumeData.personal.title,
+        date: new Date().toLocaleDateString(),
+        data: defaultResumeData,
+        theme: defaultThemeSettings,
+      },
+    ]);
+    setResumeData(defaultResumeData);
+    setThemeSettings(defaultThemeSettings);
+    setRevisedResumeData(null);
+    setAppliedFixes([]);
+
+    setSavedSessions([]);
+    setCurrentSessionId(null);
+    setInterviewPlan(null);
+    setInterviewJD('');
+    setInterviewPositionName('');
+    setInterviewCompanyName('');
+    setMockAnswers({});
+    setMockScores({});
+    setMockQuestionIdx(0);
+    setMockRound('hr');
+    setMockMode('idle');
+    setRecruiterReplies({});
+    setIsSessionCompleted(false);
+    setSessionSummaryFeedback('');
+    setRecruiterQuestions(null);
+    setIdealAnswers({});
+    setOptimizedResults({});
+    setGeminiData(null);
+
+    // Reset local storage keys
+    localStorage.removeItem('pro_portfolio_active_session_id');
+    localStorage.removeItem('pro_portfolio_active_resume');
+    localStorage.removeItem('pro_portfolio_saved_resumes');
+    localStorage.removeItem('pro_portfolio_interview_sessions');
+  };
+
   // Supabase Auth Helpers & Synchronization Logic
   const handleSignOut = async () => {
     const hasInFlightSync = isSyncInFlight();
     const prompt = hasInFlightSync
       ? 'A sync is still in progress. Signing out now will abort the in-flight write and may leave your last edit unsynced to the cloud. Sign out anyway?'
-      : 'Are you sure you want to sign out? Your current session remains in your browser storage.';
+      : 'Are you sure you want to sign out? Your current session will be cleared from this browser for privacy.';
     if (!confirm(prompt)) return;
 
     setIsSigningOut(true);
@@ -358,6 +397,7 @@ const setCopiedQuestionId = useUIStore((s) => s.setCopiedQuestionId);
       // invalidated at completion (the result never reaches the store).
       bumpSyncGeneration();
       await supabase.auth.signOut();
+      clearLocalUserData();
       setUser(null);
     } finally {
       setIsSigningOut(false);
@@ -372,8 +412,11 @@ const setCopiedQuestionId = useUIStore((s) => s.setCopiedQuestionId);
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange((event, session) => {
       setUser(session?.user ?? null);
+      if (event === 'SIGNED_OUT') {
+        clearLocalUserData();
+      }
     });
 
     return () => {
@@ -6670,7 +6713,7 @@ export default function Portfolio() {
                                       ? 'bg-amber-900/60 text-amber-400'
                                       : 'bg-emerald-900/60 text-emerald-400'
                                 }`}
-                              >
+                                >
                                 {topic.priority.toUpperCase()} PRIORITY
                               </span>
                               <p className="text-xs font-bold text-slate-200">{topic.topic}</p>
@@ -6850,6 +6893,35 @@ export default function Portfolio() {
                             () => setMockTimerSec((s) => s + 1),
                             1000
                           );
+                        };
+
+                        const handleStartRound = async (roundObj: typeof allRounds[number]) => {
+                          if (
+                            mockInterfaceMode === 'interactive' &&
+                            roundObj.round === 'hr' &&
+                            !recruiterQuestions
+                          ) {
+                            setIsLoadingRecruiterQuestions(true);
+                            try {
+                              const qs = await generateRecruiterRoundQuestions(
+                                interviewCompanyName ||
+                                  interviewPlan.context.company,
+                                interviewPositionName ||
+                                  interviewPlan.context.role,
+                                geminiApiKey,
+                                aiProvider
+                              );
+                              setRecruiterQuestions(qs);
+                            } catch (err) {
+                              console.warn(
+                                'Failed to fetch recruiter questions, using generic HR round:',
+                                err
+                              );
+                            } finally {
+                              setIsLoadingRecruiterQuestions(false);
+                            }
+                          }
+                          startQuestion(roundObj.round, 0);
                         };
 
                         const enableStarMode = async () => {
@@ -7040,17 +7112,38 @@ export default function Portfolio() {
                                       {selectedRecruiter.name}
                                     </p>
                                   </div>
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setIsSessionCompleted(false);
-                                      setMockMode('idle');
-                                      setMockQuestionIdx(0);
-                                    }}
-                                    className="px-3 py-1 rounded-lg border border-slate-800 text-slate-300 hover:text-white text-[10px] font-bold transition duration-200 ease-out"
-                                  >
-                                    ← Back to Rounds
-                                  </button>
+                                  <div className="flex items-center gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setIsSessionCompleted(false);
+                                        setMockMode('idle');
+                                        setMockQuestionIdx(0);
+                                      }}
+                                      className="px-3 py-1 rounded-lg border border-slate-800 text-slate-300 hover:text-white text-[10px] font-bold transition duration-200 ease-out"
+                                    >
+                                      ← Back to Rounds
+                                    </button>
+                                    {(() => {
+                                      const roundIdx = allRounds.findIndex((r) => r.round === mockRound);
+                                      if (roundIdx !== -1 && roundIdx + 1 < allRounds.length) {
+                                        const nextRound = allRounds[roundIdx + 1];
+                                        return (
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              setIsSessionCompleted(false);
+                                              handleStartRound(nextRound);
+                                            }}
+                                            className="px-3 py-1 rounded-lg bg-violet-600 hover:bg-violet-500 text-white text-[10px] font-bold transition duration-200 ease-out shadow-sm"
+                                          >
+                                            Proceed to Next Round: {nextRound.label.replace(/🎙️|🏢|💬|👨‍💻|👥|📋|📝/g, '').trim()} →
+                                          </button>
+                                        );
+                                      }
+                                      return null;
+                                    })()}
+                                  </div>
                                 </div>
 
                                 {/* Executive Assessment Card */}
@@ -7376,6 +7469,40 @@ export default function Portfolio() {
                                     );
                                   })}
                                 </div>
+
+                                {/* Bottom navigation buttons */}
+                                <div className="flex justify-end gap-2 border-t border-slate-800 pt-4 mt-6">
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setIsSessionCompleted(false);
+                                      setMockMode('idle');
+                                      setMockQuestionIdx(0);
+                                    }}
+                                    className="px-4 py-2 rounded-xl border border-slate-800 text-slate-300 hover:text-white text-xs font-bold transition duration-200 ease-out"
+                                  >
+                                    ← Back to Rounds
+                                  </button>
+                                  {(() => {
+                                    const roundIdx = allRounds.findIndex((r) => r.round === mockRound);
+                                    if (roundIdx !== -1 && roundIdx + 1 < allRounds.length) {
+                                      const nextRound = allRounds[roundIdx + 1];
+                                      return (
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            setIsSessionCompleted(false);
+                                            handleStartRound(nextRound);
+                                          }}
+                                          className="px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-xs font-bold transition duration-200 ease-out shadow-sm"
+                                        >
+                                          Proceed to Next Round: {nextRound.label.replace(/🎙️|🏢|💬|👨‍💻|👥|📋|📝/g, '').trim()} →
+                                        </button>
+                                      );
+                                    }
+                                    return null;
+                                  })()}
+                                </div>
                               </div>
                             ) : (
                               <>
@@ -7488,35 +7615,7 @@ export default function Portfolio() {
                                         <button
                                           key={r.round}
                                           type="button"
-                                          onClick={async () => {
-                                            // In interactive mode, fetch company-specific recruiter questions for the hr round
-                                            if (
-                                              mockInterfaceMode === 'interactive' &&
-                                              r.round === 'hr' &&
-                                              !recruiterQuestions
-                                            ) {
-                                              setIsLoadingRecruiterQuestions(true);
-                                              try {
-                                                const qs = await generateRecruiterRoundQuestions(
-                                                  interviewCompanyName ||
-                                                    interviewPlan.context.company,
-                                                  interviewPositionName ||
-                                                    interviewPlan.context.role,
-                                                  geminiApiKey,
-                                                  aiProvider
-                                                );
-                                                setRecruiterQuestions(qs);
-                                              } catch (err) {
-                                                console.warn(
-                                                  'Failed to fetch recruiter questions, using generic HR round:',
-                                                  err
-                                                );
-                                              } finally {
-                                                setIsLoadingRecruiterQuestions(false);
-                                              }
-                                            }
-                                            startQuestion(r.round, 0);
-                                          }}
+                                          onClick={() => handleStartRound(r)}
                                           disabled={isLoadingRecruiterQuestions}
                                           className={`w-full p-3 rounded-xl border border-slate-800 bg-slate-900/35 hover:border-violet-500 hover:bg-slate-800/5 transition duration-200 ease-out text-left group ${isLoadingRecruiterQuestions ? 'opacity-60 cursor-wait' : ''}`}
                                         >
