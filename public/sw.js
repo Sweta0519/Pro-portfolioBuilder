@@ -36,6 +36,9 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
+  // Skip non-HTTP/HTTPS schemes (like chrome-extension, file, etc.) to prevent cache put errors
+  if (url.protocol !== 'http:' && url.protocol !== 'https:') return;
+
   // Skip non-GET requests and cross-origin requests (CDN workers, etc.)
   if (request.method !== 'GET') return;
 
