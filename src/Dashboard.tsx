@@ -570,7 +570,20 @@ const setCopiedQuestionId = useUIStore((s) => s.setCopiedQuestionId);
         for (let k = 0; k < localSessList.length; k++) {
           if (signal.aborted) return;
           const localSess = localSessList[k];
-          const matchedDbSess = mergedSessionsMap.get(localSess.id);
+          let matchedDbSess = mergedSessionsMap.get(localSess.id);
+
+          if (!matchedDbSess && localSess.companyName) {
+            const dbSessionsList = Array.from(mergedSessionsMap.values());
+            const matchedByName = dbSessionsList.find(
+              (s) =>
+                s.companyName?.trim().toLowerCase() === localSess.companyName?.trim().toLowerCase() &&
+                s.positionName?.trim().toLowerCase() === localSess.positionName?.trim().toLowerCase()
+            );
+            if (matchedByName) {
+              matchedDbSess = matchedByName;
+              localSess.id = matchedByName.id;
+            }
+          }
 
           if (matchedDbSess) {
             const localAnswersCount = Object.keys(localSess.mockAnswers || {}).length;
