@@ -521,7 +521,7 @@ const setCopiedQuestionId = useUIStore((s) => s.setCopiedQuestionId);
 
         // Generation check: if user signed out / switched / aborted while we
         // were writing, discard the result instead of clobbering the store.
-        if (!finishLane('login', generation)) return;
+        if (signal.aborted) return;
         const finalResumes = Array.from(mergedResumesMap.values());
         setSavedResumes(finalResumes);
         setResumeSyncPhase('idle');
