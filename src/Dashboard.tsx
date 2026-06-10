@@ -1011,6 +1011,56 @@ const setCopiedQuestionId = useUIStore((s) => s.setCopiedQuestionId);
     }
   };
 
+  const startMockRoundGlobal = async (
+    roundType: InterviewRound,
+    interfaceMode: 'standard' | 'interactive'
+  ) => {
+    setMockInterfaceMode(interfaceMode);
+    setMockRound(roundType);
+    setMockQuestionIdx(0);
+    setMockMode('answering');
+    setMockTimerSec(0);
+    setStarSituation('');
+    setStarTask('');
+    setStarAction('');
+    setStarResult('');
+    setStarMode(false);
+    setAudioUrl(null);
+    setIsSessionCompleted(false);
+
+    if (mockTimerRef.current) clearInterval(mockTimerRef.current);
+    mockTimerRef.current = setInterval(
+      () => setMockTimerSec((s) => s + 1),
+      1000
+    );
+
+    if (
+      interfaceMode === 'interactive' &&
+      roundType === 'hr' &&
+      !recruiterQuestions
+    ) {
+      setIsLoadingRecruiterQuestions(true);
+      try {
+        const qs = await generateRecruiterRoundQuestions(
+          interviewCompanyName || interviewPlan?.context.company || '',
+          interviewPositionName || interviewPlan?.context.role || '',
+          geminiApiKey,
+          aiProvider
+        );
+        setRecruiterQuestions(qs);
+      } catch (err) {
+        console.warn(
+          'Failed to fetch recruiter questions, using generic HR round:',
+          err
+        );
+      } finally {
+        setIsLoadingRecruiterQuestions(false);
+      }
+    }
+
+    setInterviewSubTab('mock');
+  };
+
   const speakRecruiterText = (text: string, onEndCallback?: () => void) => {
     if (!autoPlayVoice) {
       if (onEndCallback) onEndCallback();
@@ -6486,13 +6536,22 @@ export default function Portfolio() {
                         {geminiData?.reportedQuestions &&
                           geminiData.reportedQuestions.length > 0 && (
                             <div className="rounded-xl border border-blue-500/25 bg-blue-500/5 overflow-hidden">
-                              <div className="px-3 py-2 bg-blue-500/10 border-b border-blue-500/20 flex items-center justify-between">
-                                <p className="text-[10px] font-black text-blue-400 uppercase tracking-wider">
+                              <div className="px-3 py-2 bg-blue-500/10 border-b border-blue-500/20 flex items-center justify-between gap-3">
+                                <p className="text-[10px] font-black text-blue-400 uppercase tracking-wider truncate">
                                   🌐 Real Interview Questions From Candidates
                                 </p>
-                                <span className="text-[10px] bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded-full font-bold">
-                                  {geminiData.reportedQuestions.length} found
-                                </span>
+                                <div className="flex items-center gap-2 shrink-0">
+                                  <button
+                                    type="button"
+                                    onClick={() => startMockRoundGlobal('reported', 'standard')}
+                                    className="px-2 py-0.5 rounded bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 text-[9px] font-bold text-blue-300 transition duration-200 ease-out active:scale-[0.97]"
+                                  >
+                                    👤 Practice Round
+                                  </button>
+                                  <span className="text-[10px] bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded-full font-bold">
+                                    {geminiData.reportedQuestions.length} found
+                                  </span>
+                                </div>
                               </div>
                               <div className="divide-y divide-slate-800/50">
                                 {geminiData.reportedQuestions.map((q, i) => (
@@ -6592,6 +6651,29 @@ export default function Portfolio() {
                               <p className="text-[10px] text-slate-200 font-bold">
                                 {r.questions.length} questions · sorted by difficulty
                               </p>
+                              <div className="flex gap-2 pt-1 pb-1">
+                                <button
+                                  type="button"
+                                  onClick={() => startMockRoundGlobal(r.round, 'standard')}
+                                  className="flex-grow py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-[10px] font-bold text-slate-200 border border-slate-700 hover:border-slate-650 transition duration-200 ease-out flex items-center justify-center gap-1.5 shadow-sm active:scale-[0.98]"
+                                >
+                                  👤 Start Self-Paced Mock
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={async () => {
+                                    const recruiter = getRecruiterPersona(
+                                      interviewCompanyName || interviewPlan.context.company,
+                                      interviewPlan.context.companyCulture
+                                    );
+                                    setSelectedRecruiter(recruiter);
+                                    await startMockRoundGlobal(r.round, 'interactive');
+                                  }}
+                                  className="flex-grow py-2 px-3 rounded-xl bg-violet-650 hover:bg-violet-600 text-[10px] font-bold text-white transition duration-200 ease-out flex items-center justify-center gap-1.5 shadow-md shadow-violet-950/20 active:scale-[0.98]"
+                                >
+                                  🎙️ Start Voice Recruiter
+                                </button>
+                              </div>
                               {r.questions.map((q) => (
                                 <div
                                   key={q.id}
@@ -7599,57 +7681,50 @@ export default function Portfolio() {
                                               <span>Auto-Activate Mic</span>
                                             </label>
                                           </div>
+
+                                          {/* Start Screen Button */}
+                                          <div className="pt-3 border-t border-slate-850 space-y-2">
+                                            <button
+                                              type="button"
+                                              onClick={() => {
+                                                const hrRound = allRounds.find((r) => r.round === 'hr') || allRounds[0];
+                                                handleStartRound(hrRound);
+                                              }}
+                                              disabled={isLoadingRecruiterQuestions}
+                                              className="w-full py-2.5 rounded-xl bg-violet-650 hover:bg-violet-600 disabled:opacity-50 text-white font-bold text-xs transition duration-200 ease-out shadow-sm flex items-center justify-center gap-1.5 active:scale-[0.98]"
+                                            >
+                                              {isLoadingRecruiterQuestions ? (
+                                                <>⏳ Loading Recruiter Questions...</>
+                                              ) : (
+                                                <>🎙️ Start Recruiter Screen with {selectedRecruiter.name} →</>
+                                              )}
+                                            </button>
+                                            <p className="text-[9.5px] text-slate-500 text-center leading-relaxed">
+                                              💡 Want to practice other rounds (e.g. Technical, Coding) with this recruiter? Select them in the <strong>Questions</strong> tab.
+                                            </p>
+                                          </div>
                                         </div>
                                       </div>
                                     ) : (
-                                      <p className="text-[11px] text-slate-300 leading-relaxed">
-                                        Select a round to begin your self-paced mock interview. You
-                                        will see scores and improvements immediately after
-                                        submitting each answer.
-                                      </p>
-                                    )}
-
-                                    {/* Rounds listing */}
-                                    <div className="space-y-2 pt-1">
-                                      {allRounds.map((r) => (
+                                      <div className="p-4 rounded-xl border border-slate-850 bg-slate-900/10 text-center space-y-3 animate-fadeIn">
+                                        <div className="text-2xl">📋</div>
+                                        <div className="space-y-1">
+                                          <p className="text-xs font-bold text-slate-200">
+                                            Select a Round from the Questions Tab
+                                          </p>
+                                          <p className="text-[10px] text-slate-400 max-w-sm mx-auto leading-relaxed">
+                                            Browse curated interview questions, read hints, and click <strong>Start Mock</strong> on any round to begin practicing.
+                                          </p>
+                                        </div>
                                         <button
-                                          key={r.round}
                                           type="button"
-                                          onClick={() => handleStartRound(r)}
-                                          disabled={isLoadingRecruiterQuestions}
-                                          className={`w-full p-3 rounded-xl border border-slate-800 bg-slate-900/35 hover:border-violet-500 hover:bg-slate-800/5 transition duration-200 ease-out text-left group ${isLoadingRecruiterQuestions ? 'opacity-60 cursor-wait' : ''}`}
+                                          onClick={() => setInterviewSubTab('questions')}
+                                          className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-bold border border-slate-700 transition duration-200 ease-out"
                                         >
-                                          <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2">
-                                              <span className="text-base">{r.emoji}</span>
-                                              <div>
-                                                <p className="text-[11px] font-bold text-slate-200 group-hover:text-slate-300 transition duration-200 ease-out">
-                                                  {r.label}
-                                                </p>
-                                                <p className="text-[10px] text-slate-500">
-                                                  {r.questions.length} questions
-                                                  {mockInterfaceMode === 'interactive' &&
-                                                    r.round === 'hr' && (
-                                                      <span className="ml-1.5 text-slate-200 font-bold">
-                                                        {recruiterQuestions
-                                                          ? `• ${interviewPlan.context.company}-specific`
-                                                          : isLoadingRecruiterQuestions
-                                                            ? '• Loading…'
-                                                            : '• Will load company questions'}
-                                                      </span>
-                                                    )}
-                                                </p>
-                                              </div>
-                                            </div>
-                                            <span className="text-[10px] text-slate-200 font-bold opacity-0 group-hover:opacity-100 transition duration-200 ease-out transform translate-x-1 group-hover:translate-x-0">
-                                              {isLoadingRecruiterQuestions
-                                                ? '⏳ Loading…'
-                                                : 'Start Screen →'}
-                                            </span>
-                                          </div>
+                                          Go to Questions Tab →
                                         </button>
-                                      ))}
-                                    </div>
+                                      </div>
+                                    )}
                                   </div>
                                 )}
 
