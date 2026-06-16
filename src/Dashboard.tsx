@@ -2127,9 +2127,13 @@ const setCopiedQuestionId = useUIStore((s) => s.setCopiedQuestionId);
       if (resData?.url) {
         setVercelDeployUrl(resData.url);
         setVercelDeployState('success');
+      } else if (resData?.destinationUrl) {
+        setVercelDeployUrl(resData.destinationUrl);
+        setVercelDeployState('success');
       } else {
-        // Fallback success if webhook completed but URL is not returned directly
-        setVercelDeployUrl('http://localhost:5678'); // n8n instance link
+        // Fallback success: extract n8n host base URL dynamically
+        const n8nBaseUrl = n8nWebhookUrl.replace(/\/webhook-test\/.*|\/webhook\/.*/, '');
+        setVercelDeployUrl(n8nBaseUrl || 'http://localhost:5678');
         setVercelDeployState('success');
       }
     } catch (err: any) {
