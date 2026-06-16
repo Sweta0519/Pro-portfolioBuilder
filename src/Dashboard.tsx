@@ -1082,8 +1082,8 @@ const setCopiedQuestionId = useUIStore((s) => s.setCopiedQuestionId);
         project: 'Pro-portfolioBuilder',
         message: 'Hello from your Pro-portfolioBuilder Dashboard!',
         testData: {
-          userName: resumeData?.basics?.name || 'Jane Doe',
-          userEmail: resumeData?.basics?.email || 'jane@example.com',
+          userName: resumeData?.personal?.name || 'Jane Doe',
+          userEmail: resumeData?.personal?.email || 'jane@example.com',
           company: interviewCompanyName || 'Demo Corp',
           role: interviewPositionName || 'Software Engineer'
         }
@@ -1305,8 +1305,8 @@ const setCopiedQuestionId = useUIStore((s) => s.setCopiedQuestionId);
           body: JSON.stringify({
             event: 'mock_interview_completed',
             timestamp: new Date().toISOString(),
-            candidateName: resumeData?.basics?.name || 'Candidate',
-            candidateEmail: resumeData?.basics?.email || '',
+            candidateName: resumeData?.personal?.name || 'Candidate',
+            candidateEmail: resumeData?.personal?.email || '',
             company: interviewPlan?.context?.company || '',
             role: interviewPlan?.context?.role || '',
             recruiterName: `${selectedRecruiter.avatar} ${selectedRecruiter.name}`,
