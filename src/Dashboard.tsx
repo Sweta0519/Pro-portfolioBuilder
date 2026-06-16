@@ -332,6 +332,12 @@ const setCopiedQuestionId = useUIStore((s) => s.setCopiedQuestionId);
   const [autoFitToPage, setAutoFitToPage] = useState<boolean>(true);
   const [printScaleFactor, setPrintScaleFactor] = useState<number>(1);
 
+  const [n8nWebhookUrl, setN8nWebhookUrl] = useState<string>(() => {
+    return localStorage.getItem('pro_portfolio_n8n_webhook_url') || '';
+  });
+  const [testingN8n, setTestingN8n] = useState<boolean>(false);
+  const [n8nTestResult, setN8nTestResult] = useState<string | null>(null);
+
 
   const clearLocalUserData = () => {
     // Reset Zustand stores
@@ -1061,6 +1067,47 @@ const setCopiedQuestionId = useUIStore((s) => s.setCopiedQuestionId);
     setInterviewSubTab('mock');
   };
 
+  const testN8nConnection = async () => {
+    if (!n8nWebhookUrl.trim()) {
+      setN8nTestResult('Please enter a valid webhook URL first.');
+      return;
+    }
+    setTestingN8n(true);
+    setN8nTestResult(null);
+    try {
+      const payload = {
+        event: 'test_connection',
+        timestamp: new Date().toISOString(),
+        project: 'Pro-portfolioBuilder',
+        message: 'Hello from your Pro-portfolioBuilder Dashboard!',
+        testData: {
+          userName: resumeData?.basics?.name || 'Jane Doe',
+          userEmail: resumeData?.basics?.email || 'jane@example.com',
+          company: interviewCompanyName || 'Demo Corp',
+          role: interviewPositionName || 'Software Engineer'
+        }
+      };
+      
+      const res = await fetch(n8nWebhookUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+      
+      if (res.ok) {
+        setN8nTestResult('🟢 Success! n8n received the event and responded.');
+      } else {
+        setN8nTestResult(`🔴 Error: Server responded with status ${res.status}`);
+      }
+    } catch (err: any) {
+      setN8nTestResult(`🔴 Failed to connect: ${err.message || 'Network error'}`);
+    } finally {
+      setTestingN8n(false);
+    }
+  };
+
   const speakRecruiterText = (text: string, onEndCallback?: () => void) => {
     if (!autoPlayVoice) {
       if (onEndCallback) onEndCallback();
@@ -1246,6 +1293,31 @@ const setCopiedQuestionId = useUIStore((s) => s.setCopiedQuestionId);
         qaPairs
       );
       setSessionSummaryFeedback(summary);
+
+      // Trigger n8n webhook if URL is configured
+      if (n8nWebhookUrl.trim()) {
+        fetch(n8nWebhookUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            event: 'mock_interview_completed',
+            timestamp: new Date().toISOString(),
+            candidateName: resumeData?.basics?.name || 'Candidate',
+            candidateEmail: resumeData?.basics?.email || '',
+            company: interviewPlan?.context?.company || '',
+            role: interviewPlan?.context?.role || '',
+            recruiterName: `${selectedRecruiter.avatar} ${selectedRecruiter.name}`,
+            recruiterTitle: selectedRecruiter.title,
+            averageScore: Math.round(
+              qaPairs.reduce((acc, curr) => acc + curr.score, 0) / (qaPairs.length || 1)
+            ),
+            summaryFeedback: summary,
+            qaPairs: qaPairs,
+          }),
+        }).catch((err) => console.warn('Failed to send session to n8n:', err));
+      }
     } catch (err) {
       console.error(err);
       setSessionSummaryFeedback('Failed to generate AI executive summary.');
@@ -5943,6 +6015,57 @@ export default function Portfolio() {
                             )}
                           </div>
                         )}
+                      </div>
+
+                      {/* n8n Webhook configuration */}
+                      <div className="rounded-xl border border-slate-850 bg-slate-900/10 p-3.5 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
+                            ⚡ n8n Workflow Integration
+                          </span>
+                          <span className="text-[9px] bg-violet-500/20 text-violet-300 px-1.5 py-0.5 rounded-full font-bold">
+                            Active
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-slate-400 leading-relaxed">
+                          Enter your local or cloud n8n webhook URL to send mock interview transcripts & feedback reports automatically when a session ends.
+                        </p>
+                        <div className="space-y-1.5">
+                          <input
+                            type="text"
+                            value={n8nWebhookUrl}
+                            onChange={(e) => {
+                              const val = e.target.value.trim();
+                              setN8nWebhookUrl(val);
+                              localStorage.setItem('pro_portfolio_n8n_webhook_url', val);
+                              setN8nTestResult(null);
+                            }}
+                            placeholder="http://localhost:5678/webhook-test/..."
+                            className="w-full bg-slate-950/50 border border-slate-700 rounded-xl px-3 py-2.5 text-[10px] text-slate-200 placeholder-slate-600 focus:outline-none focus:border-violet-500 transition duration-200 ease-out font-mono"
+                          />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={testN8nConnection}
+                            disabled={testingN8n}
+                            className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-[10px] font-bold text-slate-200 transition duration-200 ease-out flex items-center gap-1.5 active:scale-[0.98]"
+                          >
+                            {testingN8n ? (
+                              <>
+                                <span className="w-3 h-3 border-2 border-slate-500 border-t-violet-400 rounded-full animate-spin" />
+                                Sending...
+                              </>
+                            ) : (
+                              <>⚡ Test Webhook</>
+                            )}
+                          </button>
+                          {n8nTestResult && (
+                            <span className="text-[10px] font-semibold text-slate-300">
+                              {n8nTestResult}
+                            </span>
+                          )}
+                        </div>
                       </div>
 
                       {/* Company Name input */}
