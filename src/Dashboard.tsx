@@ -337,6 +337,7 @@ const setCopiedQuestionId = useUIStore((s) => s.setCopiedQuestionId);
   });
   const [testingN8n, setTestingN8n] = useState<boolean>(false);
   const [n8nTestResult, setN8nTestResult] = useState<string | null>(null);
+  const [deployProvider, setDeployProvider] = useState<'vercel' | 'n8n'>('vercel');
 
 
   const clearLocalUserData = () => {
@@ -2068,6 +2069,72 @@ const setCopiedQuestionId = useUIStore((s) => s.setCopiedQuestionId);
     } catch (err: any) {
       console.error('Vercel deployment failed:', err);
       setVercelError(err.message || 'An unexpected error occurred during Vercel deployment.');
+      setVercelDeployState('error');
+    }
+  };
+
+  const handleN8nDeploy = async () => {
+    if (!n8nWebhookUrl.trim()) {
+      setVercelError('n8n Webhook URL is required.');
+      setVercelDeployState('error');
+      return;
+    }
+    if (!vercelProjectName.trim()) {
+      setVercelError('Project Name is required.');
+      setVercelDeployState('error');
+      return;
+    }
+
+    setVercelDeployState('preparing');
+    setVercelDeployProgress('Compiling your premium portfolio code files...');
+    setVercelError('');
+
+    try {
+      // 1. Structural collection of all portfolio project files
+      const portfolioFiles = getPortfolioFiles(resumeData, themeSettings);
+      const compiledFiles = portfolioFiles.map((f) => ({
+        file: f.file,
+        data: f.data,
+        encoding: 'utf-8',
+      }));
+
+      setVercelDeployState('deploying');
+      setVercelDeployProgress('Sending compiled bundle to n8n workflow...');
+
+      // 2. POST deployment request to n8n Webhook
+      const response = await fetch(n8nWebhookUrl.trim(), {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          event: 'portfolio_publish_requested',
+          timestamp: new Date().toISOString(),
+          projectName: vercelProjectName.trim(),
+          candidateName: resumeData.personal.name,
+          candidateEmail: resumeData.personal.email,
+          files: compiledFiles,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`n8n webhook returned status code ${response.status}`);
+      }
+
+      const resData = await response.json().catch(() => ({}));
+      
+      // If n8n responds with a deploy URL, set it!
+      if (resData?.url) {
+        setVercelDeployUrl(resData.url);
+        setVercelDeployState('success');
+      } else {
+        // Fallback success if webhook completed but URL is not returned directly
+        setVercelDeployUrl('http://localhost:5678'); // n8n instance link
+        setVercelDeployState('success');
+      }
+    } catch (err: any) {
+      console.error('n8n publishing failed:', err);
+      setVercelError(err.message || 'An unexpected error occurred during n8n publishing.');
       setVercelDeployState('error');
     }
   };
@@ -9876,10 +9943,37 @@ export default function Portfolio() {
             <div className="p-6 flex-1 flex flex-col overflow-y-auto max-h-[70vh]">
               {/* IDLE / INPUT STATE */}
               {(vercelDeployState === 'idle' || vercelDeployState === 'error') && (
-                <div className="space-y-5">
+                <div className="space-y-5 animate-fadeIn">
+                  {/* Provider Toggle Tabs */}
+                  <div className="flex bg-slate-955 p-1 rounded-xl border border-slate-800 w-full">
+                    <button
+                      type="button"
+                      onClick={() => setDeployProvider('vercel')}
+                      className={`flex-1 py-2 rounded-lg text-xs font-bold transition duration-200 ease-out flex items-center justify-center gap-1.5 ${
+                        deployProvider === 'vercel'
+                          ? 'bg-slate-800 text-white shadow-sm'
+                          : 'text-slate-500 hover:text-slate-350'
+                      }`}
+                    >
+                      ▲ Vercel Personal Token
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDeployProvider('n8n')}
+                      className={`flex-1 py-2 rounded-lg text-xs font-bold transition duration-200 ease-out flex items-center justify-center gap-1.5 ${
+                        deployProvider === 'n8n'
+                          ? 'bg-violet-650 text-white shadow-sm'
+                          : 'text-slate-500 hover:text-slate-350'
+                      }`}
+                    >
+                      ⚡ n8n Workflow Webhook
+                    </button>
+                  </div>
+
                   <p className="text-xs text-slate-300 leading-relaxed font-semibold">
-                    Deploy your high-fidelity React + Vite portfolio website directly to Vercel
-                    production. No command lines, git pushes, or configuration files required.
+                    {deployProvider === 'vercel'
+                      ? 'Deploy your high-fidelity React + Vite portfolio website directly to Vercel production. No command lines or git pushes required.'
+                      : 'Deploy your portfolio using a custom n8n workflow. The workflow receives the compiled folder files, and handles the deployment pipeline.'}
                   </p>
 
                   {vercelError && (
@@ -9893,40 +9987,68 @@ export default function Portfolio() {
                   )}
 
                   <div className="space-y-4">
-                    {/* Access Token Field */}
-                    <div className="space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <label className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">
-                          Vercel Personal Access Token
-                        </label>
-                        <a
-                          href="https://vercel.com/account/tokens"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-[10px] text-slate-200 hover:text-slate-300 font-bold underline transition duration-200 ease-out"
-                        >
-                          Generate Token →
-                        </a>
-                      </div>
-                      <div className="relative">
-                        <input
-                          type="password"
-                          value={vercelToken}
-                          onChange={(e) => setVercelToken(e.target.value)}
-                          placeholder="paste your vercel token (e.g. v2_...)"
-                          className="w-full bg-slate-950 border border-slate-800 focus:border-slate-600 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-600 focus:outline-none transition duration-200 ease-out"
-                        />
-                      </div>
-                      <p className="text-[10px] text-slate-500 leading-normal">
-                        Your Vercel token is stored safely in your own browser's local storage and
-                        used solely to trigger this deployment.
-                      </p>
-                    </div>
+                    {deployProvider === 'vercel' ? (
+                      <>
+                        {/* Vercel Access Token Field */}
+                        <div className="space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <label className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">
+                              Vercel Personal Access Token
+                            </label>
+                            <a
+                              href="https://vercel.com/account/tokens"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[10px] text-slate-200 hover:text-slate-300 font-bold underline transition duration-200 ease-out"
+                            >
+                              Generate Token →
+                            </a>
+                          </div>
+                          <div className="relative">
+                            <input
+                              type="password"
+                              value={vercelToken}
+                              onChange={(e) => setVercelToken(e.target.value)}
+                              placeholder="paste your vercel token (e.g. v2_...)"
+                              className="w-full bg-slate-950 border border-slate-800 focus:border-slate-600 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-600 focus:outline-none transition duration-200 ease-out"
+                            />
+                          </div>
+                          <p className="text-[10px] text-slate-500 leading-normal">
+                            Your Vercel token is stored safely in your own browser's local storage.
+                          </p>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        {/* n8n Webhook Field */}
+                        <div className="space-y-1.5">
+                          <label className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">
+                            n8n Webhook URL (Production / Test)
+                          </label>
+                          <div className="relative">
+                            <input
+                              type="text"
+                              value={n8nWebhookUrl}
+                              onChange={(e) => {
+                                const val = e.target.value.trim();
+                                setN8nWebhookUrl(val);
+                                localStorage.setItem('pro_portfolio_n8n_webhook_url', val);
+                              }}
+                              placeholder="e.g. http://localhost:5678/webhook/..."
+                              className="w-full bg-slate-950 border border-slate-800 focus:border-slate-600 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-650 focus:outline-none transition duration-200 ease-out font-mono"
+                            />
+                          </div>
+                          <p className="text-[10px] text-slate-500 leading-normal">
+                            Configure your webhook to listen for POST requests. n8n will receive the compiled HTML/JS file payload.
+                          </p>
+                        </div>
+                      </>
+                    )}
 
-                    {/* Project Name Field */}
+                    {/* Common Project Name Field */}
                     <div className="space-y-1.5">
                       <label className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">
-                        Vercel Project Name
+                        Project/Repository Name
                       </label>
                       <div className="relative">
                         <input
@@ -9942,22 +10064,34 @@ export default function Portfolio() {
                         />
                       </div>
                       <div className="flex items-center gap-1.5 text-[10px] text-slate-500 font-semibold">
-                        <span>Expected subdomain:</span>
-                        <span className="font-mono text-slate-200 bg-slate-950 px-1.5 py-0.5 rounded border border-slate-850">
-                          {vercelProjectName || 'project-name'}.vercel.app
+                        <span>Expected identifier:</span>
+                        <span className="font-mono text-slate-200 bg-slate-950 px-1.5 py-0.5 rounded border border-slate-855 animate-fadeIn">
+                          {vercelProjectName || 'project-name'}
                         </span>
                       </div>
                     </div>
                   </div>
 
                   <button
-                    onClick={handleVercelDeploy}
-                    className="w-full bg-white text-slate-900 hover:bg-slate-200 text-white font-extrabold py-3 rounded-xl text-xs transition duration-200 ease-out shadow-lg hover:shadow-black/10 active:scale-[0.97] cursor-pointer active:scale-[0.97] flex items-center justify-center gap-2 mt-2"
+                    onClick={deployProvider === 'vercel' ? handleVercelDeploy : handleN8nDeploy}
+                    className={`w-full text-white font-extrabold py-3 rounded-xl text-xs transition duration-200 ease-out shadow-lg hover:shadow-black/10 active:scale-[0.97] cursor-pointer flex items-center justify-center gap-2 mt-2 ${
+                      deployProvider === 'vercel'
+                        ? 'bg-white hover:bg-slate-200 !text-slate-900'
+                        : 'bg-violet-650 hover:bg-violet-600'
+                    }`}
                   >
-                    <svg className="w-3.5 h-3.5 fill-current text-white" viewBox="0 0 512 512">
-                      <path d="M256,48,496,464H16Z" />
-                    </svg>
-                    <span>Deploy Portfolio Website</span>
+                    {deployProvider === 'vercel' ? (
+                      <>
+                        <svg className="w-3.5 h-3.5 fill-current text-slate-900" viewBox="0 0 512 512">
+                          <path d="M256,48,496,464H16Z" />
+                        </svg>
+                        <span>Deploy Portfolio Website</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>⚡ Publish via n8n Workflow</span>
+                      </>
+                    )}
                   </button>
                 </div>
               )}
