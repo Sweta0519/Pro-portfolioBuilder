@@ -457,11 +457,11 @@ const setCopiedQuestionId = useUIStore((s) => s.setCopiedQuestionId);
     }
   }, [user]);
 
-  // Load / Sync User Data from/to Supabase on Login
   useEffect(() => {
     if (!user) return;
 
     const syncOnLogin = async () => {
+      console.log('🔄 [syncOnLogin] Started. User ID:', user.id);
       const { signal, generation } = startLane('login');
       setSyncStatus('syncing');
       try {
@@ -800,10 +800,13 @@ const setCopiedQuestionId = useUIStore((s) => s.setCopiedQuestionId);
     // flash) caused by syncOnLogin writing savedSessions, which re-triggers
     // this effect's dependency, even though all data is already in the DB.
     if (Date.now() - lastLoginSyncAt.current < 3000) {
+      console.log('⏳ [syncSessions] Suppressing push since lastLoginSyncAt was recent (< 3s ago)');
       return;
     }
 
+    console.log('⏳ [syncSessions] Debounce timer scheduled.');
     const syncSessions = async () => {
+      console.log('🚀 [syncSessions] Uploading sessions to Supabase...');
       const { signal, generation } = startLane('sessionPush');
       setSyncStatus('syncing');
       setSessionSyncPhase('pushing');
@@ -964,8 +967,24 @@ const setCopiedQuestionId = useUIStore((s) => s.setCopiedQuestionId);
         next.isCompleted !== existing.isCompleted
       );
 
+      console.log('🔍 [activeSessionSync] changed =', changed, {
+        mockAnswers: !isObjectEqual(next.mockAnswers, existing.mockAnswers),
+        mockScores: !isObjectEqual(next.mockScores, existing.mockScores),
+        idealAnswers: !isObjectEqual(next.idealAnswers, existing.idealAnswers),
+        optimizedResults: !isObjectEqual(next.optimizedResults, existing.optimizedResults),
+        plan: next.plan !== existing.plan,
+        geminiData: next.geminiData !== existing.geminiData,
+        recruiterPersonaId: next.recruiterPersonaId !== existing.recruiterPersonaId,
+        recruiterReplies: !isObjectEqual(next.recruiterReplies, existing.recruiterReplies),
+        sessionSummaryFeedback: next.sessionSummaryFeedback !== existing.sessionSummaryFeedback,
+        recruiterQuestions: !isArrayEqual(next.recruiterQuestions, existing.recruiterQuestions),
+        interfaceMode: next.interfaceMode !== existing.interfaceMode,
+        isCompleted: next.isCompleted !== existing.isCompleted,
+      });
+
       if (!changed) return prev; // no-op: prevents Supabase push debounce re-arm
 
+      console.log('💾 [activeSessionSync] Writing changes to savedSessions!');
       return prev.map((s) => (s.id === currentSessionId ? next : s));
     });
   }, [
