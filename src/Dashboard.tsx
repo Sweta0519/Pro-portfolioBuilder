@@ -740,7 +740,7 @@ const setCopiedQuestionId = useUIStore((s) => s.setCopiedQuestionId);
     // dependency list: this effect must run exactly once per user change. The
     // phase setters are stable references from the store.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [user?.id]);
 
   // Auto-sync Resumes to Supabase
   useEffect(() => {
@@ -788,7 +788,7 @@ const setCopiedQuestionId = useUIStore((s) => s.setCopiedQuestionId);
     // Phase is a coordination primitive, not a trigger; depending on it
     // would cause an infinite re-push loop when phase returns to 'idle'.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [savedResumes, user]);
+  }, [savedResumes, user?.id]);
 
   // Auto-sync Interview Sessions to Supabase
   useEffect(() => {
@@ -854,7 +854,7 @@ const setCopiedQuestionId = useUIStore((s) => s.setCopiedQuestionId);
     // Phase is a coordination primitive, not a trigger; depending on it
     // would cause an infinite re-push loop when phase returns to 'idle'.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [savedSessions, user]);
+  }, [savedSessions, user?.id]);
 
   // Listen to browser network connectivity status changes
   useEffect(() => {
@@ -923,19 +923,43 @@ const setCopiedQuestionId = useUIStore((s) => s.setCopiedQuestionId);
         isCompleted: isSessionCompleted,
       };
 
+      // Helper function to check if two values are shallowly equal (for objects)
+      const isObjectEqual = (a: any, b: any) => {
+        if (a === b) return true;
+        if (!a || !b || typeof a !== 'object' || typeof b !== 'object') return false;
+        const keysA = Object.keys(a);
+        const keysB = Object.keys(b);
+        if (keysA.length !== keysB.length) return false;
+        for (const k of keysA) {
+          if (a[k] !== b[k]) return false;
+        }
+        return true;
+      };
+
+      // Helper function to check if two arrays are shallowly equal
+      const isArrayEqual = (a: any[] | null | undefined, b: any[] | null | undefined) => {
+        if (a === b) return true;
+        if (!a || !b) return false;
+        if (a.length !== b.length) return false;
+        for (let i = 0; i < a.length; i++) {
+          if (a[i] !== b[i]) return false;
+        }
+        return true;
+      };
+
       // Shallow-compare the fields we're about to write. If nothing changed,
       // return the same array reference so no downstream effects are triggered.
       const changed = (
-        next.mockAnswers !== existing.mockAnswers ||
-        next.mockScores !== existing.mockScores ||
-        next.idealAnswers !== existing.idealAnswers ||
-        next.optimizedResults !== existing.optimizedResults ||
+        !isObjectEqual(next.mockAnswers, existing.mockAnswers) ||
+        !isObjectEqual(next.mockScores, existing.mockScores) ||
+        !isObjectEqual(next.idealAnswers, existing.idealAnswers) ||
+        !isObjectEqual(next.optimizedResults, existing.optimizedResults) ||
         next.plan !== existing.plan ||
         next.geminiData !== existing.geminiData ||
         next.recruiterPersonaId !== existing.recruiterPersonaId ||
-        next.recruiterReplies !== existing.recruiterReplies ||
+        !isObjectEqual(next.recruiterReplies, existing.recruiterReplies) ||
         next.sessionSummaryFeedback !== existing.sessionSummaryFeedback ||
-        next.recruiterQuestions !== existing.recruiterQuestions ||
+        !isArrayEqual(next.recruiterQuestions, existing.recruiterQuestions) ||
         next.interfaceMode !== existing.interfaceMode ||
         next.isCompleted !== existing.isCompleted
       );
