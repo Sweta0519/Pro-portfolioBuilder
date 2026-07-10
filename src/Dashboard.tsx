@@ -638,10 +638,16 @@ const setCopiedQuestionId = useUIStore((s) => s.setCopiedQuestionId);
           if (matchedDbSess) {
             const localAnswersCount = Object.keys(localSess.mockAnswers || {}).length;
             const dbAnswersCount = Object.keys(matchedDbSess.mockAnswers || {}).length;
+            // Also prefer local when it has geminiData and the DB doesn't — this
+            // handles the race where the first Supabase upload happened before the
+            // AI fetch completed, so gemini_data was stored as null in the DB.
+            const localHasGemini = !!localSess.geminiData;
+            const dbHasGemini = !!matchedDbSess.geminiData;
 
             if (
               localAnswersCount > dbAnswersCount ||
-              (localSess.isCompleted && !matchedDbSess.isCompleted)
+              (localSess.isCompleted && !matchedDbSess.isCompleted) ||
+              (localHasGemini && !dbHasGemini)
             ) {
               mergedSessionsMap.set(localSess.id, localSess);
               localSessionsToUpload.push({
@@ -873,31 +879,57 @@ const setCopiedQuestionId = useUIStore((s) => s.setCopiedQuestionId);
     showOptimizerModal,
   ]);
 
-  // Sync current active session state changes back to savedSessions list
+  // Sync current active session state changes back to savedSessions list.
+  // IMPORTANT: We only call setSavedSessions when something actually changed.
+  // An unconditional write would restart the Supabase push debounce on every
+  // render, causing the "Saving to cloud…" banner to flash constantly.
   useEffect(() => {
     if (!currentSessionId) return;
-    setSavedSessions((prev) =>
-      prev.map((s) => {
-        if (s.id === currentSessionId) {
-          return {
-            ...s,
-            mockAnswers,
-            mockScores,
-            idealAnswers,
-            optimizedResults,
-            plan: interviewPlan!,
-            geminiData,
-            recruiterPersonaId: selectedRecruiter.id,
-            recruiterReplies: recruiterReplies,
-            sessionSummaryFeedback: sessionSummaryFeedback || s.sessionSummaryFeedback,
-            recruiterQuestions: recruiterQuestions ?? s.recruiterQuestions,
-            interfaceMode: mockInterfaceMode,
-            isCompleted: isSessionCompleted,
-          };
-        }
-        return s;
-      })
-    );
+    setSavedSessions((prev) => {
+      const existing = prev.find((s) => s.id === currentSessionId);
+      if (!existing) return prev; // session not found yet – skip
+
+      const next = {
+        ...existing,
+        mockAnswers,
+        mockScores,
+        idealAnswers,
+        optimizedResults,
+        // Guard against null plan/geminiData during transient states (e.g. 600ms
+        // delay between plan creation and currentSessionId being assigned, or
+        // when the AI fetch hasn't completed yet). Preserving the stored value
+        // prevents Reset -> Load-History from losing the search/question data.
+        plan: interviewPlan ?? existing.plan,
+        geminiData: geminiData ?? existing.geminiData,
+        recruiterPersonaId: selectedRecruiter.id,
+        recruiterReplies: recruiterReplies,
+        sessionSummaryFeedback: sessionSummaryFeedback || existing.sessionSummaryFeedback,
+        recruiterQuestions: recruiterQuestions ?? existing.recruiterQuestions,
+        interfaceMode: mockInterfaceMode,
+        isCompleted: isSessionCompleted,
+      };
+
+      // Shallow-compare the fields we're about to write. If nothing changed,
+      // return the same array reference so no downstream effects are triggered.
+      const changed = (
+        next.mockAnswers !== existing.mockAnswers ||
+        next.mockScores !== existing.mockScores ||
+        next.idealAnswers !== existing.idealAnswers ||
+        next.optimizedResults !== existing.optimizedResults ||
+        next.plan !== existing.plan ||
+        next.geminiData !== existing.geminiData ||
+        next.recruiterPersonaId !== existing.recruiterPersonaId ||
+        next.recruiterReplies !== existing.recruiterReplies ||
+        next.sessionSummaryFeedback !== existing.sessionSummaryFeedback ||
+        next.recruiterQuestions !== existing.recruiterQuestions ||
+        next.interfaceMode !== existing.interfaceMode ||
+        next.isCompleted !== existing.isCompleted
+      );
+
+      if (!changed) return prev; // no-op: prevents Supabase push debounce re-arm
+
+      return prev.map((s) => (s.id === currentSessionId ? next : s));
+    });
   }, [
     currentSessionId,
     mockAnswers,
