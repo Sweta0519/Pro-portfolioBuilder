@@ -88,7 +88,8 @@ import {
   Moon,
   Sun,
   X,
-} from 'lucide-react';
+  Search,
+ } from 'lucide-react';
 
 export default function Dashboard() {
   // Zustand state: per-field selectors. Each subscription only triggers a re-render
@@ -6604,6 +6605,61 @@ export default function Portfolio() {
                         {geminiError && (
                           <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/20">
                             <p className="text-[10px] text-amber-400">{geminiError}</p>
+                          </div>
+                        )}
+
+                        {/* Fetch insights on demand if missing */}
+                        {!geminiData && !isFetchingGemini && (
+                          <div className="p-3.5 rounded-xl border border-dashed border-slate-800 bg-slate-950/20 flex flex-col items-center text-center space-y-2">
+                            <div className="p-2 rounded-full bg-violet-500/10 text-violet-400">
+                              <Search className="w-4 h-4" />
+                            </div>
+                            <div className="space-y-0.5">
+                              <h4 className="text-[11px] font-bold text-slate-200">Missing Google Search Insights</h4>
+                              <p className="text-[10px] text-slate-400 max-w-xs leading-normal">
+                                Real interview questions, process steps, and candidate insights are not loaded.
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                if (!geminiApiKey.trim()) {
+                                  alert('⚠️ Please configure your API Key in the settings panel above first.');
+                                  return;
+                                }
+                                setIsFetchingGemini(true);
+                                setAiProgress('Connecting...');
+                                try {
+                                  const companyForSearch =
+                                    interviewCompanyName.trim() || interviewPlan.context.company;
+                                  const enhanced = await fetchGeminiInsights(
+                                    geminiApiKey,
+                                    companyForSearch,
+                                    interviewPlan.context.role,
+                                    interviewPlan.context.seniority,
+                                    aiProvider,
+                                    (msg) => setAiProgress(msg)
+                                  );
+                                  if (enhanced) {
+                                    setGeminiData(enhanced);
+                                    setGeminiError('');
+                                  } else {
+                                    setGeminiError(
+                                      'Could not fetch data from Google Search. Check your API key or model settings.'
+                                    );
+                                  }
+                                } catch (err: any) {
+                                  setGeminiError(
+                                    err?.message || 'AI insights retrieval failed.'
+                                  );
+                                } finally {
+                                  setIsFetchingGemini(false);
+                                }
+                              }}
+                              className="px-3.5 py-1.5 rounded-lg bg-violet-650 hover:bg-violet-500 text-white text-[10px] font-bold transition duration-200 ease-out cursor-pointer active:scale-[0.97]"
+                            >
+                              🔍 Retrieve Real Questions & Insights
+                            </button>
                           </div>
                         )}
 
