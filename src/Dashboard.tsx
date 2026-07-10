@@ -323,6 +323,10 @@ const setCopiedQuestionId = useUIStore((s) => s.setCopiedQuestionId);
   const recognitionRef = useRef<any>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  // Timestamp of the last full login-sync write to savedSessions. Used to
+  // suppress the session push effect for a short window after syncOnLogin
+  // already uploaded everything, preventing a redundant double-upload flash.
+  const lastLoginSyncAt = useRef<number>(0);
 
   // Local state variables declared up top to prevent initialization-order issues
   const [printTemplate, setPrintTemplate] = useState<string>('classic');
@@ -709,6 +713,9 @@ const setCopiedQuestionId = useUIStore((s) => s.setCopiedQuestionId);
         // Generation check again before committing session results.
         if (!finishLane('login', generation)) return;
         const finalSessions = Array.from(mergedSessionsMap.values());
+        // Stamp the ref BEFORE writing so the push effect's debounce
+        // (1500 ms) fires after the stamp and can detect the cooldown.
+        lastLoginSyncAt.current = Date.now();
         setSavedSessions(finalSessions);
         setSessionSyncPhase('idle');
 
@@ -786,6 +793,13 @@ const setCopiedQuestionId = useUIStore((s) => s.setCopiedQuestionId);
   // Auto-sync Interview Sessions to Supabase
   useEffect(() => {
     if (!user || sessionSyncPhase !== 'idle' || resumeSyncPhase === 'pulling' || resumeSyncPhase === 'pushing') {
+      return;
+    }
+    // Skip the push for 3 s after syncOnLogin already uploaded everything.
+    // This prevents a redundant second upload (and the resulting sync banner
+    // flash) caused by syncOnLogin writing savedSessions, which re-triggers
+    // this effect's dependency, even though all data is already in the DB.
+    if (Date.now() - lastLoginSyncAt.current < 3000) {
       return;
     }
 
