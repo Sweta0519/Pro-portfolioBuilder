@@ -6303,11 +6303,45 @@ export default function Portfolio() {
                           );
                           setSelectedRecruiter(recruiter);
 
+                          const resolvedCompany = interviewCompanyName.trim() || plan.context.company;
+                          const resolvedPosition = interviewPositionName.trim() || plan.context.role;
+
+                          // Check for an existing session with the same company + position
+                          const existingSession = savedSessions.find(
+                            (s) =>
+                              s.companyName?.trim().toLowerCase() === resolvedCompany.toLowerCase() &&
+                              s.positionName?.trim().toLowerCase() === resolvedPosition.toLowerCase()
+                          );
+
+                          if (existingSession) {
+                            // Load existing session instead of creating a duplicate
+                            setCurrentSessionId(existingSession.id);
+                            setInterviewPlan(existingSession.plan);
+                            setGeminiData(existingSession.geminiData);
+                            setMockAnswers(existingSession.mockAnswers);
+                            setMockScores(existingSession.mockScores);
+                            setIdealAnswers(existingSession.idealAnswers || {});
+                            setOptimizedResults(existingSession.optimizedResults || {});
+                            setInterviewCompanyName(existingSession.companyName);
+                            setInterviewPositionName(existingSession.positionName);
+                            setInterviewJD(existingSession.jobDescription);
+                            setInterviewSubTab(existingSession.isCompleted ? 'mock' : 'overview');
+                            setMockMode(existingSession.mockMode ?? 'idle');
+                            setMockRound(existingSession.mockRound ?? 'hr');
+                            setMockQuestionIdx(existingSession.mockQuestionIdx ?? 0);
+                            setRecruiterReplies(existingSession.recruiterReplies || {});
+                            setSessionSummaryFeedback(existingSession.sessionSummaryFeedback || '');
+                            setIsSessionCompleted(existingSession.isCompleted || false);
+                            setRecruiterQuestions(existingSession.recruiterQuestions || null);
+                            setIsGeneratingPlan(false);
+                            return;
+                          }
+
                           const sessionId = crypto.randomUUID();
                           const newSession: InterviewSession = {
                             id: sessionId,
-                            companyName: interviewCompanyName.trim() || plan.context.company,
-                            positionName: interviewPositionName.trim() || plan.context.role,
+                            companyName: resolvedCompany,
+                            positionName: resolvedPosition,
                             jobDescription: interviewJD,
                             generatedAt: new Date().toLocaleString(undefined, {
                               month: 'short',

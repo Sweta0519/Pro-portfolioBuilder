@@ -138,10 +138,21 @@ const getInitialSessions = (): InterviewSession[] => {
           }
           return sess;
         });
-        if (migratedAny) {
-          localStorage.setItem('pro_portfolio_interview_sessions', JSON.stringify(migrated));
+
+        // Deduplicate: keep only the first occurrence per company+position pair
+        // (sessions are stored newest-first, so first = most recent)
+        const seen = new Set<string>();
+        const deduplicated = migrated.filter((sess: any) => {
+          const key = `${(sess.companyName || '').trim().toLowerCase()}||${(sess.positionName || '').trim().toLowerCase()}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+
+        if (migratedAny || deduplicated.length !== migrated.length) {
+          localStorage.setItem('pro_portfolio_interview_sessions', JSON.stringify(deduplicated));
         }
-        return migrated as InterviewSession[];
+        return deduplicated as InterviewSession[];
       }
     }
   } catch (e) {
