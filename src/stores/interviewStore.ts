@@ -139,11 +139,11 @@ const getInitialSessions = (): InterviewSession[] => {
           return sess;
         });
 
-        // Deduplicate: keep only the first occurrence per company+position pair
+        // Deduplicate: keep only the first occurrence per company name (case-insensitive)
         // (sessions are stored newest-first, so first = most recent)
         const seen = new Set<string>();
         const deduplicated = migrated.filter((sess: any) => {
-          const key = `${(sess.companyName || '').trim().toLowerCase()}||${(sess.positionName || '').trim().toLowerCase()}`;
+          const key = (sess.companyName || '').trim().toLowerCase();
           if (seen.has(key)) return false;
           seen.add(key);
           return true;

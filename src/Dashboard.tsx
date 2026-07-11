@@ -631,8 +631,7 @@ const setCopiedQuestionId = useUIStore((s) => s.setCopiedQuestionId);
             const dbSessionsList = Array.from(mergedSessionsMap.values());
             const matchedByName = dbSessionsList.find(
               (s) =>
-                s.companyName?.trim().toLowerCase() === localSess.companyName?.trim().toLowerCase() &&
-                s.positionName?.trim().toLowerCase() === localSess.positionName?.trim().toLowerCase()
+                s.companyName?.trim().toLowerCase() === localSess.companyName?.trim().toLowerCase()
             );
             if (matchedByName) {
               matchedDbSess = matchedByName;
@@ -715,13 +714,13 @@ const setCopiedQuestionId = useUIStore((s) => s.setCopiedQuestionId);
         if (!finishLane('login', generation)) return;
         const rawSessions = Array.from(mergedSessionsMap.values());
 
-        // Deduplicate: keep newest per company+position, delete extras from DB
+        // Deduplicate: keep newest per company name, delete extras from DB
         const seenKeys = new Map<string, string>(); // key -> kept id
         const dedupedSessions: typeof rawSessions = [];
         const idsToDeleteFromDb: string[] = [];
 
         for (const s of rawSessions) {
-          const key = `${(s.companyName || '').trim().toLowerCase()}||${(s.positionName || '').trim().toLowerCase()}`;
+          const key = (s.companyName || '').trim().toLowerCase();
           if (seenKeys.has(key)) {
             idsToDeleteFromDb.push(s.id);
           } else {
@@ -6329,11 +6328,10 @@ export default function Portfolio() {
                           const resolvedCompany = interviewCompanyName.trim() || plan.context.company;
                           const resolvedPosition = interviewPositionName.trim() || plan.context.role;
 
-                          // Check for an existing session with the same company + position
+                          // Check for an existing session with the same company name
                           const existingSession = savedSessions.find(
                             (s) =>
-                              s.companyName?.trim().toLowerCase() === resolvedCompany.toLowerCase() &&
-                              s.positionName?.trim().toLowerCase() === resolvedPosition.toLowerCase()
+                              s.companyName?.trim().toLowerCase() === resolvedCompany.toLowerCase()
                           );
 
                           if (existingSession) {
