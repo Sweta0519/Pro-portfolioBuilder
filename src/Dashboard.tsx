@@ -713,12 +713,35 @@ const setCopiedQuestionId = useUIStore((s) => s.setCopiedQuestionId);
 
         // Generation check again before committing session results.
         if (!finishLane('login', generation)) return;
-        const finalSessions = Array.from(mergedSessionsMap.values());
+        const rawSessions = Array.from(mergedSessionsMap.values());
+
+        // Deduplicate: keep newest per company+position, delete extras from DB
+        const seenKeys = new Map<string, string>(); // key -> kept id
+        const dedupedSessions: typeof rawSessions = [];
+        const idsToDeleteFromDb: string[] = [];
+
+        for (const s of rawSessions) {
+          const key = `${(s.companyName || '').trim().toLowerCase()}||${(s.positionName || '').trim().toLowerCase()}`;
+          if (seenKeys.has(key)) {
+            idsToDeleteFromDb.push(s.id);
+          } else {
+            seenKeys.set(key, s.id);
+            dedupedSessions.push(s);
+          }
+        }
+
+        if (idsToDeleteFromDb.length > 0) {
+          console.log(`[Sync] Removing ${idsToDeleteFromDb.length} duplicate session(s) from DB...`);
+          await supabase.from('interview_sessions').delete().in('id', idsToDeleteFromDb);
+        }
+
+        const finalSessions = dedupedSessions;
         // Stamp the ref BEFORE writing so the push effect's debounce
         // (1500 ms) fires after the stamp and can detect the cooldown.
         lastLoginSyncAt.current = Date.now();
         setSavedSessions(finalSessions);
         setSessionSyncPhase('idle');
+
 
         setSyncStatus('synced');
       } catch (err: any) {
