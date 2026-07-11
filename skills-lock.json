@@ -13,6 +13,12 @@
       "skillPath": "skills/emil-design-eng/SKILL.md",
       "computedHash": "ac3fc5b4e206488ffc408a2806f829bb2e5eaf518fded09be34790685c2b3a0d"
     },
+    "graphify": {
+      "source": "Graphify-Labs/graphify",
+      "sourceType": "github",
+      "skillPath": "graphify/SKILL.md",
+      "computedHash": "2e8fecb9b2e9dbd55c635ef9ec5b1c3e31550cd4c98e09ec1780d6a842d9f7b7"
+    },
     "impeccable": {
       "source": "pbakaus/impeccable",
       "sourceType": "github",

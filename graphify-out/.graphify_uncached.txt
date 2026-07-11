@@ -1,0 +1,13 @@
+C:\Users\abhij\Downloads\build-portfolio-from-resume\PRODUCT.md
+C:\Users\abhij\Downloads\build-portfolio-from-resume\README.md
+C:\Users\abhij\Downloads\build-portfolio-from-resume\architecture_audit_report.md
+C:\Users\abhij\Downloads\build-portfolio-from-resume\backend_plan.md
+C:\Users\abhij\Downloads\build-portfolio-from-resume\index.html
+C:\Users\abhij\Downloads\build-portfolio-from-resume\portfolio_innovations.md
+C:\Users\abhij\Downloads\build-portfolio-from-resume\public\dashboard-demo.webp
+C:\Users\abhij\Downloads\build-portfolio-from-resume\public\favicon.svg
+C:\Users\abhij\Downloads\build-portfolio-from-resume\public\icons\apple-touch-icon.png
+C:\Users\abhij\Downloads\build-portfolio-from-resume\public\icons\icon-192.png
+C:\Users\abhij\Downloads\build-portfolio-from-resume\public\icons\icon-512.png
+C:\Users\abhij\Downloads\build-portfolio-from-resume\public\icons\icon.svg
+C:\Users\abhij\Downloads\build-portfolio-from-resume\public\logo.png
