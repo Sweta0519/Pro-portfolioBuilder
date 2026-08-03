@@ -3,6 +3,7 @@ import LandingPage from './LandingPage';
 import Dashboard from './Dashboard';
 import { ErrorBoundary } from './ErrorBoundary';
 import { ShieldAlert, Download, RefreshCcw } from 'lucide-react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 
 const GlobalErrorFallback = (error: Error | null, reset: () => void) => {
   const rescueData = () => {
@@ -88,6 +89,7 @@ export default function App() {
           <Route path="/app" element={<Dashboard />} />
         </Routes>
       </BrowserRouter>
+      <SpeedInsights />
     </ErrorBoundary>
   );
 }
