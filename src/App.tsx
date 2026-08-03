@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { Analytics } from '@vercel/analytics/react';
 import LandingPage from './LandingPage';
 import Dashboard from './Dashboard';
 import { ErrorBoundary } from './ErrorBoundary';
@@ -88,6 +89,7 @@ export default function App() {
           <Route path="/app" element={<Dashboard />} />
         </Routes>
       </BrowserRouter>
+      <Analytics />
     </ErrorBoundary>
   );
 }
