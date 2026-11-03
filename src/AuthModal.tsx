@@ -4,6 +4,7 @@ import { useAuthStore } from './stores/authStore';
 import { useFocusTrap } from './hooks/useFocusTrap';
 import { supabase } from './supabaseClient';
 import { Z } from './utils/zIndex';
+import { track } from './analytics';
 
 export function AuthModal() {
   const showAuthModal = useAuthStore((s) => s.showAuthModal);
@@ -44,11 +45,12 @@ export function AuthModal() {
         });
         if (error) throw error;
       } else {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email: authEmail.trim(),
           password: authPassword.trim(),
         });
         if (error) throw error;
+        if (data.user?.identities?.length) track('signed_up', { method: 'email' });
         alert('Verification email sent! Check your inbox to complete sign up.');
       }
       setShowAuthModal(false);
@@ -170,6 +172,12 @@ export function AuthModal() {
                 <span>{authMode === 'login' ? '🔑 Sign In' : '📝 Register'}</span>
               )}
             </button>
+            <p className="text-[10px] text-slate-500 font-medium text-center">
+              See our{' '}
+              <a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-slate-300">
+                Privacy Policy
+              </a>
+            </p>
           </form>
 
           <div className="relative my-5 text-center">

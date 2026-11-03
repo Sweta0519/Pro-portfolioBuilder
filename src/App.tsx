@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import LandingPage from './LandingPage';
 import Dashboard from './Dashboard';
+import { PrivacyPage, ImprintPage } from './LegalPages';
 import { ErrorBoundary } from './ErrorBoundary';
 import { ShieldAlert, Download, RefreshCcw } from 'lucide-react';
 
@@ -86,6 +87,8 @@ export default function App() {
         <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/app" element={<Dashboard />} />
+          <Route path="/privacy" element={<PrivacyPage />} />
+          <Route path="/imprint" element={<ImprintPage />} />
         </Routes>
       </BrowserRouter>
     </ErrorBoundary>

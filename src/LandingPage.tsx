@@ -17,7 +17,7 @@ export default function LandingPage() {
           <div className="flex items-center gap-4">
             <a href="#features" className="text-sm font-medium text-slate-600 hover:text-slate-900 hidden sm:block transition duration-200 ease-out">Features</a>
             <a href="#pricing" className="text-sm font-medium text-slate-600 hover:text-slate-900 hidden sm:block transition duration-200 ease-out">Pricing</a>
-            <Link to="/app" className="bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 transition duration-200 ease-out active:scale-[0.97] hidden sm:block">
+            <Link to="/app" data-ph-capture-attribute-cta="nav-open-dashboard" className="bg-slate-900 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-slate-800 transition duration-200 ease-out active:scale-[0.97] hidden sm:block">
               Open Dashboard
             </Link>
             {/* Mobile Menu Toggle */}
@@ -49,7 +49,7 @@ export default function LandingPage() {
             </a>
             <div className="pt-2">
               <Link 
-                to="/app" 
+                to="/app" data-ph-capture-attribute-cta="nav-mobile-open-dashboard" 
                 className="block w-full text-center bg-slate-900 text-white px-4 py-3 rounded-xl text-base font-bold hover:bg-slate-800 transition shadow-md active:scale-[0.97] duration-200 ease-out"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
@@ -73,7 +73,7 @@ export default function LandingPage() {
               Upload your PDF. Get a live, ATS-optimized portfolio and AI interview prep in seconds.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
-              <Link to="/app" className="bg-slate-900 text-white px-8 py-4 rounded-xl text-lg font-bold hover:bg-slate-800 shadow-xl shadow-black/10 transition active:scale-[0.97] duration-200 ease-out hover:-translate-y-0.5 inline-flex items-center gap-2">
+              <Link to="/app" data-ph-capture-attribute-cta="hero-start-free" className="bg-slate-900 text-white px-8 py-4 rounded-xl text-lg font-bold hover:bg-slate-800 shadow-xl shadow-black/10 transition active:scale-[0.97] duration-200 ease-out hover:-translate-y-0.5 inline-flex items-center gap-2">
                 Start Building Free
                 <ArrowRight className="w-5 h-5" />
               </Link>
@@ -177,7 +177,7 @@ export default function LandingPage() {
                 <li className="flex items-center gap-3"><CheckCircle className="w-5 h-5 text-emerald-500" /> <span className="text-slate-700">1 Standard Theme</span></li>
                 <li className="flex items-center gap-3"><CheckCircle className="w-5 h-5 text-emerald-500" /> <span className="text-slate-700">HTML Single File Export</span></li>
               </ul>
-              <Link to="/app" className="block w-full py-3 px-4 bg-slate-100 text-slate-900 font-bold text-center rounded-xl hover:bg-slate-200 transition active:scale-[0.97] duration-200 ease-out">
+              <Link to="/app" data-ph-capture-attribute-cta="pricing-free-get-started" className="block w-full py-3 px-4 bg-slate-100 text-slate-900 font-bold text-center rounded-xl hover:bg-slate-200 transition active:scale-[0.97] duration-200 ease-out">
                 Get Started
               </Link>
             </div>
@@ -195,7 +195,7 @@ export default function LandingPage() {
                 <li className="flex items-center gap-3"><CheckCircle className="w-5 h-5 text-emerald-400" /> <span>Unlimited AI Mock Interviews</span></li>
                 <li className="flex items-center gap-3"><CheckCircle className="w-5 h-5 text-emerald-400" /> <span>React Source Code Export</span></li>
               </ul>
-              <Link to="/app" className="block w-full py-3 px-4 bg-white text-slate-900 font-bold text-center rounded-xl hover:bg-slate-100 transition active:scale-[0.97] duration-200 ease-out shadow-lg shadow-white/10">
+              <Link to="/app" data-ph-capture-attribute-cta="pricing-pro-upgrade" className="block w-full py-3 px-4 bg-white text-slate-900 font-bold text-center rounded-xl hover:bg-slate-100 transition active:scale-[0.97] duration-200 ease-out shadow-lg shadow-white/10">
                 Upgrade to Pro
               </Link>
             </div>
@@ -214,6 +214,10 @@ export default function LandingPage() {
       <footer className="bg-white border-t border-slate-200 py-12">
         <div className="max-w-7xl mx-auto px-4 text-center text-slate-500 text-sm">
           <p>© {new Date().getFullYear()} ProPortfolio Builder. All rights reserved.</p>
+          <p className="mt-3 flex items-center justify-center gap-4">
+            <Link to="/privacy" className="hover:text-slate-900 transition duration-200 ease-out">Privacy</Link>
+            <Link to="/imprint" className="hover:text-slate-900 transition duration-200 ease-out">Imprint</Link>
+          </p>
         </div>
       </footer>
     </div>

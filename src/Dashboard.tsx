@@ -53,6 +53,7 @@ import { generateWordDocument } from './wordExporter';
 import { ResumeInteractivePreview } from './ResumeInteractivePreview';
 import { extractTextFromFile } from './fileParser';
 import { AuthModal } from './AuthModal';
+import { track, fileTypeOf } from './analytics';
 import {
   startLane,
   finishLane,
@@ -1152,6 +1153,7 @@ const setCopiedQuestionId = useUIStore((s) => s.setCopiedQuestionId);
       () => setMockTimerSec((s) => s + 1),
       1000
     );
+    track('mock_interview_started', { round: roundType, mode: interfaceMode });
 
     if (
       interfaceMode === 'interactive' &&
@@ -1387,6 +1389,13 @@ const setCopiedQuestionId = useUIStore((s) => s.setCopiedQuestionId);
   const finishInteractiveSession = async (
     sessionQuestions: Array<{ id: string; question: string; difficulty: string; source: string }>
   ) => {
+    if (!isSessionCompleted) {
+      track('mock_interview_completed', {
+        round: mockRound,
+        mode: 'interactive',
+        question_count: sessionQuestions.length,
+      });
+    }
     setIsSessionCompleted(true);
     setIsLoadingSummary(true);
     setSessionSummaryFeedback('');
@@ -1646,6 +1655,7 @@ const setCopiedQuestionId = useUIStore((s) => s.setCopiedQuestionId);
             if (parsedJSON && parsedJSON.personal) {
               setResumeData(parsedJSON);
               setImportSuccess(true);
+              track('resume_uploaded', { source: 'file', file_type: 'json' });
               setLeftTab('profile');
               setRightTab('coach');
               setIsParsing(false);
@@ -1706,6 +1716,7 @@ const setCopiedQuestionId = useUIStore((s) => s.setCopiedQuestionId);
       saveResumeToHistory(finalData, tunedTheme);
       setIsParsing(false);
       setImportSuccess(true);
+      track('resume_uploaded', { source: 'file', file_type: fileTypeOf(file.name) });
       setFileErrorMessage(
         `Imported ${finalData.experience.length} roles, ${finalData.skills.length} skills, and ${finalData.projects.length} projects successfully.`
       );
@@ -1762,6 +1773,7 @@ const setCopiedQuestionId = useUIStore((s) => s.setCopiedQuestionId);
 
       setIsParsing(false);
       setImportSuccess(true);
+      track('resume_uploaded', { source: 'paste' });
       setFileErrorMessage(
         `Imported ${finalData.experience.length} roles, ${finalData.skills.length} skills, and ${finalData.projects.length} projects successfully.`
       );
@@ -1852,6 +1864,7 @@ const setCopiedQuestionId = useUIStore((s) => s.setCopiedQuestionId);
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
       console.log('handleWordDownload: Word export download triggered successfully!');
+      track('resume_exported', { format: 'docx', template: targetTemplate });
     } catch (err) {
       console.error('Failed to export DOCX:', err);
       alert(
@@ -1954,12 +1967,14 @@ const setCopiedQuestionId = useUIStore((s) => s.setCopiedQuestionId);
 
       pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
       pdf.save(`${resumeData.personal.name.toLowerCase().replace(/\s+/g, '-')}-resume.pdf`);
+      track('resume_exported', { format: 'pdf', template: printTemplate });
     } catch (err) {
       console.error(
         'Direct high-fidelity PDF capture failed, falling back to native browser engine:',
         err
       );
       window.print();
+      track('resume_exported', { format: 'print', template: printTemplate });
     } finally {
       setIsGeneratingPdf(false);
     }
@@ -2046,6 +2061,7 @@ const setCopiedQuestionId = useUIStore((s) => s.setCopiedQuestionId);
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
+      track('resume_exported', { format: 'zip', template: themeSettings.id });
 
       setCopiedZip(true);
       setTimeout(() => setCopiedZip(false), 2500);
@@ -2131,6 +2147,7 @@ const setCopiedQuestionId = useUIStore((s) => s.setCopiedQuestionId);
       setVercelDeployProgress('Vercel is building your portfolio. Polling build logs...');
 
       // 3. Status Polling Loop every 3 seconds
+      let published = false;
       const pollInterval = setInterval(async () => {
         try {
           const pollResponse = await fetch(
@@ -2151,6 +2168,10 @@ const setCopiedQuestionId = useUIStore((s) => s.setCopiedQuestionId);
             clearInterval(pollInterval);
             setVercelDeployUrl(`https://${hostUrl}`);
             setVercelDeployState('success');
+            if (!published) {
+              published = true;
+              track('portfolio_published', { provider: 'vercel', theme_id: themeSettings.id });
+            }
           } else if (currentStatus === 'ERROR' || currentStatus === 'CANCELED') {
             clearInterval(pollInterval);
             setVercelError(`Vercel build pipeline failed with status: ${currentStatus}`);
@@ -2248,6 +2269,7 @@ const setCopiedQuestionId = useUIStore((s) => s.setCopiedQuestionId);
         setVercelDeployUrl(n8nBaseUrl || 'http://localhost:5678');
         setVercelDeployState('success');
       }
+      track('portfolio_published', { provider: 'n8n', theme_id: themeSettings.id });
     } catch (err: any) {
       console.error('n8n publishing failed:', err);
       setVercelError(err.message || 'An unexpected error occurred during n8n publishing.');
@@ -2850,6 +2872,11 @@ export default function Portfolio() {
         </div>
 
         <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+          {/* Legal links (new tab so unsaved work survives) */}
+          <div className="hidden sm:flex items-center gap-2 text-[10px] text-slate-500 mr-1">
+            <a href="/privacy" target="_blank" rel="noopener noreferrer" className="hover:text-slate-300 underline">Privacy</a>
+            <a href="/imprint" target="_blank" rel="noopener noreferrer" className="hover:text-slate-300 underline">Imprint</a>
+          </div>
           {/* Supabase Auth & Sync Status */}
           <div className="flex items-center gap-2">
             {user ? (
@@ -7532,6 +7559,7 @@ export default function Portfolio() {
                                 const nextRound = allRounds[roundIdx + 1];
                                 startQuestion(nextRound.round, 0);
                               } else {
+                                track('mock_interview_completed', { round: mockRound, mode: 'standard' });
                                 setMockMode('idle');
                               }
                             }
@@ -9611,7 +9639,7 @@ export default function Portfolio() {
               )}
 
               <div
-                className={`resume-preview-container transition duration-500 h-full w-full overflow-y-auto border border-slate-850 rounded-2xl shadow-2xl scrollbar-thin ${
+                className={`ph-no-capture resume-preview-container transition duration-500 h-full w-full overflow-y-auto border border-slate-850 rounded-2xl shadow-2xl scrollbar-thin ${
                   themeSettings.darkMode || themeSettings.id === 'cyberpunk' ? 'dark' : ''
                 } ${
                   previewDevice === 'desktop'
@@ -10023,7 +10051,10 @@ export default function Portfolio() {
                   ✨ Optimized for MS Word, OpenOffice, LibreOffice, & Google Docs
                 </div>
                 <button
-                  onClick={() => window.print()}
+                  onClick={() => {
+                    window.print();
+                    track('resume_exported', { format: 'print', template: printTemplate });
+                  }}
                   disabled={isGeneratingPdf}
                   className="w-full py-2.5 bg-slate-950 hover:bg-slate-900 text-slate-300 border border-slate-800 hover:text-slate-200 rounded-2xl text-xs font-bold transition duration-200 ease-out flex justify-center items-center gap-2 disabled:opacity-50"
                 >
@@ -10075,7 +10106,7 @@ export default function Portfolio() {
               <div className="min-h-full flex justify-center p-2 md:p-4">
                 <div
                   ref={previewContainerRef}
-                  className={`print-resume-container shadow-2xl transition duration-300 pointer-events-none density-${spacingDensity} ${
+                  className={`ph-no-capture print-resume-container shadow-2xl transition duration-300 pointer-events-none density-${spacingDensity} ${
                     printTemplate === 'classic' ? 'font-serif' : 'font-sans'
                   }`}
                   style={{
@@ -10520,7 +10551,7 @@ export default function Portfolio() {
           aria-label="AI Resume Optimization Review"
           className={`fixed inset-0 ${Z.MODAL_BACKDROP} flex items-center justify-center p-4 md:p-8 bg-slate-900/90 backdrop-blur-md animate-fadeIn`}
         >
-          <div className="w-full max-w-6xl h-full max-h-[90vh] flex flex-col relative">
+          <div className="ph-no-capture w-full max-w-6xl h-full max-h-[90vh] flex flex-col relative">
             <button
               onClick={closeOptimizerModal}
               aria-label="Close optimizer dialog"
@@ -10706,6 +10737,10 @@ export default function Portfolio() {
             <Smartphone className="w-5 h-5" />
             <span className="text-[10px] font-bold uppercase tracking-wider">Preview</span>
           </button>
+          <div className="flex flex-col items-center gap-0.5 text-[10px] text-slate-500">
+            <a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline hover:text-slate-300">Privacy</a>
+            <a href="/imprint" target="_blank" rel="noopener noreferrer" className="underline hover:text-slate-300">Imprint</a>
+          </div>
         </div>
         </>
       )}
