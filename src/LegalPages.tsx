@@ -61,7 +61,7 @@ export function ImprintPage() {
       <p>
         Operated by:
         <br />
-        Abhijit Kumar Sahoo
+        Swetaprangya Sahoo
         <br />
         Billstedter Hauptstraße 69
         <br />
@@ -76,7 +76,7 @@ export function ImprintPage() {
       </p>
 
       <H2>Responsible for content</H2>
-      <p>Responsible for content pursuant to § 18 Abs. 2 MStV: Abhijit Kumar Sahoo (address as above).</p>
+      <p>Responsible for content pursuant to § 18 Abs. 2 MStV: Swetaprangya Sahoo (address as above).</p>
     </LegalLayout>
   );
 }
@@ -89,7 +89,7 @@ export function PrivacyPage() {
 
       <H2>1. Controller</H2>
       <p>
-        Abhijit Kumar Sahoo, Billstedter Hauptstraße 69, 22111 Hamburg, Germany. Email: <Mail />. See also the{' '}
+        Swetaprangya Sahoo, Billstedter Hauptstraße 69, 22111 Hamburg, Germany. Email: <Mail />. See also the{' '}
         <Link to="/imprint" className="text-emerald-700 underline hover:text-emerald-800">Imprint</Link>.
       </p>
 
