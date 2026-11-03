@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { Sparkles, ArrowLeft } from 'lucide-react';
 
-const CONTACT_EMAIL = 'hello@drivede.app';
+const CONTACT_EMAIL = 'swetapsahoo05@gmail.com';
 
 function LegalLayout({ children }: { children: ReactNode }) {
   return (
